@@ -84,4 +84,19 @@ describe('GroceryList', () => {
     });
     expect(getByText('Milk')).not.toHaveStyle({ textDecorationLine: 'line-through' });
   });
+
+  test('shows empty checkbox for unchecked items', () => {
+    const { getAllByText } = render(<GroceryList />);
+    const emptyCheckboxes = getAllByText('☐');
+    expect(emptyCheckboxes.length).toBe(3);
+  });
+
+  test('shows checked checkbox for checked items', () => {
+    const { getByText, getAllByText } = render(<GroceryList />);
+
+    fireEvent.press(getByText('Milk'));
+
+    expect(getAllByText('☑').length).toBe(1);
+    expect(getAllByText('☐').length).toBe(2);
+  });
 });

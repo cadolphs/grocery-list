@@ -35,20 +35,46 @@ export function GroceryList({
   };
 
   return (
-    <View>
-      {GROCERY_ITEMS.map((item) => (
-        <Pressable key={item} onPress={() => toggleItem(item)}>
-          <Text style={checkedItems.has(item) ? styles.checked : undefined}>
-            {item}
-          </Text>
-        </Pressable>
-      ))}
+    <View style={styles.container}>
+      {GROCERY_ITEMS.map((item) => {
+        const isChecked = checkedItems.has(item);
+        return (
+          <Pressable
+            key={item}
+            style={styles.item}
+            onPress={() => toggleItem(item)}
+          >
+            <Text style={styles.checkbox}>{isChecked ? '☑' : '☐'}</Text>
+            <Text style={[styles.itemText, isChecked && styles.checkedText]}>
+              {item}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  checked: {
+  container: {
+    padding: 16,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  checkbox: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  itemText: {
+    fontSize: 18,
+  },
+  checkedText: {
     textDecorationLine: 'line-through',
     color: '#888',
   },
