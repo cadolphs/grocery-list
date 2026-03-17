@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/cadolphs/git-personal/grocery-list diff)",
+      "Bash(git -C /Users/cadolphs/git-personal/grocery-list log --oneline -5)",
+      "Bash(git -C /Users/cadolphs/git-personal/grocery-list add CLAUDE.md app.json eas.json package.json package-lock.json)",
+      "Bash(git -C /Users/cadolphs/git-personal/grocery-list commit -m \"$\\(cat <<''EOF''\nAdd Jest testing setup and project documentation\n\nSet up jest-expo for testing with npm test and test:watch scripts.\nAdd CLAUDE.md with development commands and architecture overview.\nConfigure EAS Build profiles for development, preview, and production.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/cadolphs/git-personal/grocery-list push)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nImplement Walking Skeleton \\(Stories 1.1, 1.2, 1.3\\)\n\nAdd basic grocery list with check-off functionality and local persistence:\n- GroceryList component displaying hardcoded items \\(Milk, Eggs, Bread\\)\n- Tap to toggle check state with strikethrough styling\n- Persist checked items to AsyncStorage\n\nUses \"Testing Without Mocks\" pattern with nullable infrastructure wrapper\nfor CheckedItemsStorage, enabling clean dependency injection in tests.\n\nAlso adds problem analysis and user stories documentation for Milestone 1.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
+    ]
+  }
+}
