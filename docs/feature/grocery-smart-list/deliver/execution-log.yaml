@@ -50,5 +50,33 @@ events:
   s: EXECUTED
   sid: 01-02
   t: '2026-03-17T19:08:45Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 01-02
+  t: '2026-03-17T20:02:39Z'
+- d: 'NOT_APPLICABLE: test was already enabled and passing from step 01-01 - StoreLocation
+    type already supports null aisleNumber'
+  p: RED_ACCEPTANCE
+  s: SKIPPED
+  sid: 01-02
+  t: '2026-03-17T20:02:44Z'
+- d: 'NOT_APPLICABLE: acceptance test fully covers null aisle behavior for this simple
+    case'
+  p: RED_UNIT
+  s: SKIPPED
+  sid: 01-02
+  t: '2026-03-17T20:02:47Z'
+- d: 'NOT_APPLICABLE: all tests already pass - null aisle support was built into StoreLocation
+    type from step 01-01'
+  p: GREEN
+  s: SKIPPED
+  sid: 01-02
+  t: '2026-03-17T20:02:51Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 01-02
+  t: '2026-03-17T20:03:05Z'
 phases: []
 schema_version: '3.0'
