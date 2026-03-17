@@ -24,13 +24,14 @@
 // --- Driving port imports (to be created during DELIVER wave) ---
 // Domain ports:
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-// import { createTrip, completeTrip } from '../../../src/domain/trip';
+import { createTrip } from '../../../src/domain/trip';
+// import { completeTrip } from '../../../src/domain/trip';
 // import { groupByArea, groupByAisle } from '../../../src/domain/item-grouping';
 // import { StapleItem, TripItem, HouseArea } from '../../../src/domain/types';
 //
 // Null adapters for testing:
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
-// import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
+import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 //
 // UI components (for UI-level walking skeleton tests):
 // import { render, fireEvent, waitFor } from '@testing-library/react-native';
@@ -87,32 +88,32 @@ describe('WS-1: Add a Staple Item', () => {
     expect(staple.storeLocation.aisleNumber).toBeNull();
   });
 
-  it.skip('adds a one-off item to the current trip only', () => {
+  it('adds a one-off item to the current trip only', () => {
     // Given Carlos has an active trip
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([]);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
 
     // When Carlos adds "Birthday candles" as a one-off
-    // trip.addItem({
-    //   name: 'Birthday candles',
-    //   houseArea: 'Kitchen Cabinets',
-    //   storeLocation: { section: 'Baking', aisleNumber: 12 },
-    //   itemType: 'one-off',
-    //   source: 'quick-add',
-    // });
+    trip.addItem({
+      name: 'Birthday candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
 
     // Then "Birthday candles" appears on the current trip
-    // expect(trip.getItems()).toContainEqual(
-    //   expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
-    // );
+    expect(trip.getItems()).toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
+    );
 
     // And "Birthday candles" does not appear in the staple library
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // expect(library.listAll()).not.toContainEqual(
-    //   expect.objectContaining({ name: 'Birthday candles' })
-    // );
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    expect(library.listAll()).not.toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles' })
+    );
   });
 
   it.skip('prevents duplicate staple in the same house area', () => {

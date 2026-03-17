@@ -32,3 +32,35 @@ export type AddStapleRequest = {
 export type AddStapleResult =
   | { readonly success: true }
   | { readonly success: false; readonly error: string };
+
+// Trip domain types
+
+export type ItemSource = 'preloaded' | 'quick-add' | 'whiteboard';
+
+export type TripItem = {
+  readonly id: string;
+  readonly name: string;
+  readonly houseArea: HouseArea;
+  readonly storeLocation: StoreLocation;
+  readonly itemType: ItemType;
+  readonly stapleId: string | null;
+  readonly source: ItemSource;
+  readonly needed: boolean;
+  readonly checked: boolean;
+  readonly checkedAt: string | null;
+};
+
+export type AddTripItemRequest = {
+  readonly name: string;
+  readonly houseArea: HouseArea;
+  readonly storeLocation: StoreLocation;
+  readonly itemType: ItemType;
+  readonly source: ItemSource;
+};
+
+export type Trip = {
+  readonly id: string;
+  readonly items: TripItem[];
+  readonly status: 'active' | 'completed';
+  readonly createdAt: string;
+};
