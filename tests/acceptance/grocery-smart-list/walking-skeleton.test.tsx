@@ -116,27 +116,27 @@ describe('WS-1: Add a Staple Item', () => {
     );
   });
 
-  it.skip('prevents duplicate staple in the same house area', () => {
+  it('prevents duplicate staple in the same house area', () => {
     // Given "Whole milk" already exists as a staple in "Fridge"
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({
-    //   name: 'Whole milk',
-    //   houseArea: 'Fridge',
-    //   storeLocation: { section: 'Dairy', aisleNumber: 3 },
-    // });
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
 
     // When Carlos tries to add "Whole milk" to "Fridge" again
-    // const result = library.addStaple({
-    //   name: 'Whole milk',
-    //   houseArea: 'Fridge',
-    //   storeLocation: { section: 'Dairy', aisleNumber: 3 },
-    // });
+    const result = library.addStaple({
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
 
     // Then the app prevents the duplicate and shows a message
-    // expect(result.success).toBe(false);
-    // expect(result.error).toContain('already exists in Fridge');
-    // expect(library.listAll()).toHaveLength(1);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('already exists in Fridge');
+    expect(library.listAll()).toHaveLength(1);
   });
 
   it.skip('allows same item name in different house areas', () => {

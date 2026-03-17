@@ -78,5 +78,56 @@ events:
   s: EXECUTED
   sid: 01-02
   t: '2026-03-17T20:03:05Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 01-03
+  t: '2026-03-17T20:05:13Z'
+- d: PASS
+  p: RED_ACCEPTANCE
+  s: EXECUTED
+  sid: 01-03
+  t: '2026-03-17T20:05:18Z'
+- d: PASS
+  p: RED_UNIT
+  s: EXECUTED
+  sid: 01-03
+  t: '2026-03-17T20:05:39Z'
+- d: PASS
+  p: GREEN
+  s: EXECUTED
+  sid: 01-03
+  t: '2026-03-17T20:06:22Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 01-03
+  t: '2026-03-17T20:06:47Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 01-04
+  t: '2026-03-17T21:35:33Z'
+- d: PASS
+  p: RED_ACCEPTANCE
+  s: EXECUTED
+  sid: 01-04
+  t: '2026-03-17T21:35:33Z'
+- d: 'NOT_APPLICABLE: unit test for duplicate prevention already exists from prior
+    implementation'
+  p: RED_UNIT
+  s: SKIPPED
+  sid: 01-04
+  t: '2026-03-17T21:35:37Z'
+- d: 'NOT_APPLICABLE: implementation already exists and passes all tests'
+  p: GREEN
+  s: SKIPPED
+  sid: 01-04
+  t: '2026-03-17T21:35:39Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 01-04
+  t: '2026-03-17T21:35:50Z'
 phases: []
 schema_version: '3.0'
