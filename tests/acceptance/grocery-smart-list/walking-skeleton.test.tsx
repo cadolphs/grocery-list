@@ -68,23 +68,23 @@ describe('WS-1: Add a Staple Item', () => {
     expect(allStaples[0].storeLocation.aisleNumber).toBe(3);
   });
 
-  it.skip('adds a staple item without an aisle number', () => {
+  it('adds a staple item without an aisle number', () => {
     // Given Carlos has an empty staple library
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
 
     // When Carlos adds "Rotisserie chicken" as a staple in "Fridge" area, "Deli" section, with no aisle
-    // const result = library.addStaple({
-    //   name: 'Rotisserie chicken',
-    //   houseArea: 'Fridge',
-    //   storeLocation: { section: 'Deli', aisleNumber: null },
-    // });
+    const result = library.addStaple({
+      name: 'Rotisserie chicken',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Deli', aisleNumber: null },
+    });
 
     // Then "Rotisserie chicken" is saved with no aisle assigned
-    // expect(result.success).toBe(true);
-    // const staple = library.listAll()[0];
-    // expect(staple.name).toBe('Rotisserie chicken');
-    // expect(staple.storeLocation.aisleNumber).toBeNull();
+    expect(result.success).toBe(true);
+    const staple = library.listAll()[0];
+    expect(staple.name).toBe('Rotisserie chicken');
+    expect(staple.storeLocation.aisleNumber).toBeNull();
   });
 
   it.skip('adds a one-off item to the current trip only', () => {

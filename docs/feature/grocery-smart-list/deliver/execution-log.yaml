@@ -19,5 +19,36 @@ events:
   s: EXECUTED
   sid: 01-01
   t: '2026-03-17T19:05:08Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 01-01
+  t: '2026-03-17T19:05:32Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 01-02
+  t: '2026-03-17T19:08:11Z'
+- d: PASS
+  p: RED_ACCEPTANCE
+  s: EXECUTED
+  sid: 01-02
+  t: '2026-03-17T19:08:15Z'
+- d: 'NOT_APPLICABLE: Acceptance test sufficient for null aisle - no new domain logic
+    needed'
+  p: RED_UNIT
+  s: SKIPPED
+  sid: 01-02
+  t: '2026-03-17T19:08:26Z'
+- d: PASS
+  p: GREEN
+  s: EXECUTED
+  sid: 01-02
+  t: '2026-03-17T19:08:29Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 01-02
+  t: '2026-03-17T19:08:45Z'
 phases: []
 schema_version: '3.0'
