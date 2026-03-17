@@ -1,5 +1,6 @@
 {
   "schema_version": "3.0",
+  "project_id": "grocery-smart-list",
   "events": [
     {
       "sid": "01-01",
