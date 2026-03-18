@@ -139,24 +139,24 @@ describe('US-08: Navigate Areas During Sweep', () => {
   // AC: Progress shows completed vs remaining areas
   // AC: Areas can be visited in any order
 
-  it.skip('marks an area as complete and shows sweep progress', () => {
+  it('marks an area as complete and shows sweep progress', () => {
     // Given Carlos is sweeping with items in Bathroom
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'TP', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-    // ]);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      { name: 'TP', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
+    ]);
 
     // When Carlos marks "Bathroom" as done
-    // trip.completeArea('Bathroom');
+    trip.completeArea('Bathroom');
 
     // Then progress shows 1 of 5 areas complete
-    // const progress = trip.getSweepProgress();
-    // expect(progress.completedAreas).toContain('Bathroom');
-    // expect(progress.completedCount).toBe(1);
-    // expect(progress.totalAreas).toBe(5);
+    const progress = trip.getSweepProgress();
+    expect(progress.completedAreas).toContain('Bathroom');
+    expect(progress.completedCount).toBe(1);
+    expect(progress.totalAreas).toBe(5);
   });
 
   it.skip('allows navigating areas out of order', () => {

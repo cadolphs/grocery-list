@@ -13,6 +13,21 @@ import {
 import { TripStorage } from '../ports/trip-storage';
 import { StapleLibrary } from './staple-library';
 
+export type SweepProgress = {
+  readonly completedAreas: readonly HouseArea[];
+  readonly completedCount: number;
+  readonly totalAreas: number;
+  readonly allAreasComplete: boolean;
+};
+
+const ALL_HOUSE_AREAS: readonly HouseArea[] = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
+
 export type TripService = {
   readonly start: (staples: StapleItem[], carryover?: TripItem[]) => void;
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
@@ -21,6 +36,8 @@ export type TripService = {
   readonly uncheckItem: (name: string) => void;
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
+  readonly completeArea: (area: HouseArea) => void;
+  readonly getSweepProgress: () => SweepProgress;
   readonly loadFromStorage: () => void;
   readonly complete: () => void;
 };
@@ -55,6 +72,7 @@ export const createTrip = (storage: TripStorage): TripService => {
   let items: TripItem[] = [];
   let tripId: string = generateTripId();
   let createdAt: string = new Date().toISOString();
+  const completedAreas = new Set<HouseArea>();
 
   const persistTrip = (): void => {
     storage.saveTrip(buildTrip(tripId, items, createdAt));
@@ -121,6 +139,20 @@ export const createTrip = (storage: TripStorage): TripService => {
           ? { ...item, needed: true }
           : item
       );
+    },
+
+    completeArea: (area: HouseArea) => {
+      completedAreas.add(area);
+    },
+
+    getSweepProgress: (): SweepProgress => {
+      const completed = [...completedAreas];
+      return {
+        completedAreas: completed,
+        completedCount: completed.length,
+        totalAreas: ALL_HOUSE_AREAS.length,
+        allAreasComplete: completed.length === ALL_HOUSE_AREAS.length,
+      };
     },
 
     loadFromStorage: () => {

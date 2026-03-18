@@ -182,6 +182,63 @@ describe('Trip: skipItem', () => {
   });
 });
 
+describe('Trip: completeArea and getSweepProgress', () => {
+  it('marks an area as completed and reports it in progress', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    ]);
+
+    trip.completeArea('Bathroom');
+
+    const progress = trip.getSweepProgress();
+    expect(progress.completedAreas).toContain('Bathroom');
+    expect(progress.completedCount).toBe(1);
+    expect(progress.totalAreas).toBe(5);
+    expect(progress.allAreasComplete).toBe(false);
+  });
+
+  it('returns zero completed areas initially', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    const progress = trip.getSweepProgress();
+
+    expect(progress.completedAreas).toEqual([]);
+    expect(progress.completedCount).toBe(0);
+    expect(progress.totalAreas).toBe(5);
+    expect(progress.allAreasComplete).toBe(false);
+  });
+
+  it('reports allAreasComplete when all 5 areas are done', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'].forEach(
+      (area) => trip.completeArea(area as any)
+    );
+
+    const progress = trip.getSweepProgress();
+    expect(progress.completedCount).toBe(5);
+    expect(progress.allAreasComplete).toBe(true);
+  });
+
+  it('completing the same area twice does not double-count', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    trip.completeArea('Bathroom');
+    trip.completeArea('Bathroom');
+
+    const progress = trip.getSweepProgress();
+    expect(progress.completedCount).toBe(1);
+  });
+});
+
 describe('completeTrip', () => {
   const setupTripWithItems = () => {
     const stapleStorage = createNullStapleStorage();
