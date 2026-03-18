@@ -208,24 +208,24 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     });
   });
 
-  it.skip('tapping a suggestion adds it with metadata', () => {
+  it('tapping a suggestion adds it with metadata', async () => {
     // Given "Whole milk" appears as a suggestion
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // const quickAddInput = screen.getByPlaceholderText('Add an item...');
-    // fireEvent.changeText(quickAddInput, 'who');
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'who');
 
     // When Carlos taps the "Whole milk" suggestion
-    // await waitFor(() => {
-    //   fireEvent.press(screen.getByText('Whole milk - Dairy / Aisle 3'));
-    // });
+    await waitFor(() => {
+      fireEvent.press(screen.getByText('Whole milk - Dairy / Aisle 3'));
+    });
 
     // Then "Whole milk" is added to the trip with section "Dairy" and aisle 3
-    // expect(screen.getByText('Whole milk')).toBeTruthy();
+    expect(screen.getByText('Whole milk')).toBeTruthy();
   });
 
   it.skip('shows no suggestions for unknown items', () => {

@@ -6,7 +6,7 @@ import { View, Text } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useServices } from './ServiceProvider';
 import { groupByArea } from '../domain/item-grouping';
-import { HouseArea } from '../domain/types';
+import { HouseArea, StapleItem } from '../domain/types';
 import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 
@@ -23,9 +23,24 @@ export const HomeView = (): React.JSX.Element => {
     setActiveArea(area as HouseArea);
   }, []);
 
+  const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
+    const alreadyInTrip = items.some(
+      (item) => item.name === staple.name && item.houseArea === staple.houseArea
+    );
+    if (!alreadyInTrip) {
+      addItem({
+        name: staple.name,
+        houseArea: staple.houseArea,
+        storeLocation: staple.storeLocation,
+        itemType: 'staple',
+        source: 'quick-add',
+      });
+    }
+  }, [items, addItem]);
+
   return (
     <View>
-      <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} />
+      <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} />
       <Text>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
         <Text>Add from whiteboard</Text>
