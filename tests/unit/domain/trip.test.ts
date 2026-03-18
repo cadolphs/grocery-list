@@ -150,6 +150,38 @@ describe('Trip: loadFromStorage', () => {
   });
 });
 
+describe('Trip: skipItem', () => {
+  it('sets needed to false for the matching item', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    ]);
+
+    trip.skipItem('Shampoo');
+
+    const items = trip.getItems();
+    const shampoo = items.find(i => i.name === 'Shampoo');
+    const soap = items.find(i => i.name === 'Soap');
+    expect(shampoo?.needed).toBe(false);
+    expect(soap?.needed).toBe(true);
+  });
+
+  it('does not remove the item from the trip', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+
+    trip.skipItem('Butter');
+
+    expect(trip.getItems()).toHaveLength(1);
+    expect(trip.getItems()[0].name).toBe('Butter');
+  });
+});
+
 describe('completeTrip', () => {
   const setupTripWithItems = () => {
     const stapleStorage = createNullStapleStorage();
