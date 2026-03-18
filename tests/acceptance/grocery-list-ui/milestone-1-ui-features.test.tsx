@@ -228,23 +228,23 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     expect(screen.getByText('Whole milk')).toBeTruthy();
   });
 
-  it.skip('shows no suggestions for unknown items', () => {
+  it('shows no suggestions for unknown items', async () => {
     // Given the staple library does not contain "Birthday candles"
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
 
     // When Carlos types "birthday" in the quick-add field
-    // const quickAddInput = screen.getByPlaceholderText('Add an item...');
-    // fireEvent.changeText(quickAddInput, 'birthday');
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'birthday');
 
     // Then no suggestions appear below the field
-    // await waitFor(() => {
-    //   expect(screen.queryByTestId('suggestion-list')).toBeNull();
-    // });
+    await waitFor(() => {
+      expect(screen.queryByTestId('suggestion-list')).toBeNull();
+    });
   });
 
   it.skip('clears suggestions when quick-add field is cleared', () => {
