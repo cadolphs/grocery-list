@@ -1,0 +1,178 @@
+{
+  "roadmap": {
+    "project_id": "grocery-list-ui-m1",
+    "created_at": "2026-03-18T21:00:00Z",
+    "total_steps": 16,
+    "phases": 5
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Skip Staple UI",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Skip button removes item from home view",
+          "criteria": "Tapping skip on Shampoo hides it from Bathroom area. Area count updates to show 1 item.",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "removes skipped item from the home view area",
+          "files_to_modify": ["src/ui/TripItemRow.tsx", "src/ui/AreaSection.tsx", "src/ui/HomeView.tsx", "src/hooks/useTrip.ts"]
+        },
+        {
+          "id": "01-02",
+          "name": "Skipped item hidden in store view",
+          "criteria": "After skipping Shampoo on home screen, switching to store view does not show Shampoo",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "skipped item does not appear in store view",
+          "files_to_modify": ["src/ui/StoreView.tsx"]
+        },
+        {
+          "id": "01-03",
+          "name": "Re-add skipped staple",
+          "criteria": "Tapping re-add on skipped Butter makes it reappear in Fridge area",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "re-adds a skipped staple on the home screen",
+          "files_to_modify": ["src/ui/TripItemRow.tsx", "src/ui/HomeView.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Sweep Progress UI",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Area completion badge and progress",
+          "criteria": "Marking Bathroom done shows badge and '1 of 5 areas complete' text",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows completion badge and progress bar after marking area done",
+          "files_to_modify": ["src/ui/AreaSection.tsx", "src/ui/HomeView.tsx", "src/hooks/useTrip.ts"]
+        },
+        {
+          "id": "02-02",
+          "name": "Navigate areas out of order",
+          "criteria": "Tapping Freezer opens it as active area without changing progress",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "navigates to a different area out of order",
+          "files_to_modify": ["src/ui/HomeView.tsx"]
+        },
+        {
+          "id": "02-03",
+          "name": "Whiteboard prompt on all areas complete",
+          "criteria": "After completing all 5 areas, 'Add from whiteboard' text is visible",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows whiteboard prompt when all areas complete",
+          "files_to_modify": ["src/ui/HomeView.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Type-Ahead Suggestions UI",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Show matching suggestions on typing",
+          "criteria": "Typing 'who' shows 'Whole milk - Dairy / Aisle 3' suggestion",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows matching suggestions when typing a prefix",
+          "files_to_modify": ["src/ui/QuickAdd.tsx", "src/hooks/useStapleLibrary.ts"]
+        },
+        {
+          "id": "03-02",
+          "name": "Tap suggestion adds with metadata",
+          "criteria": "Tapping 'Whole milk' suggestion adds it to trip",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "tapping a suggestion adds it with metadata",
+          "files_to_modify": ["src/ui/QuickAdd.tsx"]
+        },
+        {
+          "id": "03-03",
+          "name": "No suggestions for unknown items",
+          "criteria": "Typing 'birthday' shows no suggestion list",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows no suggestions for unknown items",
+          "files_to_modify": ["src/ui/QuickAdd.tsx"]
+        },
+        {
+          "id": "03-04",
+          "name": "Clear suggestions on empty input",
+          "criteria": "Clearing quick-add field removes suggestions",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "clears suggestions when quick-add field is cleared",
+          "files_to_modify": ["src/ui/QuickAdd.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "Section Progress UI",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "Checked count per section",
+          "criteria": "After checking Whole milk, Aisle 3: Dairy shows '1 of 3' progress",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows checked count per store section",
+          "files_to_modify": ["src/ui/AisleSection.tsx"]
+        },
+        {
+          "id": "04-02",
+          "name": "Completion checkmark on full section",
+          "criteria": "After checking all items in Canned Goods, section shows completion checkmark",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows completion checkmark on fully checked section",
+          "files_to_modify": ["src/ui/AisleSection.tsx"]
+        },
+        {
+          "id": "04-03",
+          "name": "Finish Trip on all sections complete",
+          "criteria": "After checking all items in all sections, Finish Trip button is visible",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "reveals finish trip button when all sections are complete",
+          "files_to_modify": ["src/ui/StoreView.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "name": "Trip Summary UI",
+      "steps": [
+        {
+          "id": "05-01",
+          "name": "Summary with purchased count and breakdown",
+          "criteria": "After finishing trip, shows '5 items purchased' and staple counts",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "displays total purchased and item breakdown",
+          "files_to_modify": ["src/ui/TripSummaryView.tsx"]
+        },
+        {
+          "id": "05-02",
+          "name": "Prep time on summary",
+          "criteria": "Summary shows approximately 3 minutes prep time",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "shows preparation time on summary",
+          "files_to_modify": ["src/ui/TripSummaryView.tsx"]
+        },
+        {
+          "id": "05-03",
+          "name": "Store view transition from summary",
+          "criteria": "Tapping 'Switch to Store View' from summary opens store view",
+          "test_file": "tests/acceptance/grocery-list-ui/milestone-1-ui-features.test.tsx",
+          "scenario_name": "switches to store view from trip summary",
+          "files_to_modify": ["src/ui/TripSummaryView.tsx", "src/ui/StoreView.tsx"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/", "src/hooks/"],
+    "test_directories": ["tests/acceptance/grocery-list-ui/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-18T21:00:00Z"
+  }
+}

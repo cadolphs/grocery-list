@@ -8,18 +8,29 @@ import { TripItemRow } from './TripItemRow';
 
 type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
+  readonly onSkipItem?: (name: string) => void;
 };
 
-export const AreaSection = ({ areaGroup }: AreaSectionProps): React.JSX.Element | null => {
-  if (areaGroup.items.length === 0) {
+const formatAreaHeading = (area: string, neededCount: number): string =>
+  `${area} (${neededCount})`;
+
+export const AreaSection = ({ areaGroup, onSkipItem }: AreaSectionProps): React.JSX.Element | null => {
+  const neededItems = areaGroup.items.filter((item) => item.needed);
+
+  if (neededItems.length === 0) {
     return null;
   }
 
   return (
     <View>
-      <Text>{areaGroup.area}</Text>
-      {areaGroup.items.map((item) => (
-        <TripItemRow key={item.id} item={item} mode="home" />
+      <Text>{formatAreaHeading(areaGroup.area, neededItems.length)}</Text>
+      {neededItems.map((item) => (
+        <TripItemRow
+          key={item.id}
+          item={item}
+          mode="home"
+          onSkip={onSkipItem ? () => onSkipItem(item.name) : undefined}
+        />
       ))}
     </View>
   );

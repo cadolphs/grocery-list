@@ -74,17 +74,17 @@ describe('UI-WS-1: Home view shows staples organized by house area', () => {
     );
 
     // Then Carlos sees "Fridge" area with "Whole milk" and "Butter"
-    expect(screen.getByText('Fridge')).toBeTruthy();
+    expect(screen.getByText('Fridge (2)')).toBeTruthy();
     expect(screen.getByText('Whole milk')).toBeTruthy();
     expect(screen.getByText('Butter')).toBeTruthy();
 
     // And Carlos sees "Bathroom" area with "Toilet paper" and "Shampoo"
-    expect(screen.getByText('Bathroom')).toBeTruthy();
+    expect(screen.getByText('Bathroom (2)')).toBeTruthy();
     expect(screen.getByText('Toilet paper')).toBeTruthy();
     expect(screen.getByText('Shampoo')).toBeTruthy();
 
     // And Carlos sees "Garage Pantry" area with "Canned beans"
-    expect(screen.getByText('Garage Pantry')).toBeTruthy();
+    expect(screen.getByText('Garage Pantry (1)')).toBeTruthy();
     expect(screen.getByText('Canned beans')).toBeTruthy();
   });
 });
@@ -133,7 +133,7 @@ describe('UI-WS-3: Toggle switches from home view to store view', () => {
         <AppShell />
       </ServiceProvider>
     );
-    expect(screen.getByText('Fridge')).toBeTruthy();
+    expect(screen.getByText('Fridge (2)')).toBeTruthy();
 
     // When Carlos taps the store view toggle
     fireEvent.press(screen.getByText('Store'));
@@ -142,7 +142,7 @@ describe('UI-WS-3: Toggle switches from home view to store view', () => {
     expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
 
     // And the home view area headings are no longer visible
-    expect(screen.queryByText('Fridge')).toBeNull();
+    expect(screen.queryByText('Fridge (2)')).toBeNull();
   });
 });
 

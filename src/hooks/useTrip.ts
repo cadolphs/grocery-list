@@ -9,6 +9,8 @@ export type UseTripResult = {
   readonly items: TripItem[];
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly checkOff: (name: string) => void;
+  readonly skipItem: (name: string) => void;
+  readonly unskipItem: (name: string) => void;
 };
 
 export const useTrip = (): UseTripResult => {
@@ -34,5 +36,21 @@ export const useTrip = (): UseTripResult => {
     [tripService]
   );
 
-  return { items, addItem, checkOff };
+  const skipItem = useCallback(
+    (name: string): void => {
+      tripService.skipItem(name);
+      setItems(tripService.getItems());
+    },
+    [tripService]
+  );
+
+  const unskipItem = useCallback(
+    (name: string): void => {
+      tripService.unskipItem(name);
+      setItems(tripService.getItems());
+    },
+    [tripService]
+  );
+
+  return { items, addItem, checkOff, skipItem, unskipItem };
 };
