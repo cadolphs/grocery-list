@@ -394,40 +394,39 @@ describe('US-11: Trip Summary', () => {
   // AC: Breakdown by type (staple vs one-off)
   // AC: Prep time displayed
 
-  it.skip('shows trip summary with item breakdown', () => {
+  it('shows trip summary with item breakdown', () => {
     // Given Carlos completed sweep with 19 items and 3 from whiteboard
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // // Simulate 19 sweep items (17 staples + 2 one-offs) and 3 whiteboard items (3 one-offs)
-    // const sweepStaples = Array.from({ length: 17 }, (_, i) => ({
-    //   name: `Staple ${i}`, houseArea: 'Fridge',
-    //   storeLocation: { section: 'General', aisleNumber: 1 },
-    //   itemType: 'staple', source: 'preloaded', needed: true, checked: false,
-    // }));
-    // const sweepOneOffs = Array.from({ length: 2 }, (_, i) => ({
-    //   name: `SweepOneOff ${i}`, houseArea: 'Fridge',
-    //   storeLocation: { section: 'General', aisleNumber: 1 },
-    //   itemType: 'one-off', source: 'quick-add', needed: true, checked: false,
-    // }));
-    // const whiteboardItems = Array.from({ length: 3 }, (_, i) => ({
-    //   name: `Whiteboard ${i}`, houseArea: 'Kitchen Cabinets',
-    //   storeLocation: { section: 'General', aisleNumber: 2 },
-    //   itemType: 'one-off', source: 'whiteboard', needed: true, checked: false,
-    // }));
-    // // Start trip and add items
-    // trip.start(sweepStaples);
-    // sweepOneOffs.forEach(i => trip.addItem(i));
-    // whiteboardItems.forEach(i => trip.addItem(i));
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    // Simulate 19 sweep items (17 staples + 2 one-offs) and 3 whiteboard items (3 one-offs)
+    const sweepStaples = Array.from({ length: 17 }, (_, i) => ({
+      name: `Staple ${i}`, houseArea: 'Fridge' as const,
+      storeLocation: { section: 'General', aisleNumber: 1 },
+    }));
+    const sweepOneOffs: Array<{ name: string; houseArea: 'Fridge'; storeLocation: { section: string; aisleNumber: number }; itemType: 'one-off'; source: 'quick-add' }> = Array.from({ length: 2 }, (_, i) => ({
+      name: `SweepOneOff ${i}`, houseArea: 'Fridge' as const,
+      storeLocation: { section: 'General', aisleNumber: 1 },
+      itemType: 'one-off' as const, source: 'quick-add' as const,
+    }));
+    const whiteboardItems: Array<{ name: string; houseArea: 'Kitchen Cabinets'; storeLocation: { section: string; aisleNumber: number }; itemType: 'one-off'; source: 'whiteboard' }> = Array.from({ length: 3 }, (_, i) => ({
+      name: `Whiteboard ${i}`, houseArea: 'Kitchen Cabinets' as const,
+      storeLocation: { section: 'General', aisleNumber: 2 },
+      itemType: 'one-off' as const, source: 'whiteboard' as const,
+    }));
+    // Start trip and add items
+    trip.start(sweepStaples);
+    sweepOneOffs.forEach(i => trip.addItem(i));
+    whiteboardItems.forEach(i => trip.addItem(i));
 
     // When Carlos views the trip summary
-    // const summary = trip.getSummary();
+    const summary = trip.getSummary();
 
     // Then it shows correct totals and breakdowns
-    // expect(summary.totalItems).toBe(22);
-    // expect(summary.stapleCount).toBe(17);
-    // expect(summary.oneOffCount).toBe(5);
-    // expect(summary.sweepCount).toBe(19);
-    // expect(summary.whiteboardCount).toBe(3);
+    expect(summary.totalItems).toBe(22);
+    expect(summary.stapleCount).toBe(17);
+    expect(summary.oneOffCount).toBe(5);
+    expect(summary.sweepCount).toBe(19);
+    expect(summary.whiteboardCount).toBe(3);
   });
 
   it.skip('displays prep time', () => {

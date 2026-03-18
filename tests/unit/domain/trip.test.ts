@@ -239,6 +239,63 @@ describe('Trip: completeArea and getSweepProgress', () => {
   });
 });
 
+describe('Trip: getSummary', () => {
+  it('returns zero counts for an empty trip', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    const summary = trip.getSummary();
+
+    expect(summary.totalItems).toBe(0);
+    expect(summary.stapleCount).toBe(0);
+    expect(summary.oneOffCount).toBe(0);
+    expect(summary.sweepCount).toBe(0);
+    expect(summary.whiteboardCount).toBe(0);
+  });
+
+  it('counts only needed items in totals', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    trip.skipItem('Butter');
+
+    const summary = trip.getSummary();
+
+    expect(summary.totalItems).toBe(1);
+    expect(summary.stapleCount).toBe(1);
+  });
+
+  it('breaks down items by type and source', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    trip.addItem({
+      name: 'Candles', houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off', source: 'quick-add',
+    });
+    trip.addItem({
+      name: 'Wine', houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Alcohol', aisleNumber: 10 },
+      itemType: 'one-off', source: 'whiteboard',
+    });
+
+    const summary = trip.getSummary();
+
+    expect(summary.totalItems).toBe(3);
+    expect(summary.stapleCount).toBe(1);
+    expect(summary.oneOffCount).toBe(2);
+    expect(summary.sweepCount).toBe(2); // preloaded + quick-add
+    expect(summary.whiteboardCount).toBe(1);
+  });
+});
+
 describe('completeTrip', () => {
   const setupTripWithItems = () => {
     const stapleStorage = createNullStapleStorage();

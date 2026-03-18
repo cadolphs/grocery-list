@@ -13,6 +13,14 @@ import {
 import { TripStorage } from '../ports/trip-storage';
 import { StapleLibrary } from './staple-library';
 
+export type TripSummary = {
+  readonly totalItems: number;
+  readonly stapleCount: number;
+  readonly oneOffCount: number;
+  readonly sweepCount: number;
+  readonly whiteboardCount: number;
+};
+
 export type SweepProgress = {
   readonly completedAreas: readonly HouseArea[];
   readonly completedCount: number;
@@ -38,6 +46,7 @@ export type TripService = {
   readonly unskipItem: (name: string) => void;
   readonly completeArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
+  readonly getSummary: () => TripSummary;
   readonly loadFromStorage: () => void;
   readonly complete: () => void;
 };
@@ -152,6 +161,17 @@ export const createTrip = (storage: TripStorage): TripService => {
         completedCount: completed.length,
         totalAreas: ALL_HOUSE_AREAS.length,
         allAreasComplete: completed.length === ALL_HOUSE_AREAS.length,
+      };
+    },
+
+    getSummary: (): TripSummary => {
+      const neededItems = items.filter((item) => item.needed);
+      return {
+        totalItems: neededItems.length,
+        stapleCount: neededItems.filter((item) => item.itemType === 'staple').length,
+        oneOffCount: neededItems.filter((item) => item.itemType === 'one-off').length,
+        sweepCount: neededItems.filter((item) => item.source !== 'whiteboard').length,
+        whiteboardCount: neededItems.filter((item) => item.source === 'whiteboard').length,
       };
     },
 
