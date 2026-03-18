@@ -331,22 +331,22 @@ describe('US-10: Navigate Store Sections', () => {
     expect(groups[1].section).toBe('Canned Goods');
   });
 
-  it.skip('section progress reflects partial completion', () => {
+  it('section progress reflects partial completion', () => {
     // Given Produce has 3 of 4 items checked
-    // const items = [
-    //   { name: 'Apples', storeLocation: { section: 'Produce', aisleNumber: null }, checked: true },
-    //   { name: 'Bananas', storeLocation: { section: 'Produce', aisleNumber: null }, checked: true },
-    //   { name: 'Oranges', storeLocation: { section: 'Produce', aisleNumber: null }, checked: true },
-    //   { name: 'Avocados', storeLocation: { section: 'Produce', aisleNumber: null }, checked: false },
-    // ];
+    const items = [
+      { name: 'Apples', storeLocation: { section: 'Produce', aisleNumber: null }, checked: true },
+      { name: 'Bananas', storeLocation: { section: 'Produce', aisleNumber: null }, checked: true },
+      { name: 'Oranges', storeLocation: { section: 'Produce', aisleNumber: null }, checked: true },
+      { name: 'Avocados', storeLocation: { section: 'Produce', aisleNumber: null }, checked: false },
+    ];
 
     // When we compute the store grouping
-    // const groups = groupByAisle(items);
-    // const produce = groups.find(g => g.section === 'Produce');
+    const groups = groupByAisle(items as any);
+    const produce = groups.find(g => g.section === 'Produce');
 
     // Then Produce shows 3 of 4
-    // expect(produce?.checkedCount).toBe(3);
-    // expect(produce?.totalCount).toBe(4);
+    expect(produce?.checkedCount).toBe(3);
+    expect(produce?.totalCount).toBe(4);
   });
 
   it.skip('section list shows completion badges', () => {
