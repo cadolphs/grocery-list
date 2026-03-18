@@ -18,7 +18,7 @@
 
 // --- Driving port imports (to be created during DELIVER wave) ---
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createTrip } from '../../../src/domain/trip';
+import { createTrip, completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
 // import { groupByAisle } from '../../../src/domain/item-grouping';
 // import { searchStaples } from '../../../src/domain/staple-library';
@@ -62,25 +62,25 @@ describe('US-07: Skip Staple This Trip', () => {
     expect(bathroom?.neededCount).toBe(1);
   });
 
-  it.skip('skipped staple reappears on next trip', () => {
+  it('skipped staple reappears on next trip', () => {
     // Given Carlos skipped "Shampoo" on the current trip
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip1 = createTrip(tripStorage);
-    // trip1.start(library.listAll());
-    // trip1.skipItem('Shampoo');
-    // completeTrip(trip1, library);
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip1 = createTrip(tripStorage);
+    trip1.start(library.listAll());
+    trip1.skipItem('Shampoo');
+    completeTrip(trip1, library);
 
     // When Carlos starts the next sweep
-    // const trip2 = createTrip(tripStorage);
-    // trip2.start(library.listAll());
+    const trip2 = createTrip(tripStorage);
+    trip2.start(library.listAll());
 
     // Then "Shampoo" appears pre-loaded again with needed = true
-    // const shampoo = trip2.getItems().find(i => i.name === 'Shampoo');
-    // expect(shampoo?.needed).toBe(true);
+    const shampoo = trip2.getItems().find(i => i.name === 'Shampoo');
+    expect(shampoo?.needed).toBe(true);
   });
 
   it.skip('re-adds a skipped staple within the same trip', () => {
