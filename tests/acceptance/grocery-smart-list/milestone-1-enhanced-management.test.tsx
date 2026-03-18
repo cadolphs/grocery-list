@@ -195,26 +195,26 @@ describe('US-08: Navigate Areas During Sweep', () => {
     expect(progress.allAreasComplete).toBe(true);
   });
 
-  it.skip('area item count updates when items are added during sweep', () => {
+  it('area item count updates when items are added during sweep', () => {
     // Given Carlos is sweeping Kitchen Cabinets with 2 pre-loaded staples
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([
-    //   { name: 'Cereal', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Breakfast', aisleNumber: 2 } },
-    //   { name: 'Pasta', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Pasta', aisleNumber: 4 } },
-    // ]);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Cereal', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Breakfast', aisleNumber: 2 } },
+      { name: 'Pasta', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Pasta', aisleNumber: 4 } },
+    ]);
 
     // When Carlos quick-adds 1 new item to Kitchen Cabinets
-    // trip.addItem({
-    //   name: 'Rice', houseArea: 'Kitchen Cabinets',
-    //   storeLocation: { section: 'Rice', aisleNumber: 4 },
-    //   itemType: 'staple', source: 'quick-add',
-    // });
+    trip.addItem({
+      name: 'Rice', houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Rice', aisleNumber: 4 },
+      itemType: 'staple', source: 'quick-add',
+    });
 
     // Then Kitchen Cabinets shows 3 items
-    // const grouped = groupByArea(trip.getItems());
-    // const kc = grouped.find(g => g.area === 'Kitchen Cabinets');
-    // expect(kc?.totalCount).toBe(3);
+    const grouped = groupByArea(trip.getItems());
+    const kc = grouped.find(g => g.area === 'Kitchen Cabinets');
+    expect(kc?.totalCount).toBe(3);
   });
 });
 
