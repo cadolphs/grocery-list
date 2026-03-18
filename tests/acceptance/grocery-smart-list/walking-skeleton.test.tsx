@@ -26,7 +26,8 @@
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 // import { completeTrip } from '../../../src/domain/trip';
-// import { groupByArea, groupByAisle } from '../../../src/domain/item-grouping';
+import { groupByArea } from '../../../src/domain/item-grouping';
+// import { groupByAisle } from '../../../src/domain/item-grouping';
 // import { StapleItem, TripItem, HouseArea } from '../../../src/domain/types';
 //
 // Null adapters for testing:
@@ -172,28 +173,27 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
   // AC: Areas with zero staples are still visible
   // Trace: US-02, AC-1, AC-2, AC-4
 
-  it.skip('pre-loads all staples grouped by house area on new sweep', () => {
+  it('pre-loads all staples grouped by house area on new sweep', () => {
     // Given Carlos has staples in the library
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({ name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } });
+    library.addStaple({ name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
+    library.addStaple({ name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } });
 
     // When Carlos starts a new sweep
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // const staples = library.listAll();
-    // trip.start(staples);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    const staples = library.listAll();
+    trip.start(staples);
 
     // Then items are grouped by house area
-    // const grouped = groupByArea(trip.getItems());
-    // expect(grouped.find(g => g.area === 'Fridge')?.items).toHaveLength(2);
-    // expect(grouped.find(g => g.area === 'Bathroom')?.items).toHaveLength(2);
-    // expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(1);
+    const grouped = groupByArea(trip.getItems());
+    expect(grouped.find(g => g.area === 'Fridge')?.items).toHaveLength(2);
+    expect(grouped.find(g => g.area === 'Bathroom')?.items).toHaveLength(2);
+    expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(1);
   });
 
   it.skip('shows all 5 house areas even when some are empty', () => {
