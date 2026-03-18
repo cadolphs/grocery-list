@@ -258,19 +258,19 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
     expect(suggestions).toHaveLength(0);
   });
 
-  it.skip('search is case-insensitive', () => {
+  it('search is case-insensitive', () => {
     // Given "Greek yogurt" is in the staple library
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
 
     // When Carlos types "GREEK"
-    // const suggestions = library.search('GREEK');
+    const suggestions = library.search('GREEK');
 
     // Then "Greek yogurt" appears
-    // expect(suggestions).toHaveLength(1);
-    // expect(suggestions[0].name).toBe('Greek yogurt');
+    expect(suggestions).toHaveLength(1);
+    expect(suggestions[0].name).toBe('Greek yogurt');
   });
 
   it.skip('multiple suggestions for partial match', () => {
