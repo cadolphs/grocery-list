@@ -244,18 +244,18 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
     expect(suggestions[0].name).toBe('Greek yogurt');
   });
 
-  it.skip('returns no suggestions for unknown item', () => {
+  it('returns no suggestions for unknown item', () => {
     // Given staple library has items but not "Birthday candles"
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
 
     // When Carlos types "birthday candles"
-    // const suggestions = library.search('birthday candles');
+    const suggestions = library.search('birthday candles');
 
     // Then no suggestions appear
-    // expect(suggestions).toHaveLength(0);
+    expect(suggestions).toHaveLength(0);
   });
 
   it.skip('search is case-insensitive', () => {
