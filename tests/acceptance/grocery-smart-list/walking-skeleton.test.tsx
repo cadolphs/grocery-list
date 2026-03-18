@@ -589,30 +589,30 @@ describe('WS-6: Complete Trip with Carryover', () => {
     expect(library.listAll()).toHaveLength(5);
   });
 
-  it.skip('all items bought results in clean next trip with only staples', () => {
+  it('all items bought results in clean next trip with only staples', () => {
     // Given Carlos has checked all items: 3 staples and 2 one-offs
-    // const staples = [
-    //   { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
-    // ];
-    // const stapleStorage = createNullStapleStorage(staples);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
-    // trip.addItem({ name: 'Candles', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Baking', aisleNumber: 12 }, itemType: 'one-off', source: 'quick-add' });
-    // trip.addItem({ name: 'Flowers', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Floral', aisleNumber: null }, itemType: 'one-off', source: 'quick-add' });
-    // // Check all items
-    // trip.getItems().forEach(i => trip.checkOff(i.name));
+    const staples = [
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+    ];
+    const stapleStorage = createNullStapleStorage(staples);
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
+    trip.addItem({ name: 'Candles', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Baking', aisleNumber: 12 }, itemType: 'one-off', source: 'quick-add' });
+    trip.addItem({ name: 'Flowers', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Floral', aisleNumber: null }, itemType: 'one-off', source: 'quick-add' });
+    // Check all items
+    trip.getItems().forEach(i => trip.checkOff(i.name));
 
     // When Carlos finishes the trip
-    // const result = completeTrip(trip, library);
+    const result = completeTrip(trip, library);
 
     // Then the next trip has only the 3 staples
-    // const nextTrip = createTrip(tripStorage);
-    // nextTrip.start(library.listAll(), result.unboughtItems);
-    // expect(nextTrip.getItems()).toHaveLength(3);
-    // expect(nextTrip.getItems().every(i => i.itemType === 'staple')).toBe(true);
+    const nextTrip = createTrip(tripStorage);
+    nextTrip.start(library.listAll(), result.unboughtItems);
+    expect(nextTrip.getItems()).toHaveLength(3);
+    expect(nextTrip.getItems().every(i => i.itemType === 'staple')).toBe(true);
   });
 });
