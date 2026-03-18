@@ -273,22 +273,22 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
     expect(suggestions[0].name).toBe('Greek yogurt');
   });
 
-  it.skip('multiple suggestions for partial match', () => {
+  it('multiple suggestions for partial match', () => {
     // Given multiple items starting with "ch"
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Cheddar cheese', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Chicken breast', houseArea: 'Fridge', storeLocation: { section: 'Meat', aisleNumber: 6 } },
-    //   { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Cheddar cheese', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Chicken breast', houseArea: 'Fridge', storeLocation: { section: 'Meat', aisleNumber: 6 } },
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
 
     // When Carlos types "ch"
-    // const suggestions = library.search('ch');
+    const suggestions = library.search('ch');
 
     // Then both "ch" items appear, but not "Milk"
-    // expect(suggestions).toHaveLength(2);
-    // expect(suggestions.map(s => s.name)).toContain('Cheddar cheese');
-    // expect(suggestions.map(s => s.name)).toContain('Chicken breast');
+    expect(suggestions).toHaveLength(2);
+    expect(suggestions.map(s => s.name)).toContain('Cheddar cheese');
+    expect(suggestions.map(s => s.name)).toContain('Chicken breast');
   });
 
   it.skip('empty input returns no suggestions', () => {
