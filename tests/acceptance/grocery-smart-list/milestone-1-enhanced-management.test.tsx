@@ -179,20 +179,20 @@ describe('US-08: Navigate Areas During Sweep', () => {
     expect(progress.completedCount).toBe(2);
   });
 
-  it.skip('all areas complete triggers whiteboard consolidation', () => {
+  it('all areas complete triggers whiteboard consolidation', () => {
     // Given Carlos has completed all 5 house areas
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([]);
-    // ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']
-    //   .forEach(area => trip.completeArea(area));
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+    ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']
+      .forEach(area => trip.completeArea(area));
 
     // When Carlos checks sweep progress
-    // const progress = trip.getSweepProgress();
+    const progress = trip.getSweepProgress();
 
     // Then all areas are complete and whiteboard step is available
-    // expect(progress.completedCount).toBe(5);
-    // expect(progress.allAreasComplete).toBe(true);
+    expect(progress.completedCount).toBe(5);
+    expect(progress.allAreasComplete).toBe(true);
   });
 
   it.skip('area item count updates when items are added during sweep', () => {
