@@ -464,22 +464,22 @@ describe('WS-5: Check Off Items in Store', () => {
     expect(items.filter(i => i.checked)).toHaveLength(3);
   });
 
-  it.skip('section progress updates on check-off', () => {
-    // Given Carlos is viewing a section with 4 items and 0 checked
-    // const items = [
-    //   { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false },
-    //   { name: 'Butter', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false },
-    //   { name: 'Yogurt', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
-    //   { name: 'Cheese', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
-    // ];
+  it('section progress updates on check-off', () => {
+    // Given Carlos is viewing a section with 4 items — 2 unchecked, 2 checked
+    const items = [
+      { name: 'Milk', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false, needed: true },
+      { name: 'Butter', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false, needed: true },
+      { name: 'Yogurt', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true, needed: true },
+      { name: 'Cheese', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true, needed: true },
+    ];
 
     // When we compute the store view grouping
-    // const groups = groupByAisle(items);
-    // const dairy = groups.find(g => g.section === 'Dairy');
+    const groups = groupByAisle(items);
+    const dairy = groups.find(g => g.section === 'Dairy');
 
     // Then progress shows 2 of 4
-    // expect(dairy?.checkedCount).toBe(2);
-    // expect(dairy?.totalCount).toBe(4);
+    expect(dairy?.checkedCount).toBe(2);
+    expect(dairy?.totalCount).toBe(4);
   });
 });
 
