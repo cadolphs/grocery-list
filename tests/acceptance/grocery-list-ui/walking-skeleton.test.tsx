@@ -216,26 +216,26 @@ describe('UI-WS-6: Completing the trip shows a summary with carryover', () => {
   // AC: Summary shows purchased count and carryover items
   // Trace: US-06 (UI rendering)
 
-  it.skip('displays trip summary with purchased and carryover counts', () => {
+  it('displays trip summary with purchased and carryover counts', () => {
     // Given Carlos has checked off "Whole milk" and "Butter" but not "Canned beans"
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
-    // fireEvent.press(screen.getByText('Whole milk'));
-    // fireEvent.press(screen.getByText('Butter'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
+    fireEvent.press(screen.getByText('Whole milk'));
+    fireEvent.press(screen.getByText('Butter'));
 
     // When Carlos finishes the trip
-    // fireEvent.press(screen.getByText('Finish Trip'));
+    fireEvent.press(screen.getByText('Finish Trip'));
 
     // Then Carlos sees a trip summary showing 2 items purchased
-    // expect(screen.getByText('2 items purchased')).toBeTruthy();
+    expect(screen.getByText('2 items purchased')).toBeTruthy();
 
     // And the summary indicates "Canned beans" will carry over
-    // expect(screen.getByText('Canned beans')).toBeTruthy();
-    // expect(screen.getByText(/carry over/i)).toBeTruthy();
+    expect(screen.getByText('Canned beans')).toBeTruthy();
+    expect(screen.getByText(/carry over/i)).toBeTruthy();
   });
 });
