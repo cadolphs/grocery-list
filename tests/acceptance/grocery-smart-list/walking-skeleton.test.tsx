@@ -28,7 +28,7 @@ import { createTrip } from '../../../src/domain/trip';
 import { completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { groupByAisle } from '../../../src/domain/item-grouping';
-// import { StapleItem, TripItem, HouseArea } from '../../../src/domain/types';
+import { TripItem } from '../../../src/domain/types';
 //
 // Null adapters for testing:
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
@@ -545,26 +545,26 @@ describe('WS-6: Complete Trip with Carryover', () => {
     expect(nextItems).not.toContainEqual(expect.objectContaining({ name: 'Birthday candles' }));
   });
 
-  it.skip('unbought items carry over exactly once without duplicates', () => {
+  it('unbought items carry over exactly once without duplicates', () => {
     // Given "Avocados" was carried over from the previous trip
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // const carryover = [
-    //   { name: 'Avocados', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null }, itemType: 'one-off' },
-    // ];
-    // trip.start([], carryover);
-    // // Carlos did not buy "Avocados" again
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    const carryover: TripItem[] = [
+      { id: 'carry-1', name: 'Avocados', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null }, itemType: 'one-off', stapleId: null, source: 'carryover', needed: true, checked: false, checkedAt: null },
+    ];
+    trip.start([], carryover);
+    // Carlos did not buy "Avocados" again
 
     // When Carlos finishes the trip
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // const result = completeTrip(trip, library);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    const result = completeTrip(trip, library);
 
     // Then "Avocados" appears once on the next trip
-    // const nextTrip = createTrip(tripStorage);
-    // nextTrip.start(library.listAll(), result.unboughtItems);
-    // const avocadoEntries = nextTrip.getItems().filter(i => i.name === 'Avocados');
-    // expect(avocadoEntries).toHaveLength(1);
+    const nextTrip = createTrip(tripStorage);
+    nextTrip.start(library.listAll(), result.unboughtItems);
+    const avocadoEntries = nextTrip.getItems().filter(i => i.name === 'Avocados');
+    expect(avocadoEntries).toHaveLength(1);
   });
 
   it.skip('staple library is unchanged after trip completion', () => {
