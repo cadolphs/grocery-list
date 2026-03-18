@@ -312,24 +312,24 @@ describe('US-10: Store section navigation and progress in UI', () => {
     expect(screen.getByTestId('section-complete-Canned Goods')).toBeTruthy();
   });
 
-  it.skip('reveals finish trip button when all sections are complete', () => {
+  it('reveals finish trip button when all sections are complete', () => {
     // Given Carlos has checked all items in all store sections
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
-    // // Check all items
-    // ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Shampoo', 'Canned beans']
-    //   .forEach(name => fireEvent.press(screen.getByText(name)));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
+    // Check all items
+    ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Shampoo', 'Canned beans']
+      .forEach(name => fireEvent.press(screen.getByText(name)));
 
     // When Carlos views the store view
     // (already viewing)
 
     // Then "Finish Trip" button is visible
-    // expect(screen.getByText('Finish Trip')).toBeTruthy();
+    expect(screen.getByText('Finish Trip')).toBeTruthy();
   });
 });
 
