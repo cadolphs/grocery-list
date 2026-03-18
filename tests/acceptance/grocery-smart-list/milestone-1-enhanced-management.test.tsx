@@ -228,20 +228,20 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
   // AC: Tapping suggestion adds item with all metadata
   // AC: No suggestions when no match exists
 
-  it.skip('suggests known staples by name prefix', () => {
+  it('suggests known staples by name prefix', () => {
     // Given "Greek yogurt" is in the staple library
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Green beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Green beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
 
     // When Carlos types "gre"
-    // const suggestions = library.search('gre');
+    const suggestions = library.search('gre');
 
     // Then matching staples appear
-    // expect(suggestions).toHaveLength(2);
-    // expect(suggestions[0].name).toBe('Greek yogurt');
+    expect(suggestions).toHaveLength(2);
+    expect(suggestions[0].name).toBe('Greek yogurt');
   });
 
   it.skip('returns no suggestions for unknown item', () => {
