@@ -119,3 +119,31 @@ describe('Trip: checkOff persistence', () => {
     expect(loadedButter?.checked).toBe(false);
   });
 });
+
+describe('Trip: loadFromStorage', () => {
+  it('restores trip items including checked state from storage', () => {
+    const tripStorage = createNullTripStorage();
+    const trip1 = createTrip(tripStorage);
+    trip1.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+    ]);
+    trip1.checkOff('Milk');
+
+    const trip2 = createTrip(tripStorage);
+    trip2.loadFromStorage();
+
+    const items = trip2.getItems();
+    expect(items).toHaveLength(2);
+    expect(items.find(i => i.name === 'Milk')?.checked).toBe(true);
+    expect(items.find(i => i.name === 'Bread')?.checked).toBe(false);
+  });
+
+  it('returns empty items when no trip in storage', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.loadFromStorage();
+
+    expect(trip.getItems()).toHaveLength(0);
+  });
+});

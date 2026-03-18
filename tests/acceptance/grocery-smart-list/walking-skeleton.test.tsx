@@ -442,26 +442,26 @@ describe('WS-5: Check Off Items in Store', () => {
     expect(loadedButter?.checked).toBe(false);
   });
 
-  it.skip('check-off state survives simulated app restart', () => {
+  it('check-off state survives simulated app restart', () => {
     // Given Carlos has checked off 3 items
-    // const tripStorage = createNullTripStorage();
-    // const trip1 = createTrip(tripStorage);
-    // trip1.start([
-    //   { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
-    // ]);
-    // trip1.checkOff('Milk');
-    // trip1.checkOff('Eggs');
-    // trip1.checkOff('Bread');
+    const tripStorage = createNullTripStorage();
+    const trip1 = createTrip(tripStorage);
+    trip1.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+    ]);
+    trip1.checkOff('Milk');
+    trip1.checkOff('Eggs');
+    trip1.checkOff('Bread');
 
     // When the app restarts (simulate by creating new trip instance with same storage)
-    // const trip2 = createTrip(tripStorage);
-    // await trip2.loadFromStorage();
+    const trip2 = createTrip(tripStorage);
+    trip2.loadFromStorage();
 
     // Then all 3 items are still checked off
-    // const items = trip2.getItems();
-    // expect(items.filter(i => i.checked)).toHaveLength(3);
+    const items = trip2.getItems();
+    expect(items.filter(i => i.checked)).toHaveLength(3);
   });
 
   it.skip('section progress updates on check-off', () => {

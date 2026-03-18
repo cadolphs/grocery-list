@@ -18,6 +18,7 @@ export type TripService = {
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
   readonly uncheckItem: (name: string) => void;
+  readonly loadFromStorage: () => void;
   readonly complete: () => void;
 };
 
@@ -101,6 +102,15 @@ export const createTrip = (storage: TripStorage): TripService => {
           : item
       );
       persistTrip();
+    },
+
+    loadFromStorage: () => {
+      const savedTrip = storage.loadTrip();
+      if (savedTrip) {
+        tripId = savedTrip.id;
+        createdAt = savedTrip.createdAt;
+        items = [...savedTrip.items];
+      }
     },
 
     complete: () => {
