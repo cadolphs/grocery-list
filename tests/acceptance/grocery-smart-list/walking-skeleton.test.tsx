@@ -139,26 +139,26 @@ describe('WS-1: Add a Staple Item', () => {
     expect(library.listAll()).toHaveLength(1);
   });
 
-  it.skip('allows same item name in different house areas', () => {
+  it('allows same item name in different house areas', () => {
     // Given "Hand soap" exists as a staple in "Bathroom"
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({
-    //   name: 'Hand soap',
-    //   houseArea: 'Bathroom',
-    //   storeLocation: { section: 'Personal Care', aisleNumber: 7 },
-    // });
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({
+      name: 'Hand soap',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    });
 
     // When Carlos adds "Hand soap" to "Kitchen Cabinets"
-    // const result = library.addStaple({
-    //   name: 'Hand soap',
-    //   houseArea: 'Kitchen Cabinets',
-    //   storeLocation: { section: 'Cleaning', aisleNumber: 9 },
-    // });
+    const result = library.addStaple({
+      name: 'Hand soap',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Cleaning', aisleNumber: 9 },
+    });
 
     // Then both entries exist in the staple library
-    // expect(result.success).toBe(true);
-    // expect(library.listAll()).toHaveLength(2);
+    expect(result.success).toBe(true);
+    expect(library.listAll()).toHaveLength(2);
   });
 });
 
