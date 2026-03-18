@@ -9,7 +9,7 @@ import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 
 export const HomeView = (): React.JSX.Element => {
-  const { items, addItem, skipItem } = useTrip();
+  const { items, addItem, skipItem, unskipItem } = useTrip();
   const areaGroups = groupByArea(items);
 
   return (
@@ -20,6 +20,7 @@ export const HomeView = (): React.JSX.Element => {
           key={areaGroup.area}
           areaGroup={areaGroup}
           onSkipItem={skipItem}
+          onUnskipItem={unskipItem}
         />
       ))}
     </View>

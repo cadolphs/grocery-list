@@ -95,22 +95,22 @@ describe('US-07: Skip staple from home screen', () => {
     expect(screen.queryByText('Shampoo')).toBeNull();
   });
 
-  it.skip('re-adds a skipped staple on the home screen', () => {
+  it('re-adds a skipped staple on the home screen', () => {
     // Given Carlos has skipped "Butter" in the "Fridge" area
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByTestId('skip-Butter'));
-    // expect(screen.queryByText('Butter')).toBeNull();
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByTestId('skip-Butter'));
+    expect(screen.queryByText('Butter')).toBeNull();
 
     // When Carlos taps "re-add" on "Butter"
-    // fireEvent.press(screen.getByTestId('readd-Butter'));
+    fireEvent.press(screen.getByTestId('readd-Butter'));
 
     // Then "Butter" reappears in the "Fridge" area
-    // expect(screen.getByText('Butter')).toBeTruthy();
+    expect(screen.getByText('Butter')).toBeTruthy();
   });
 });
 
