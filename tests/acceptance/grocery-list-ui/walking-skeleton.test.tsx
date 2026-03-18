@@ -125,24 +125,24 @@ describe('UI-WS-3: Toggle switches from home view to store view', () => {
   // AC: Home view content disappears when store view is active
   // Trace: US-04 (UI rendering)
 
-  it.skip('hides home view and shows store view on toggle tap', () => {
+  it('hides home view and shows store view on toggle tap', () => {
     // Given Carlos is viewing the home screen
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // expect(screen.getByText('Fridge')).toBeTruthy();
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    expect(screen.getByText('Fridge')).toBeTruthy();
 
     // When Carlos taps the store view toggle
-    // fireEvent.press(screen.getByText('Store'));
+    fireEvent.press(screen.getByText('Store'));
 
     // Then the store view is displayed
-    // expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
+    expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
 
     // And the home view area headings are no longer visible
-    // expect(screen.queryByText('Fridge')).toBeNull();
+    expect(screen.queryByText('Fridge')).toBeNull();
   });
 });
 
