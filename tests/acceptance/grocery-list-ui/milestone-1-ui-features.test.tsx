@@ -142,23 +142,23 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     expect(screen.getByText('1 of 5 areas complete')).toBeTruthy();
   });
 
-  it.skip('navigates to a different area out of order', () => {
+  it('navigates to a different area out of order', () => {
     // Given the suggested next area is "Garage Pantry"
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
 
     // When Carlos taps "Freezer" instead
-    // fireEvent.press(screen.getByText('Freezer'));
+    fireEvent.press(screen.getByText('Freezer (0)'));
 
     // Then the "Freezer" area opens for review
-    // expect(screen.getByTestId('active-area-Freezer')).toBeTruthy();
+    expect(screen.getByTestId('active-area-Freezer')).toBeTruthy();
 
     // And sweep progress is unchanged
-    // expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
+    expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
   });
 
   it.skip('shows whiteboard prompt when all areas complete', () => {

@@ -11,23 +11,23 @@ type AreaSectionProps = {
   readonly onSkipItem?: (name: string) => void;
   readonly onUnskipItem?: (name: string) => void;
   readonly onCompleteArea?: (area: string) => void;
+  readonly onSelectArea?: (area: string) => void;
   readonly isCompleted?: boolean;
+  readonly isActive?: boolean;
 };
 
 const formatAreaHeading = (area: string, neededCount: number): string =>
   `${area} (${neededCount})`;
 
-export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteArea, isCompleted }: AreaSectionProps): React.JSX.Element | null => {
+export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteArea, onSelectArea, isCompleted, isActive }: AreaSectionProps): React.JSX.Element => {
   const neededItems = areaGroup.items.filter((item) => item.needed);
   const skippedItems = areaGroup.items.filter((item) => !item.needed);
 
-  if (neededItems.length === 0 && skippedItems.length === 0) {
-    return null;
-  }
-
   return (
-    <View>
-      <Text>{formatAreaHeading(areaGroup.area, neededItems.length)}</Text>
+    <View testID={isActive ? `active-area-${areaGroup.area}` : undefined}>
+      <Pressable onPress={onSelectArea ? () => onSelectArea(areaGroup.area) : undefined}>
+        <Text>{formatAreaHeading(areaGroup.area, neededItems.length)}</Text>
+      </Pressable>
       {isCompleted && (
         <View testID={`badge-${areaGroup.area}`}>
           <Text>Complete</Text>
