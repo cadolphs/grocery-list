@@ -54,7 +54,8 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
     listByArea: (area: HouseArea): StapleItem[] =>
       storage.loadAll().filter((item) => item.houseArea === area),
 
-    search: (query: string): StapleItem[] => storage.search(query),
+    search: (query: string): StapleItem[] =>
+      query.trim() === '' ? [] : storage.search(query),
 
     remove: (id: string): void => storage.remove(id),
   };

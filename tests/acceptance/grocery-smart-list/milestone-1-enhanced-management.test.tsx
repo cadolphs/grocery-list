@@ -291,17 +291,17 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
     expect(suggestions.map(s => s.name)).toContain('Chicken breast');
   });
 
-  it.skip('empty input returns no suggestions', () => {
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
+  it('empty input returns no suggestions', () => {
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Greek yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
 
     // When the quick-add field is empty
-    // const suggestions = library.search('');
+    const suggestions = library.search('');
 
     // Then no suggestions are shown
-    // expect(suggestions).toHaveLength(0);
+    expect(suggestions).toHaveLength(0);
   });
 });
 
