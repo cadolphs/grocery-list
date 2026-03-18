@@ -294,22 +294,22 @@ describe('US-10: Store section navigation and progress in UI', () => {
     expect(screen.getByText('1 of 3')).toBeTruthy();
   });
 
-  it.skip('shows completion checkmark on fully checked section', () => {
+  it('shows completion checkmark on fully checked section', () => {
     // Given Carlos has checked all items in "Aisle 5: Canned Goods"
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
-    // fireEvent.press(screen.getByText('Canned beans'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
+    fireEvent.press(screen.getByText('Canned beans'));
 
     // When Carlos views the store section list
     // (already viewing)
 
     // Then "Aisle 5: Canned Goods" shows a completion checkmark
-    // expect(screen.getByTestId('section-complete-Canned Goods')).toBeTruthy();
+    expect(screen.getByTestId('section-complete-Canned Goods')).toBeTruthy();
   });
 
   it.skip('reveals finish trip button when all sections are complete', () => {
