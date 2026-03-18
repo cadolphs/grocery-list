@@ -250,35 +250,35 @@ describe('WS-3: Quick-Add Item', () => {
   // AC: One-off items are trip-scoped only
   // Trace: US-03, AC-1, AC-2, AC-4
 
-  it.skip('quick-adds a new staple item with metadata', () => {
+  it('quick-adds a new staple item with metadata', () => {
     // Given Carlos has an active trip
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([]);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
 
     // When Carlos quick-adds "Canned tomatoes" as a staple
-    // library.addStaple({
-    //   name: 'Canned tomatoes',
-    //   houseArea: 'Garage Pantry',
-    //   storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
-    // });
-    // trip.addItem({
-    //   name: 'Canned tomatoes',
-    //   houseArea: 'Garage Pantry',
-    //   storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
-    //   itemType: 'staple',
-    //   source: 'quick-add',
-    // });
+    library.addStaple({
+      name: 'Canned tomatoes',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+    });
+    trip.addItem({
+      name: 'Canned tomatoes',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+      itemType: 'staple',
+      source: 'quick-add',
+    });
 
     // Then item appears on trip AND in staple library
-    // expect(trip.getItems()).toContainEqual(
-    //   expect.objectContaining({ name: 'Canned tomatoes' })
-    // );
-    // expect(library.listAll()).toContainEqual(
-    //   expect.objectContaining({ name: 'Canned tomatoes' })
-    // );
+    expect(trip.getItems()).toContainEqual(
+      expect.objectContaining({ name: 'Canned tomatoes' })
+    );
+    expect(library.listAll()).toContainEqual(
+      expect.objectContaining({ name: 'Canned tomatoes' })
+    );
   });
 
   it.skip('quick-adds a one-off item without adding to staple library', () => {
