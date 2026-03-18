@@ -24,7 +24,8 @@ export const StoreView = (): React.JSX.Element => {
     return <TripSummaryView result={tripResult} />;
   }
 
-  const aisleGroups = groupByAisle(items);
+  const neededItems = items.filter((item) => item.needed);
+  const aisleGroups = groupByAisle(neededItems);
 
   return (
     <View>

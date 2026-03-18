@@ -78,21 +78,21 @@ describe('US-07: Skip staple from home screen', () => {
     expect(screen.getByText('Bathroom (1)')).toBeTruthy();
   });
 
-  it.skip('skipped item does not appear in store view', () => {
+  it('skipped item does not appear in store view', () => {
     // Given Carlos has skipped "Shampoo" on the home screen
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByTestId('skip-Shampoo'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByTestId('skip-Shampoo'));
 
     // When Carlos switches to the store view
-    // fireEvent.press(screen.getByText('Store'));
+    fireEvent.press(screen.getByText('Store'));
 
     // Then "Shampoo" is not visible in any store section
-    // expect(screen.queryByText('Shampoo')).toBeNull();
+    expect(screen.queryByText('Shampoo')).toBeNull();
   });
 
   it.skip('re-adds a skipped staple on the home screen', () => {
