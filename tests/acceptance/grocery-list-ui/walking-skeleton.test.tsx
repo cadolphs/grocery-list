@@ -154,31 +154,30 @@ describe('UI-WS-4: Store view shows items organized by aisle and section', () =>
   // AC: Store view groups items by aisle number ascending, then named sections
   // Trace: US-04 (UI rendering)
 
-  it.skip('displays items under aisle and section headings', () => {
+  it('displays items under aisle and section headings', () => {
     // Given Carlos has an active trip and switches to store view
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
 
     // When the store view renders
     // (already rendered after toggle)
 
     // Then Carlos sees "Aisle 3: Dairy" with "Whole milk" and "Butter"
-    // expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
-    // expect(screen.getByText('Whole milk')).toBeTruthy();
-    // expect(screen.getByText('Butter')).toBeTruthy();
+    expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
+    expect(screen.getByText('Whole milk')).toBeTruthy();
+    expect(screen.getByText('Butter')).toBeTruthy();
 
     // And Carlos sees "Aisle 5: Canned Goods" with "Canned beans"
-    // expect(screen.getByText('Aisle 5: Canned Goods')).toBeTruthy();
-    // expect(screen.getByText('Canned beans')).toBeTruthy();
+    expect(screen.getByText('Aisle 5: Canned Goods')).toBeTruthy();
+    expect(screen.getByText('Canned beans')).toBeTruthy();
 
     // And numbered aisles appear before named-only sections
-    // const allText = screen.toJSON();
-    // (visual ordering verified by render order in snapshot)
+    // (visual ordering verified by render order via groupByAisle sort)
   });
 });
 
