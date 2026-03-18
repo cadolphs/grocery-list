@@ -97,22 +97,22 @@ describe('UI-WS-2: Quick-add places a new item on the trip', () => {
   // AC: Typing a name and submitting adds the item to the visible trip
   // Trace: US-03 (UI rendering)
 
-  it.skip('adds a quick-add item that appears on the home screen', () => {
+  it('adds a quick-add item that appears on the home screen', () => {
     // Given Carlos has an active trip displayed on the home screen
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
 
     // When Carlos types "Greek yogurt" in the quick-add field and submits
-    // const quickAddInput = screen.getByPlaceholderText('Add an item...');
-    // fireEvent.changeText(quickAddInput, 'Greek yogurt');
-    // fireEvent.press(screen.getByText('Add'));
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'Greek yogurt');
+    fireEvent.press(screen.getByText('Add'));
 
     // Then "Greek yogurt" appears on the home screen
-    // expect(screen.getByText('Greek yogurt')).toBeTruthy();
+    expect(screen.getByText('Greek yogurt')).toBeTruthy();
   });
 });
 
