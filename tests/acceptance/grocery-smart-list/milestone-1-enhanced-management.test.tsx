@@ -83,23 +83,23 @@ describe('US-07: Skip Staple This Trip', () => {
     expect(shampoo?.needed).toBe(true);
   });
 
-  it.skip('re-adds a skipped staple within the same trip', () => {
+  it('re-adds a skipped staple within the same trip', () => {
     // Given Carlos skipped "Butter" in "Fridge"
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
-    // trip.skipItem('Butter');
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
+    trip.skipItem('Butter');
 
     // When Carlos re-adds "Butter"
-    // trip.unskipItem('Butter');
+    trip.unskipItem('Butter');
 
     // Then "Butter" is back on the current trip
-    // const butter = trip.getItems().find(i => i.name === 'Butter');
-    // expect(butter?.needed).toBe(true);
+    const butter = trip.getItems().find(i => i.name === 'Butter');
+    expect(butter?.needed).toBe(true);
   });
 
   it.skip('skip multiple staples across different areas', () => {
