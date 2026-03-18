@@ -1,6 +1,6 @@
-// Unit tests for groupByArea pure function
+// Unit tests for item grouping pure functions
 
-import { groupByArea, AreaGroup } from '../../../src/domain/item-grouping';
+import { groupByArea, AreaGroup, groupByAisle, AisleGroup } from '../../../src/domain/item-grouping';
 import { TripItem, HouseArea } from '../../../src/domain/types';
 
 const makeTripItem = (overrides: Partial<TripItem> & { name: string; houseArea: HouseArea }): TripItem => ({
@@ -71,5 +71,71 @@ describe('groupByArea', () => {
     const fridgeGroup = result.find(g => g.area === 'Fridge')!;
     expect(fridgeGroup.neededCount).toBe(2);
     expect(fridgeGroup.totalCount).toBe(3);
+  });
+});
+
+describe('groupByAisle', () => {
+  it('returns empty array for empty items', () => {
+    const result = groupByAisle([]);
+
+    expect(result).toEqual([]);
+  });
+
+  it('groups items by section and aisle number', () => {
+    const items = [
+      makeTripItem({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+      makeTripItem({ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+      makeTripItem({ name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } }),
+    ];
+
+    const result = groupByAisle(items);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].section).toBe('Dairy');
+    expect(result[0].items).toHaveLength(2);
+    expect(result[1].section).toBe('Canned Goods');
+    expect(result[1].items).toHaveLength(1);
+  });
+
+  it('sorts numbered aisles ascending before named sections without aisle numbers', () => {
+    const items = [
+      makeTripItem({ name: 'Deli turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } }),
+      makeTripItem({ name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } }),
+      makeTripItem({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+    ];
+
+    const result = groupByAisle(items);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].aisleNumber).toBe(3);
+    expect(result[0].section).toBe('Dairy');
+    expect(result[1].aisleNumber).toBe(5);
+    expect(result[1].section).toBe('Canned Goods');
+    expect(result[2].aisleNumber).toBeNull();
+    expect(result[2].section).toBe('Deli');
+  });
+
+  it('computes totalCount and checkedCount per group', () => {
+    const items = [
+      makeTripItem({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true }),
+      makeTripItem({ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false }),
+      makeTripItem({ name: 'Yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true }),
+    ];
+
+    const result = groupByAisle(items);
+
+    expect(result[0].totalCount).toBe(3);
+    expect(result[0].checkedCount).toBe(2);
+  });
+
+  it('only includes non-empty groups', () => {
+    const items = [
+      makeTripItem({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+    ];
+
+    const result = groupByAisle(items);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].section).toBe('Dairy');
   });
 });

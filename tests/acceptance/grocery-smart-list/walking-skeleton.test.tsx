@@ -27,7 +27,7 @@ import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 // import { completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
-// import { groupByAisle } from '../../../src/domain/item-grouping';
+import { groupByAisle } from '../../../src/domain/item-grouping';
 // import { StapleItem, TripItem, HouseArea } from '../../../src/domain/types';
 //
 // Null adapters for testing:
@@ -338,28 +338,28 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
   // AC: Check-off state preserved across view switches
   // Trace: US-04, AC-2, AC-3, AC-4, AC-5
 
-  it.skip('groups items by aisle and section in store view', () => {
+  it('groups items by aisle and section in store view', () => {
     // Given Carlos has trip items with aisle metadata
-    // const items = [
-    //   { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
-    //   { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
-    //   { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, itemType: 'staple', checked: false, needed: true },
-    //   { name: 'Deli turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null }, itemType: 'one-off', checked: false, needed: true },
-    // ];
+    const items = [
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
+      { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, itemType: 'staple', checked: false, needed: true },
+      { name: 'Deli turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null }, itemType: 'one-off', checked: false, needed: true },
+    ];
 
     // When Carlos switches to store view
-    // const storeGroups = groupByAisle(items);
+    const storeGroups = groupByAisle(items as any);
 
     // Then items are grouped by aisle/section with numbered aisles first
-    // expect(storeGroups[0].aisleNumber).toBe(3);
-    // expect(storeGroups[0].section).toBe('Dairy');
-    // expect(storeGroups[0].items).toHaveLength(2);
-    // expect(storeGroups[1].aisleNumber).toBe(5);
-    // expect(storeGroups[1].section).toBe('Canned Goods');
-    // expect(storeGroups[1].items).toHaveLength(1);
-    // expect(storeGroups[2].aisleNumber).toBeNull();
-    // expect(storeGroups[2].section).toBe('Deli');
-    // expect(storeGroups[2].items).toHaveLength(1);
+    expect(storeGroups[0].aisleNumber).toBe(3);
+    expect(storeGroups[0].section).toBe('Dairy');
+    expect(storeGroups[0].items).toHaveLength(2);
+    expect(storeGroups[1].aisleNumber).toBe(5);
+    expect(storeGroups[1].section).toBe('Canned Goods');
+    expect(storeGroups[1].items).toHaveLength(1);
+    expect(storeGroups[2].aisleNumber).toBeNull();
+    expect(storeGroups[2].section).toBe('Deli');
+    expect(storeGroups[2].items).toHaveLength(1);
   });
 
   it.skip('excludes empty sections from store view', () => {
