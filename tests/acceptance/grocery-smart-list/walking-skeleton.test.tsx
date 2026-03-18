@@ -567,28 +567,26 @@ describe('WS-6: Complete Trip with Carryover', () => {
     expect(avocadoEntries).toHaveLength(1);
   });
 
-  it.skip('staple library is unchanged after trip completion', () => {
+  it('staple library is unchanged after trip completion', () => {
     // Given Carlos has 5 staples in the library
-    // const initialStaples = [
-    //   { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-    // ];
-    // const stapleStorage = createNullStapleStorage(initialStaples);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
-    // trip.checkOff('Milk');
-    // trip.checkOff('Eggs');
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({ name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({ name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } });
+    library.addStaple({ name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
+    library.addStaple({ name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } });
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
+    trip.checkOff('Milk');
+    trip.checkOff('Eggs');
 
     // When Carlos finishes the trip
-    // completeTrip(trip, library);
+    completeTrip(trip, library);
 
     // Then the staple library still contains exactly 5 items
-    // expect(library.listAll()).toHaveLength(5);
+    expect(library.listAll()).toHaveLength(5);
   });
 
   it.skip('all items bought results in clean next trip with only staples', () => {
