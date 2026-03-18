@@ -376,19 +376,19 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
     expect(storeGroups).toHaveLength(2);
   });
 
-  it.skip('preserves check-off state across view toggle', () => {
+  it('preserves check-off state across view toggle', () => {
     // Given Carlos has checked off "Whole milk" in store view
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([{ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
-    // trip.checkOff('Whole milk');
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([{ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
+    trip.checkOff('Whole milk');
 
     // When Carlos views the items (toggle does not change data, only grouping)
-    // const items = trip.getItems();
+    const items = trip.getItems();
 
     // Then "Whole milk" is still checked off
-    // const milk = items.find(i => i.name === 'Whole milk');
-    // expect(milk?.checked).toBe(true);
+    const milk = items.find(i => i.name === 'Whole milk');
+    expect(milk?.checked).toBe(true);
   });
 });
 
