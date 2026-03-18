@@ -159,24 +159,24 @@ describe('US-08: Navigate Areas During Sweep', () => {
     expect(progress.totalAreas).toBe(5);
   });
 
-  it.skip('allows navigating areas out of order', () => {
+  it('allows navigating areas out of order', () => {
     // Given trip with items in multiple areas
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } },
-    // ]);
-    // trip.completeArea('Bathroom');
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      { name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } },
+    ]);
+    trip.completeArea('Bathroom');
 
     // When Carlos jumps to Freezer (skipping suggested order)
-    // trip.completeArea('Freezer');
+    trip.completeArea('Freezer');
 
     // Then both areas are complete, no progress lost
-    // const progress = trip.getSweepProgress();
-    // expect(progress.completedAreas).toContain('Bathroom');
-    // expect(progress.completedAreas).toContain('Freezer');
-    // expect(progress.completedCount).toBe(2);
+    const progress = trip.getSweepProgress();
+    expect(progress.completedAreas).toContain('Bathroom');
+    expect(progress.completedAreas).toContain('Freezer');
+    expect(progress.completedCount).toBe(2);
   });
 
   it.skip('all areas complete triggers whiteboard consolidation', () => {
