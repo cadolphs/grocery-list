@@ -368,19 +368,19 @@ describe('US-10: Navigate Store Sections', () => {
     expect(incomplete[0].section).toBe('Deli');
   });
 
-  it.skip('all sections complete enables trip completion', () => {
+  it('all sections complete enables trip completion', () => {
     // Given all sections are complete
-    // const items = [
-    //   { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
-    //   { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: true },
-    // ];
-    // const groups = groupByAisle(items);
+    const items = [
+      { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
+      { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: true },
+    ];
+    const groups = groupByAisle(items as any);
 
     // When we check if all sections are complete
-    // const allComplete = groups.every(g => g.checkedCount === g.totalCount);
+    const allComplete = groups.every(g => g.checkedCount === g.totalCount);
 
     // Then trip completion is available
-    // expect(allComplete).toBe(true);
+    expect(allComplete).toBe(true);
   });
 });
 
