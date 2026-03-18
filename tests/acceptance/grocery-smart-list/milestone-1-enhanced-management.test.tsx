@@ -20,7 +20,7 @@
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip, completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
-// import { groupByAisle } from '../../../src/domain/item-grouping';
+import { groupByAisle } from '../../../src/domain/item-grouping';
 // import { searchStaples } from '../../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
@@ -314,21 +314,21 @@ describe('US-10: Navigate Store Sections', () => {
   // AC: "Move on" allows leaving a section with unchecked items
   // AC: Section list shows completion status
 
-  it.skip('determines next section in store order', () => {
+  it('determines next section in store order', () => {
     // Given items across multiple store sections
-    // const items = [
-    //   { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
-    //   { name: 'Butter', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
-    //   { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: false },
-    // ];
-    // const groups = groupByAisle(items);
+    const items = [
+      { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
+      { name: 'Butter', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
+      { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: false },
+    ];
+    const groups = groupByAisle(items as any);
 
     // When all Dairy items are checked
-    // const dairyComplete = groups[0].checkedCount === groups[0].totalCount;
+    const dairyComplete = groups[0].checkedCount === groups[0].totalCount;
 
     // Then the next section is Canned Goods
-    // expect(dairyComplete).toBe(true);
-    // expect(groups[1].section).toBe('Canned Goods');
+    expect(dairyComplete).toBe(true);
+    expect(groups[1].section).toBe('Canned Goods');
   });
 
   it.skip('section progress reflects partial completion', () => {
