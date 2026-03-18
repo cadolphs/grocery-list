@@ -281,28 +281,28 @@ describe('WS-3: Quick-Add Item', () => {
     );
   });
 
-  it.skip('quick-adds a one-off item without adding to staple library', () => {
+  it('quick-adds a one-off item without adding to staple library', () => {
     // Given Carlos has an active trip
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([]);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
 
     // When Carlos quick-adds "Deli turkey" as a one-off
-    // trip.addItem({
-    //   name: 'Deli turkey',
-    //   houseArea: 'Fridge',
-    //   storeLocation: { section: 'Deli', aisleNumber: null },
-    //   itemType: 'one-off',
-    //   source: 'quick-add',
-    // });
+    trip.addItem({
+      name: 'Deli turkey',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Deli', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
 
     // Then item is on the trip but not in the staple library
-    // expect(trip.getItems()).toContainEqual(
-    //   expect.objectContaining({ name: 'Deli turkey', itemType: 'one-off' })
-    // );
-    // expect(library.listAll()).toHaveLength(0);
+    expect(trip.getItems()).toContainEqual(
+      expect.objectContaining({ name: 'Deli turkey', itemType: 'one-off' })
+    );
+    expect(library.listAll()).toHaveLength(0);
   });
 
   it.skip('rejects quick-add without required area', () => {
