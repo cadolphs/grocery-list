@@ -247,24 +247,24 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     });
   });
 
-  it.skip('clears suggestions when quick-add field is cleared', () => {
+  it('clears suggestions when quick-add field is cleared', async () => {
     // Given suggestions are visible for "who"
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // const quickAddInput = screen.getByPlaceholderText('Add an item...');
-    // fireEvent.changeText(quickAddInput, 'who');
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'who');
 
     // When Carlos clears the quick-add field
-    // fireEvent.changeText(quickAddInput, '');
+    fireEvent.changeText(quickAddInput, '');
 
     // Then no suggestions are visible
-    // await waitFor(() => {
-    //   expect(screen.queryByTestId('suggestion-list')).toBeNull();
-    // });
+    await waitFor(() => {
+      expect(screen.queryByTestId('suggestion-list')).toBeNull();
+    });
   });
 });
 
@@ -277,21 +277,21 @@ describe('US-10: Store section navigation and progress in UI', () => {
   // AC: Completed sections show a checkmark badge
   // AC: All sections complete reveals Finish Trip button
 
-  it.skip('shows checked count per store section', () => {
+  it('shows checked count per store section', () => {
     // Given Carlos is viewing the store view
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
 
     // And Carlos has checked off "Whole milk" in "Aisle 3: Dairy"
-    // fireEvent.press(screen.getByText('Whole milk'));
+    fireEvent.press(screen.getByText('Whole milk'));
 
     // Then "Aisle 3: Dairy" shows "1 of 3" progress
-    // expect(screen.getByText('1 of 3')).toBeTruthy();
+    expect(screen.getByText('1 of 3')).toBeTruthy();
   });
 
   it.skip('shows completion checkmark on fully checked section', () => {

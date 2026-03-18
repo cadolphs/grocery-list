@@ -16,9 +16,19 @@ const formatAisleHeading = (aisleGroup: AisleGroup): string =>
     ? `Aisle ${aisleGroup.aisleNumber}: ${aisleGroup.section}`
     : aisleGroup.section;
 
+const formatProgress = (aisleGroup: AisleGroup): string =>
+  `${aisleGroup.checkedCount} of ${aisleGroup.totalCount}`;
+
+const isSectionComplete = (aisleGroup: AisleGroup): boolean =>
+  aisleGroup.checkedCount === aisleGroup.totalCount;
+
 export const AisleSection = ({ aisleGroup, onItemPress }: AisleSectionProps): React.JSX.Element => (
   <View>
     <Text>{formatAisleHeading(aisleGroup)}</Text>
+    <Text>{formatProgress(aisleGroup)}</Text>
+    {isSectionComplete(aisleGroup) && (
+      <Text testID={`section-complete-${aisleGroup.section}`}>✓</Text>
+    )}
     {aisleGroup.items.map((item) => (
       <TripItemRow
         key={item.id}
