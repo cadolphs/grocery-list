@@ -365,25 +365,25 @@ describe('US-11: Trip summary screen in UI', () => {
     expect(screen.getByText(/5 staples/)).toBeTruthy();
   });
 
-  it.skip('shows preparation time on summary', () => {
+  it('shows preparation time on summary', () => {
     // Given Carlos started the sweep 3 minutes ago
-    // const { library, tripService } = createTestServices();
-    // tripService.setStartTime(new Date(Date.now() - 3 * 60 * 1000));
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // // Complete all items and finish trip
-    // fireEvent.press(screen.getByText('Store'));
-    // tripService.getItems().forEach(i => tripService.checkOff(i.name));
-    // fireEvent.press(screen.getByText('Finish Trip'));
+    const { library, tripService } = createTestServices();
+    tripService.setStartTime(new Date(Date.now() - 3 * 60 * 1000));
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    // Complete all items and finish trip
+    fireEvent.press(screen.getByText('Store'));
+    tripService.getItems().forEach(i => tripService.checkOff(i.name));
+    fireEvent.press(screen.getByText('Finish Trip'));
 
     // When the trip summary screen appears
     // (already rendered)
 
     // Then Carlos sees approximately "3 minutes" prep time
-    // expect(screen.getByText(/3 min/)).toBeTruthy();
+    expect(screen.getByText(/3 min/)).toBeTruthy();
   });
 
   it.skip('switches to store view from trip summary', () => {
