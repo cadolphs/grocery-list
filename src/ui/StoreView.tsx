@@ -8,7 +8,7 @@ import { groupByAisle } from '../domain/item-grouping';
 import { AisleSection } from './AisleSection';
 
 export const StoreView = (): React.JSX.Element => {
-  const { items } = useTrip();
+  const { items, checkOff } = useTrip();
   const aisleGroups = groupByAisle(items);
 
   return (
@@ -17,6 +17,7 @@ export const StoreView = (): React.JSX.Element => {
         <AisleSection
           key={`${aisleGroup.aisleNumber}-${aisleGroup.section}`}
           aisleGroup={aisleGroup}
+          onItemPress={checkOff}
         />
       ))}
     </View>

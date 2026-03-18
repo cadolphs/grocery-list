@@ -189,21 +189,21 @@ describe('UI-WS-5: Tapping an item in store view marks it as in the cart', () =>
   // AC: Tapping an item toggles its checked state visually
   // Trace: US-05 (UI rendering)
 
-  it.skip('shows item as checked after tap', () => {
+  it('shows item as checked after tap', () => {
     // Given Carlos is viewing the store view
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
 
     // When Carlos taps "Whole milk" to check it off
-    // fireEvent.press(screen.getByText('Whole milk'));
+    fireEvent.press(screen.getByText('Whole milk'));
 
     // Then "Whole milk" appears as checked off (strikethrough or checkmark visible)
-    // expect(screen.getByTestId('checked-Whole milk')).toBeTruthy();
+    expect(screen.getByTestId('checked-Whole milk')).toBeTruthy();
   });
 });
 

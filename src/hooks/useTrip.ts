@@ -8,6 +8,7 @@ import { useServices } from '../ui/ServiceProvider';
 export type UseTripResult = {
   readonly items: TripItem[];
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
+  readonly checkOff: (name: string) => void;
 };
 
 export const useTrip = (): UseTripResult => {
@@ -25,5 +26,13 @@ export const useTrip = (): UseTripResult => {
     [tripService]
   );
 
-  return { items, addItem };
+  const checkOff = useCallback(
+    (name: string): void => {
+      tripService.checkOff(name);
+      setItems(tripService.getItems());
+    },
+    [tripService]
+  );
+
+  return { items, addItem, checkOff };
 };

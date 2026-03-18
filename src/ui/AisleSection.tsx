@@ -8,6 +8,7 @@ import { TripItemRow } from './TripItemRow';
 
 type AisleSectionProps = {
   readonly aisleGroup: AisleGroup;
+  readonly onItemPress?: (name: string) => void;
 };
 
 const formatAisleHeading = (aisleGroup: AisleGroup): string =>
@@ -15,11 +16,16 @@ const formatAisleHeading = (aisleGroup: AisleGroup): string =>
     ? `Aisle ${aisleGroup.aisleNumber}: ${aisleGroup.section}`
     : aisleGroup.section;
 
-export const AisleSection = ({ aisleGroup }: AisleSectionProps): React.JSX.Element => (
+export const AisleSection = ({ aisleGroup, onItemPress }: AisleSectionProps): React.JSX.Element => (
   <View>
     <Text>{formatAisleHeading(aisleGroup)}</Text>
     {aisleGroup.items.map((item) => (
-      <TripItemRow key={item.id} item={item} mode="store" />
+      <TripItemRow
+        key={item.id}
+        item={item}
+        mode="store"
+        onPress={onItemPress ? () => onItemPress(item.name) : undefined}
+      />
     ))}
   </View>
 );
