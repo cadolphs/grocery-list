@@ -4,6 +4,7 @@
 import {
   TripItem,
   AddTripItemRequest,
+  AddTripItemResult,
   StapleItem,
   HouseArea,
   StoreLocation,
@@ -12,7 +13,7 @@ import { TripStorage } from '../ports/trip-storage';
 
 export type TripService = {
   readonly start: (staples: StapleItem[], carryover?: TripItem[]) => void;
-  readonly addItem: (request: AddTripItemRequest) => void;
+  readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
   readonly uncheckItem: (name: string) => void;
@@ -44,7 +45,11 @@ export const createTrip = (storage: TripStorage): TripService => {
       items = [...stapleItems, ...carryover];
     },
 
-    addItem: (request: AddTripItemRequest) => {
+    addItem: (request: AddTripItemRequest): AddTripItemResult => {
+      if (!request.houseArea || request.houseArea.trim() === '') {
+        return { success: false, error: 'area is required' };
+      }
+
       const tripItem: TripItem = {
         id: generateTripItemId(),
         name: request.name,
@@ -58,6 +63,7 @@ export const createTrip = (storage: TripStorage): TripService => {
         checkedAt: null,
       };
       items = [...items, tripItem];
+      return { success: true };
     },
 
     getItems: () => [...items],

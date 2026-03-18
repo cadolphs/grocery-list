@@ -58,6 +58,10 @@ export type AddTripItemRequest = {
   readonly source: ItemSource;
 };
 
+export type AddTripItemResult =
+  | { readonly success: true }
+  | { readonly success: false; readonly error: string };
+
 export type Trip = {
   readonly id: string;
   readonly items: TripItem[];

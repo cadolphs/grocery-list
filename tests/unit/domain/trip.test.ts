@@ -49,4 +49,41 @@ describe('Trip: addItem', () => {
     const items = trip.getItems();
     expect(items[0].stapleId).toBeNull();
   });
+
+  it('returns success result when adding a valid item', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    const result = trip.addItem({
+      name: 'Canned beans',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+      itemType: 'staple',
+      source: 'quick-add',
+    });
+
+    expect(result.success).toBe(true);
+    expect(trip.getItems()).toHaveLength(1);
+  });
+
+  it('rejects item with empty houseArea', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    const result = trip.addItem({
+      name: 'Something',
+      houseArea: '' as any,
+      storeLocation: { section: 'General', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('area is required');
+    }
+    expect(trip.getItems()).toHaveLength(0);
+  });
 });

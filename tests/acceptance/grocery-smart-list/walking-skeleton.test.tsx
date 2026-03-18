@@ -305,25 +305,25 @@ describe('WS-3: Quick-Add Item', () => {
     expect(library.listAll()).toHaveLength(0);
   });
 
-  it.skip('rejects quick-add without required area', () => {
+  it('rejects quick-add without required area', () => {
     // Given Carlos has an active trip
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([]);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
 
     // When Carlos tries to quick-add without specifying an area
-    // const result = trip.addItem({
-    //   name: 'Something',
-    //   houseArea: '' as any,
-    //   storeLocation: { section: 'General', aisleNumber: null },
-    //   itemType: 'one-off',
-    //   source: 'quick-add',
-    // });
+    const result = trip.addItem({
+      name: 'Something',
+      houseArea: '' as any,
+      storeLocation: { section: 'General', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
 
     // Then the item is not added
-    // expect(result.success).toBe(false);
-    // expect(result.error).toContain('area is required');
-    // expect(trip.getItems()).toHaveLength(0);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('area is required');
+    expect(trip.getItems()).toHaveLength(0);
   });
 });
 
