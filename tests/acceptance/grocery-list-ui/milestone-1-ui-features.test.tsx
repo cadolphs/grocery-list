@@ -386,22 +386,22 @@ describe('US-11: Trip summary screen in UI', () => {
     expect(screen.getByText(/3 min/)).toBeTruthy();
   });
 
-  it.skip('switches to store view from trip summary', () => {
+  it('switches to store view from trip summary', () => {
     // Given the trip summary is displayed
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
-    // tripService.getItems().forEach(i => tripService.checkOff(i.name));
-    // fireEvent.press(screen.getByText('Finish Trip'));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
+    tripService.getItems().forEach(i => tripService.checkOff(i.name));
+    fireEvent.press(screen.getByText('Finish Trip'));
 
     // When Carlos taps "Switch to Store View"
-    // fireEvent.press(screen.getByText('Switch to Store View'));
+    fireEvent.press(screen.getByText('Switch to Store View'));
 
     // Then the store view opens with all trip items grouped by aisle
-    // expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
+    expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
   });
 });
