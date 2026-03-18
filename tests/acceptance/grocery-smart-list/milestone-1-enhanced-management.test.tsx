@@ -102,31 +102,31 @@ describe('US-07: Skip Staple This Trip', () => {
     expect(butter?.needed).toBe(true);
   });
 
-  it.skip('skip multiple staples across different areas', () => {
+  it('skip multiple staples across different areas', () => {
     // Given Carlos has staples in Bathroom and Fridge
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    //   { name: 'TP', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-    //   { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Cheese', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      { name: 'TP', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Cheese', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
 
     // When Carlos skips 1 in Bathroom and 2 in Fridge
-    // trip.skipItem('Shampoo');
-    // trip.skipItem('Butter');
-    // trip.skipItem('Eggs');
+    trip.skipItem('Shampoo');
+    trip.skipItem('Butter');
+    trip.skipItem('Eggs');
 
     // Then area counts reflect skips
-    // const grouped = groupByArea(trip.getItems());
-    // expect(grouped.find(g => g.area === 'Bathroom')?.neededCount).toBe(2);
-    // expect(grouped.find(g => g.area === 'Fridge')?.neededCount).toBe(2);
+    const grouped = groupByArea(trip.getItems());
+    expect(grouped.find(g => g.area === 'Bathroom')?.neededCount).toBe(2);
+    expect(grouped.find(g => g.area === 'Fridge')?.neededCount).toBe(2);
   });
 });
 
