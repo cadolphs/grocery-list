@@ -123,23 +123,23 @@ describe('US-08: Area completion and sweep progress in UI', () => {
   // AC: Progress bar reflects completed area count
   // AC: All areas complete shows whiteboard prompt
 
-  it.skip('shows completion badge and progress bar after marking area done', () => {
+  it('shows completion badge and progress bar after marking area done', () => {
     // Given Carlos is sweeping the "Bathroom" area
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
 
     // When Carlos marks "Bathroom" as done
-    // fireEvent.press(screen.getByTestId('complete-Bathroom'));
+    fireEvent.press(screen.getByTestId('complete-Bathroom'));
 
     // Then "Bathroom" shows a completion badge
-    // expect(screen.getByTestId('badge-Bathroom')).toBeTruthy();
+    expect(screen.getByTestId('badge-Bathroom')).toBeTruthy();
 
     // And the sweep progress bar shows "1 of 5 areas complete"
-    // expect(screen.getByText('1 of 5 areas complete')).toBeTruthy();
+    expect(screen.getByText('1 of 5 areas complete')).toBeTruthy();
   });
 
   it.skip('navigates to a different area out of order', () => {

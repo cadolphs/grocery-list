@@ -2,7 +2,8 @@
 // Reads items from context and exposes them as reactive state
 
 import { useState, useCallback } from 'react';
-import { TripItem, AddTripItemRequest, AddTripItemResult } from '../domain/types';
+import { TripItem, AddTripItemRequest, AddTripItemResult, HouseArea } from '../domain/types';
+import { SweepProgress } from '../domain/trip';
 import { useServices } from '../ui/ServiceProvider';
 
 export type UseTripResult = {
@@ -11,11 +12,14 @@ export type UseTripResult = {
   readonly checkOff: (name: string) => void;
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
+  readonly completeArea: (area: HouseArea) => void;
+  readonly sweepProgress: SweepProgress;
 };
 
 export const useTrip = (): UseTripResult => {
   const { tripService } = useServices();
   const [items, setItems] = useState<TripItem[]>(() => tripService.getItems());
+  const [sweepProgress, setSweepProgress] = useState<SweepProgress>(() => tripService.getSweepProgress());
 
   const addItem = useCallback(
     (request: AddTripItemRequest): AddTripItemResult => {
@@ -52,5 +56,13 @@ export const useTrip = (): UseTripResult => {
     [tripService]
   );
 
-  return { items, addItem, checkOff, skipItem, unskipItem };
+  const completeArea = useCallback(
+    (area: HouseArea): void => {
+      tripService.completeArea(area);
+      setSweepProgress(tripService.getSweepProgress());
+    },
+    [tripService]
+  );
+
+  return { items, addItem, checkOff, skipItem, unskipItem, completeArea, sweepProgress };
 };

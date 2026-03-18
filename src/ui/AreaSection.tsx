@@ -10,12 +10,14 @@ type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
   readonly onSkipItem?: (name: string) => void;
   readonly onUnskipItem?: (name: string) => void;
+  readonly onCompleteArea?: (area: string) => void;
+  readonly isCompleted?: boolean;
 };
 
 const formatAreaHeading = (area: string, neededCount: number): string =>
   `${area} (${neededCount})`;
 
-export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem }: AreaSectionProps): React.JSX.Element | null => {
+export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteArea, isCompleted }: AreaSectionProps): React.JSX.Element | null => {
   const neededItems = areaGroup.items.filter((item) => item.needed);
   const skippedItems = areaGroup.items.filter((item) => !item.needed);
 
@@ -26,6 +28,11 @@ export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem }: AreaSection
   return (
     <View>
       <Text>{formatAreaHeading(areaGroup.area, neededItems.length)}</Text>
+      {isCompleted && (
+        <View testID={`badge-${areaGroup.area}`}>
+          <Text>Complete</Text>
+        </View>
+      )}
       {neededItems.map((item) => (
         <TripItemRow
           key={item.id}
@@ -44,6 +51,14 @@ export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem }: AreaSection
           </Pressable>
         </View>
       ))}
+      {onCompleteArea && !isCompleted && (
+        <Pressable
+          testID={`complete-${areaGroup.area}`}
+          onPress={() => onCompleteArea(areaGroup.area)}
+        >
+          <Text>Done</Text>
+        </Pressable>
+      )}
     </View>
   );
 };
