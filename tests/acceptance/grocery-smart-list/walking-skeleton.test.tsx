@@ -216,27 +216,27 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(0);
   });
 
-  it.skip('newly added staple appears on next sweep', () => {
+  it('newly added staple appears on next sweep', () => {
     // Given Carlos adds "Oat milk" as a staple during a trip
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({
-    //   name: 'Oat milk',
-    //   houseArea: 'Fridge',
-    //   storeLocation: { section: 'Dairy', aisleNumber: 3 },
-    // });
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({
+      name: 'Oat milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
 
     // When Carlos starts the next sweep
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
 
     // Then "Oat milk" appears pre-loaded in "Fridge"
-    // const fridgeItems = groupByArea(trip.getItems())
-    //   .find(g => g.area === 'Fridge')?.items;
-    // expect(fridgeItems).toContainEqual(
-    //   expect.objectContaining({ name: 'Oat milk' })
-    // );
+    const fridgeItems = groupByArea(trip.getItems())
+      .find(g => g.area === 'Fridge')?.items;
+    expect(fridgeItems).toContainEqual(
+      expect.objectContaining({ name: 'Oat milk' })
+    );
   });
 });
 
