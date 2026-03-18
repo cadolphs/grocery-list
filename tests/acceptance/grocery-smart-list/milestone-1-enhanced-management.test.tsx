@@ -446,34 +446,34 @@ describe('US-11: Trip Summary', () => {
     expect(summary.prepTimeMinutes).toBeLessThanOrEqual(5);
   });
 
-  it.skip('summary reflects skipped staples', () => {
+  it('summary reflects skipped staples', () => {
     // Given Carlos started with 21 staples and skipped 3, added 2 one-offs
-    // const staples = Array.from({ length: 21 }, (_, i) => ({
-    //   name: `Staple ${i}`, houseArea: 'Fridge',
-    //   storeLocation: { section: 'General', aisleNumber: 1 },
-    // }));
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(staples);
-    // trip.skipItem('Staple 0');
-    // trip.skipItem('Staple 1');
-    // trip.skipItem('Staple 2');
-    // trip.addItem({
-    //   name: 'OneOff A', houseArea: 'Fridge',
-    //   storeLocation: { section: 'General', aisleNumber: 1 },
-    //   itemType: 'one-off', source: 'quick-add',
-    // });
-    // trip.addItem({
-    //   name: 'OneOff B', houseArea: 'Fridge',
-    //   storeLocation: { section: 'General', aisleNumber: 1 },
-    //   itemType: 'one-off', source: 'quick-add',
-    // });
+    const staples = Array.from({ length: 21 }, (_, i) => ({
+      name: `Staple ${i}`, houseArea: 'Fridge' as const,
+      storeLocation: { section: 'General', aisleNumber: 1 },
+    }));
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(staples);
+    trip.skipItem('Staple 0');
+    trip.skipItem('Staple 1');
+    trip.skipItem('Staple 2');
+    trip.addItem({
+      name: 'OneOff A', houseArea: 'Fridge',
+      storeLocation: { section: 'General', aisleNumber: 1 },
+      itemType: 'one-off', source: 'quick-add',
+    });
+    trip.addItem({
+      name: 'OneOff B', houseArea: 'Fridge',
+      storeLocation: { section: 'General', aisleNumber: 1 },
+      itemType: 'one-off', source: 'quick-add',
+    });
 
     // When Carlos views the summary (only needed items count)
-    // const summary = trip.getSummary();
+    const summary = trip.getSummary();
 
     // Then 20 total items (18 staples + 2 one-offs)
-    // expect(summary.totalItems).toBe(20);
+    expect(summary.totalItems).toBe(20);
   });
 
   it.skip('summary offers store view transition', () => {
