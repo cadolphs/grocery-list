@@ -2,6 +2,7 @@
 // Pure domain logic, no IO imports
 
 import {
+  Trip,
   TripItem,
   AddTripItemRequest,
   AddTripItemResult,
@@ -36,8 +37,24 @@ const stapleToTripItem = (staple: StapleItem): TripItem => ({
   checkedAt: null,
 });
 
+const generateTripId = (): string =>
+  `trip-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const buildTrip = (tripId: string, items: TripItem[], createdAt: string): Trip => ({
+  id: tripId,
+  items: [...items],
+  status: 'active',
+  createdAt,
+});
+
 export const createTrip = (storage: TripStorage): TripService => {
   let items: TripItem[] = [];
+  let tripId: string = generateTripId();
+  let createdAt: string = new Date().toISOString();
+
+  const persistTrip = (): void => {
+    storage.saveTrip(buildTrip(tripId, items, createdAt));
+  };
 
   return {
     start: (staples: StapleItem[], carryover: TripItem[] = []) => {
@@ -74,6 +91,7 @@ export const createTrip = (storage: TripStorage): TripService => {
           ? { ...item, checked: true, checkedAt: new Date().toISOString() }
           : item
       );
+      persistTrip();
     },
 
     uncheckItem: (name: string) => {

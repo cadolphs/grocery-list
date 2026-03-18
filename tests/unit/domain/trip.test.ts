@@ -87,3 +87,35 @@ describe('Trip: addItem', () => {
     expect(trip.getItems()).toHaveLength(0);
   });
 });
+
+describe('Trip: checkOff persistence', () => {
+  it('persists checked item to storage via saveTrip', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+
+    trip.checkOff('Whole milk');
+
+    const loadedTrip = tripStorage.loadTrip();
+    expect(loadedTrip).not.toBeNull();
+    const loadedMilk = loadedTrip?.items.find(i => i.name === 'Whole milk');
+    expect(loadedMilk?.checked).toBe(true);
+  });
+
+  it('persists only the checked item, others remain unchecked', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+
+    trip.checkOff('Whole milk');
+
+    const loadedTrip = tripStorage.loadTrip();
+    const loadedButter = loadedTrip?.items.find(i => i.name === 'Butter');
+    expect(loadedButter?.checked).toBe(false);
+  });
+});

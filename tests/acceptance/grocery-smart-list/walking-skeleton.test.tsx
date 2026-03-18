@@ -403,23 +403,23 @@ describe('WS-5: Check Off Items in Store', () => {
   // AC: Section progress counter updates on check-off
   // Trace: US-05, AC-1, AC-3, AC-4, AC-6
 
-  it.skip('checks off an item and persists the state', () => {
+  it('checks off an item and persists the state', () => {
     // Given Carlos has an active trip with "Whole milk"
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([{ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([{ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
 
     // When Carlos checks off "Whole milk"
-    // trip.checkOff('Whole milk');
+    trip.checkOff('Whole milk');
 
     // Then "Whole milk" shows as in the cart
-    // const milk = trip.getItems().find(i => i.name === 'Whole milk');
-    // expect(milk?.checked).toBe(true);
+    const milk = trip.getItems().find(i => i.name === 'Whole milk');
+    expect(milk?.checked).toBe(true);
 
     // And the check-off is persisted to storage
-    // const loadedTrip = await tripStorage.loadTrip();
-    // const loadedMilk = loadedTrip.items.find(i => i.name === 'Whole milk');
-    // expect(loadedMilk?.checked).toBe(true);
+    const loadedTrip = tripStorage.loadTrip();
+    const loadedMilk = loadedTrip?.items.find(i => i.name === 'Whole milk');
+    expect(loadedMilk?.checked).toBe(true);
   });
 
   it.skip('unchecks an accidentally checked item', () => {
