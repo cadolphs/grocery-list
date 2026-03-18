@@ -349,23 +349,23 @@ describe('US-10: Navigate Store Sections', () => {
     expect(produce?.totalCount).toBe(4);
   });
 
-  it.skip('section list shows completion badges', () => {
+  it('section list shows completion badges', () => {
     // Given Carlos has completed 2 of 3 sections
-    // const items = [
-    //   { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
-    //   { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: true },
-    //   { name: 'Turkey', storeLocation: { section: 'Deli', aisleNumber: null }, checked: false },
-    // ];
+    const items = [
+      { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
+      { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: true },
+      { name: 'Turkey', storeLocation: { section: 'Deli', aisleNumber: null }, checked: false },
+    ];
 
     // When we compute the store grouping
-    // const groups = groupByAisle(items);
+    const groups = groupByAisle(items as any);
 
     // Then completed sections are identifiable
-    // const completed = groups.filter(g => g.checkedCount === g.totalCount);
-    // expect(completed).toHaveLength(2);
-    // const incomplete = groups.filter(g => g.checkedCount < g.totalCount);
-    // expect(incomplete).toHaveLength(1);
-    // expect(incomplete[0].section).toBe('Deli');
+    const completed = groups.filter(g => g.checkedCount === g.totalCount);
+    expect(completed).toHaveLength(2);
+    const incomplete = groups.filter(g => g.checkedCount < g.totalCount);
+    expect(incomplete).toHaveLength(1);
+    expect(incomplete[0].section).toBe('Deli');
   });
 
   it.skip('all sections complete enables trip completion', () => {
