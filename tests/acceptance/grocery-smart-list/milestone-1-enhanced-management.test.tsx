@@ -429,21 +429,21 @@ describe('US-11: Trip Summary', () => {
     expect(summary.whiteboardCount).toBe(3);
   });
 
-  it.skip('displays prep time', () => {
+  it('displays prep time', () => {
     // Given Carlos started the sweep 4 minutes ago
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([]);
-    // // Simulate 4 minutes elapsed by setting startedAt in the past
-    // const fourMinutesAgo = new Date(Date.now() - 4 * 60 * 1000);
-    // trip.setStartTime(fourMinutesAgo); // test helper
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+    // Simulate 4 minutes elapsed by setting startedAt in the past
+    const fourMinutesAgo = new Date(Date.now() - 4 * 60 * 1000);
+    trip.setStartTime(fourMinutesAgo); // test helper
 
     // When Carlos views the trip summary
-    // const summary = trip.getSummary();
+    const summary = trip.getSummary();
 
     // Then prep time shows approximately 4 minutes
-    // expect(summary.prepTimeMinutes).toBeGreaterThanOrEqual(3);
-    // expect(summary.prepTimeMinutes).toBeLessThanOrEqual(5);
+    expect(summary.prepTimeMinutes).toBeGreaterThanOrEqual(3);
+    expect(summary.prepTimeMinutes).toBeLessThanOrEqual(5);
   });
 
   it.skip('summary reflects skipped staples', () => {
