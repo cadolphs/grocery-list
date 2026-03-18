@@ -196,25 +196,24 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(1);
   });
 
-  it.skip('shows all 5 house areas even when some are empty', () => {
+  it('shows all 5 house areas even when some are empty', () => {
     // Given Carlos has staples only in "Fridge" and "Bathroom"
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({ name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
 
     // When Carlos views the home view
-    // const grouped = groupByArea(trip.getItems());
+    const grouped = groupByArea(trip.getItems());
 
     // Then all 5 house areas are visible
-    // expect(grouped).toHaveLength(5);
-    // expect(grouped.find(g => g.area === 'Freezer')?.items).toHaveLength(0);
-    // expect(grouped.find(g => g.area === 'Kitchen Cabinets')?.items).toHaveLength(0);
-    // expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(0);
+    expect(grouped).toHaveLength(5);
+    expect(grouped.find(g => g.area === 'Freezer')?.items).toHaveLength(0);
+    expect(grouped.find(g => g.area === 'Kitchen Cabinets')?.items).toHaveLength(0);
+    expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(0);
   });
 
   it.skip('newly added staple appears on next sweep', () => {

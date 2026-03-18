@@ -134,5 +134,83 @@ events:
   s: EXECUTED
   sid: 01-04
   t: '2026-03-17T21:36:27Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 01-05
+  t: '2026-03-18T00:58:10Z'
+- d: PASS
+  p: RED_ACCEPTANCE
+  s: EXECUTED
+  sid: 01-05
+  t: '2026-03-18T00:58:34Z'
+- d: 'NOT_APPLICABLE: acceptance test already covers the behavior and passes with
+    existing implementation'
+  p: RED_UNIT
+  s: SKIPPED
+  sid: 01-05
+  t: '2026-03-18T00:58:36Z'
+- d: 'NOT_APPLICABLE: existing isDuplicate checks name+houseArea, test passed without
+    code changes'
+  p: GREEN
+  s: SKIPPED
+  sid: 01-05
+  t: '2026-03-18T00:58:37Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 01-05
+  t: '2026-03-18T00:58:58Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 02-01
+  t: '2026-03-18T05:01:21Z'
+- d: PASS
+  p: RED_ACCEPTANCE
+  s: EXECUTED
+  sid: 02-01
+  t: '2026-03-18T05:01:22Z'
+- d: PASS
+  p: RED_UNIT
+  s: EXECUTED
+  sid: 02-01
+  t: '2026-03-18T13:55:42Z'
+- d: PASS
+  p: GREEN
+  s: EXECUTED
+  sid: 02-01
+  t: '2026-03-18T13:56:09Z'
+- d: PASS
+  p: COMMIT
+  s: EXECUTED
+  sid: 02-01
+  t: '2026-03-18T13:56:38Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 02-01
+  t: '2026-03-18T16:34:58Z'
+- d: PASS
+  p: PREPARE
+  s: EXECUTED
+  sid: 02-02
+  t: '2026-03-18T17:10:41Z'
+- d: PASS
+  p: RED_ACCEPTANCE
+  s: EXECUTED
+  sid: 02-02
+  t: '2026-03-18T17:10:42Z'
+- d: 'NOT_APPLICABLE: groupByArea already returns all 5 areas from step 02-01, acceptance
+    test is sufficient'
+  p: RED_UNIT
+  s: SKIPPED
+  sid: 02-02
+  t: '2026-03-18T17:10:47Z'
+- d: PASS
+  p: GREEN
+  s: EXECUTED
+  sid: 02-02
+  t: '2026-03-18T17:10:48Z'
 phases: []
 schema_version: '3.0'
