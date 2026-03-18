@@ -11,6 +11,7 @@ import {
   StoreLocation,
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
+import { StapleLibrary } from './staple-library';
 
 export type TripService = {
   readonly start: (staples: StapleItem[], carryover?: TripItem[]) => void;
@@ -116,5 +117,32 @@ export const createTrip = (storage: TripStorage): TripService => {
     complete: () => {
       // Will be implemented in a later step
     },
+  };
+};
+
+// --- Pure function: categorize trip items on completion ---
+
+export type CompleteTripResult = {
+  readonly purchasedStaples: readonly TripItem[];
+  readonly purchasedOneOffs: readonly TripItem[];
+  readonly unboughtItems: readonly TripItem[];
+};
+
+const isChecked = (item: TripItem): boolean => item.checked;
+const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
+const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
+
+export const completeTrip = (
+  trip: TripService,
+  _library: StapleLibrary
+): CompleteTripResult => {
+  const items = trip.getItems();
+  const checkedItems = items.filter(isChecked);
+  const uncheckedItems = items.filter((item) => !isChecked(item));
+
+  return {
+    purchasedStaples: checkedItems.filter(isStaple),
+    purchasedOneOffs: checkedItems.filter(isOneOff),
+    unboughtItems: uncheckedItems,
   };
 };

@@ -25,7 +25,7 @@
 // Domain ports:
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-// import { completeTrip } from '../../../src/domain/trip';
+import { completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { groupByAisle } from '../../../src/domain/item-grouping';
 // import { StapleItem, TripItem, HouseArea } from '../../../src/domain/types';
@@ -495,52 +495,54 @@ describe('WS-6: Complete Trip with Carryover', () => {
   // AC: Staple library is never modified by trip completion
   // Trace: US-06, AC-2, AC-3, AC-4, AC-5, AC-6
 
-  it.skip('bought staples re-queue, bought one-offs clear, unbought carry over', () => {
+  it('bought staples re-queue, bought one-offs clear, unbought carry over', () => {
     // Given Carlos has an active trip with mixed items
-    // const stapleStorage = createNullStapleStorage([
-    //   { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    // ]);
-    // const library = createStapleLibrary(stapleStorage);
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start(library.listAll());
-    // trip.addItem({
-    //   name: 'Birthday candles', houseArea: 'Kitchen Cabinets',
-    //   storeLocation: { section: 'Baking', aisleNumber: 12 },
-    //   itemType: 'one-off', source: 'quick-add',
-    // });
-    // trip.addItem({
-    //   name: 'Avocados', houseArea: 'Fridge',
-    //   storeLocation: { section: 'Produce', aisleNumber: null },
-    //   itemType: 'one-off', source: 'quick-add',
-    // });
-    // trip.checkOff('Whole milk');
-    // trip.checkOff('Birthday candles');
-    // // Avocados left unchecked
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({
+      name: 'Whole milk', houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
+    trip.addItem({
+      name: 'Birthday candles', houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off', source: 'quick-add',
+    });
+    trip.addItem({
+      name: 'Avocados', houseArea: 'Fridge',
+      storeLocation: { section: 'Produce', aisleNumber: null },
+      itemType: 'one-off', source: 'quick-add',
+    });
+    trip.checkOff('Whole milk');
+    trip.checkOff('Birthday candles');
+    // Avocados left unchecked
 
     // When Carlos finishes the trip
-    // const result = completeTrip(trip, library);
+    const result = completeTrip(trip, library);
 
     // Then bought staple re-queues (it is in the library, so it will pre-load next trip)
-    // expect(result.purchasedStaples).toContainEqual(
-    //   expect.objectContaining({ name: 'Whole milk' })
-    // );
+    expect(result.purchasedStaples).toContainEqual(
+      expect.objectContaining({ name: 'Whole milk' })
+    );
     // And bought one-off is cleared
-    // expect(result.purchasedOneOffs).toContainEqual(
-    //   expect.objectContaining({ name: 'Birthday candles' })
-    // );
+    expect(result.purchasedOneOffs).toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles' })
+    );
     // And unbought one-off carries over
-    // expect(result.unboughtItems).toContainEqual(
-    //   expect.objectContaining({ name: 'Avocados' })
-    // );
+    expect(result.unboughtItems).toContainEqual(
+      expect.objectContaining({ name: 'Avocados' })
+    );
 
     // Verify next trip has staples + carried-over items
-    // const nextTrip = createTrip(tripStorage);
-    // nextTrip.start(library.listAll(), result.unboughtItems);
-    // const nextItems = nextTrip.getItems();
-    // expect(nextItems).toContainEqual(expect.objectContaining({ name: 'Whole milk' }));
-    // expect(nextItems).toContainEqual(expect.objectContaining({ name: 'Avocados' }));
-    // expect(nextItems).not.toContainEqual(expect.objectContaining({ name: 'Birthday candles' }));
+    const nextTrip = createTrip(tripStorage);
+    nextTrip.start(library.listAll(), result.unboughtItems);
+    const nextItems = nextTrip.getItems();
+    expect(nextItems).toContainEqual(expect.objectContaining({ name: 'Whole milk' }));
+    expect(nextItems).toContainEqual(expect.objectContaining({ name: 'Avocados' }));
+    expect(nextItems).not.toContainEqual(expect.objectContaining({ name: 'Birthday candles' }));
   });
 
   it.skip('unbought items carry over exactly once without duplicates', () => {

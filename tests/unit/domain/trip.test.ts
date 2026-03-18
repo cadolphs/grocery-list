@@ -1,7 +1,9 @@
 // Trip domain - unit tests
 
-import { createTrip } from '../../../src/domain/trip';
+import { createTrip, completeTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
+import { createStapleLibrary } from '../../../src/domain/staple-library';
+import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 
 describe('Trip: addItem', () => {
   it('adds a one-off item to the trip', () => {
@@ -145,5 +147,84 @@ describe('Trip: loadFromStorage', () => {
     trip.loadFromStorage();
 
     expect(trip.getItems()).toHaveLength(0);
+  });
+});
+
+describe('completeTrip', () => {
+  const setupTripWithItems = () => {
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start(library.listAll());
+    return { trip, library };
+  };
+
+  it('categorizes checked staples as purchasedStaples', () => {
+    const { trip, library } = setupTripWithItems();
+    trip.checkOff('Milk');
+
+    const result = completeTrip(trip, library);
+
+    expect(result.purchasedStaples).toHaveLength(1);
+    expect(result.purchasedStaples[0].name).toBe('Milk');
+  });
+
+  it('categorizes checked one-offs as purchasedOneOffs', () => {
+    const { trip, library } = setupTripWithItems();
+    trip.addItem({
+      name: 'Candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+    trip.checkOff('Candles');
+
+    const result = completeTrip(trip, library);
+
+    expect(result.purchasedOneOffs).toHaveLength(1);
+    expect(result.purchasedOneOffs[0].name).toBe('Candles');
+  });
+
+  it('categorizes unchecked items as unboughtItems', () => {
+    const { trip, library } = setupTripWithItems();
+    trip.addItem({
+      name: 'Avocados',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Produce', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+    // Leave Milk and Avocados unchecked
+
+    const result = completeTrip(trip, library);
+
+    expect(result.unboughtItems).toHaveLength(2);
+    expect(result.unboughtItems).toContainEqual(
+      expect.objectContaining({ name: 'Milk' })
+    );
+    expect(result.unboughtItems).toContainEqual(
+      expect.objectContaining({ name: 'Avocados' })
+    );
+  });
+
+  it('returns empty arrays when trip has no items', () => {
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([]);
+
+    const result = completeTrip(trip, library);
+
+    expect(result.purchasedStaples).toHaveLength(0);
+    expect(result.purchasedOneOffs).toHaveLength(0);
+    expect(result.unboughtItems).toHaveLength(0);
   });
 });
