@@ -422,19 +422,24 @@ describe('WS-5: Check Off Items in Store', () => {
     expect(loadedMilk?.checked).toBe(true);
   });
 
-  it.skip('unchecks an accidentally checked item', () => {
+  it('unchecks an accidentally checked item', () => {
     // Given Carlos has checked off "Butter"
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage);
-    // trip.start([{ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
-    // trip.checkOff('Butter');
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([{ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
+    trip.checkOff('Butter');
 
     // When Carlos taps "Butter" again
-    // trip.uncheckItem('Butter');
+    trip.uncheckItem('Butter');
 
     // Then "Butter" is unchecked
-    // const butter = trip.getItems().find(i => i.name === 'Butter');
-    // expect(butter?.checked).toBe(false);
+    const butter = trip.getItems().find(i => i.name === 'Butter');
+    expect(butter?.checked).toBe(false);
+
+    // And the uncheck is persisted to storage
+    const loadedTrip = tripStorage.loadTrip();
+    const loadedButter = loadedTrip?.items.find(i => i.name === 'Butter');
+    expect(loadedButter?.checked).toBe(false);
   });
 
   it.skip('check-off state survives simulated app restart', () => {

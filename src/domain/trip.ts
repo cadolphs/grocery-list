@@ -100,6 +100,7 @@ export const createTrip = (storage: TripStorage): TripService => {
           ? { ...item, checked: false, checkedAt: null }
           : item
       );
+      persistTrip();
     },
 
     complete: () => {
