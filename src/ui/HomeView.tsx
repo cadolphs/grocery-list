@@ -4,6 +4,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
+import { useServices } from './ServiceProvider';
 import { groupByArea } from '../domain/item-grouping';
 import { HouseArea } from '../domain/types';
 import { AreaSection } from './AreaSection';
@@ -14,6 +15,7 @@ const formatSweepProgress = (completedCount: number, totalAreas: number): string
 
 export const HomeView = (): React.JSX.Element => {
   const { items, addItem, skipItem, unskipItem, completeArea, sweepProgress } = useTrip();
+  const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items);
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
 
@@ -23,7 +25,7 @@ export const HomeView = (): React.JSX.Element => {
 
   return (
     <View>
-      <QuickAdd onAddItem={addItem} />
+      <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} />
       <Text>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
         <Text>Add from whiteboard</Text>

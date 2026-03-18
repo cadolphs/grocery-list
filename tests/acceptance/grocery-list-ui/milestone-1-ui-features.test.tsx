@@ -161,22 +161,22 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
   });
 
-  it.skip('shows whiteboard prompt when all areas complete', () => {
+  it('shows whiteboard prompt when all areas complete', () => {
     // Given Carlos has marked all 5 areas as done
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']
-    //   .forEach(area => fireEvent.press(screen.getByTestId(`complete-${area}`)));
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']
+      .forEach(area => fireEvent.press(screen.getByTestId(`complete-${area}`)));
 
     // When Carlos views the sweep screen
     // (already viewing it)
 
     // Then "Add from whiteboard" is prominently displayed
-    // expect(screen.getByText('Add from whiteboard')).toBeTruthy();
+    expect(screen.getByText('Add from whiteboard')).toBeTruthy();
   });
 });
 
@@ -189,23 +189,23 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
   // AC: Tapping a suggestion adds it with all metadata
   // AC: No suggestions for unknown items
 
-  it.skip('shows matching suggestions when typing a prefix', () => {
+  it('shows matching suggestions when typing a prefix', async () => {
     // Given the quick-add field is active
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
 
     // When Carlos types "who" in the quick-add field
-    // const quickAddInput = screen.getByPlaceholderText('Add an item...');
-    // fireEvent.changeText(quickAddInput, 'who');
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'who');
 
     // Then "Whole milk" appears as a suggestion below the field
-    // await waitFor(() => {
-    //   expect(screen.getByText('Whole milk - Dairy / Aisle 3')).toBeTruthy();
-    // });
+    await waitFor(() => {
+      expect(screen.getByText('Whole milk - Dairy / Aisle 3')).toBeTruthy();
+    });
   });
 
   it.skip('tapping a suggestion adds it with metadata', () => {
