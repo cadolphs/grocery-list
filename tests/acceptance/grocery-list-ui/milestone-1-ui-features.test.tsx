@@ -342,27 +342,27 @@ describe('US-11: Trip summary screen in UI', () => {
   // AC: Prep time is displayed
   // AC: Store view transition is available
 
-  it.skip('displays total purchased and item breakdown', () => {
+  it('displays total purchased and item breakdown', () => {
     // Given Carlos has completed the trip with 5 items purchased and 1 skipped
-    // const { library, tripService } = createTestServices();
-    // render(
-    //   <ServiceProvider stapleLibrary={library} tripService={tripService}>
-    //     <AppShell />
-    //   </ServiceProvider>
-    // );
-    // fireEvent.press(screen.getByText('Store'));
-    // ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans']
-    //   .forEach(name => fireEvent.press(screen.getByText(name)));
-    // tripService.skipItem('Shampoo');
+    const { library, tripService } = createTestServices();
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    fireEvent.press(screen.getByText('Store'));
+    ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans']
+      .forEach(name => fireEvent.press(screen.getByText(name)));
+    tripService.skipItem('Shampoo');
 
     // When the trip summary screen appears
-    // fireEvent.press(screen.getByText('Finish Trip'));
+    fireEvent.press(screen.getByText('Finish Trip'));
 
     // Then Carlos sees "5 items purchased"
-    // expect(screen.getByText('5 items purchased')).toBeTruthy();
+    expect(screen.getByText('5 items purchased')).toBeTruthy();
 
     // And breakdown shows staple and one-off counts
-    // expect(screen.getByText(/5 staples/)).toBeTruthy();
+    expect(screen.getByText(/5 staples/)).toBeTruthy();
   });
 
   it.skip('shows preparation time on summary', () => {
