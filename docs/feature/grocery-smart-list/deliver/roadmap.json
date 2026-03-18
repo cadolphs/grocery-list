@@ -1,0 +1,208 @@
+roadmap:
+  project_id: grocery-smart-list
+  created_at: '2026-03-17T18:57:47Z'
+  total_steps: 22
+  phases: 6
+phases:
+- id: '01'
+  name: 'Staple Library'
+  steps:
+  - id: 01-01
+    name: 'Add staple with full metadata'
+    criteria: 'Staple with name, house area, section, and aisle persists to library; library count is 1'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'adds a staple item with full metadata to the library'
+    files_to_modify:
+    - src/domain/types.ts
+    - src/domain/staple-library.ts
+    - src/ports/staple-storage.ts
+    - src/adapters/null/null-staple-storage.ts
+  - id: 01-02
+    name: 'Add staple without aisle'
+    criteria: 'Staple with null aisle saved successfully; aisle field is null on retrieval'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'adds a staple item without an aisle number'
+    files_to_modify:
+    - src/domain/staple-library.ts
+  - id: 01-03
+    name: 'Add one-off to trip only'
+    criteria: 'One-off item appears on active trip; does not appear in staple library'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'adds a one-off item to the current trip only'
+    files_to_modify:
+    - src/domain/trip.ts
+    - src/ports/trip-storage.ts
+    - src/adapters/null/null-trip-storage.ts
+  - id: 01-04
+    name: 'Prevent duplicate staple in same area'
+    criteria: 'Adding same name+area returns error with message; library count unchanged'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'prevents duplicate staple in the same house area'
+    files_to_modify:
+    - src/domain/staple-library.ts
+  - id: 01-05
+    name: 'Allow same name in different areas'
+    criteria: 'Same item name in two different house areas creates two separate entries'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'allows same item name in different house areas'
+    files_to_modify:
+    - src/domain/staple-library.ts
+
+- id: '02'
+  name: 'Trip + Grouping'
+  steps:
+  - id: 02-01
+    name: 'Pre-load staples grouped by area'
+    criteria: 'New sweep pre-loads all staples; groupByArea returns items under correct house areas with correct counts'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'pre-loads all staples grouped by house area on new sweep'
+    files_to_modify:
+    - src/domain/trip.ts
+    - src/domain/item-grouping.ts
+  - id: 02-02
+    name: 'Empty areas visible'
+    criteria: 'All 5 house areas returned by groupByArea even when some have 0 items'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'shows all 5 house areas even when some are empty'
+    files_to_modify:
+    - src/domain/item-grouping.ts
+  - id: 02-03
+    name: 'New staple appears on next sweep'
+    criteria: 'Staple added during trip appears pre-loaded in correct area on next sweep start'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'newly added staple appears on next sweep'
+    files_to_modify:
+    - src/domain/trip.ts
+    - src/domain/staple-library.ts
+
+- id: '03'
+  name: 'Quick-Add Flow'
+  steps:
+  - id: 03-01
+    name: 'Quick-add staple with metadata'
+    criteria: 'Quick-added staple appears on trip AND in staple library'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'quick-adds a new staple item with metadata'
+    files_to_modify:
+    - src/domain/trip.ts
+    - src/domain/staple-library.ts
+  - id: 03-02
+    name: 'Quick-add one-off'
+    criteria: 'Quick-added one-off appears on trip; not in staple library'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'quick-adds a one-off item without adding to staple library'
+    files_to_modify:
+    - src/domain/trip.ts
+  - id: 03-03
+    name: 'Quick-add validation'
+    criteria: 'Item without area is rejected with error message; trip items unchanged'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'rejects quick-add without required area'
+    files_to_modify:
+    - src/domain/trip.ts
+
+- id: '04'
+  name: 'Store View'
+  steps:
+  - id: 04-01
+    name: 'Group by aisle and section'
+    criteria: 'groupByAisle returns numbered aisles sorted ascending before named sections; correct item counts per group'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'groups items by aisle and section in store view'
+    files_to_modify:
+    - src/domain/item-grouping.ts
+  - id: 04-02
+    name: 'Exclude empty sections'
+    criteria: 'Store view only includes sections that have items; no empty groups returned'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'excludes empty sections from store view'
+    files_to_modify:
+    - src/domain/item-grouping.ts
+  - id: 04-03
+    name: 'Check-off state preserved across toggle'
+    criteria: 'Checked item remains checked when switching between home and store views'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'preserves check-off state across view toggle'
+    files_to_modify:
+    - src/domain/trip.ts
+
+- id: '05'
+  name: 'Check-Off'
+  steps:
+  - id: 05-01
+    name: 'Check off item with persistence'
+    criteria: 'Checked item shows as in cart; check-off state persisted to storage'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'checks off an item and persists the state'
+    files_to_modify:
+    - src/domain/trip.ts
+    - src/adapters/null/null-trip-storage.ts
+  - id: 05-02
+    name: 'Uncheck item'
+    criteria: 'Tapping checked item unchecks it; no longer shows as in cart'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'unchecks an accidentally checked item'
+    files_to_modify:
+    - src/domain/trip.ts
+  - id: 05-03
+    name: 'Check-off survives restart'
+    criteria: 'After simulated restart (new trip instance, same storage), all checked items remain checked'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'check-off state survives simulated app restart'
+    files_to_modify:
+    - src/domain/trip.ts
+    - src/adapters/null/null-trip-storage.ts
+  - id: 05-04
+    name: 'Section progress counter'
+    criteria: 'Store view groups include checkedCount and totalCount reflecting actual check-off state'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'section progress updates on check-off'
+    files_to_modify:
+    - src/domain/item-grouping.ts
+
+- id: '06'
+  name: 'Trip Completion'
+  steps:
+  - id: 06-01
+    name: 'Complete trip with carryover'
+    criteria: 'Bought staples re-queue via library; bought one-offs cleared; unbought items carry over to next trip'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'bought staples re-queue, bought one-offs clear, unbought carry over'
+    files_to_modify:
+    - src/domain/trip.ts
+  - id: 06-02
+    name: 'No duplicate carryover'
+    criteria: 'Unbought item carried over appears exactly once on next trip; no duplicates'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'unbought items carry over exactly once without duplicates'
+    files_to_modify:
+    - src/domain/trip.ts
+  - id: 06-03
+    name: 'Library unchanged after completion'
+    criteria: 'Staple library item count identical before and after trip completion'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'staple library is unchanged after trip completion'
+    files_to_modify:
+    - src/domain/trip.ts
+  - id: 06-04
+    name: 'All bought yields clean next trip'
+    criteria: 'When all items bought, next trip contains only staples from library; no one-offs carry over'
+    test_file: tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx
+    scenario_name: 'all items bought results in clean next trip with only staples'
+    files_to_modify:
+    - src/domain/trip.ts
+
+implementation_scope:
+  source_directories:
+  - src/domain/
+  - src/ports/
+  - src/adapters/null/
+  test_directories:
+  - tests/acceptance/grocery-smart-list/
+  excluded_patterns:
+  - node_modules/**
+  - dist/**
+validation:
+  status: pending
+  reviewer: solution-architect
+  approved_at: null
