@@ -362,18 +362,18 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
     expect(storeGroups[2].items).toHaveLength(1);
   });
 
-  it.skip('excludes empty sections from store view', () => {
+  it('excludes empty sections from store view', () => {
     // Given Carlos has items only in Dairy and Deli
-    // const items = [
-    //   { name: 'Whole milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, needed: true, checked: false },
-    //   { name: 'Deli turkey', storeLocation: { section: 'Deli', aisleNumber: null }, needed: true, checked: false },
-    // ];
+    const items = [
+      { name: 'Whole milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, needed: true, checked: false },
+      { name: 'Deli turkey', storeLocation: { section: 'Deli', aisleNumber: null }, needed: true, checked: false },
+    ];
 
     // When Carlos views store layout
-    // const storeGroups = groupByAisle(items);
+    const storeGroups = groupByAisle(items as any);
 
     // Then only sections with items are shown
-    // expect(storeGroups).toHaveLength(2);
+    expect(storeGroups).toHaveLength(2);
   });
 
   it.skip('preserves check-off state across view toggle', () => {
