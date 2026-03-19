@@ -2,7 +2,7 @@
 // Renders ViewToggle and conditionally shows HomeView or StoreView
 
 import React from 'react';
-import { View } from 'react-native';
+import { SafeAreaView, StyleSheet } from 'react-native';
 import { useViewMode } from '../hooks/useViewMode';
 import { ViewToggle } from './ViewToggle';
 import { HomeView } from './HomeView';
@@ -18,9 +18,16 @@ export const AppShell = (): React.JSX.Element => {
   };
 
   return (
-    <View>
+    <SafeAreaView testID="safe-area" style={styles.container}>
       <ViewToggle viewMode={viewMode} onToggle={handleToggle} />
       {viewMode === 'home' ? <HomeView /> : <StoreView />}
-    </View>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+});

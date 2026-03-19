@@ -2,7 +2,7 @@
 // Composes useTrip hook with groupByAisle pure function
 
 import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useServices } from './ServiceProvider';
 import { groupByAisle } from '../domain/item-grouping';
@@ -43,7 +43,7 @@ export const StoreView = (): React.JSX.Element => {
   const aisleGroups = groupByAisle(neededItems);
 
   return (
-    <View>
+    <ScrollView testID="store-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       {aisleGroups.map((aisleGroup) => (
         <AisleSection
           key={`${aisleGroup.aisleNumber}-${aisleGroup.section}`}
@@ -51,9 +51,32 @@ export const StoreView = (): React.JSX.Element => {
           onItemPress={checkOff}
         />
       ))}
-      <Pressable onPress={handleFinishTrip}>
-        <Text>Finish Trip</Text>
+      <Pressable style={styles.finishButton} onPress={handleFinishTrip}>
+        <Text style={styles.finishButtonText}>Finish Trip</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 16,
+  },
+  finishButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+    minHeight: 44,
+  },
+  finishButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

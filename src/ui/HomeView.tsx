@@ -2,7 +2,7 @@
 // Composes useTrip hook with groupByArea pure function
 
 import React, { useState, useCallback } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useServices } from './ServiceProvider';
 import { groupByArea } from '../domain/item-grouping';
@@ -39,11 +39,11 @@ export const HomeView = (): React.JSX.Element => {
   }, [items, addItem]);
 
   return (
-    <View>
+    <ScrollView testID="home-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} />
-      <Text>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
+      <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
-        <Text>Add from whiteboard</Text>
+        <Text style={styles.whiteboardPrompt}>Add from whiteboard</Text>
       )}
       {areaGroups.map((areaGroup) => (
         <AreaSection
@@ -57,6 +57,27 @@ export const HomeView = (): React.JSX.Element => {
           isActive={activeArea === areaGroup.area}
         />
       ))}
-    </View>
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 16,
+  },
+  sweepProgress: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    marginVertical: 8,
+  },
+  whiteboardPrompt: {
+    fontSize: 16,
+    color: '#2196F3',
+    textAlign: 'center',
+    marginVertical: 8,
+  },
+});

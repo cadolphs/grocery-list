@@ -1,0 +1,65 @@
+{
+  "roadmap": {
+    "project_id": "fix-unstyled-ui",
+    "created_at": "2026-03-18T22:00:00Z",
+    "total_steps": 3,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "UI Styling Fix",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Shell layout and navigation styling",
+          "criteria": "AppShell uses SafeAreaView with flex:1. HomeView and StoreView wrap content in ScrollView. ViewToggle renders as a styled tab bar with active indicator. Regression test verifies ScrollView and SafeAreaView are present.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "src/ui/AppShell.tsx",
+            "src/ui/HomeView.tsx",
+            "src/ui/StoreView.tsx",
+            "src/ui/ViewToggle.tsx",
+            "src/ui/LoadingScreen.tsx"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Content component styling",
+          "criteria": "AreaSection has card-like appearance with heading typography and spacing. AisleSection has section headers with progress indicators. TripItemRow has 44pt minimum tap targets, row layout with item name and action buttons, visual checked state. QuickAdd has styled input field with border, styled Add button, suggestion dropdown with visual separation.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "src/ui/AreaSection.tsx",
+            "src/ui/AisleSection.tsx",
+            "src/ui/TripItemRow.tsx",
+            "src/ui/QuickAdd.tsx"
+          ]
+        },
+        {
+          "id": "01-03",
+          "name": "Summary and final polish",
+          "criteria": "TripSummaryView has card layout with typography hierarchy for counts and breakdown. All Pressable buttons have visible backgrounds, padding, and rounded corners. Consistent color scheme across all components.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "src/ui/TripSummaryView.tsx",
+            "src/ui/StoreView.tsx",
+            "src/ui/HomeView.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/"],
+    "test_directories": ["tests/acceptance/grocery-list-ui/", "tests/regression/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-18T22:00:00Z"
+  }
+}
