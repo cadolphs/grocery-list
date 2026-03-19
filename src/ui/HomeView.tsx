@@ -76,7 +76,8 @@ const styles = StyleSheet.create({
   },
   whiteboardPrompt: {
     fontSize: 16,
-    color: '#2196F3',
+    fontWeight: '600',
+    color: '#FF9800',
     textAlign: 'center',
     marginVertical: 8,
   },
