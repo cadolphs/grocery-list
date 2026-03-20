@@ -6,7 +6,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useServices } from './ServiceProvider';
 import { groupByArea } from '../domain/item-grouping';
-import { HouseArea, StapleItem } from '../domain/types';
+import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
 import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
@@ -35,6 +35,14 @@ export const HomeView = (): React.JSX.Element => {
     setMetadataSheetVisible(false);
     setMetadataSheetItemName('');
   }, []);
+
+  const handleSubmitStaple = useCallback((request: AddStapleRequest): void => {
+    stapleLibrary.addStaple(request);
+  }, [stapleLibrary]);
+
+  const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
+    addItem(request);
+  }, [addItem]);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
     const alreadyInTrip = items.some(
@@ -74,6 +82,8 @@ export const HomeView = (): React.JSX.Element => {
         visible={metadataSheetVisible}
         itemName={metadataSheetItemName}
         onDismiss={handleDismissMetadataSheet}
+        onSubmitStaple={handleSubmitStaple}
+        onSubmitTripItem={handleSubmitTripItem}
       />
     </ScrollView>
   );

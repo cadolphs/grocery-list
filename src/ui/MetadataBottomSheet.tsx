@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
-import { HouseArea } from '../domain/types';
+import { HouseArea, AddStapleRequest, AddTripItemRequest } from '../domain/types';
 
 const HOUSE_AREAS: readonly HouseArea[] = [
   'Bathroom',
@@ -19,17 +19,46 @@ type MetadataBottomSheetProps = {
   readonly visible: boolean;
   readonly itemName: string;
   readonly onDismiss: () => void;
+  readonly onSubmitStaple: (request: AddStapleRequest) => void;
+  readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
 };
 
 export const MetadataBottomSheet = ({
   visible,
   itemName,
   onDismiss,
+  onSubmitStaple,
+  onSubmitTripItem,
 }: MetadataBottomSheetProps): React.JSX.Element => {
   const [selectedType, setSelectedType] = useState<ItemTypeSelection>('Staple');
   const [selectedArea, setSelectedArea] = useState<HouseArea>('Kitchen Cabinets');
   const [section, setSection] = useState('');
   const [aisleText, setAisleText] = useState('');
+
+  const handleSubmit = (): void => {
+    const storeLocation = {
+      section,
+      aisleNumber: aisleText ? parseInt(aisleText, 10) : null,
+    };
+
+    if (selectedType === 'Staple') {
+      onSubmitStaple({
+        name: itemName,
+        houseArea: selectedArea,
+        storeLocation,
+      });
+    }
+
+    onSubmitTripItem({
+      name: itemName,
+      houseArea: selectedArea,
+      storeLocation,
+      itemType: selectedType === 'Staple' ? 'staple' : 'one-off',
+      source: 'quick-add',
+    });
+
+    onDismiss();
+  };
 
   return (
     <Modal
@@ -119,7 +148,7 @@ export const MetadataBottomSheet = ({
           />
 
           {/* Action buttons */}
-          <Pressable style={styles.addButton}>
+          <Pressable style={styles.addButton} onPress={handleSubmit}>
             <Text style={styles.addButtonText}>Add Item</Text>
           </Pressable>
 

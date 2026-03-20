@@ -149,27 +149,46 @@ describe('WS-AIF-3: Submitting as staple saves to library and adds to trip', () 
   // AC: Staple items are saved to the staple library AND added to the trip
   // Trace: US-AIF-01, AC-3
 
-  it.skip('submitting as staple saves to library and adds to trip', () => {
+  it('submitting as staple saves to library and adds to trip', () => {
     // Given Carlos has an active trip and opens the metadata bottom sheet for "Oat milk"
-    // const { library, tripService } = createTestServices();
+    const { library, tripService } = createTestServices();
 
-    // And Carlos selects type "Staple", area "Fridge", section "Dairy", aisle 3
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    // Carlos types "Oat milk" and taps "Add as new item"
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'Oat milk');
+    fireEvent.press(screen.getByText(/Add 'Oat milk' as new item/));
+
+    // And Carlos selects type "Staple" (default), area "Fridge", section "Dairy", aisle 3
+    fireEvent.press(screen.getByText('Staple'));
+    fireEvent.press(screen.getByText('Fridge'));
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Dairy');
+    fireEvent.changeText(screen.getByPlaceholderText('Aisle number'), '3');
 
     // When Carlos taps "Add Item"
+    fireEvent.press(screen.getByText('Add Item'));
 
     // Then "Oat milk" is saved to the staple library
-    // const allStaples = library.listAll();
-    // expect(allStaples).toContainEqual(
-    //   expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge' })
-    // );
-    // expect(allStaples.find(s => s.name === 'Oat milk')?.storeLocation.section).toBe('Dairy');
-    // expect(allStaples.find(s => s.name === 'Oat milk')?.storeLocation.aisleNumber).toBe(3);
+    const allStaples = library.listAll();
+    expect(allStaples).toContainEqual(
+      expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge' })
+    );
+    expect(allStaples.find(s => s.name === 'Oat milk')?.storeLocation.section).toBe('Dairy');
+    expect(allStaples.find(s => s.name === 'Oat milk')?.storeLocation.aisleNumber).toBe(3);
 
     // And "Oat milk" appears on the current trip
-    // const tripItems = tripService.getItems();
-    // expect(tripItems).toContainEqual(
-    //   expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge', itemType: 'staple' })
-    // );
+    const tripItems = tripService.getItems();
+    expect(tripItems).toContainEqual(
+      expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge', itemType: 'staple' })
+    );
+
+    // And the sheet is dismissed
+    expect(screen.queryByText("Add 'Oat milk'")).toBeNull();
   });
 });
 
