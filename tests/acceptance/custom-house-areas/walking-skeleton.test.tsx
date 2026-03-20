@@ -244,31 +244,31 @@ describe('WS-CHA-03: New area appears in groupByArea', () => {
   // AC: New area immediately available in home view
   // Trace: US-CHA-02, AC-3 + US-CHA-03, AC-1
 
-  it.skip('newly added area shows items in groupByArea', () => {
+  it('newly added area shows items in groupByArea', () => {
     // Given Carlos has added "Laundry Room" to his areas
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
-    // areaManagement.add('Laundry Room');
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    areaManagement.add('Laundry Room');
 
     // And Carlos adds "Detergent" as a staple in "Laundry Room"
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({
-    //   name: 'Detergent',
-    //   houseArea: 'Laundry Room',
-    //   storeLocation: { section: 'Cleaning', aisleNumber: 9 },
-    // });
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({
+      name: 'Detergent',
+      houseArea: 'Laundry Room',
+      storeLocation: { section: 'Cleaning', aisleNumber: 9 },
+    });
 
     // When Carlos starts a new sweep
-    // const trip = createTrip(tripStorage, areaManagement.getAreas());
-    // trip.start(library.listAll());
+    const trip = createTrip(tripStorage, areaManagement.getAreas());
+    trip.start(library.listAll());
 
     // Then "Laundry Room" appears as a group with "Detergent" pre-loaded
-    // const grouped = groupByArea(trip.getItems(), areaManagement.getAreas());
-    // const laundry = grouped.find(g => g.area === 'Laundry Room');
-    // expect(laundry?.items).toHaveLength(1);
-    // expect(laundry?.items[0].name).toBe('Detergent');
+    const grouped = groupByArea(trip.getItems(), areaManagement.getAreas());
+    const laundry = grouped.find(g => g.area === 'Laundry Room');
+    expect(laundry?.items).toHaveLength(1);
+    expect(laundry?.items[0].name).toBe('Detergent');
   });
 });
 
@@ -276,15 +276,15 @@ describe('WS-CHA-03: Default areas seeded on fresh install', () => {
   // AC: Fresh install shows 5 default areas
   // Trace: US-CHA-01, AC-5
 
-  it.skip('loads the 5 default areas on a brand new installation', () => {
+  it('loads the 5 default areas on a brand new installation', () => {
     // Given a brand new app with no prior area data
-    // const areaStorage = createNullAreaStorage();
+    const areaStorage = createNullAreaStorage();
 
     // When the area list is loaded
-    // const areas = areaStorage.loadAll();
+    const areas = areaStorage.loadAll();
 
     // Then it contains the 5 defaults in order
-    // expect(areas).toEqual(['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']);
+    expect(areas).toEqual(['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']);
   });
 });
 
