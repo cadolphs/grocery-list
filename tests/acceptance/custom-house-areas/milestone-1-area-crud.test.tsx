@@ -144,21 +144,21 @@ describe('US-CHA-05: Delete a House Area', () => {
   // AC: Cannot delete the last remaining area
   // Trace: US-CHA-05, AC-1 through AC-5
 
-  it.skip('deletes an empty area', () => {
+  it('deletes an empty area', () => {
     // Given Ana Lucia has "Garage Pantry" with 0 staples
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Ana Lucia deletes "Garage Pantry"
-    // const result = areaManagement.delete('Garage Pantry');
+    const result = areaManagement.delete('Garage Pantry');
 
     // Then "Garage Pantry" is removed
-    // expect(result.success).toBe(true);
-    // const areas = areaManagement.getAreas();
-    // expect(areas).not.toContain('Garage Pantry');
-    // expect(areas).toHaveLength(4);
+    expect(result.success).toBe(true);
+    const areas = areaManagement.getAreas();
+    expect(areas).not.toContain('Garage Pantry');
+    expect(areas).toHaveLength(4);
   });
 
   it.skip('deletes area with staples and reassigns to target', () => {
@@ -207,20 +207,22 @@ describe('US-CHA-05: Delete a House Area', () => {
     // expect(fridgeItems).toHaveLength(2);
   });
 
-  it.skip('cannot delete the last remaining area', () => {
+  it('cannot delete the last remaining area', () => {
     // Given Ana Lucia has only 1 area remaining
-    // const areaStorage = createNullAreaStorage(['Kitchen']);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(['Kitchen']);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Ana Lucia tries to delete "Kitchen"
-    // const result = areaManagement.delete('Kitchen');
+    const result = areaManagement.delete('Kitchen');
 
     // Then the delete is blocked
-    // expect(result.success).toBe(false);
-    // expect(result.error).toContain('at least one area');
-    // expect(areaManagement.getAreas()).toHaveLength(1);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('at least one area');
+    }
+    expect(areaManagement.getAreas()).toHaveLength(1);
   });
 
   it.skip('detects duplicate conflict on reassignment', () => {

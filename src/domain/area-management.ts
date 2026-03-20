@@ -9,9 +9,18 @@ export type AreaResult =
   | { readonly success: true }
   | { readonly success: false; readonly error: string };
 
+export type DeleteOptions = {
+  readonly reassignTo?: string;
+};
+
+export type DeleteResult =
+  | { readonly success: true }
+  | { readonly success: false; readonly error: string; readonly conflicts?: ReadonlyArray<{ readonly name: string; readonly existsIn: string }> };
+
 export type AreaManagement = {
   readonly add: (name: string) => AreaResult;
   readonly rename: (oldName: string, newName: string) => AreaResult;
+  readonly delete: (name: string, options?: DeleteOptions) => DeleteResult;
   readonly getAreas: () => string[];
 };
 
@@ -65,6 +74,45 @@ export const createAreaManagement = (
       stapleStorage.updateArea(oldName, trimmedNewName);
       tripStorage.updateItemArea(oldName, trimmedNewName);
 
+      return { success: true };
+    },
+
+    delete: (name: string, options?: DeleteOptions): DeleteResult => {
+      const currentAreas = areaStorage.loadAll();
+
+      if (currentAreas.length <= 1) {
+        return { success: false, error: 'Cannot delete: at least one area must remain' };
+      }
+
+      if (!currentAreas.includes(name)) {
+        return { success: false, error: `"${name}" not found` };
+      }
+
+      const staplesInArea = stapleStorage.loadAll().filter(s => s.houseArea === name);
+
+      if (staplesInArea.length > 0 && !options?.reassignTo) {
+        return { success: false, error: 'Area has staples; reassignment target is required' };
+      }
+
+      if (staplesInArea.length > 0 && options?.reassignTo) {
+        // Check for duplicate conflicts
+        const targetStaples = stapleStorage.loadAll().filter(s => s.houseArea === options.reassignTo);
+        const targetNames = new Set(targetStaples.map(s => s.name.toLowerCase()));
+        const conflicts = staplesInArea
+          .filter(s => targetNames.has(s.name.toLowerCase()))
+          .map(s => ({ name: s.name, existsIn: options.reassignTo! }));
+
+        if (conflicts.length > 0) {
+          return { success: false, error: 'Duplicate conflict on reassignment', conflicts };
+        }
+
+        // Reassign staples and trip items
+        stapleStorage.updateArea(name, options.reassignTo);
+        tripStorage.updateItemArea(name, options.reassignTo);
+      }
+
+      const updatedAreas = currentAreas.filter(area => area !== name);
+      areaStorage.saveAll(updatedAreas);
       return { success: true };
     },
 
