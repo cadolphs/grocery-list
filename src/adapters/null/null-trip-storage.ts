@@ -16,5 +16,17 @@ export const createNullTripStorage = (): TripStorage => {
     saveCheckoffs: (checkoffs: ReadonlyMap<string, string>) => {
       storedCheckoffs = new Map(checkoffs);
     },
+    updateItemArea: (oldName: string, newName: string) => {
+      if (storedTrip) {
+        storedTrip = {
+          ...storedTrip,
+          items: storedTrip.items.map(item =>
+            item.houseArea === oldName
+              ? { ...item, houseArea: newName }
+              : item
+          ),
+        };
+      }
+    },
   };
 };

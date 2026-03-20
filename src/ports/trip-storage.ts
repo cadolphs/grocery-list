@@ -8,4 +8,5 @@ export type TripStorage = {
   readonly saveTrip: (trip: Trip) => void;
   readonly loadCheckoffs: () => ReadonlyMap<string, string>;
   readonly saveCheckoffs: (checkoffs: ReadonlyMap<string, string>) => void;
+  readonly updateItemArea: (oldName: string, newName: string) => void;
 };

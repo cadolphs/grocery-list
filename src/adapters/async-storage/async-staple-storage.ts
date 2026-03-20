@@ -56,5 +56,14 @@ export const createAsyncStapleStorage = (): AsyncStapleStorage => {
         item.name.toLowerCase().includes(lowerQuery)
       );
     },
+
+    updateArea: (oldName: string, newName: string): void => {
+      cache = cache.map(item =>
+        item.houseArea === oldName
+          ? { ...item, houseArea: newName }
+          : item
+      );
+      persistInBackground(cache);
+    },
   };
 };

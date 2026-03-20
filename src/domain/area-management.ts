@@ -11,6 +11,7 @@ export type AreaResult =
 
 export type AreaManagement = {
   readonly add: (name: string) => AreaResult;
+  readonly rename: (oldName: string, newName: string) => AreaResult;
   readonly getAreas: () => string[];
 };
 
@@ -19,8 +20,8 @@ const isDuplicate = (name: string, areas: string[]): boolean =>
 
 export const createAreaManagement = (
   areaStorage: AreaStorage,
-  _stapleStorage: StapleStorage,
-  _tripStorage: TripStorage,
+  stapleStorage: StapleStorage,
+  tripStorage: TripStorage,
 ): AreaManagement => {
   return {
     add: (name: string): AreaResult => {
@@ -35,6 +36,35 @@ export const createAreaManagement = (
       }
 
       areaStorage.saveAll([...currentAreas, trimmedName]);
+      return { success: true };
+    },
+
+    rename: (oldName: string, newName: string): AreaResult => {
+      const trimmedNewName = newName.trim();
+      if (trimmedNewName === '') {
+        return { success: false, error: 'Area name is required' };
+      }
+
+      const currentAreas = areaStorage.loadAll();
+
+      if (isDuplicate(trimmedNewName, currentAreas)) {
+        return { success: false, error: `"${trimmedNewName}" already exists` };
+      }
+
+      if (!currentAreas.includes(oldName)) {
+        return { success: false, error: `"${oldName}" not found` };
+      }
+
+      // Replace old name with new name at same position
+      const updatedAreas = currentAreas.map(area =>
+        area === oldName ? trimmedNewName : area
+      );
+      areaStorage.saveAll(updatedAreas);
+
+      // Propagate to staples and trip items
+      stapleStorage.updateArea(oldName, trimmedNewName);
+      tripStorage.updateItemArea(oldName, trimmedNewName);
+
       return { success: true };
     },
 

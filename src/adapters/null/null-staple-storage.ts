@@ -23,5 +23,12 @@ export const createNullStapleStorage = (
       items.filter((item) =>
         item.name.toLowerCase().includes(query.toLowerCase())
       ),
+    updateArea: (oldName: string, newName: string) => {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].houseArea === oldName) {
+          items[i] = { ...items[i], houseArea: newName };
+        }
+      }
+    },
   };
 };
