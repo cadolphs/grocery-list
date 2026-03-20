@@ -34,15 +34,14 @@
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-// NEW domain ports (to be created):
-// import { createAreaManagement } from '../../../src/domain/area-management';
-// import { validateAreaName } from '../../../src/domain/area-validation';
+// NEW domain ports:
+import { createAreaManagement } from '../../../src/domain/area-management';
 
 // Null adapters:
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-// NEW null adapter (to be created):
-// import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
+// NEW null adapter:
+import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 
 // UI components (for UI-level walking skeleton tests):
 // import { render, fireEvent, waitFor } from '@testing-library/react-native';
@@ -203,39 +202,41 @@ describe('WS-CHA-03: Area management adds a new area', () => {
   // AC: New area appended to end of area list by default
   // Trace: US-CHA-02, AC-1, AC-2
 
-  it.skip('adds a new area that persists in the area list', () => {
+  it('adds a new area that persists in the area list', () => {
     // Given Carlos has the 5 default areas
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Carlos adds "Laundry Room"
-    // const result = areaManagement.add('Laundry Room');
+    const result = areaManagement.add('Laundry Room');
 
     // Then the area list contains 6 areas
-    // expect(result.success).toBe(true);
-    // const areas = areaManagement.getAreas();
-    // expect(areas).toHaveLength(6);
+    expect(result.success).toBe(true);
+    const areas = areaManagement.getAreas();
+    expect(areas).toHaveLength(6);
 
     // And "Laundry Room" is at the end
-    // expect(areas[5]).toBe('Laundry Room');
+    expect(areas[5]).toBe('Laundry Room');
   });
 
-  it.skip('rejects adding a duplicate area name', () => {
+  it('rejects adding a duplicate area name', () => {
     // Given "Bathroom" already exists
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Carlos tries to add "Bathroom" again
-    // const result = areaManagement.add('Bathroom');
+    const result = areaManagement.add('Bathroom');
 
     // Then the add is rejected
-    // expect(result.success).toBe(false);
-    // expect(result.error).toContain('already exists');
-    // expect(areaManagement.getAreas()).toHaveLength(5);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('already exists');
+    }
+    expect(areaManagement.getAreas()).toHaveLength(5);
   });
 });
 
