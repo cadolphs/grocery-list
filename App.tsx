@@ -17,6 +17,7 @@ export default function App() {
       <ServiceProvider
         stapleLibrary={services.stapleLibrary}
         tripService={services.tripService}
+        areaManagement={services.areaManagement}
       >
         <AppShell />
       </ServiceProvider>
