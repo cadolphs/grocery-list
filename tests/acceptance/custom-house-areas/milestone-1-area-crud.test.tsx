@@ -19,7 +19,7 @@
 
 // Domain ports:
 import { createAreaManagement } from '../../../src/domain/area-management';
-// import { validateAreaName } from '../../../src/domain/area-validation';
+import { validateAreaName } from '../../../src/domain/area-validation';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
@@ -323,68 +323,76 @@ describe('US-CHA-07: Area Name Validation', () => {
   // AC: Validation applies to both add and rename operations
   // Trace: US-CHA-07, AC-1 through AC-6
 
-  it.skip('rejects duplicate name case-insensitively', () => {
+  it('rejects duplicate name case-insensitively', () => {
     // Given "Bathroom" exists in the area list
-    // const existingAreas = DEFAULT_AREAS;
+    const existingAreas = DEFAULT_AREAS;
 
     // When Carlos tries to add "bathroom" (lowercase)
-    // const result = validateAreaName('bathroom', existingAreas);
+    const result = validateAreaName('bathroom', existingAreas);
 
     // Then the validation rejects it
-    // expect(result.valid).toBe(false);
-    // expect(result.error).toContain('already exists');
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toContain('already exists');
+    }
   });
 
-  it.skip('rejects empty name', () => {
+  it('rejects empty name', () => {
     // When Carlos tries to add an area with a blank name
-    // const result = validateAreaName('', DEFAULT_AREAS);
+    const result = validateAreaName('', DEFAULT_AREAS);
 
     // Then validation rejects it
-    // expect(result.valid).toBe(false);
-    // expect(result.error).toContain('required');
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toContain('required');
+    }
   });
 
-  it.skip('rejects whitespace-only name', () => {
+  it('rejects whitespace-only name', () => {
     // When Carlos tries to add "   " as an area name
-    // const result = validateAreaName('   ', DEFAULT_AREAS);
+    const result = validateAreaName('   ', DEFAULT_AREAS);
 
     // Then validation rejects it
-    // expect(result.valid).toBe(false);
-    // expect(result.error).toContain('required');
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toContain('required');
+    }
   });
 
-  it.skip('rejects name exceeding 40 characters', () => {
+  it('rejects name exceeding 40 characters', () => {
     // When Carlos tries to add a name that is 41 characters
-    // const longName = 'A'.repeat(41);
-    // const result = validateAreaName(longName, DEFAULT_AREAS);
+    const longName = 'A'.repeat(41);
+    const result = validateAreaName(longName, DEFAULT_AREAS);
 
     // Then validation rejects it
-    // expect(result.valid).toBe(false);
-    // expect(result.error).toContain('40 characters');
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.error).toContain('40 characters');
+    }
   });
 
-  it.skip('accepts name at exactly 40 characters', () => {
+  it('accepts name at exactly 40 characters', () => {
     // When Carlos tries to add a name that is exactly 40 characters
-    // const exactName = 'A'.repeat(40);
-    // const result = validateAreaName(exactName, DEFAULT_AREAS);
+    const exactName = 'A'.repeat(40);
+    const result = validateAreaName(exactName, DEFAULT_AREAS);
 
     // Then validation accepts it
-    // expect(result.valid).toBe(true);
+    expect(result.valid).toBe(true);
   });
 
-  it.skip('accepts valid unique name', () => {
+  it('accepts valid unique name', () => {
     // When Carlos tries to add "Laundry Room"
-    // const result = validateAreaName('Laundry Room', DEFAULT_AREAS);
+    const result = validateAreaName('Laundry Room', DEFAULT_AREAS);
 
     // Then validation accepts it
-    // expect(result.valid).toBe(true);
+    expect(result.valid).toBe(true);
   });
 
-  it.skip('trims whitespace before validation', () => {
+  it('trims whitespace before validation', () => {
     // When Carlos types "  Laundry Room  " with leading/trailing spaces
-    // const result = validateAreaName('  Laundry Room  ', DEFAULT_AREAS);
+    const result = validateAreaName('  Laundry Room  ', DEFAULT_AREAS);
 
     // Then validation accepts the trimmed name
-    // expect(result.valid).toBe(true);
+    expect(result.valid).toBe(true);
   });
 });
