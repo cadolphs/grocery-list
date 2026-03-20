@@ -101,21 +101,43 @@ describe('WS-AIF-2: Bottom sheet opens with metadata form', () => {
   // AC: Tapping the prompt opens a bottom sheet with type, area, section, and aisle fields
   // Trace: US-AIF-01, AC-2
 
-  it.skip('bottom sheet opens with form fields when "Add as new item" is tapped', () => {
+  it('bottom sheet opens with form fields when "Add as new item" is tapped', () => {
     // Given Carlos has typed "Oat milk" and sees the new item prompt
-    // const { library, tripService } = createTestServices();
+    const { library, tripService } = createTestServices();
+
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'Oat milk');
 
     // When Carlos taps "Add 'Oat milk' as new item..."
-    // (UI: fireEvent.press(screen.getByText(/Add 'Oat milk' as new item/)))
+    fireEvent.press(screen.getByText(/Add 'Oat milk' as new item/));
 
     // Then a bottom sheet opens with title "Add 'Oat milk'"
-    // expect(screen.getByText("Add 'Oat milk'")).toBeTruthy();
+    expect(screen.getByText("Add 'Oat milk'")).toBeTruthy();
 
-    // And the bottom sheet shows fields for type, area, section, and aisle
-    // expect(screen.getByText('Staple')).toBeTruthy();
-    // expect(screen.getByText('One-off')).toBeTruthy();
-    // expect(screen.getByPlaceholderText('Store section...')).toBeTruthy();
-    // expect(screen.getByPlaceholderText('Aisle number')).toBeTruthy();
+    // And the bottom sheet shows type toggle
+    expect(screen.getByText('Staple')).toBeTruthy();
+    expect(screen.getByText('One-off')).toBeTruthy();
+
+    // And all 5 house areas are shown
+    expect(screen.getByText('Bathroom')).toBeTruthy();
+    expect(screen.getByText('Garage Pantry')).toBeTruthy();
+    expect(screen.getByText('Kitchen Cabinets')).toBeTruthy();
+    expect(screen.getByText('Fridge')).toBeTruthy();
+    expect(screen.getByText('Freezer')).toBeTruthy();
+
+    // And section and aisle inputs are shown
+    expect(screen.getByPlaceholderText('Store section...')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Aisle number')).toBeTruthy();
+
+    // And action buttons are shown
+    expect(screen.getByText('Add Item')).toBeTruthy();
+    expect(screen.getByText('Skip, add with defaults')).toBeTruthy();
   });
 });
 

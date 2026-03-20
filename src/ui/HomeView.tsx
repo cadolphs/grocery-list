@@ -9,6 +9,7 @@ import { groupByArea } from '../domain/item-grouping';
 import { HouseArea, StapleItem } from '../domain/types';
 import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
+import { MetadataBottomSheet } from './MetadataBottomSheet';
 
 const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
   `${completedCount} of ${totalAreas} areas complete`;
@@ -18,9 +19,21 @@ export const HomeView = (): React.JSX.Element => {
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items);
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
+  const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
+  const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
 
   const handleSelectArea = useCallback((area: string) => {
     setActiveArea(area as HouseArea);
+  }, []);
+
+  const handleOpenMetadataSheet = useCallback((name: string) => {
+    setMetadataSheetItemName(name);
+    setMetadataSheetVisible(true);
+  }, []);
+
+  const handleDismissMetadataSheet = useCallback(() => {
+    setMetadataSheetVisible(false);
+    setMetadataSheetItemName('');
   }, []);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
@@ -40,7 +53,7 @@ export const HomeView = (): React.JSX.Element => {
 
   return (
     <ScrollView testID="home-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-      <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} />
+      <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
       <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
         <Text style={styles.whiteboardPrompt}>Add from whiteboard</Text>
@@ -57,6 +70,11 @@ export const HomeView = (): React.JSX.Element => {
           isActive={activeArea === areaGroup.area}
         />
       ))}
+      <MetadataBottomSheet
+        visible={metadataSheetVisible}
+        itemName={metadataSheetItemName}
+        onDismiss={handleDismissMetadataSheet}
+      />
     </ScrollView>
   );
 };
