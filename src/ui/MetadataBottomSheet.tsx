@@ -1,7 +1,7 @@
 // MetadataBottomSheet - Modal form for adding new item metadata
 // Collects item type (Staple/One-off), house area, store section, and aisle
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
 import { HouseArea, AddStapleRequest, AddTripItemRequest } from '../domain/types';
 
@@ -18,6 +18,8 @@ type ItemTypeSelection = 'Staple' | 'One-off';
 type MetadataBottomSheetProps = {
   readonly visible: boolean;
   readonly itemName: string;
+  readonly defaultItemType?: ItemTypeSelection;
+  readonly defaultArea?: HouseArea | null;
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
@@ -26,16 +28,33 @@ type MetadataBottomSheetProps = {
 export const MetadataBottomSheet = ({
   visible,
   itemName,
+  defaultItemType,
+  defaultArea,
   onDismiss,
   onSubmitStaple,
   onSubmitTripItem,
 }: MetadataBottomSheetProps): React.JSX.Element => {
-  const [selectedType, setSelectedType] = useState<ItemTypeSelection>('Staple');
-  const [selectedArea, setSelectedArea] = useState<HouseArea>('Kitchen Cabinets');
+  const resolveDefaultArea = (): HouseArea | null =>
+    defaultArea === undefined ? 'Kitchen Cabinets' : defaultArea;
+
+  const [selectedType, setSelectedType] = useState<ItemTypeSelection>(defaultItemType ?? 'Staple');
+  const [selectedArea, setSelectedArea] = useState<HouseArea | null>(resolveDefaultArea());
   const [section, setSection] = useState('');
   const [aisleText, setAisleText] = useState('');
 
+  // Re-initialize defaults when sheet opens or defaults change
+  useEffect(() => {
+    if (visible) {
+      setSelectedType(defaultItemType ?? 'Staple');
+      setSelectedArea(resolveDefaultArea());
+      setSection('');
+      setAisleText('');
+    }
+  }, [visible, defaultItemType, defaultArea]);
+
   const handleSubmit = (): void => {
+    if (selectedArea === null) return;
+
     const storeLocation = {
       section,
       aisleNumber: aisleText ? parseInt(aisleText, 10) : null,
@@ -60,6 +79,20 @@ export const MetadataBottomSheet = ({
     onDismiss();
   };
 
+  const handleSkip = (): void => {
+    const skipArea: HouseArea = selectedArea ?? 'Kitchen Cabinets';
+
+    onSubmitTripItem({
+      name: itemName,
+      houseArea: skipArea,
+      storeLocation: { section: 'Uncategorized', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+
+    onDismiss();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -74,6 +107,7 @@ export const MetadataBottomSheet = ({
           {/* Type toggle */}
           <View style={styles.typeToggleContainer}>
             <Pressable
+              testID={selectedType === 'Staple' ? 'type-toggle-Staple-active' : 'type-toggle-Staple'}
               style={[
                 styles.typeToggleButton,
                 selectedType === 'Staple' && styles.typeToggleActive,
@@ -90,6 +124,7 @@ export const MetadataBottomSheet = ({
               </Text>
             </Pressable>
             <Pressable
+              testID={selectedType === 'One-off' ? 'type-toggle-One-off-active' : 'type-toggle-One-off'}
               style={[
                 styles.typeToggleButton,
                 selectedType === 'One-off' && styles.typeToggleActive,
@@ -112,6 +147,7 @@ export const MetadataBottomSheet = ({
             {HOUSE_AREAS.map((area) => (
               <Pressable
                 key={area}
+                testID={selectedArea === area ? `area-button-${area}-active` : `area-button-${area}`}
                 style={[
                   styles.areaButton,
                   selectedArea === area && styles.areaButtonActive,
@@ -152,7 +188,7 @@ export const MetadataBottomSheet = ({
             <Text style={styles.addButtonText}>Add Item</Text>
           </Pressable>
 
-          <Pressable style={styles.skipButton}>
+          <Pressable style={styles.skipButton} onPress={handleSkip}>
             <Text style={styles.skipButtonText}>Skip, add with defaults</Text>
           </Pressable>
         </View>

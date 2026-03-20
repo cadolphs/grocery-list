@@ -81,6 +81,8 @@ export const HomeView = (): React.JSX.Element => {
       <MetadataBottomSheet
         visible={metadataSheetVisible}
         itemName={metadataSheetItemName}
+        defaultItemType={sweepProgress.allAreasComplete ? 'One-off' : 'Staple'}
+        defaultArea={sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)}
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
         onSubmitTripItem={handleSubmitTripItem}
