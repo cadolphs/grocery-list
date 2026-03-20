@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react-native';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
@@ -56,5 +56,72 @@ describe('Area Settings Screen', () => {
     fireEvent.press(screen.getByTestId('settings-button'));
 
     expect(screen.getByText('Add Area')).toBeTruthy();
+  });
+
+  describe('Add Area', () => {
+    it('tapping Add Area opens name input, typing and saving adds area to list', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByText('Add Area'));
+
+      // Input and Save/Cancel buttons should be visible
+      const nameInput = screen.getByTestId('area-name-input');
+      expect(nameInput).toBeTruthy();
+      expect(screen.getByText('Save')).toBeTruthy();
+      expect(screen.getByText('Cancel')).toBeTruthy();
+
+      // Type a new area name and save
+      fireEvent.changeText(nameInput, 'Garage');
+      fireEvent.press(screen.getByText('Save'));
+
+      // New area should appear in the list
+      expect(screen.getByText('Garage')).toBeTruthy();
+      // Input should be hidden after saving
+      expect(screen.queryByTestId('area-name-input')).toBeNull();
+    });
+
+    it('blocks empty area name with error message', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByText('Add Area'));
+
+      // Try to save with empty name
+      fireEvent.press(screen.getByText('Save'));
+
+      // Error message should appear
+      expect(screen.getByText('Area name is required')).toBeTruthy();
+      // Input should still be visible
+      expect(screen.getByTestId('area-name-input')).toBeTruthy();
+    });
+
+    it('blocks duplicate area name with error message', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByText('Add Area'));
+
+      fireEvent.changeText(screen.getByTestId('area-name-input'), 'Bathroom');
+      fireEvent.press(screen.getByText('Save'));
+
+      // Error message should appear
+      expect(screen.getByText('"Bathroom" already exists')).toBeTruthy();
+    });
+
+    it('Cancel hides the input without adding', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByText('Add Area'));
+
+      fireEvent.changeText(screen.getByTestId('area-name-input'), 'Garage');
+      fireEvent.press(screen.getByText('Cancel'));
+
+      // Input should be hidden
+      expect(screen.queryByTestId('area-name-input')).toBeNull();
+      // Garage should NOT have been added
+      expect(screen.queryByText('Garage')).toBeNull();
+    });
   });
 });
