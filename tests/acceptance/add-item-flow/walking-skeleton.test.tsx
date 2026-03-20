@@ -200,23 +200,41 @@ describe('WS-AIF-4: Submitting as one-off adds to trip without saving to library
   // AC: One-off items are added to the trip only, not the staple library
   // Trace: US-AIF-01, AC-4
 
-  it.skip('submitting as one-off adds to trip but not to staple library', () => {
+  it('submitting as one-off adds to trip but not to staple library', () => {
     // Given Carlos has an active trip and opens the metadata bottom sheet for "Birthday candles"
-    // const { library, tripService } = createTestServices();
+    const { library, tripService } = createTestServices();
 
-    // And Carlos selects type "One-off", area "Kitchen Cabinets", section "Baking", aisle 12
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    // Carlos types "Birthday candles" and taps "Add as new item"
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'Birthday candles');
+    fireEvent.press(screen.getByText(/Add 'Birthday candles' as new item/));
+
+    // And Carlos selects type "One-off", area "Kitchen Cabinets" (default), section "Baking", aisle 12
+    fireEvent.press(screen.getByText('One-off'));
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Baking');
+    fireEvent.changeText(screen.getByPlaceholderText('Aisle number'), '12');
 
     // When Carlos taps "Add Item"
+    fireEvent.press(screen.getByText('Add Item'));
 
     // Then "Birthday candles" appears on the current trip as one-off
-    // const tripItems = tripService.getItems();
-    // expect(tripItems).toContainEqual(
-    //   expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
-    // );
+    const tripItems = tripService.getItems();
+    expect(tripItems).toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
+    );
 
     // And "Birthday candles" is NOT in the staple library
-    // expect(library.listAll()).not.toContainEqual(
-    //   expect.objectContaining({ name: 'Birthday candles' })
-    // );
+    expect(library.listAll()).not.toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles' })
+    );
+
+    // And the sheet is dismissed
+    expect(screen.queryByText("Add 'Birthday candles'")).toBeNull();
   });
 });
