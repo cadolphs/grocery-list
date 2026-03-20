@@ -260,55 +260,55 @@ describe('US-CHA-06: Reorder Areas', () => {
   // AC: New order persists across app restart
   // Trace: US-CHA-06, AC-1 through AC-5
 
-  it.skip('reorder changes area list order', () => {
+  it('reorder changes area list order', () => {
     // Given Carlos has areas with "Laundry Room" at position 6
-    // const areas = [...DEFAULT_AREAS, 'Laundry Room'];
-    // const areaStorage = createNullAreaStorage(areas);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areas = [...DEFAULT_AREAS, 'Laundry Room'];
+    const areaStorage = createNullAreaStorage(areas);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Carlos moves "Laundry Room" from position 6 to position 2
-    // const newOrder = ['Bathroom', 'Laundry Room', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
-    // areaManagement.reorder(newOrder);
+    const newOrder = ['Bathroom', 'Laundry Room', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+    areaManagement.reorder(newOrder);
 
     // Then the area order matches the new arrangement
-    // expect(areaManagement.getAreas()).toEqual(newOrder);
+    expect(areaManagement.getAreas()).toEqual(newOrder);
   });
 
-  it.skip('reordered areas produce matching groupByArea order', () => {
+  it('reordered areas produce matching groupByArea order', () => {
     // Given Carlos has reordered areas
-    // const newOrder = ['Bathroom', 'Laundry Room', 'Pantry', 'Kitchen Cabinets', 'Fridge'];
-    // const areaStorage = createNullAreaStorage(newOrder);
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({ name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
-    // library.addStaple({ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage, newOrder);
-    // trip.start(library.listAll());
+    const newOrder = ['Bathroom', 'Laundry Room', 'Pantry', 'Kitchen Cabinets', 'Fridge'];
+    const areaStorage = createNullAreaStorage(newOrder);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
+    library.addStaple({ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage, newOrder);
+    trip.start(library.listAll());
 
     // When Carlos views the home screen
-    // const grouped = groupByArea(trip.getItems(), newOrder);
+    const grouped = groupByArea(trip.getItems(), newOrder);
 
     // Then area sections appear in the reordered sequence
-    // expect(grouped.map(g => g.area)).toEqual(newOrder);
+    expect(grouped.map(g => g.area)).toEqual(newOrder);
   });
 
-  it.skip('reorder persists after simulated restart', () => {
+  it('reorder persists after simulated restart', () => {
     // Given Carlos has reordered his areas
-    // const newOrder = ['Fridge', 'Kitchen Cabinets', 'Bathroom', 'Garage Pantry', 'Freezer'];
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
-    // areaManagement.reorder(newOrder);
+    const newOrder = ['Fridge', 'Kitchen Cabinets', 'Bathroom', 'Garage Pantry', 'Freezer'];
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    areaManagement.reorder(newOrder);
 
     // When Carlos reopens the app (simulated by re-reading storage)
-    // const reloadedAreas = areaStorage.loadAll();
+    const reloadedAreas = areaStorage.loadAll();
 
     // Then areas appear in the same custom order
-    // expect(reloadedAreas).toEqual(newOrder);
+    expect(reloadedAreas).toEqual(newOrder);
   });
 });
 

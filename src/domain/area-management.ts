@@ -21,6 +21,7 @@ export type AreaManagement = {
   readonly add: (name: string) => AreaResult;
   readonly rename: (oldName: string, newName: string) => AreaResult;
   readonly delete: (name: string, options?: DeleteOptions) => DeleteResult;
+  readonly reorder: (newOrder: string[]) => AreaResult;
   readonly getAreas: () => string[];
 };
 
@@ -113,6 +114,20 @@ export const createAreaManagement = (
 
       const updatedAreas = currentAreas.filter(area => area !== name);
       areaStorage.saveAll(updatedAreas);
+      return { success: true };
+    },
+
+    reorder: (newOrder: string[]): AreaResult => {
+      const currentAreas = areaStorage.loadAll();
+      const currentSorted = [...currentAreas].sort();
+      const newSorted = [...newOrder].sort();
+
+      if (currentSorted.length !== newSorted.length ||
+          currentSorted.some((area, index) => area !== newSorted[index])) {
+        return { success: false, error: 'Reorder must contain exactly the same areas' };
+      }
+
+      areaStorage.saveAll([...newOrder]);
       return { success: true };
     },
 
