@@ -2,7 +2,7 @@
 // Composes useTrip hook with groupByArea pure function
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useServices } from './ServiceProvider';
 import { groupByArea } from '../domain/item-grouping';
@@ -10,6 +10,7 @@ import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../
 import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
+import { AreaSettingsScreen } from './AreaSettingsScreen';
 
 const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
 
@@ -31,6 +32,11 @@ export const HomeView = ({ areas = DEFAULT_AREAS }: HomeViewProps = {}): React.J
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+
+  const handleToggleSettings = useCallback(() => {
+    setShowSettings((prev) => !prev);
+  }, []);
 
   const handleSelectArea = useCallback((area: string) => {
     setActiveArea(area as HouseArea);
@@ -75,8 +81,26 @@ export const HomeView = ({ areas = DEFAULT_AREAS }: HomeViewProps = {}): React.J
     }
   }, [items, addItem]);
 
+  if (showSettings) {
+    return (
+      <View style={styles.settingsContainer}>
+        <View style={styles.settingsHeader}>
+          <Pressable testID="settings-back-button" onPress={handleToggleSettings}>
+            <Text style={styles.backButtonText}>Back</Text>
+          </Pressable>
+        </View>
+        <AreaSettingsScreen />
+      </View>
+    );
+  }
+
   return (
     <ScrollView testID="home-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.headerRow}>
+        <Pressable testID="settings-button" onPress={handleToggleSettings} style={styles.settingsButton}>
+          <Text style={styles.settingsButtonText}>Settings</Text>
+        </Pressable>
+      </View>
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
       <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
@@ -116,6 +140,30 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  settingsButton: {
+    padding: 8,
+  },
+  settingsButtonText: {
+    fontSize: 16,
+    color: '#2196F3',
+  },
+  settingsContainer: {
+    flex: 1,
+  },
+  settingsHeader: {
+    flexDirection: 'row',
+    padding: 16,
+    paddingBottom: 0,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#2196F3',
   },
   sweepProgress: {
     fontSize: 14,

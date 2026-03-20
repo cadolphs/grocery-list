@@ -1,13 +1,18 @@
 // ServiceProvider - React Context for dependency injection
 // Provides domain services to the component tree
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { StapleLibrary } from '../domain/staple-library';
 import { TripService } from '../domain/trip';
+import { AreaManagement, createAreaManagement } from '../domain/area-management';
+import { createNullAreaStorage } from '../adapters/null/null-area-storage';
+import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
+import { createNullTripStorage } from '../adapters/null/null-trip-storage';
 
 export type ServiceContextValue = {
   readonly stapleLibrary: StapleLibrary;
   readonly tripService: TripService;
+  readonly areaManagement: AreaManagement;
 };
 
 export const ServiceContext = createContext<ServiceContextValue | null>(null);
@@ -20,18 +25,34 @@ export const useServices = (): ServiceContextValue => {
   return context;
 };
 
+const createDefaultAreaManagement = (): AreaManagement =>
+  createAreaManagement(
+    createNullAreaStorage(),
+    createNullStapleStorage([]),
+    createNullTripStorage(),
+  );
+
 type ServiceProviderProps = {
   readonly stapleLibrary: StapleLibrary;
   readonly tripService: TripService;
+  readonly areaManagement?: AreaManagement;
   readonly children: React.ReactNode;
 };
 
 export const ServiceProvider = ({
   stapleLibrary,
   tripService,
+  areaManagement,
   children,
-}: ServiceProviderProps): React.JSX.Element => (
-  <ServiceContext.Provider value={{ stapleLibrary, tripService }}>
-    {children}
-  </ServiceContext.Provider>
-);
+}: ServiceProviderProps): React.JSX.Element => {
+  const resolvedAreaManagement = useMemo(
+    () => areaManagement ?? createDefaultAreaManagement(),
+    [areaManagement],
+  );
+
+  return (
+    <ServiceContext.Provider value={{ stapleLibrary, tripService, areaManagement: resolvedAreaManagement }}>
+      {children}
+    </ServiceContext.Provider>
+  );
+};

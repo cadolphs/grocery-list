@@ -1,0 +1,86 @@
+{
+  "roadmap": {
+    "project_id": "custom-areas-ui",
+    "created_at": "2026-03-20T12:00:00Z",
+    "total_steps": 6,
+    "phases": 3
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Settings Screen + Add Area",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Settings screen with area list",
+          "criteria": "Settings gear icon on HomeView. Tapping opens AreaSettingsScreen showing all configured areas with Add Area button. useAreas hook provides area list from AreaManagement via context.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/AreaSettingsScreen.tsx", "src/ui/HomeView.tsx", "src/ui/ServiceProvider.tsx", "src/hooks/useAreas.ts"]
+        },
+        {
+          "id": "01-02",
+          "name": "Add area from settings",
+          "criteria": "Tapping Add Area shows name input. Typing name and saving adds to area list. New area appears in HomeView area sections and MetadataBottomSheet area picker.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/AreaSettingsScreen.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Rename + Delete from Settings",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Rename area from settings",
+          "criteria": "Each area has edit button. Tapping opens rename input. Saving renames area and propagates to staples/trip items.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/AreaSettingsScreen.tsx"]
+        },
+        {
+          "id": "02-02",
+          "name": "Delete area from settings",
+          "criteria": "Each area has delete button. Empty areas deleted with confirmation. Areas with staples show reassignment picker. Last area deletion blocked.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/AreaSettingsScreen.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "App Wiring + Dynamic Areas Everywhere",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "AsyncStorage area adapter + app initialization",
+          "criteria": "createAsyncAreaStorage implements AreaStorage with cached pattern. useAppInitialization creates AreaManagement and provides via context. Loading screen shown during init.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/adapters/async-storage/async-area-storage.ts", "src/hooks/useAppInitialization.ts", "App.tsx"]
+        },
+        {
+          "id": "03-02",
+          "name": "HomeView + MetadataBottomSheet use dynamic areas",
+          "criteria": "HomeView reads areas from useAreas hook instead of DEFAULT_AREAS constant. MetadataBottomSheet area picker shows dynamic areas. Sweep progress uses dynamic count. All existing tests pass.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/HomeView.tsx", "src/ui/MetadataBottomSheet.tsx", "src/hooks/useTrip.ts"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/", "src/hooks/", "src/adapters/async-storage/"],
+    "test_directories": ["tests/acceptance/custom-house-areas/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-20T12:00:00Z"
+  }
+}
