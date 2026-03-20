@@ -29,7 +29,7 @@ export type SweepProgress = {
   readonly allAreasComplete: boolean;
 };
 
-const ALL_HOUSE_AREAS: readonly HouseArea[] = [
+const DEFAULT_HOUSE_AREAS: readonly string[] = [
   'Bathroom',
   'Garage Pantry',
   'Kitchen Cabinets',
@@ -79,7 +79,8 @@ const buildTrip = (tripId: string, items: TripItem[], createdAt: string): Trip =
   createdAt,
 });
 
-export const createTrip = (storage: TripStorage): TripService => {
+export const createTrip = (storage: TripStorage, areas?: readonly string[]): TripService => {
+  const tripAreas = areas ?? DEFAULT_HOUSE_AREAS;
   let items: TripItem[] = [];
   let tripId: string = generateTripId();
   let createdAt: string = new Date().toISOString();
@@ -161,8 +162,8 @@ export const createTrip = (storage: TripStorage): TripService => {
       return {
         completedAreas: completed,
         completedCount: completed.length,
-        totalAreas: ALL_HOUSE_AREAS.length,
-        allAreasComplete: completed.length === ALL_HOUSE_AREAS.length,
+        totalAreas: tripAreas.length,
+        allAreasComplete: completed.length === tripAreas.length,
       };
     },
 

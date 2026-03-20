@@ -156,45 +156,45 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
   // AC: getSweepProgress uses dynamic area count (no hardcoded constant)
   // Trace: US-CHA-03, AC-2
 
-  it.skip('shows progress out of 6 when Carlos has 6 areas', () => {
+  it('shows progress out of 6 when Carlos has 6 areas', () => {
     // Given Carlos has 6 configured areas
-    // const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage, customAreas);
-    // trip.start([]);
+    const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage, customAreas);
+    trip.start([]);
 
     // When Carlos completes "Bathroom"
-    // trip.completeArea('Bathroom');
+    trip.completeArea('Bathroom');
 
     // Then sweep progress shows 1 of 6
-    // const progress = trip.getSweepProgress();
-    // expect(progress.completedCount).toBe(1);
-    // expect(progress.totalAreas).toBe(6);
-    // expect(progress.allAreasComplete).toBe(false);
+    const progress = trip.getSweepProgress();
+    expect(progress.completedCount).toBe(1);
+    expect(progress.totalAreas).toBe(6);
+    expect(progress.allAreasComplete).toBe(false);
   });
 
-  it.skip('all-areas-complete triggers only after completing all 6', () => {
+  it('all-areas-complete triggers only after completing all 6', () => {
     // Given Carlos has 6 areas and completes 5
-    // const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage, customAreas);
-    // trip.start([]);
-    // DEFAULT_AREAS.forEach(area => trip.completeArea(area));
+    const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage, customAreas);
+    trip.start([]);
+    DEFAULT_AREAS.forEach(area => trip.completeArea(area));
 
     // When Carlos has not yet completed "Laundry Room"
-    // const progress = trip.getSweepProgress();
+    const progress = trip.getSweepProgress();
 
     // Then all-areas-complete is false
-    // expect(progress.completedCount).toBe(5);
-    // expect(progress.allAreasComplete).toBe(false);
+    expect(progress.completedCount).toBe(5);
+    expect(progress.allAreasComplete).toBe(false);
 
     // When Carlos completes "Laundry Room"
-    // trip.completeArea('Laundry Room');
-    // const finalProgress = trip.getSweepProgress();
+    trip.completeArea('Laundry Room');
+    const finalProgress = trip.getSweepProgress();
 
     // Then all-areas-complete is true
-    // expect(finalProgress.completedCount).toBe(6);
-    // expect(finalProgress.allAreasComplete).toBe(true);
+    expect(finalProgress.completedCount).toBe(6);
+    expect(finalProgress.allAreasComplete).toBe(true);
   });
 });
 
