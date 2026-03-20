@@ -6,10 +6,13 @@ import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from 'react-
 import { useAreas } from '../hooks/useAreas';
 
 export const AreaSettingsScreen = (): React.JSX.Element => {
-  const { areas, addArea } = useAreas();
+  const { areas, addArea, renameArea } = useAreas();
   const [isAdding, setIsAdding] = useState(false);
   const [newAreaName, setNewAreaName] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
+  const [editingArea, setEditingArea] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
 
   const handleAddPress = () => {
     setIsAdding(true);
@@ -34,14 +37,72 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
     setAddError(null);
   };
 
+  const handleEditPress = (area: string) => {
+    setEditingArea(area);
+    setEditName(area);
+    setEditError(null);
+  };
+
+  const handleSaveRename = () => {
+    if (editingArea === null) return;
+    const result = renameArea(editingArea, editName);
+    if (result.success) {
+      setEditingArea(null);
+      setEditName('');
+      setEditError(null);
+    } else {
+      setEditError(result.error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingArea(null);
+    setEditName('');
+    setEditError(null);
+  };
+
+  const renderAreaRow = (area: string) => {
+    if (editingArea === area) {
+      return (
+        <View key={area} style={styles.areaCard}>
+          <View style={styles.editForm}>
+            <TextInput
+              testID="rename-area-input"
+              style={styles.nameInput}
+              value={editName}
+              onChangeText={setEditName}
+              autoFocus
+            />
+            {editError && <Text style={styles.errorText}>{editError}</Text>}
+            <View style={styles.formButtons}>
+              <Pressable style={styles.saveButton} onPress={handleSaveRename}>
+                <Text style={styles.saveButtonText}>Save</Text>
+              </Pressable>
+              <Pressable style={styles.cancelButton} onPress={handleCancelEdit}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View key={area} style={styles.areaCard}>
+        <Text style={styles.areaName}>{area}</Text>
+        <View style={styles.rowActions}>
+          <Pressable testID={`edit-area-${area}`} onPress={() => handleEditPress(area)}>
+            <Text style={styles.actionText}>Edit</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <ScrollView testID="area-settings-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.header}>House Areas</Text>
-      {areas.map((area) => (
-        <View key={area} style={styles.areaCard}>
-          <Text style={styles.areaName}>{area}</Text>
-        </View>
-      ))}
+      {areas.map(renderAreaRow)}
       {isAdding ? (
         <View style={styles.addForm}>
           <TextInput
@@ -101,6 +162,18 @@ const styles = StyleSheet.create({
   areaName: {
     fontSize: 16,
     color: '#333333',
+  },
+  rowActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionText: {
+    color: '#2196F3',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  editForm: {
+    flex: 1,
   },
   addButton: {
     backgroundColor: '#2196F3',

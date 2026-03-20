@@ -124,4 +124,50 @@ describe('Area Settings Screen', () => {
       expect(screen.queryByText('Garage')).toBeNull();
     });
   });
+
+  describe('Rename Area', () => {
+    it('tapping Edit on an area row opens rename input with current name pre-filled', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+
+      // Tap Edit on the Bathroom row
+      fireEvent.press(screen.getByTestId('edit-area-Bathroom'));
+
+      // Input should have current name pre-filled
+      const renameInput = screen.getByTestId('rename-area-input');
+      expect(renameInput.props.value).toBe('Bathroom');
+    });
+
+    it('saving a renamed area updates the list', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByTestId('edit-area-Bathroom'));
+
+      const renameInput = screen.getByTestId('rename-area-input');
+      fireEvent.changeText(renameInput, 'Master Bath');
+      fireEvent.press(screen.getByText('Save'));
+
+      // Old name gone, new name present
+      expect(screen.queryByText('Bathroom')).toBeNull();
+      expect(screen.getByText('Master Bath')).toBeTruthy();
+      // Input should be hidden
+      expect(screen.queryByTestId('rename-area-input')).toBeNull();
+    });
+
+    it('shows error when renaming to an existing area name', () => {
+      renderApp(['Bathroom', 'Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByTestId('edit-area-Bathroom'));
+
+      fireEvent.changeText(screen.getByTestId('rename-area-input'), 'Kitchen');
+      fireEvent.press(screen.getByText('Save'));
+
+      expect(screen.getByText('"Kitchen" already exists')).toBeTruthy();
+      // Input should remain visible
+      expect(screen.getByTestId('rename-area-input')).toBeTruthy();
+    });
+  });
 });
