@@ -161,50 +161,52 @@ describe('US-CHA-05: Delete a House Area', () => {
     expect(areas).toHaveLength(4);
   });
 
-  it.skip('deletes area with staples and reassigns to target', () => {
+  it('deletes area with staples and reassigns to target', () => {
     // Given Carlos has 2 staples in "Freezer"
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({ name: 'Frozen peas', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    // library.addStaple({ name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Frozen peas', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    library.addStaple({ name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Carlos deletes "Freezer" and reassigns to "Fridge"
-    // const result = areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
+    const result = areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
 
     // Then "Freezer" is removed
-    // expect(result.success).toBe(true);
-    // expect(areaManagement.getAreas()).not.toContain('Freezer');
+    expect(result.success).toBe(true);
+    expect(areaManagement.getAreas()).not.toContain('Freezer');
 
     // And both staples now have area "Fridge"
-    // const allStaples = library.listAll();
-    // expect(allStaples.filter(s => s.houseArea === 'Fridge')).toHaveLength(2);
-    // expect(allStaples.filter(s => s.houseArea === 'Freezer')).toHaveLength(0);
+    const allStaples = library.listAll();
+    expect(allStaples.filter(s => s.houseArea === 'Fridge')).toHaveLength(2);
+    expect(allStaples.filter(s => s.houseArea === 'Freezer')).toHaveLength(0);
   });
 
-  it.skip('delete reassigns trip items too', () => {
+  it('delete reassigns trip items too', () => {
     // Given Carlos has an active trip with 1 item in "Freezer" and 2 staples
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({ name: 'Frozen peas', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    // library.addStaple({ name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    // const tripStorage = createNullTripStorage();
-    // const trip = createTrip(tripStorage, DEFAULT_AREAS);
-    // trip.start(library.listAll());
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Frozen peas', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    library.addStaple({ name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage, DEFAULT_AREAS);
+    trip.start(library.listAll());
+    // Persist the trip so delete can update items in storage
+    tripStorage.saveTrip({ id: 'test-trip', items: trip.getItems(), status: 'active', createdAt: new Date().toISOString() });
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Carlos deletes "Freezer" and reassigns to "Fridge"
-    // areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
+    areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
 
     // Then trip items and staples all belong to "Fridge"
-    // const loadedTrip = tripStorage.loadTrip();
-    // const freezerItems = loadedTrip?.items.filter(i => i.houseArea === 'Freezer');
-    // expect(freezerItems).toHaveLength(0);
-    // const fridgeItems = loadedTrip?.items.filter(i => i.houseArea === 'Fridge');
-    // expect(fridgeItems).toHaveLength(2);
+    const loadedTrip = tripStorage.loadTrip();
+    const freezerItems = loadedTrip?.items.filter(i => i.houseArea === 'Freezer');
+    expect(freezerItems).toHaveLength(0);
+    const fridgeItems = loadedTrip?.items.filter(i => i.houseArea === 'Fridge');
+    expect(fridgeItems).toHaveLength(2);
   });
 
   it('cannot delete the last remaining area', () => {
@@ -225,24 +227,26 @@ describe('US-CHA-05: Delete a House Area', () => {
     expect(areaManagement.getAreas()).toHaveLength(1);
   });
 
-  it.skip('detects duplicate conflict on reassignment', () => {
+  it('detects duplicate conflict on reassignment', () => {
     // Given Carlos has "Whole milk" in both "Fridge" and "Freezer"
-    // const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    // const stapleStorage = createNullStapleStorage();
-    // const library = createStapleLibrary(stapleStorage);
-    // library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    // library.addStaple({ name: 'Whole milk', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    // const tripStorage = createNullTripStorage();
-    // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
+    const stapleStorage = createNullStapleStorage();
+    const library = createStapleLibrary(stapleStorage);
+    library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({ name: 'Whole milk', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    const tripStorage = createNullTripStorage();
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     // When Carlos tries to delete "Freezer" and reassign to "Fridge"
-    // const result = areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
+    const result = areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
 
     // Then a conflict is detected
-    // expect(result.success).toBe(false);
-    // expect(result.conflicts).toContainEqual(
-    //   expect.objectContaining({ name: 'Whole milk', existsIn: 'Fridge' })
-    // );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.conflicts).toContainEqual(
+        expect.objectContaining({ name: 'Whole milk', existsIn: 'Fridge' })
+      );
+    }
   });
 });
 
