@@ -1,7 +1,7 @@
 // HomeView - displays trip items grouped by house area
 // Composes useTrip hook with groupByArea pure function
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useServices } from './ServiceProvider';
@@ -18,6 +18,10 @@ export const HomeView = (): React.JSX.Element => {
   const { items, addItem, skipItem, unskipItem, completeArea, sweepProgress } = useTrip();
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items);
+  const existingSections = useMemo(
+    () => [...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section))],
+    [stapleLibrary],
+  );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
@@ -83,6 +87,7 @@ export const HomeView = (): React.JSX.Element => {
         itemName={metadataSheetItemName}
         defaultItemType={sweepProgress.allAreasComplete ? 'One-off' : 'Staple'}
         defaultArea={sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)}
+        existingSections={existingSections}
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
         onSubmitTripItem={handleSubmitTripItem}

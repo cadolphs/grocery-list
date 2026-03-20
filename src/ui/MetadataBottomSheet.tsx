@@ -20,9 +20,20 @@ type MetadataBottomSheetProps = {
   readonly itemName: string;
   readonly defaultItemType?: ItemTypeSelection;
   readonly defaultArea?: HouseArea | null;
+  readonly existingSections?: readonly string[];
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
+};
+
+const filterSectionSuggestions = (
+  sections: readonly string[],
+  query: string,
+): readonly string[] => {
+  const trimmed = query.trim();
+  if (trimmed === '') return [];
+  const lowerQuery = trimmed.toLowerCase();
+  return sections.filter((s) => s.toLowerCase().startsWith(lowerQuery));
 };
 
 export const MetadataBottomSheet = ({
@@ -30,6 +41,7 @@ export const MetadataBottomSheet = ({
   itemName,
   defaultItemType,
   defaultArea,
+  existingSections = [],
   onDismiss,
   onSubmitStaple,
   onSubmitTripItem,
@@ -40,6 +52,7 @@ export const MetadataBottomSheet = ({
   const [selectedType, setSelectedType] = useState<ItemTypeSelection>(defaultItemType ?? 'Staple');
   const [selectedArea, setSelectedArea] = useState<HouseArea | null>(resolveDefaultArea());
   const [section, setSection] = useState('');
+  const [sectionSuggestions, setSectionSuggestions] = useState<readonly string[]>([]);
   const [aisleText, setAisleText] = useState('');
 
   // Re-initialize defaults when sheet opens or defaults change
@@ -48,9 +61,20 @@ export const MetadataBottomSheet = ({
       setSelectedType(defaultItemType ?? 'Staple');
       setSelectedArea(resolveDefaultArea());
       setSection('');
+      setSectionSuggestions([]);
       setAisleText('');
     }
   }, [visible, defaultItemType, defaultArea]);
+
+  const handleSectionChange = (text: string): void => {
+    setSection(text);
+    setSectionSuggestions(filterSectionSuggestions(existingSections, text));
+  };
+
+  const handleSelectSectionSuggestion = (sectionName: string): void => {
+    setSection(sectionName);
+    setSectionSuggestions([]);
+  };
 
   const handleSubmit = (): void => {
     if (selectedArea === null) return;
@@ -171,8 +195,23 @@ export const MetadataBottomSheet = ({
             style={styles.input}
             placeholder="Store section..."
             value={section}
-            onChangeText={setSection}
+            onChangeText={handleSectionChange}
           />
+
+          {/* Section suggestions */}
+          {sectionSuggestions.length > 0 && (
+            <View style={styles.sectionSuggestions}>
+              {sectionSuggestions.map((sectionName) => (
+                <Pressable
+                  key={sectionName}
+                  style={styles.sectionSuggestionItem}
+                  onPress={() => handleSelectSectionSuggestion(sectionName)}
+                >
+                  <Text style={styles.sectionSuggestionText}>{sectionName}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
 
           {/* Aisle input */}
           <TextInput
@@ -278,6 +317,21 @@ const styles = StyleSheet.create({
     color: '#333333',
     backgroundColor: '#ffffff',
     marginBottom: 12,
+  },
+  sectionSuggestions: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginBottom: 12,
+    marginTop: -8,
+  },
+  sectionSuggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  sectionSuggestionText: {
+    fontSize: 14,
+    color: '#333333',
   },
   addButton: {
     backgroundColor: '#2196F3',

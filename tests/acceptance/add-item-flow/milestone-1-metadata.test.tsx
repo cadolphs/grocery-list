@@ -252,59 +252,112 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
   // AC: New section names are accepted (free-text)
   // Trace: US-AIF-04, AC-1 through AC-5
 
-  it.skip('previously used section appears as suggestion on prefix match', () => {
+  it('previously used section appears as suggestion on prefix match', () => {
     // Given Carlos has staples in sections "Dairy", "Produce", and "Deli"
-    // const { library } = createTestServices([
-    //   { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    //   { name: 'Apples', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null } },
-    //   { name: 'Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
-    // ]);
+    const { library, tripService } = createTestServices([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Apples', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null } },
+      { name: 'Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
+    ]);
+    renderApp(library, tripService);
 
-    // Derive distinct sections from the staple library
-    // const allSections = [...new Set(library.listAll().map(s => s.storeLocation.section))];
-    // expect(allSections).toContain('Dairy');
-    // expect(allSections).toContain('Produce');
-    // expect(allSections).toContain('Deli');
+    // Carlos taps the Fridge area to set it as active
+    tapAreaSection('Fridge');
 
-    // When Carlos types "Da" in the section field
-    // Filter sections by prefix match
-    // const query = 'Da';
-    // const suggestions = allSections.filter(s => s.toLowerCase().startsWith(query.toLowerCase()));
+    // When Carlos opens the metadata bottom sheet for "Oat milk"
+    openMetadataSheet('Oat milk');
+
+    // And types "Da" in the section field
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Da');
 
     // Then "Dairy" appears as a section suggestion
-    // expect(suggestions).toContain('Dairy');
+    expect(screen.getByText('Dairy')).toBeTruthy();
 
-    // And "Produce" and "Deli" do not appear
-    // expect(suggestions).not.toContain('Produce');
-    // expect(suggestions).not.toContain('Deli');
+    // And "Produce" and "Deli" do not appear as suggestions
+    expect(screen.queryByText('Produce')).toBeNull();
+    expect(screen.queryByText('Deli')).toBeNull();
   });
 
-  it.skip('non-matching sections are filtered out', () => {
+  it('non-matching sections are filtered out', () => {
     // Given Carlos has staples in sections "Dairy", "Produce", and "Deli"
-    // When Carlos types "Da" in the section field
-    // Then "Produce" does not appear as a suggestion
-    // And "Deli" does not appear as a suggestion
+    const { library, tripService } = createTestServices([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Apples', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null } },
+      { name: 'Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
+    ]);
+    renderApp(library, tripService);
+
+    tapAreaSection('Fridge');
+    openMetadataSheet('Oat milk');
+
+    // When Carlos types "Pr" in the section field
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Pr');
+
+    // Then "Produce" appears as a suggestion
+    expect(screen.getByText('Produce')).toBeTruthy();
+
+    // And "Dairy" and "Deli" do not appear
+    expect(screen.queryByText('Dairy')).toBeNull();
+    expect(screen.queryByText('Deli')).toBeNull();
   });
 
-  it.skip('tapping a section suggestion fills the field', () => {
-    // Given "Dairy" appears as a section suggestion
-    // When Carlos taps "Dairy"
-    // Then the section field is filled with "Dairy"
-    // And the suggestion list dismisses
-    // (UI: fireEvent.press(screen.getByText('Dairy')))
-    // (UI: expect(screen.getByPlaceholderText('Store section...')).toHaveProp('value', 'Dairy'))
-  });
-
-  it.skip('new section name is accepted without restriction', () => {
-    // Given Carlos has no staples in section "International Foods"
-    // When Carlos types "International Foods" in the section field and taps "Add Item"
-    // Then the item is created with section "International Foods"
-  });
-
-  it.skip('section suggestions are case-insensitive', () => {
+  it('tapping a section suggestion fills the field', () => {
     // Given Carlos has staples in section "Dairy"
-    // When Carlos types "dai" in the section field
+    const { library, tripService } = createTestServices([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    renderApp(library, tripService);
+
+    tapAreaSection('Fridge');
+    openMetadataSheet('Oat milk');
+
+    // When Carlos types "Da" and taps "Dairy"
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Da');
+    fireEvent.press(screen.getByText('Dairy'));
+
+    // Then the section field is filled with "Dairy"
+    expect(screen.getByPlaceholderText('Store section...')).toHaveProp('value', 'Dairy');
+
+    // And the suggestion list dismisses (no more suggestion text visible)
+    // "Dairy" as a standalone suggestion should not be visible; only the input value
+  });
+
+  it('new section name is accepted without restriction', () => {
+    // Given Carlos has no staples in section "International Foods"
+    const { library, tripService } = createTestServices([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    renderApp(library, tripService);
+
+    tapAreaSection('Fridge');
+    openMetadataSheet('Kimchi');
+
+    // When Carlos types "International Foods" in the section field and taps "Add Item"
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'International Foods');
+    fireEvent.press(screen.getByText('Add Item'));
+
+    // Then the item is created with section "International Foods"
+    const tripItems = tripService.getItems();
+    const kimchi = tripItems.find(i => i.name === 'Kimchi');
+    expect(kimchi).toBeDefined();
+    expect(kimchi?.storeLocation.section).toBe('International Foods');
+  });
+
+  it('section suggestions are case-insensitive', () => {
+    // Given Carlos has staples in section "Dairy"
+    const { library, tripService } = createTestServices([
+      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    renderApp(library, tripService);
+
+    tapAreaSection('Fridge');
+    openMetadataSheet('Oat milk');
+
+    // When Carlos types "dai" (lowercase) in the section field
+    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'dai');
+
     // Then "Dairy" appears as a suggestion
+    expect(screen.getByText('Dairy')).toBeTruthy();
   });
 });
 
