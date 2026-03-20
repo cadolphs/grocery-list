@@ -13,11 +13,13 @@ type QuickAddProps = {
   readonly onAddItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly onSearch?: (query: string) => StapleItem[];
   readonly onSelectSuggestion?: (staple: StapleItem) => void;
+  readonly onOpenMetadataSheet?: (itemName: string) => void;
 };
 
-export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion }: QuickAddProps): React.JSX.Element => {
+export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetadataSheet }: QuickAddProps): React.JSX.Element => {
   const [inputText, setInputText] = useState('');
   const [suggestions, setSuggestions] = useState<StapleItem[]>([]);
+  const trimmedInput = inputText.trim();
 
   const handleChangeText = (text: string): void => {
     setInputText(text);
@@ -71,7 +73,7 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion }: QuickAddPr
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
       </View>
-      {suggestions.length > 0 && (
+      {(suggestions.length > 0 || trimmedInput.length > 0) && (
         <View style={styles.suggestionList} testID="suggestion-list">
           {suggestions.map((staple, index) => (
             <Pressable
@@ -85,6 +87,17 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion }: QuickAddPr
               <Text style={styles.suggestionText}>{formatSuggestion(staple)}</Text>
             </Pressable>
           ))}
+          {trimmedInput.length > 0 && (
+            <Pressable
+              style={[
+                styles.suggestionItem,
+                suggestions.length > 0 && styles.suggestionSeparator,
+              ]}
+              onPress={() => onOpenMetadataSheet?.(trimmedInput)}
+            >
+              <Text style={styles.addNewItemText}>Add &apos;{trimmedInput}&apos; as new item...</Text>
+            </Pressable>
+          )}
         </View>
       )}
     </View>
@@ -140,5 +153,10 @@ const styles = StyleSheet.create({
   suggestionText: {
     fontSize: 14,
     color: '#333333',
+  },
+  addNewItemText: {
+    fontSize: 14,
+    color: '#2196F3',
+    fontWeight: '500',
   },
 });

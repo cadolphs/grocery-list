@@ -1,0 +1,102 @@
+{
+  "roadmap": {
+    "project_id": "add-item-flow",
+    "created_at": "2026-03-19T00:00:00Z",
+    "total_steps": 8,
+    "phases": 3
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Walking Skeleton - Bottom Sheet Core",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Add as new item prompt and partial match",
+          "criteria": "QuickAdd shows 'Add X as new item' row when no staple matches AND when partial matches exist",
+          "test_file": "tests/acceptance/add-item-flow/walking-skeleton.test.tsx",
+          "scenario_name": "\"Add as new item\" row appears when typed name has no staple match",
+          "files_to_modify": ["src/ui/QuickAdd.tsx"]
+        },
+        {
+          "id": "01-02",
+          "name": "Bottom sheet opens with form fields",
+          "criteria": "Tapping 'Add as new item' opens Modal with type toggle, area picker, section input, aisle input, Add Item button",
+          "test_file": "tests/acceptance/add-item-flow/walking-skeleton.test.tsx",
+          "scenario_name": "bottom sheet opens with form fields when \"Add as new item\" is tapped",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx", "src/ui/QuickAdd.tsx", "src/ui/HomeView.tsx"]
+        },
+        {
+          "id": "01-03",
+          "name": "Submit as staple saves to library and trip",
+          "criteria": "Filling form as staple and submitting saves to staple library AND adds to trip",
+          "test_file": "tests/acceptance/add-item-flow/walking-skeleton.test.tsx",
+          "scenario_name": "submitting as staple saves to library and adds to trip",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx", "src/ui/HomeView.tsx"]
+        },
+        {
+          "id": "01-04",
+          "name": "Submit as one-off adds to trip only",
+          "criteria": "Filling form as one-off and submitting adds to trip but NOT staple library",
+          "test_file": "tests/acceptance/add-item-flow/walking-skeleton.test.tsx",
+          "scenario_name": "submitting as one-off adds to trip but not to staple library",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Smart Defaults + Skip Shortcut",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Context-aware defaults and skip shortcut",
+          "criteria": "Sweep mode pre-fills Staple + active area. Whiteboard mode defaults One-off + no area. Skip adds with defaults. Overrides work.",
+          "test_file": "tests/acceptance/add-item-flow/milestone-1-metadata.test.tsx",
+          "scenario_name": "sweep mode pre-fills staple type and active area",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx", "src/ui/HomeView.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Section Auto-Suggest + Duplicate Detection",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Section auto-suggest from staple library",
+          "criteria": "Section input shows suggestions from previously used sections. Prefix match. Tap fills field.",
+          "test_file": "tests/acceptance/add-item-flow/milestone-1-metadata.test.tsx",
+          "scenario_name": "previously used section appears as suggestion on prefix match",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx"]
+        },
+        {
+          "id": "03-02",
+          "name": "Duplicate staple detection and recovery",
+          "criteria": "Adding staple with same name+area shows warning. 'Add to trip instead' uses existing metadata. Cancel returns to form.",
+          "test_file": "tests/acceptance/add-item-flow/milestone-1-metadata.test.tsx",
+          "scenario_name": "duplicate detected when same name and area exist",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx"]
+        },
+        {
+          "id": "03-03",
+          "name": "Validation and edge cases",
+          "criteria": "Submit blocked without area or section. Aisle optional. Dismiss adds nothing. QuickAdd clears after submit.",
+          "test_file": "tests/acceptance/add-item-flow/milestone-1-metadata.test.tsx",
+          "scenario_name": "submit blocked when area is not selected",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx", "src/ui/HomeView.tsx"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/"],
+    "test_directories": ["tests/acceptance/add-item-flow/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-19T00:00:00Z"
+  }
+}

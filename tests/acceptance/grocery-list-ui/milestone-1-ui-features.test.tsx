@@ -228,7 +228,7 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     expect(screen.getByText('Whole milk')).toBeTruthy();
   });
 
-  it('shows no suggestions for unknown items', async () => {
+  it('shows no staple suggestions for unknown items but shows add-new-item prompt', async () => {
     // Given the staple library does not contain "Birthday candles"
     const { library, tripService } = createTestServices();
     render(
@@ -241,9 +241,10 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(quickAddInput, 'birthday');
 
-    // Then no suggestions appear below the field
+    // Then no staple suggestions appear but "Add as new item" prompt is shown
     await waitFor(() => {
-      expect(screen.queryByTestId('suggestion-list')).toBeNull();
+      expect(screen.queryByText(/Dairy/)).toBeNull();
+      expect(screen.getByText(/Add 'birthday' as new item/)).toBeTruthy();
     });
   });
 
