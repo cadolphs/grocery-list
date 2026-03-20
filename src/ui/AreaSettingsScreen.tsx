@@ -4,15 +4,24 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useAreas } from '../hooks/useAreas';
+import { useServices } from './ServiceProvider';
+
+type DeleteState =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'confirm-empty'; readonly areaName: string }
+  | { readonly kind: 'reassign'; readonly areaName: string; readonly stapleCount: number; readonly selectedTarget: string | null }
+  | { readonly kind: 'blocked'; readonly message: string };
 
 export const AreaSettingsScreen = (): React.JSX.Element => {
-  const { areas, addArea, renameArea } = useAreas();
+  const { areas, addArea, renameArea, deleteArea } = useAreas();
+  const { stapleLibrary } = useServices();
   const [isAdding, setIsAdding] = useState(false);
   const [newAreaName, setNewAreaName] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [editingArea, setEditingArea] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
+  const [deleteState, setDeleteState] = useState<DeleteState>({ kind: 'idle' });
 
   const handleAddPress = () => {
     setIsAdding(true);
@@ -61,6 +70,46 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
     setEditError(null);
   };
 
+  const handleDeletePress = (area: string) => {
+    // Check if last area
+    if (areas.length <= 1) {
+      setDeleteState({ kind: 'blocked', message: 'Cannot delete: at least one area must remain' });
+      return;
+    }
+
+    // Check staple count
+    const staplesInArea = stapleLibrary.listByArea(area);
+    if (staplesInArea.length > 0) {
+      setDeleteState({ kind: 'reassign', areaName: area, stapleCount: staplesInArea.length, selectedTarget: null });
+    } else {
+      setDeleteState({ kind: 'confirm-empty', areaName: area });
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteState.kind === 'confirm-empty') {
+      deleteArea(deleteState.areaName);
+      setDeleteState({ kind: 'idle' });
+    }
+  };
+
+  const handleSelectReassignTarget = (target: string) => {
+    if (deleteState.kind === 'reassign') {
+      setDeleteState({ ...deleteState, selectedTarget: target });
+    }
+  };
+
+  const handleConfirmDeleteAndMove = () => {
+    if (deleteState.kind === 'reassign' && deleteState.selectedTarget) {
+      deleteArea(deleteState.areaName, { reassignTo: deleteState.selectedTarget });
+      setDeleteState({ kind: 'idle' });
+    }
+  };
+
+  const handleDismissDelete = () => {
+    setDeleteState({ kind: 'idle' });
+  };
+
   const renderAreaRow = (area: string) => {
     if (editingArea === area) {
       return (
@@ -94,15 +143,88 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
           <Pressable testID={`edit-area-${area}`} onPress={() => handleEditPress(area)}>
             <Text style={styles.actionText}>Edit</Text>
           </Pressable>
+          <Pressable testID={`delete-area-${area}`} onPress={() => handleDeletePress(area)}>
+            <Text style={styles.deleteActionText}>Delete</Text>
+          </Pressable>
         </View>
       </View>
     );
+  };
+
+  const renderDeleteDialog = () => {
+    if (deleteState.kind === 'idle') return null;
+
+    if (deleteState.kind === 'blocked') {
+      return (
+        <View style={styles.deleteDialog}>
+          <Text style={styles.errorText}>{deleteState.message}</Text>
+          <Pressable style={styles.cancelButton} onPress={handleDismissDelete}>
+            <Text style={styles.cancelButtonText}>OK</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    if (deleteState.kind === 'confirm-empty') {
+      return (
+        <View style={styles.deleteDialog}>
+          <Text style={styles.deleteDialogText}>Delete {deleteState.areaName}?</Text>
+          <View style={styles.formButtons}>
+            <Pressable style={styles.deleteConfirmButton} testID="confirm-delete-button" onPress={handleConfirmDelete}>
+              <Text style={styles.saveButtonText}>Delete</Text>
+            </Pressable>
+            <Pressable style={styles.cancelButton} onPress={handleDismissDelete}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+
+    if (deleteState.kind === 'reassign') {
+      const otherAreas = areas.filter(a => a !== deleteState.areaName);
+      return (
+        <View style={styles.deleteDialog}>
+          <Text style={styles.deleteDialogText}>
+            {deleteState.stapleCount} staples in {deleteState.areaName}. Move to:
+          </Text>
+          {otherAreas.map(target => (
+            <Pressable
+              key={target}
+              testID={`reassign-to-${target}`}
+              style={[
+                styles.reassignOption,
+                deleteState.selectedTarget === target && styles.reassignOptionSelected,
+              ]}
+              onPress={() => handleSelectReassignTarget(target)}
+            >
+              <Text style={styles.reassignOptionText}>{target}</Text>
+            </Pressable>
+          ))}
+          <View style={styles.formButtons}>
+            <Pressable
+              style={[styles.deleteConfirmButton, !deleteState.selectedTarget && styles.disabledButton]}
+              testID="confirm-delete-and-move-button"
+              onPress={handleConfirmDeleteAndMove}
+            >
+              <Text style={styles.saveButtonText}>Delete and Move</Text>
+            </Pressable>
+            <Pressable style={styles.cancelButton} onPress={handleDismissDelete}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+
+    return null;
   };
 
   return (
     <ScrollView testID="area-settings-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.header}>House Areas</Text>
       {areas.map(renderAreaRow)}
+      {renderDeleteDialog()}
       {isAdding ? (
         <View style={styles.addForm}>
           <TextInput
@@ -172,6 +294,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  deleteActionText: {
+    color: '#d32f2f',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   editForm: {
     flex: 1,
   },
@@ -236,5 +363,43 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  deleteDialog: {
+    backgroundColor: '#fff3e0',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#ff9800',
+  },
+  deleteDialogText: {
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 12,
+  },
+  deleteConfirmButton: {
+    backgroundColor: '#d32f2f',
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  reassignOption: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#cccccc',
+  },
+  reassignOptionSelected: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196F3',
+  },
+  reassignOptionText: {
+    fontSize: 14,
+    color: '#333333',
   },
 });

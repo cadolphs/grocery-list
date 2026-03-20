@@ -15,9 +15,23 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
+import { StapleItem } from '../../../src/domain/types';
 
-function createTestServices(areas: string[] = ['Bathroom', 'Kitchen', 'Garage']) {
-  const stapleStorage = createNullStapleStorage([]);
+function makeStaple(name: string, houseArea: string): StapleItem {
+  return {
+    id: `${name}-${houseArea}`,
+    name,
+    houseArea,
+    storeLocation: { section: 'A', aisleNumber: 1 },
+    type: 'staple',
+  };
+}
+
+function createTestServices(
+  areas: string[] = ['Bathroom', 'Kitchen', 'Garage'],
+  staples: StapleItem[] = [],
+) {
+  const stapleStorage = createNullStapleStorage(staples);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(areas);
   const stapleLibrary = createStapleLibrary(stapleStorage);
@@ -27,8 +41,8 @@ function createTestServices(areas: string[] = ['Bathroom', 'Kitchen', 'Garage'])
   return { stapleLibrary, tripService, areaManagement };
 }
 
-function renderApp(areas?: string[]) {
-  const { stapleLibrary, tripService, areaManagement } = createTestServices(areas);
+function renderApp(areas?: string[], staples: StapleItem[] = []) {
+  const { stapleLibrary, tripService, areaManagement } = createTestServices(areas, staples);
   return render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
       <AppShell />
@@ -168,6 +182,56 @@ describe('Area Settings Screen', () => {
       expect(screen.getByText('"Kitchen" already exists')).toBeTruthy();
       // Input should remain visible
       expect(screen.getByTestId('rename-area-input')).toBeTruthy();
+    });
+  });
+
+  describe('Delete Area', () => {
+    it('deleting empty area shows confirmation and removes on confirm', () => {
+      renderApp(['Bathroom', 'Kitchen', 'Garage']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByTestId('delete-area-Kitchen'));
+
+      // Confirmation dialog visible
+      expect(screen.getByText('Delete Kitchen?')).toBeTruthy();
+      fireEvent.press(screen.getByTestId('confirm-delete-button'));
+
+      // Kitchen should be gone
+      expect(screen.queryByText('Kitchen')).toBeNull();
+      // Others remain
+      expect(screen.getByText('Bathroom')).toBeTruthy();
+      expect(screen.getByText('Garage')).toBeTruthy();
+    });
+
+    it('blocks deleting the last remaining area', () => {
+      renderApp(['Kitchen']);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByTestId('delete-area-Kitchen'));
+
+      expect(screen.getByText('Cannot delete: at least one area must remain')).toBeTruthy();
+    });
+
+    it('area with staples shows reassignment picker and deletes on confirm', () => {
+      const staples = [makeStaple('Soap', 'Bathroom'), makeStaple('Shampoo', 'Bathroom')];
+      renderApp(['Bathroom', 'Kitchen', 'Garage'], staples);
+
+      fireEvent.press(screen.getByTestId('settings-button'));
+      fireEvent.press(screen.getByTestId('delete-area-Bathroom'));
+
+      // Should show staple count and reassignment options
+      expect(screen.getByText('2 staples in Bathroom. Move to:')).toBeTruthy();
+
+      // Pick Kitchen as target
+      fireEvent.press(screen.getByTestId('reassign-to-Kitchen'));
+      fireEvent.press(screen.getByTestId('confirm-delete-and-move-button'));
+
+      // Bathroom should be gone
+      expect(screen.queryByText('2 staples in Bathroom. Move to:')).toBeNull();
+      // Verify Bathroom is removed from the area list
+      const areaNames = screen.getAllByTestId(/^delete-area-/);
+      const areaTestIds = areaNames.map(el => el.props.testID);
+      expect(areaTestIds).not.toContain('delete-area-Bathroom');
     });
   });
 });
