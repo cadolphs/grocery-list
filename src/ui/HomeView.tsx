@@ -13,13 +13,17 @@ import { MetadataBottomSheet } from './MetadataBottomSheet';
 
 const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
 
+type HomeViewProps = {
+  readonly areas?: readonly string[];
+};
+
 const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
   `${completedCount} of ${totalAreas} areas complete`;
 
-export const HomeView = (): React.JSX.Element => {
+export const HomeView = ({ areas = DEFAULT_AREAS }: HomeViewProps = {}): React.JSX.Element => {
   const { items, addItem, skipItem, unskipItem, completeArea, sweepProgress } = useTrip();
   const { stapleLibrary } = useServices();
-  const areaGroups = groupByArea(items, DEFAULT_AREAS);
+  const areaGroups = groupByArea(items, areas);
   const existingSections = useMemo(
     () => [...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section))],
     [stapleLibrary],
@@ -95,6 +99,7 @@ export const HomeView = (): React.JSX.Element => {
         itemName={metadataSheetItemName}
         defaultItemType={sweepProgress.allAreasComplete ? 'One-off' : 'Staple'}
         defaultArea={sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)}
+        areas={areas as HouseArea[]}
         existingSections={existingSections}
         onFindDuplicate={handleFindDuplicate}
         onDismiss={handleDismissMetadataSheet}

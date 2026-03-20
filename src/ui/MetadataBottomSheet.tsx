@@ -3,9 +3,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
-import { HouseArea, AddStapleRequest, AddTripItemRequest } from '../domain/types';
+import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
 
-const HOUSE_AREAS: readonly HouseArea[] = [
+const DEFAULT_HOUSE_AREAS: readonly HouseArea[] = [
   'Bathroom',
   'Garage Pantry',
   'Kitchen Cabinets',
@@ -14,13 +14,16 @@ const HOUSE_AREAS: readonly HouseArea[] = [
 ];
 
 type ItemTypeSelection = 'Staple' | 'One-off';
+type SheetMode = 'form' | 'duplicate-warning';
 
 type MetadataBottomSheetProps = {
   readonly visible: boolean;
   readonly itemName: string;
   readonly defaultItemType?: ItemTypeSelection;
   readonly defaultArea?: HouseArea | null;
+  readonly areas?: readonly HouseArea[];
   readonly existingSections?: readonly string[];
+  readonly onFindDuplicate?: (name: string, area: HouseArea) => StapleItem | undefined;
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
@@ -41,7 +44,9 @@ export const MetadataBottomSheet = ({
   itemName,
   defaultItemType,
   defaultArea,
+  areas = DEFAULT_HOUSE_AREAS,
   existingSections = [],
+  onFindDuplicate,
   onDismiss,
   onSubmitStaple,
   onSubmitTripItem,
@@ -54,6 +59,8 @@ export const MetadataBottomSheet = ({
   const [section, setSection] = useState('');
   const [sectionSuggestions, setSectionSuggestions] = useState<readonly string[]>([]);
   const [aisleText, setAisleText] = useState('');
+  const [sheetMode, setSheetMode] = useState<SheetMode>('form');
+  const [duplicateStaple, setDuplicateStaple] = useState<StapleItem | null>(null);
 
   // Re-initialize defaults when sheet opens or defaults change
   useEffect(() => {
@@ -63,6 +70,8 @@ export const MetadataBottomSheet = ({
       setSection('');
       setSectionSuggestions([]);
       setAisleText('');
+      setSheetMode('form');
+      setDuplicateStaple(null);
     }
   }, [visible, defaultItemType, defaultArea]);
 
@@ -78,6 +87,16 @@ export const MetadataBottomSheet = ({
 
   const handleSubmit = (): void => {
     if (selectedArea === null) return;
+
+    // Check for duplicate staple before submitting
+    if (selectedType === 'Staple' && onFindDuplicate) {
+      const existing = onFindDuplicate(itemName, selectedArea);
+      if (existing) {
+        setDuplicateStaple(existing);
+        setSheetMode('duplicate-warning');
+        return;
+      }
+    }
 
     const storeLocation = {
       section,
@@ -103,6 +122,25 @@ export const MetadataBottomSheet = ({
     onDismiss();
   };
 
+  const handleAddToTripInstead = (): void => {
+    if (!duplicateStaple) return;
+
+    onSubmitTripItem({
+      name: duplicateStaple.name,
+      houseArea: duplicateStaple.houseArea,
+      storeLocation: duplicateStaple.storeLocation,
+      itemType: 'staple',
+      source: 'quick-add',
+    });
+
+    onDismiss();
+  };
+
+  const handleCancelDuplicate = (): void => {
+    setSheetMode('form');
+    setDuplicateStaple(null);
+  };
+
   const handleSkip = (): void => {
     const skipArea: HouseArea = selectedArea ?? 'Kitchen Cabinets';
 
@@ -126,6 +164,27 @@ export const MetadataBottomSheet = ({
     >
       <View style={styles.overlay}>
         <View style={styles.sheet}>
+          {sheetMode === 'duplicate-warning' && duplicateStaple ? (
+            <>
+              <Text style={styles.title}>Duplicate Found</Text>
+              <Text style={styles.duplicateMessage}>
+                &quot;{duplicateStaple.name}&quot; already exists in {duplicateStaple.houseArea}
+              </Text>
+              <Text style={styles.duplicateMetadata}>
+                {duplicateStaple.storeLocation.section}
+                {duplicateStaple.storeLocation.aisleNumber !== null
+                  ? ` / Aisle ${duplicateStaple.storeLocation.aisleNumber}`
+                  : ''}
+              </Text>
+              <Pressable style={styles.addButton} onPress={handleAddToTripInstead}>
+                <Text style={styles.addButtonText}>Add to trip instead</Text>
+              </Pressable>
+              <Pressable style={styles.skipButton} onPress={handleCancelDuplicate}>
+                <Text style={styles.skipButtonText}>Cancel</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
           <Text style={styles.title}>Add &apos;{itemName}&apos;</Text>
 
           {/* Type toggle */}
@@ -168,7 +227,7 @@ export const MetadataBottomSheet = ({
 
           {/* Area picker */}
           <View style={styles.areaContainer}>
-            {HOUSE_AREAS.map((area) => (
+            {areas.map((area) => (
               <Pressable
                 key={area}
                 testID={selectedArea === area ? `area-button-${area}-active` : `area-button-${area}`}
@@ -230,6 +289,8 @@ export const MetadataBottomSheet = ({
           <Pressable style={styles.skipButton} onPress={handleSkip}>
             <Text style={styles.skipButtonText}>Skip, add with defaults</Text>
           </Pressable>
+            </>
+          )}
         </View>
       </View>
     </Modal>
@@ -317,6 +378,16 @@ const styles = StyleSheet.create({
     color: '#333333',
     backgroundColor: '#ffffff',
     marginBottom: 12,
+  },
+  duplicateMessage: {
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 8,
+  },
+  duplicateMetadata: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 16,
   },
   sectionSuggestions: {
     backgroundColor: '#f5f5f5',
