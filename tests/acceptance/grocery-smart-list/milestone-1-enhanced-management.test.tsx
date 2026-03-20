@@ -25,6 +25,8 @@ import { groupByAisle } from '../../../src/domain/item-grouping';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
+const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+
 // =============================================================================
 // US-07: Skip Staple This Trip
 // =============================================================================
@@ -57,7 +59,7 @@ describe('US-07: Skip Staple This Trip', () => {
       expect.objectContaining({ name: 'Shampoo' })
     );
     // And the "Bathroom" needed count decreases
-    const grouped = groupByArea(trip.getItems());
+    const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
     const bathroom = grouped.find(g => g.area === 'Bathroom');
     expect(bathroom?.neededCount).toBe(1);
   });
@@ -124,7 +126,7 @@ describe('US-07: Skip Staple This Trip', () => {
     trip.skipItem('Eggs');
 
     // Then area counts reflect skips
-    const grouped = groupByArea(trip.getItems());
+    const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
     expect(grouped.find(g => g.area === 'Bathroom')?.neededCount).toBe(2);
     expect(grouped.find(g => g.area === 'Fridge')?.neededCount).toBe(2);
   });
@@ -212,7 +214,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
     });
 
     // Then Kitchen Cabinets shows 3 items
-    const grouped = groupByArea(trip.getItems());
+    const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
     const kc = grouped.find(g => g.area === 'Kitchen Cabinets');
     expect(kc?.totalCount).toBe(3);
   });

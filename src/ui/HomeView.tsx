@@ -11,13 +11,15 @@ import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 
+const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+
 const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
   `${completedCount} of ${totalAreas} areas complete`;
 
 export const HomeView = (): React.JSX.Element => {
   const { items, addItem, skipItem, unskipItem, completeArea, sweepProgress } = useTrip();
   const { stapleLibrary } = useServices();
-  const areaGroups = groupByArea(items);
+  const areaGroups = groupByArea(items, DEFAULT_AREAS);
   const existingSections = useMemo(
     () => [...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section))],
     [stapleLibrary],
@@ -47,6 +49,12 @@ export const HomeView = (): React.JSX.Element => {
   const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
     addItem(request);
   }, [addItem]);
+
+  const handleFindDuplicate = useCallback((name: string, area: HouseArea) => {
+    return stapleLibrary.listAll().find(
+      (s) => s.name === name && s.houseArea === area,
+    );
+  }, [stapleLibrary]);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
     const alreadyInTrip = items.some(
@@ -88,6 +96,7 @@ export const HomeView = (): React.JSX.Element => {
         defaultItemType={sweepProgress.allAreasComplete ? 'One-off' : 'Staple'}
         defaultArea={sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)}
         existingSections={existingSections}
+        onFindDuplicate={handleFindDuplicate}
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
         onSubmitTripItem={handleSubmitTripItem}

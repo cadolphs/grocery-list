@@ -39,6 +39,8 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 // import { HomeView } from '../../../src/ui/HomeView';
 // import { StoreView } from '../../../src/ui/StoreView';
 
+const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+
 // =============================================================================
 // WS-1: Add a Staple Item (US-01)
 // =============================================================================
@@ -190,7 +192,7 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     trip.start(staples);
 
     // Then items are grouped by house area
-    const grouped = groupByArea(trip.getItems());
+    const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
     expect(grouped.find(g => g.area === 'Fridge')?.items).toHaveLength(2);
     expect(grouped.find(g => g.area === 'Bathroom')?.items).toHaveLength(2);
     expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(1);
@@ -207,7 +209,7 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     trip.start(library.listAll());
 
     // When Carlos views the home view
-    const grouped = groupByArea(trip.getItems());
+    const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
 
     // Then all 5 house areas are visible
     expect(grouped).toHaveLength(5);
@@ -232,7 +234,7 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     trip.start(library.listAll());
 
     // Then "Oat milk" appears pre-loaded in "Fridge"
-    const fridgeItems = groupByArea(trip.getItems())
+    const fridgeItems = groupByArea(trip.getItems(), DEFAULT_AREAS)
       .find(g => g.area === 'Fridge')?.items;
     expect(fridgeItems).toContainEqual(
       expect.objectContaining({ name: 'Oat milk' })

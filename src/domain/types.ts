@@ -1,11 +1,6 @@
 // Domain types - Grocery Smart List
 
-export type HouseArea =
-  | 'Bathroom'
-  | 'Garage Pantry'
-  | 'Kitchen Cabinets'
-  | 'Fridge'
-  | 'Freezer';
+export type HouseArea = string;
 
 export type StoreLocation = {
   readonly section: string;

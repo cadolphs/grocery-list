@@ -20,7 +20,7 @@ const ALL_HOUSE_AREAS: HouseArea[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabi
 
 describe('groupByArea', () => {
   it('returns all 5 house areas even when given empty items', () => {
-    const result = groupByArea([]);
+    const result = groupByArea([], ALL_HOUSE_AREAS);
 
     expect(result).toHaveLength(5);
     const areas = result.map(g => g.area);
@@ -34,7 +34,7 @@ describe('groupByArea', () => {
       makeTripItem({ name: 'Shampoo', houseArea: 'Bathroom' }),
     ];
 
-    const result = groupByArea(items);
+    const result = groupByArea(items, ALL_HOUSE_AREAS);
 
     const fridgeGroup = result.find(g => g.area === 'Fridge')!;
     expect(fridgeGroup.items).toHaveLength(2);
@@ -52,7 +52,7 @@ describe('groupByArea', () => {
       makeTripItem({ name: 'Ice cream', houseArea: 'Freezer' }),
     ];
 
-    const result = groupByArea(items);
+    const result = groupByArea(items, ALL_HOUSE_AREAS);
 
     expect(result.find(g => g.area === 'Fridge')!.totalCount).toBe(2);
     expect(result.find(g => g.area === 'Freezer')!.totalCount).toBe(1);
@@ -66,7 +66,7 @@ describe('groupByArea', () => {
       makeTripItem({ name: 'Yogurt', houseArea: 'Fridge', needed: true }),
     ];
 
-    const result = groupByArea(items);
+    const result = groupByArea(items, ALL_HOUSE_AREAS);
 
     const fridgeGroup = result.find(g => g.area === 'Fridge')!;
     expect(fridgeGroup.neededCount).toBe(2);

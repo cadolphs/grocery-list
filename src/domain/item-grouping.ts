@@ -10,14 +10,6 @@ export type AreaGroup = {
   readonly neededCount: number;
 };
 
-const ALL_HOUSE_AREAS: readonly HouseArea[] = [
-  'Bathroom',
-  'Garage Pantry',
-  'Kitchen Cabinets',
-  'Fridge',
-  'Freezer',
-];
-
 const createAreaGroup = (area: HouseArea, items: TripItem[]): AreaGroup => ({
   area,
   items,
@@ -75,7 +67,7 @@ export const groupByAisle = (items: TripItem[]): AisleGroup[] => {
     .sort(compareAisleGroups);
 };
 
-export const groupByArea = (items: TripItem[]): AreaGroup[] => {
+export const groupByArea = (items: TripItem[], areas: readonly string[]): AreaGroup[] => {
   const itemsByArea = items.reduce<Record<string, TripItem[]>>(
     (groups, item) => ({
       ...groups,
@@ -84,7 +76,7 @@ export const groupByArea = (items: TripItem[]): AreaGroup[] => {
     {}
   );
 
-  return ALL_HOUSE_AREAS.map((area) =>
+  return areas.map((area) =>
     createAreaGroup(area, itemsByArea[area] ?? [])
   );
 };
