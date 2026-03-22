@@ -1,0 +1,292 @@
+journey:
+  name: "Store Layout Customization"
+  goal: "Define custom section ordering so the store view matches the physical walking path"
+  persona: "Carlos Rivera, household grocery planner who shops one store bi-weekly"
+  job_story_ref: "JS4 (Store Navigation)"
+
+  emotional_arc:
+    start: "Frustrated -- sections listed in aisle-number order, not walking order"
+    middle: "In Control -- drag-and-drop reordering feels empowering"
+    end: "Satisfied -- store view matches physical reality every trip"
+    pattern: "Problem Relief"
+
+  constraints:
+    - "Offline-first: section order persisted locally"
+    - "Must not break existing groupByAisle for users who have not customized"
+    - "Sections are not a managed entity with full CRUD -- they emerge from item metadata"
+    - "Custom order is a flat ordered list of section keys"
+
+steps:
+  - id: 1
+    name: "Recognize Wrong Order"
+    action: "Carlos notices store view sections do not match his walking path"
+
+    tui_mockup: |
+      +--------------------------------------------------+
+      |  Grocery Smart List           [ Home | STORE ]    |
+      |                                                   |
+      |  Store View -- ${total_items} items               |
+      |                                                   |
+      |  Aisle 3: Dairy               4 items             |
+      |  Aisle 5: Canned Goods        3 items             |
+      |  ...                                              |
+      |  Deli                          2 items             |
+      |  Produce                       4 items             |
+      |                                                   |
+      |  [gear icon] Store Layout Settings                |
+      +--------------------------------------------------+
+
+    shared_artifacts:
+      - name: "trip_items"
+        source: "Trip storage (local)"
+        displayed_as: "${total_items}"
+        consumers: ["store view header", "section list"]
+      - name: "section_order"
+        source: "Section order storage (local) -- falls back to default sort if not set"
+        displayed_as: "section list ordering"
+        consumers: ["store view", "section navigation (Next button)", "store layout settings"]
+
+    emotional_state:
+      entry: "Frustrated (sections in wrong order)"
+      exit: "Motivated (sees settings entry point)"
+
+    integration_checkpoint: |
+      Store view must show settings entry point.
+      Default sort (aisle ascending, then alpha) is used when no custom order exists.
+
+    gherkin: |
+      Scenario: Store view shows default section order when no custom order set
+        Given Carlos has items in Aisle 3, Aisle 5, Deli, and Produce
+        And no custom section order has been defined
+        When Carlos opens the store view
+        Then sections appear in default order: Aisle 3, Aisle 5, Deli, Produce
+        And a "Store Layout Settings" entry point is visible
+
+  - id: 2
+    name: "Open Store Layout Settings"
+    action: "Carlos taps Store Layout Settings"
+
+    tui_mockup: |
+      +--------------------------------------------------+
+      |  < Back         Store Layout                      |
+      |                                                   |
+      |  Drag sections to match your walking order.       |
+      |                                                   |
+      |  1.  [=] ${section_display_1}                     |
+      |  2.  [=] ${section_display_2}                     |
+      |  ...                                              |
+      |  N.  [=] ${section_display_N}                     |
+      |                                                   |
+      |  Sections are collected from your staple items.   |
+      |  New sections appear at the end of this list.     |
+      |                                                   |
+      |  [Reset to Default Order]                         |
+      +--------------------------------------------------+
+
+    shared_artifacts:
+      - name: "known_sections"
+        source: "Derived from all unique storeLocation.section + aisleNumber combinations across staple library and current trip items"
+        displayed_as: "${section_display_N}"
+        consumers: ["store layout settings list", "section order storage"]
+      - name: "section_order"
+        source: "Section order storage (local)"
+        displayed_as: "list ordering"
+        consumers: ["store layout settings", "store view", "section navigation"]
+
+    emotional_state:
+      entry: "Motivated (wants to fix order)"
+      exit: "Oriented (sees all sections, understands the interface)"
+
+    integration_checkpoint: |
+      All sections from staple library and current trip must appear.
+      Order matches section_order if custom order exists, else default sort.
+      No section is missing or duplicated.
+
+    gherkin: |
+      Scenario: Store layout settings shows all known sections
+        Given Carlos has staples in Dairy/Aisle 3, Canned Goods/Aisle 5, Deli, and Produce
+        When Carlos opens Store Layout Settings
+        Then all 4 sections are listed with drag handles
+        And sections appear in their current display order
+        And instruction text explains drag-to-reorder
+
+  - id: 3
+    name: "Reorder Sections"
+    action: "Carlos drags sections to match his walking path"
+
+    tui_mockup: |
+      +--------------------------------------------------+
+      |  < Back         Store Layout                      |
+      |                                                   |
+      |  1.  [=] Aisle 8: Health & Beauty                 |
+      |  2.  [=] Deli                                     |
+      |  3.  [=] Aisle 3: Dairy                           |
+      |  ...                                              |
+      |  9.  [=] Produce                                  |
+      |                                                   |
+      |  Order saved automatically.                       |
+      +--------------------------------------------------+
+
+    shared_artifacts:
+      - name: "section_order"
+        source: "Section order storage (local)"
+        displayed_as: "reordered list"
+        consumers: ["store view", "section navigation", "store layout settings"]
+
+    emotional_state:
+      entry: "Oriented (knows what to do)"
+      exit: "In Control (order matches mental model of store)"
+
+    integration_checkpoint: |
+      Reorder persists to local storage immediately (auto-save).
+      Position numbers update after each drag.
+      All sections remain in the list after reorder (no loss).
+
+    gherkin: |
+      Scenario: Reorder sections by drag-and-drop
+        Given Carlos is on the Store Layout Settings screen
+        And Deli is at position 6
+        When Carlos drags Deli to position 2
+        Then Deli appears at position 2
+        And all other sections shift down
+        And the order is saved automatically
+
+  - id: 4
+    name: "Verify in Store View"
+    action: "Carlos returns to store view and sees custom order"
+
+    tui_mockup: |
+      +--------------------------------------------------+
+      |  Grocery Smart List           [ Home | STORE ]    |
+      |                                                   |
+      |  Store View -- ${total_items} items               |
+      |                                                   |
+      |  Aisle 8: Health & Beauty     2 items             |
+      |  Deli                          2 items             |
+      |  Aisle 3: Dairy               4 items             |
+      |  ...                                              |
+      |  Produce                       4 items             |
+      |                                                   |
+      |  9 sections  |  ${total_items} items  |  0 checked|
+      +--------------------------------------------------+
+
+    shared_artifacts:
+      - name: "section_order"
+        source: "Section order storage (local)"
+        displayed_as: "store view section ordering"
+        consumers: ["store view", "section navigation"]
+      - name: "trip_items"
+        source: "Trip storage (local)"
+        displayed_as: "${total_items}"
+        consumers: ["store view header", "section counts"]
+
+    emotional_state:
+      entry: "In Control (just configured the order)"
+      exit: "Confident (store view reflects physical reality)"
+
+    integration_checkpoint: |
+      Store view section order must match section_order from storage.
+      Only sections with items on current trip are shown.
+      Section item counts and totals remain accurate.
+
+    gherkin: |
+      Scenario: Store view uses custom section order
+        Given Carlos has set custom section order: Health & Beauty, Deli, Dairy, Canned Goods, Paper & Soap, Baking, Bakery, Frozen, Produce
+        And Carlos has items in Dairy, Deli, and Produce
+        When Carlos views the store
+        Then sections appear as: Deli, Dairy, Produce
+        And sections without items are not shown
+
+  - id: 5
+    name: "Shop in Custom Order"
+    action: "Carlos navigates sections using Next button in custom order"
+
+    tui_mockup: |
+      +--------------------------------------------------+
+      |  < Sections    Aisle 8: Health & Beauty    2/2    |
+      |                                                   |
+      |  [x] Shampoo            (staple)    IN CART       |
+      |  [x] Hand soap          (staple)    IN CART       |
+      |                                                   |
+      |  All items in this section!                       |
+      |                                                   |
+      |  +--------------------------------------------+  |
+      |  | Next: Deli (2 items)  >>                    |  |
+      |  +--------------------------------------------+  |
+      +--------------------------------------------------+
+
+    shared_artifacts:
+      - name: "section_order"
+        source: "Section order storage (local)"
+        displayed_as: "Next section hint"
+        consumers: ["section navigation (Next button)", "store view list order"]
+
+    emotional_state:
+      entry: "Confident (order matches walk)"
+      exit: "Satisfied (efficient trip, no backtracking)"
+
+    integration_checkpoint: |
+      Next button follows custom section order, skipping sections with no items.
+      All existing check-off and navigation behaviors work unchanged.
+
+    gherkin: |
+      Scenario: Next section follows custom order
+        Given Carlos has custom order: Health & Beauty, Deli, Dairy, Produce
+        And Carlos has completed all items in Health & Beauty
+        When Carlos taps "Next"
+        Then Deli section opens (next in custom order with items)
+
+  - id: 6
+    name: "New Section Auto-Appended"
+    action: "Carlos adds an item with a section not in the order list"
+
+    shared_artifacts:
+      - name: "section_order"
+        source: "Section order storage (local)"
+        displayed_as: "updated list with new section appended"
+        consumers: ["store view", "section navigation", "store layout settings"]
+
+    emotional_state:
+      entry: "Neutral (adding a new item)"
+      exit: "Aware (new section appeared at end, can reposition later)"
+
+    gherkin: |
+      Scenario: New section auto-appends to custom order
+        Given Carlos has a custom section order with 9 sections
+        When Carlos adds "Sushi rolls" with section "Sushi Bar"
+        And "Sushi Bar" is not in the existing section order
+        Then "Sushi Bar" is appended to the end of the section order
+        And "Sushi Bar" appears last in the store view
+
+  - id: 7
+    name: "Reset to Default Order"
+    action: "Carlos resets custom order back to default sort"
+
+    shared_artifacts:
+      - name: "section_order"
+        source: "Section order storage (local) -- cleared on reset"
+        displayed_as: "default sort restored"
+        consumers: ["store view", "section navigation", "store layout settings"]
+
+    emotional_state:
+      entry: "Uncertain (something went wrong with custom order)"
+      exit: "Relieved (back to known-good default)"
+
+    gherkin: |
+      Scenario: Reset to default section order
+        Given Carlos has a custom section order
+        When Carlos taps "Reset to Default Order" and confirms
+        Then sections return to default order: numbered aisles ascending, then named sections alphabetically
+        And the custom section order is cleared from storage
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "section_order"
+      must_match_across: [2, 3, 4, 5, 6, 7]
+      failure_message: "Section order in store view does not match order in settings screen or Next button navigation"
+    - artifact: "known_sections"
+      must_match_across: [2, 6]
+      failure_message: "Store layout settings is missing a section that exists in staple library or trip items"
+    - artifact: "trip_items"
+      must_match_across: [1, 4]
+      failure_message: "Item counts in store view header do not match actual trip items"

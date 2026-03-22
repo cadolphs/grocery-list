@@ -60,7 +60,11 @@
       "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/reset-sweep/deliver/)",
       "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-store-uncheck/deliver --feature-id fix-store-uncheck)",
       "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-store-uncheck/deliver/)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-staple-storage-types/deliver --feature-id fix-staple-storage-types)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-staple-storage-types/deliver/)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-ts-errors/deliver --feature-id fix-ts-errors)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-ts-errors/deliver/)"
     ]
   }
 }
