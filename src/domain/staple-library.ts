@@ -76,6 +76,14 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       const updatedHouseArea = changes.houseArea ?? staple.houseArea;
       const updatedStoreLocation = changes.storeLocation ?? staple.storeLocation;
 
+      if (updatedHouseArea.trim() === '') {
+        return { success: false, error: 'house area is required' };
+      }
+
+      if (updatedStoreLocation.section.trim() === '') {
+        return { success: false, error: 'store section is required' };
+      }
+
       if (isDuplicateExcludingSelf(existing, id, staple.name, updatedHouseArea)) {
         return {
           success: false,
