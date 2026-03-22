@@ -5,14 +5,17 @@ import { useState, useEffect } from 'react';
 import { createAsyncStapleStorage } from '../adapters/async-storage/async-staple-storage';
 import { createAsyncTripStorage } from '../adapters/async-storage/async-trip-storage';
 import { createAsyncAreaStorage } from '../adapters/async-storage/async-area-storage';
+import { createAsyncSectionOrderStorage } from '../adapters/async-storage/async-section-order-storage';
 import { createStapleLibrary, StapleLibrary } from '../domain/staple-library';
 import { createTrip, TripService } from '../domain/trip';
 import { createAreaManagement, AreaManagement } from '../domain/area-management';
+import { SectionOrderStorage } from '../ports/section-order-storage';
 
 export type AppServices = {
   readonly stapleLibrary: StapleLibrary;
   readonly tripService: TripService;
   readonly areaManagement: AreaManagement;
+  readonly sectionOrderStorage: SectionOrderStorage;
 };
 
 export type AppInitializationResult = {
@@ -25,11 +28,13 @@ const initializeApp = async (): Promise<AppServices> => {
   const stapleStorage = createAsyncStapleStorage();
   const tripStorage = createAsyncTripStorage();
   const areaStorage = createAsyncAreaStorage();
+  const sectionOrderStorage = createAsyncSectionOrderStorage();
 
   await Promise.all([
     stapleStorage.initialize(),
     tripStorage.initialize(),
     areaStorage.initialize(),
+    sectionOrderStorage.initialize(),
   ]);
 
   const stapleLibrary = createStapleLibrary(stapleStorage);
@@ -39,7 +44,7 @@ const initializeApp = async (): Promise<AppServices> => {
 
   tripService.loadFromStorage();
 
-  return { stapleLibrary, tripService, areaManagement };
+  return { stapleLibrary, tripService, areaManagement, sectionOrderStorage };
 };
 
 export const useAppInitialization = (): AppInitializationResult => {

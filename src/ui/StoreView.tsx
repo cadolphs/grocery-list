@@ -4,8 +4,10 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
+import { useSectionOrder } from '../hooks/useSectionOrder';
 import { useServices } from './ServiceProvider';
 import { groupByAisle } from '../domain/item-grouping';
+import { sortByCustomOrder } from '../domain/section-ordering';
 import { completeTrip, CompleteTripResult } from '../domain/trip';
 import { AisleSection } from './AisleSection';
 import { TripSummaryView } from './TripSummaryView';
@@ -13,6 +15,7 @@ import { TripSummaryView } from './TripSummaryView';
 export const StoreView = (): React.JSX.Element => {
   const { items, toggleCheckOff } = useTrip();
   const { tripService, stapleLibrary } = useServices();
+  const { order: sectionOrder } = useSectionOrder();
   const [tripResult, setTripResult] = useState<CompleteTripResult | null>(null);
   const [prepTimeMinutes, setPrepTimeMinutes] = useState<number | undefined>(undefined);
   const [showSummary, setShowSummary] = useState(true);
@@ -40,7 +43,7 @@ export const StoreView = (): React.JSX.Element => {
   }
 
   const neededItems = items.filter((item) => item.needed);
-  const aisleGroups = groupByAisle(neededItems);
+  const aisleGroups = sortByCustomOrder(groupByAisle(neededItems), sectionOrder);
 
   return (
     <ScrollView testID="store-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>

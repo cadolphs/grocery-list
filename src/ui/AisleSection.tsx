@@ -23,7 +23,7 @@ const isSectionComplete = (aisleGroup: AisleGroup): boolean =>
   aisleGroup.checkedCount === aisleGroup.totalCount;
 
 export const AisleSection = ({ aisleGroup, onItemPress }: AisleSectionProps): React.JSX.Element => (
-  <View style={styles.card}>
+  <View style={styles.card} testID={`aisle-section-${aisleGroup.section}`}>
     <View style={styles.header}>
       <Text style={styles.heading}>{formatAisleHeading(aisleGroup)}</Text>
       <View style={styles.headerRight}>
