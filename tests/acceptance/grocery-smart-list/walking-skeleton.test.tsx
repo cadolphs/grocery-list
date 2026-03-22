@@ -138,7 +138,9 @@ describe('WS-1: Add a Staple Item', () => {
 
     // Then the app prevents the duplicate and shows a message
     expect(result.success).toBe(false);
-    expect(result.error).toContain('already exists in Fridge');
+    expect(result).toEqual(
+      expect.objectContaining({ success: false, error: expect.stringContaining('already exists in Fridge') })
+    );
     expect(library.listAll()).toHaveLength(1);
   });
 
@@ -324,7 +326,9 @@ describe('WS-3: Quick-Add Item', () => {
 
     // Then the item is not added
     expect(result.success).toBe(false);
-    expect(result.error).toContain('area is required');
+    expect(result).toEqual(
+      expect.objectContaining({ success: false, error: expect.stringContaining('area is required') })
+    );
     expect(trip.getItems()).toHaveLength(0);
   });
 });
@@ -476,7 +480,7 @@ describe('WS-5: Check Off Items in Store', () => {
     ];
 
     // When we compute the store view grouping
-    const groups = groupByAisle(items);
+    const groups = groupByAisle(items as TripItem[]);
     const dairy = groups.find(g => g.section === 'Dairy');
 
     // Then progress shows 2 of 4

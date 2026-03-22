@@ -30,7 +30,7 @@ export type AddStapleResult =
 
 // Trip domain types
 
-export type ItemSource = 'preloaded' | 'quick-add' | 'whiteboard';
+export type ItemSource = 'preloaded' | 'quick-add' | 'whiteboard' | 'carryover';
 
 export type TripItem = {
   readonly id: string;

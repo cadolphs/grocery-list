@@ -24,6 +24,7 @@ function makeStaple(name: string, houseArea: string): StapleItem {
     houseArea,
     storeLocation: { section: 'A', aisleNumber: 1 },
     type: 'staple',
+    createdAt: new Date().toISOString(),
   };
 }
 

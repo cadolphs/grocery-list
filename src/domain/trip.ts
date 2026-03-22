@@ -6,7 +6,7 @@ import {
   TripItem,
   AddTripItemRequest,
   AddTripItemResult,
-  StapleItem,
+  AddStapleRequest,
   HouseArea,
   StoreLocation,
 } from './types';
@@ -38,7 +38,7 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 ];
 
 export type TripService = {
-  readonly start: (staples: StapleItem[], carryover?: TripItem[]) => void;
+  readonly start: (staples: ReadonlyArray<AddStapleRequest>, carryover?: readonly TripItem[]) => void;
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
@@ -57,13 +57,13 @@ export type TripService = {
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const stapleToTripItem = (staple: StapleItem): TripItem => ({
+const stapleRequestToTripItem = (staple: AddStapleRequest): TripItem => ({
   id: generateTripItemId(),
   name: staple.name,
   houseArea: staple.houseArea,
   storeLocation: staple.storeLocation,
   itemType: 'staple',
-  stapleId: staple.id,
+  stapleId: null,
   source: 'preloaded',
   needed: true,
   checked: false,
@@ -92,8 +92,8 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
   };
 
   return {
-    start: (staples: StapleItem[], carryover: TripItem[] = []) => {
-      const stapleItems = staples.map(stapleToTripItem);
+    start: (staples: ReadonlyArray<AddStapleRequest>, carryover: readonly TripItem[] = []) => {
+      const stapleItems = staples.map(stapleRequestToTripItem);
       items = [...stapleItems, ...carryover];
     },
 

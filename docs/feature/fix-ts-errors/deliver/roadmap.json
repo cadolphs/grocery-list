@@ -1,0 +1,39 @@
+{
+  "roadmap": {
+    "project_id": "fix-ts-errors",
+    "created_at": "2026-03-22T01:00:00Z",
+    "total_steps": 1,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Fix All TypeScript Errors",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Fix 40 remaining TypeScript errors across test files",
+          "criteria": "npx tsc --noEmit produces zero errors. All runtime tests still pass.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "tests/acceptance/grocery-smart-list/walking-skeleton.test.tsx",
+            "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+            "src/domain/types.ts",
+            "src/domain/trip.ts"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "tests/"],
+    "test_directories": [],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-22T01:00:00Z"
+  }
+}
