@@ -50,6 +50,7 @@ export type TripService = {
   readonly getSummary: () => TripSummary;
   readonly setStartTime: (date: Date) => void;
   readonly loadFromStorage: () => void;
+  readonly resetSweep: () => void;
   readonly complete: () => void;
 };
 
@@ -192,6 +193,14 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         createdAt = savedTrip.createdAt;
         items = [...savedTrip.items];
       }
+    },
+
+    resetSweep: () => {
+      items = items
+        .filter((item) => item.itemType !== 'one-off')
+        .map((item) => ({ ...item, needed: true, checked: false, checkedAt: null }));
+      completedAreas.clear();
+      persistTrip();
     },
 
     complete: () => {

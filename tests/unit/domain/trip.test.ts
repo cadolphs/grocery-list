@@ -323,6 +323,93 @@ describe('Trip: prepTimeMinutes', () => {
   });
 });
 
+describe('Trip: resetSweep', () => {
+  it('resets staple items to needed=true and checked=false', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    trip.checkOff('Milk');
+    trip.skipItem('Butter');
+
+    trip.resetSweep();
+
+    const items = trip.getItems();
+    expect(items).toHaveLength(2);
+    const milk = items.find(i => i.name === 'Milk');
+    const butter = items.find(i => i.name === 'Butter');
+    expect(milk?.needed).toBe(true);
+    expect(milk?.checked).toBe(false);
+    expect(milk?.checkedAt).toBeNull();
+    expect(butter?.needed).toBe(true);
+    expect(butter?.checked).toBe(false);
+  });
+
+  it('removes one-off items from the trip', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    trip.addItem({
+      name: 'Birthday candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+
+    trip.resetSweep();
+
+    const items = trip.getItems();
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe('Milk');
+  });
+
+  it('clears completed areas so sweep progress resets to zero', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    ]);
+    trip.completeArea('Bathroom');
+    trip.completeArea('Fridge');
+
+    trip.resetSweep();
+
+    const progress = trip.getSweepProgress();
+    expect(progress.completedCount).toBe(0);
+    expect(progress.completedAreas).toEqual([]);
+  });
+
+  it('persists the reset trip to storage', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+    trip.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    trip.checkOff('Milk');
+    trip.addItem({
+      name: 'Candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+
+    trip.resetSweep();
+
+    const loadedTrip = tripStorage.loadTrip();
+    expect(loadedTrip).not.toBeNull();
+    expect(loadedTrip?.items).toHaveLength(1);
+    expect(loadedTrip?.items[0].name).toBe('Milk');
+    expect(loadedTrip?.items[0].checked).toBe(false);
+    expect(loadedTrip?.items[0].needed).toBe(true);
+  });
+});
+
 describe('completeTrip', () => {
   const setupTripWithItems = () => {
     const stapleStorage = createNullStapleStorage();
