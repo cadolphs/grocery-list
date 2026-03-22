@@ -28,6 +28,12 @@ export const createNullStapleStorage = (
         items.splice(index, 1);
       }
     },
+    update: (updatedItem: StapleItem) => {
+      const index = items.findIndex((item) => item.id === updatedItem.id);
+      if (index !== -1) {
+        items[index] = updatedItem;
+      }
+    },
     search: (query: string) =>
       items.filter((item) =>
         item.name.toLowerCase().includes(query.toLowerCase())

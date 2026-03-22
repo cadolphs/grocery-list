@@ -49,6 +49,13 @@ export const createAsyncStapleStorage = (): AsyncStapleStorage => {
       }
     },
 
+    update: (updatedItem: StapleItem): void => {
+      cache = cache.map(item =>
+        item.id === updatedItem.id ? updatedItem : item
+      );
+      persistInBackground(cache);
+    },
+
     search: (query: string): StapleItem[] => {
       if (query.trim() === '') return [];
       const lowerQuery = query.toLowerCase();

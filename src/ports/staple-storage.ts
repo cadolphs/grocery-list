@@ -8,5 +8,6 @@ export type StapleStorage = {
   readonly save: (item: StapleItem) => void;
   readonly remove: (id: string) => void;
   readonly search: (query: string) => StapleItem[];
+  readonly update: (item: StapleItem) => void;
   readonly updateArea: (oldName: string, newName: string) => void;
 };

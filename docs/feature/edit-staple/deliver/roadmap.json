@@ -1,0 +1,64 @@
+{
+  "roadmap": {
+    "project_id": "edit-staple",
+    "created_at": "2026-03-22T04:00:00Z",
+    "total_steps": 4,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Core Edit Domain",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "updateStaple domain + port + adapter",
+          "criteria": "StapleLibrary.updateStaple(id, changes) changes houseArea and/or storeLocation. Validates no duplicate (self-exclusion by ID). StapleStorage.update(item) replaces item by ID. All 4 walking skeleton tests pass.",
+          "test_file": "tests/acceptance/edit-staple/walking-skeleton.test.tsx",
+          "scenario_name": "moves a staple to a different house area",
+          "files_to_modify": ["src/domain/staple-library.ts", "src/ports/staple-storage.ts", "src/adapters/null/null-staple-storage.ts", "src/adapters/async-storage/async-staple-storage.ts"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Milestone 1 - Validation + Trip Sync + UI",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Edit validation and remove",
+          "criteria": "Rejects empty houseArea, empty section, non-existent staple ID. Remove staple works (already exists). Cancel preserves original.",
+          "test_file": "tests/acceptance/edit-staple/milestone-1-edit-features.test.tsx",
+          "scenario_name": "rejects edit with empty house area",
+          "files_to_modify": ["src/domain/staple-library.ts"]
+        },
+        {
+          "id": "02-02",
+          "name": "Trip sync on staple edit",
+          "criteria": "When staple area or section changes, matching trip item updates. One-off items unaffected.",
+          "test_file": "tests/acceptance/edit-staple/milestone-1-edit-features.test.tsx",
+          "scenario_name": "trip item moves to new area when staple area is edited",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "02-03",
+          "name": "Edit UI - MetadataBottomSheet edit mode",
+          "criteria": "Tapping staple in HomeView opens MetadataBottomSheet in edit mode with pre-filled values. Save Changes updates staple. Cancel dismisses without changes.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx", "src/ui/HomeView.tsx", "src/ui/AreaSection.tsx", "src/hooks/useTrip.ts"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "src/ports/", "src/adapters/", "src/ui/", "src/hooks/"],
+    "test_directories": ["tests/acceptance/edit-staple/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-22T04:00:00Z"
+  }
+}
