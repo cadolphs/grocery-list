@@ -22,6 +22,15 @@ const compareByCustomOrder = (
   return 0;
 };
 
+export const appendNewSections = (
+  currentOrder: string[],
+  knownSectionKeys: string[],
+): string[] => {
+  const existingSet = new Set(currentOrder);
+  const newSections = knownSectionKeys.filter((key) => !existingSet.has(key));
+  return newSections.length === 0 ? currentOrder : [...currentOrder, ...newSections];
+};
+
 export const sortByCustomOrder = (
   groups: AisleGroup[],
   sectionOrder: string[] | null,
