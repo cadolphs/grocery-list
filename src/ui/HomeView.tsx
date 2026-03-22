@@ -4,6 +4,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
+import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { groupByArea } from '../domain/item-grouping';
 import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
@@ -12,17 +13,13 @@ import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
 
-const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
-
-type HomeViewProps = {
-  readonly areas?: readonly string[];
-};
-
 const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
   `${completedCount} of ${totalAreas} areas complete`;
 
-export const HomeView = ({ areas = DEFAULT_AREAS }: HomeViewProps = {}): React.JSX.Element => {
-  const { items, addItem, skipItem, unskipItem, completeArea, sweepProgress } = useTrip();
+export const HomeView = (): React.JSX.Element => {
+  const { areas } = useAreas();
+  const { items, addItem, skipItem, unskipItem, completeArea, resetSweep, sweepProgress } = useTrip();
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
   const existingSections = useMemo(
@@ -118,6 +115,39 @@ export const HomeView = ({ areas = DEFAULT_AREAS }: HomeViewProps = {}): React.J
           isActive={activeArea === areaGroup.area}
         />
       ))}
+      <Pressable
+        testID="reset-sweep-button"
+        onPress={() => setShowResetConfirmation(true)}
+        style={styles.resetSweepButton}
+      >
+        <Text style={styles.resetSweepButtonText}>Reset Sweep</Text>
+      </Pressable>
+      {showResetConfirmation && (
+        <View style={styles.resetConfirmation}>
+          <Text style={styles.resetConfirmationText}>
+            Are you sure? This will reset all items and remove one-offs.
+          </Text>
+          <View style={styles.resetConfirmationButtons}>
+            <Pressable
+              testID="confirm-reset-sweep"
+              onPress={() => {
+                resetSweep();
+                setShowResetConfirmation(false);
+              }}
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>Confirm</Text>
+            </Pressable>
+            <Pressable
+              testID="cancel-reset-sweep"
+              onPress={() => setShowResetConfirmation(false)}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
       <MetadataBottomSheet
         visible={metadataSheetVisible}
         itemName={metadataSheetItemName}
@@ -177,5 +207,54 @@ const styles = StyleSheet.create({
     color: '#FF9800',
     textAlign: 'center',
     marginVertical: 8,
+  },
+  resetSweepButton: {
+    backgroundColor: '#FF5722',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  resetSweepButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resetConfirmation: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  resetConfirmationText: {
+    fontSize: 14,
+    color: '#E65100',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  resetConfirmationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  confirmButton: {
+    backgroundColor: '#FF5722',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  confirmButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  cancelButtonText: {
+    color: '#333333',
+    fontWeight: '600',
   },
 });

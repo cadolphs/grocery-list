@@ -13,6 +13,7 @@ export type UseTripResult = {
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
   readonly completeArea: (area: HouseArea) => void;
+  readonly resetSweep: () => void;
   readonly sweepProgress: SweepProgress;
 };
 
@@ -64,5 +65,11 @@ export const useTrip = (): UseTripResult => {
     [tripService]
   );
 
-  return { items, addItem, checkOff, skipItem, unskipItem, completeArea, sweepProgress };
+  const resetSweep = useCallback((): void => {
+    tripService.resetSweep();
+    setItems(tripService.getItems());
+    setSweepProgress(tripService.getSweepProgress());
+  }, [tripService]);
+
+  return { items, addItem, checkOff, skipItem, unskipItem, completeArea, resetSweep, sweepProgress };
 };
