@@ -1,0 +1,124 @@
+{
+  "roadmap": {
+    "project_id": "custom-house-areas",
+    "created_at": "2026-03-20T00:00:00Z",
+    "total_steps": 10,
+    "phases": 4
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Cross-cutting Type Change",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "groupByArea accepts dynamic area list",
+          "criteria": "groupByArea(items, areas) returns groups for custom areas including user-added ones. HouseArea type changes from union to string. Existing behavior preserved with default 5 areas. Empty groups for areas with no items.",
+          "test_file": "tests/acceptance/custom-house-areas/walking-skeleton.test.tsx",
+          "scenario_name": "returns groups for custom areas including a user-added area",
+          "files_to_modify": ["src/domain/types.ts", "src/domain/item-grouping.ts"]
+        },
+        {
+          "id": "01-02",
+          "name": "getSweepProgress with dynamic area count",
+          "criteria": "createTrip accepts areas parameter. getSweepProgress.totalAreas uses dynamic count. allAreasComplete triggers only after all custom areas done.",
+          "test_file": "tests/acceptance/custom-house-areas/walking-skeleton.test.tsx",
+          "scenario_name": "shows progress out of 6 when Carlos has 6 areas",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "01-03",
+          "name": "AreaStorage port + null adapter + area management",
+          "criteria": "New AreaStorage port with loadAll/saveAll. createNullAreaStorage with default seeding. createAreaManagement with add/getAreas. Duplicate add blocked.",
+          "test_file": "tests/acceptance/custom-house-areas/walking-skeleton.test.tsx",
+          "scenario_name": "adds a new area that persists in the area list",
+          "files_to_modify": ["src/ports/area-storage.ts", "src/adapters/null/null-area-storage.ts", "src/domain/area-management.ts"]
+        },
+        {
+          "id": "01-04",
+          "name": "New area in groupByArea + default seeding",
+          "criteria": "Area added via area management appears in groupByArea output. Fresh install seeds 5 default areas.",
+          "test_file": "tests/acceptance/custom-house-areas/walking-skeleton.test.tsx",
+          "scenario_name": "newly added area shows items in groupByArea",
+          "files_to_modify": ["src/adapters/null/null-area-storage.ts"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Rename with Propagation",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Rename area propagates to staples and trip items",
+          "criteria": "Rename updates area list, all staples, and active trip items. Blocked when target name exists.",
+          "test_file": "tests/acceptance/custom-house-areas/milestone-1-area-crud.test.tsx",
+          "scenario_name": "rename propagates to all staples in that area",
+          "files_to_modify": ["src/domain/area-management.ts", "src/ports/staple-storage.ts", "src/ports/trip-storage.ts", "src/adapters/null/null-staple-storage.ts", "src/adapters/null/null-trip-storage.ts"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Delete with Reassignment",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Delete empty area",
+          "criteria": "Empty area removed from list. Cannot delete last area.",
+          "test_file": "tests/acceptance/custom-house-areas/milestone-1-area-crud.test.tsx",
+          "scenario_name": "deletes an empty area",
+          "files_to_modify": ["src/domain/area-management.ts"]
+        },
+        {
+          "id": "03-02",
+          "name": "Delete area with staple reassignment",
+          "criteria": "Staples and trip items moved to target area. Duplicate conflict detected.",
+          "test_file": "tests/acceptance/custom-house-areas/milestone-1-area-crud.test.tsx",
+          "scenario_name": "deletes area with staples and reassigns to target",
+          "files_to_modify": ["src/domain/area-management.ts"]
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "Reorder + Validation",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "Reorder areas",
+          "criteria": "Reorder changes list order. groupByArea reflects new order. Persists after restart.",
+          "test_file": "tests/acceptance/custom-house-areas/milestone-1-area-crud.test.tsx",
+          "scenario_name": "reorder changes area list order",
+          "files_to_modify": ["src/domain/area-management.ts"]
+        },
+        {
+          "id": "04-02",
+          "name": "Area name validation",
+          "criteria": "validateAreaName rejects duplicates (case-insensitive), empty/whitespace names, names over 40 chars. Accepts valid names. Trims whitespace.",
+          "test_file": "tests/acceptance/custom-house-areas/milestone-1-area-crud.test.tsx",
+          "scenario_name": "rejects duplicate name case-insensitively",
+          "files_to_modify": ["src/domain/area-validation.ts"]
+        },
+        {
+          "id": "04-03",
+          "name": "Update existing callers and tests",
+          "criteria": "All existing tests updated to pass with new groupByArea(items, areas) signature. HomeView, useTrip, MetadataBottomSheet use dynamic areas. All 230+ tests pass.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/HomeView.tsx", "src/ui/MetadataBottomSheet.tsx", "src/hooks/useTrip.ts"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "src/ports/", "src/adapters/null/", "src/ui/", "src/hooks/"],
+    "test_directories": ["tests/acceptance/custom-house-areas/", "tests/unit/domain/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-20T00:00:00Z"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "featureId": "custom-house-areas",
+  "wave": "DISTILL",
+  "phase": "acceptance-test-design",
+  "startedAt": "2026-03-20T00:00:00Z",
+  "status": "complete",
+  "artifacts": {
+    "featureFiles": [
+      "tests/acceptance/custom-house-areas/walking-skeleton.feature",
+      "tests/acceptance/custom-house-areas/milestone-1-area-crud.feature"
+    ],
+    "testFiles": [
+      "tests/acceptance/custom-house-areas/walking-skeleton.test.tsx",
+      "tests/acceptance/custom-house-areas/milestone-1-area-crud.test.tsx"
+    ]
+  },
+  "scenarioCounts": {
+    "walkingSkeleton": {
+      "domain": 8,
+      "uiCommented": 4,
+      "total": 12
+    },
+    "milestone1": {
+      "rename": 4,
+      "delete": 5,
+      "reorder": 3,
+      "validation": 7,
+      "total": 19
+    },
+    "grandTotal": 31,
+    "errorAndEdgeCases": 14,
+    "errorRatio": "45%"
+  },
+  "implementationSequence": [
+    {
+      "order": 1,
+      "test": "groupByArea returns groups for custom areas including a user-added area",
+      "file": "walking-skeleton.test.tsx",
+      "status": "enabled",
+      "failsFor": "groupByArea ignores second parameter, uses hardcoded 5 areas"
+    },
+    {
+      "order": 2,
+      "test": "preserves existing behavior with default 5 areas",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 3,
+      "test": "shows empty groups for areas with no items",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 4,
+      "test": "shows progress out of 6 when Carlos has 6 areas",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 5,
+      "test": "all-areas-complete triggers only after completing all 6",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 6,
+      "test": "adds a new area that persists in the area list",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 7,
+      "test": "rejects adding a duplicate area name",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 8,
+      "test": "newly added area shows items in groupByArea",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": 9,
+      "test": "loads the 5 default areas on a brand new installation",
+      "file": "walking-skeleton.test.tsx",
+      "status": "skipped"
+    },
+    {
+      "order": "10-31",
+      "tests": "milestone-1 scenarios (rename, delete, reorder, validation)",
+      "file": "milestone-1-area-crud.test.tsx",
+      "status": "all skipped"
+    }
+  ],
+  "mandateCompliance": {
+    "CM-A": "All test files import through driving ports only: groupByArea, createStapleLibrary, createTrip, createAreaManagement, validateAreaName. Null adapters for storage. Zero internal component imports.",
+    "CM-B": "Gherkin and test names use business language exclusively: 'Carlos adds', 'area list contains', 'sweep progress shows'. Zero technical terms (no HTTP verbs, status codes, DB references, JSON).",
+    "CM-C": "3 walking skeletons (groupByArea custom, sweep progress dynamic, area management add). 28 focused scenarios. Error/edge ratio: 14/31 = 45%."
+  },
+  "gates": {
+    "phase1": "PASS - user goals captured, driving ports identified, domain language extracted",
+    "phase2": "PASS - all 7 stories covered, error ratio 45% >= 40%, business language verified",
+    "phase3": "PASS - feature files created, step definitions implemented, first scenario executable (fails for business logic reason)",
+    "phase4": "PASS with note - critique-dimensions skill not found, self-review performed"
+  }
+}

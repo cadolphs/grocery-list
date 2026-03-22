@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commit-stage:
+    name: Commit Stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint . --ext .ts,.tsx --max-warnings 0
+
+      - name: Unit tests with coverage
+        run: npx jest --ci --coverage --bail
+
+      - name: Architecture enforcement
+        run: npx depcruise --validate .dependency-cruiser.cjs src/
+
+      - name: Security audit
+        run: npm audit --audit-level=high || true

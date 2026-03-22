@@ -5,14 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
 import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
 
-const DEFAULT_HOUSE_AREAS: readonly HouseArea[] = [
-  'Bathroom',
-  'Garage Pantry',
-  'Kitchen Cabinets',
-  'Fridge',
-  'Freezer',
-];
-
 type ItemTypeSelection = 'Staple' | 'One-off';
 type SheetMode = 'form' | 'duplicate-warning';
 
@@ -21,7 +13,7 @@ type MetadataBottomSheetProps = {
   readonly itemName: string;
   readonly defaultItemType?: ItemTypeSelection;
   readonly defaultArea?: HouseArea | null;
-  readonly areas?: readonly HouseArea[];
+  readonly areas: readonly HouseArea[];
   readonly existingSections?: readonly string[];
   readonly onFindDuplicate?: (name: string, area: HouseArea) => StapleItem | undefined;
   readonly onDismiss: () => void;
@@ -44,7 +36,7 @@ export const MetadataBottomSheet = ({
   itemName,
   defaultItemType,
   defaultArea,
-  areas = DEFAULT_HOUSE_AREAS,
+  areas,
   existingSections = [],
   onFindDuplicate,
   onDismiss,

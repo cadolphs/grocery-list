@@ -1,0 +1,147 @@
+{
+  "roadmap": {
+    "project_id": "grocery-list-ui",
+    "created_at": "2026-03-18T20:30:00Z",
+    "total_steps": 9,
+    "phases": 4
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Core UI Foundation",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Home view renders staples grouped by area",
+          "criteria": "ServiceProvider + AppShell + HomeView + AreaSection + TripItemRow render trip items grouped by house area. Fridge shows Whole milk and Butter. Bathroom shows Toilet paper and Shampoo.",
+          "test_file": "tests/acceptance/grocery-list-ui/walking-skeleton.test.tsx",
+          "scenario_name": "displays staples under their house area headings",
+          "files_to_modify": [
+            "src/ui/ServiceProvider.tsx",
+            "src/ui/AppShell.tsx",
+            "src/ui/HomeView.tsx",
+            "src/ui/AreaSection.tsx",
+            "src/ui/TripItemRow.tsx",
+            "src/ui/ViewToggle.tsx",
+            "src/hooks/useTrip.ts",
+            "src/hooks/useViewMode.ts"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Quick-add places item on trip",
+          "criteria": "QuickAdd component accepts text input, submitting adds item to trip and it appears in the home view",
+          "test_file": "tests/acceptance/grocery-list-ui/walking-skeleton.test.tsx",
+          "scenario_name": "adds a quick-add item that appears on the home screen",
+          "files_to_modify": [
+            "src/ui/QuickAdd.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "View Toggle + Store View",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Toggle switches home to store view",
+          "criteria": "Tapping Store toggle hides home area headings and shows store aisle headings",
+          "test_file": "tests/acceptance/grocery-list-ui/walking-skeleton.test.tsx",
+          "scenario_name": "hides home view and shows store view on toggle tap",
+          "files_to_modify": [
+            "src/ui/StoreView.tsx",
+            "src/ui/AisleSection.tsx"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Store view renders items by aisle",
+          "criteria": "Store view shows items under Aisle 3: Dairy, Aisle 5: Canned Goods, etc. Numbered aisles before named sections.",
+          "test_file": "tests/acceptance/grocery-list-ui/walking-skeleton.test.tsx",
+          "scenario_name": "displays items under aisle and section headings",
+          "files_to_modify": [
+            "src/ui/StoreView.tsx",
+            "src/ui/AisleSection.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Check-off + Trip Completion",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Check off item in store view",
+          "criteria": "Tapping item in store view toggles checked state with visual indicator",
+          "test_file": "tests/acceptance/grocery-list-ui/walking-skeleton.test.tsx",
+          "scenario_name": "shows item as checked after tap",
+          "files_to_modify": [
+            "src/ui/TripItemRow.tsx",
+            "src/ui/StoreView.tsx"
+          ]
+        },
+        {
+          "id": "03-02",
+          "name": "Trip completion with summary",
+          "criteria": "Finish Trip button shows summary with purchased count and carryover items",
+          "test_file": "tests/acceptance/grocery-list-ui/walking-skeleton.test.tsx",
+          "scenario_name": "displays trip summary with purchased and carryover counts",
+          "files_to_modify": [
+            "src/ui/TripSummaryView.tsx",
+            "src/ui/StoreView.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "AsyncStorage Adapters + App Wiring",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "AsyncStorage staple adapter with cache",
+          "criteria": "createAsyncStapleStorage implements StapleStorage port. Loads from AsyncStorage into cache on init. Sync reads from cache. Writes update cache then persist async.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "src/adapters/async-storage/async-staple-storage.ts"
+          ]
+        },
+        {
+          "id": "04-02",
+          "name": "AsyncStorage trip adapter with cache",
+          "criteria": "createAsyncTripStorage implements TripStorage port. Same cached pattern as staple adapter.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "src/adapters/async-storage/async-trip-storage.ts"
+          ]
+        },
+        {
+          "id": "04-03",
+          "name": "App initialization and wiring",
+          "criteria": "useAppInitialization hook creates adapters, initializes caches, creates services. App.tsx wires ServiceProvider with real adapters. Loading screen shown during init.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts",
+            "src/ui/LoadingScreen.tsx",
+            "App.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/", "src/hooks/", "src/adapters/async-storage/"],
+    "test_directories": ["tests/acceptance/grocery-list-ui/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-18T20:30:00Z"
+  }
+}

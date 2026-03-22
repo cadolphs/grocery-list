@@ -1,0 +1,233 @@
+journey:
+  name: "Store Shop"
+  goal: "Navigate the store efficiently aisle-by-aisle, checking off items reliably offline, and complete the trip with automatic carryover of unbought items"
+  persona: "Carlos Rivera, household grocery planner, bi-weekly shopper"
+  job_stories:
+    - JS4 (Store Navigation)
+    - JS5 (In-Store Check-Off)
+    - JS6 (Trip Completion)
+
+  emotional_arc:
+    start: "Purposeful -- arrived at store, ready to execute the plan"
+    middle: "Focused flow -- systematic section-by-section shopping"
+    end: "Satisfied -- complete trip, nothing missed, system handles carryover"
+
+steps:
+  - id: 1
+    name: "Switch to Store View"
+    action: "Manually toggle from home view to store view upon arriving at store"
+
+    shared_artifacts:
+      - name: "trip_items"
+        source: "trip item list from home sweep journey"
+        displayed_as: "items grouped by aisle/section in store walk order"
+        consumers:
+          - "store view section list"
+          - "section detail screens"
+          - "trip completion summary"
+      - name: "store_sections"
+        source: "derived from item aisle/section metadata"
+        displayed_as: "numbered aisles first, then named sections (deli, produce, etc.)"
+        consumers:
+          - "store view section list"
+          - "section navigation"
+
+    emotional_state:
+      entry: "Purposeful -- arrived at store, switching mental modes"
+      exit: "Oriented -- can see the entire plan organized by store layout"
+
+    integration_checkpoint: |
+      All trip items from home sweep appear in store view.
+      Items are correctly grouped by their stored aisle/section.
+      Empty aisles are excluded. Section order matches physical store layout.
+
+    gherkin: |
+      Scenario: Switch to store view shows items by aisle
+        Given Carlos has 22 items on his trip list with aisle metadata
+        When Carlos taps "Switch to Store View"
+        Then items are grouped by aisle in numerical order
+        And non-aisle sections (Deli, Produce, Bakery, Frozen) appear after aisles
+        And only sections with items are shown
+        And the total reads "9 sections, 22 items"
+
+  - id: 2
+    name: "Open Section and Shop"
+    action: "Tap a section to see items, check off as placed in cart"
+
+    shared_artifacts:
+      - name: "section_items"
+        source: "trip_items filtered by section"
+        displayed_as: "checklist with staple/one-off tag"
+        consumers:
+          - "section detail screen"
+          - "check-off state"
+
+    emotional_state:
+      entry: "Oriented -- knows what section to shop first"
+      exit: "Focused -- scanning shelf for listed items"
+
+    integration_checkpoint: |
+      Section item list matches trip items filtered by this section.
+      Item names and types (staple/one-off) are correct.
+
+    gherkin: |
+      Scenario: Open section shows items to buy
+        Given Carlos opens "Aisle 3: Dairy" which has 4 items
+        Then Carlos sees milk, Greek yogurt, butter, and cheddar cheese
+        And the progress shows "0/4"
+        And the next section hint shows "Aisle 5 (Canned Goods)"
+
+  - id: 3
+    name: "Check Off Items"
+    action: "Tap item to mark as in cart, persisted offline"
+
+    shared_artifacts:
+      - name: "check_off_state"
+        source: "local storage (offline-first)"
+        displayed_as: "checked items show 'IN CART' badge"
+        consumers:
+          - "section detail screen"
+          - "section progress counter"
+          - "trip completion summary"
+
+    emotional_state:
+      entry: "Focused -- looking at items in this section"
+      exit: "Focused -- items checked, progress visible"
+
+    integration_checkpoint: |
+      Check-off persists to local storage immediately.
+      Section progress counter updates. No network required.
+
+    gherkin: |
+      Scenario: Check off item offline
+        Given Carlos has no network connectivity in the store
+        And Carlos is viewing Aisle 3 with 4 items
+        When Carlos taps "Milk, whole" to check it off
+        Then milk shows "IN CART" badge
+        And the progress updates to "1/4"
+        And the check-off is saved to local storage
+
+      Scenario: Uncheck an item checked by mistake
+        Given Carlos accidentally checked off butter
+        When Carlos taps butter again
+        Then butter is unchecked
+        And the progress decreases by 1
+
+  - id: 4
+    name: "Navigate to Next Section"
+    action: "Move to the next section with items, skipping empty aisles"
+
+    shared_artifacts:
+      - name: "section_navigation"
+        source: "store_sections with completion state"
+        displayed_as: "next section hint with item count"
+        consumers:
+          - "section detail screen (next hint)"
+          - "section list (completion badges)"
+
+    emotional_state:
+      entry: "Focused -- finished or moving on from current section"
+      exit: "In flow -- seamless transition to next section"
+
+    integration_checkpoint: |
+      Next section is the next in physical store order that has items.
+      Completed sections show completion badge in section list.
+
+    gherkin: |
+      Scenario: Navigate to next section after completing current
+        Given Carlos has checked all 4 items in Aisle 3
+        When Carlos taps "Next: Aisle 5"
+        Then Aisle 5 (Canned Goods) opens with its 3 items
+        And Aisle 3 shows as complete in the section list
+
+      Scenario: Skip section with all items already checked
+        Given Aisle 5 has 3 items and all are already checked
+        When Carlos returns to the section list
+        Then Aisle 5 shows as complete
+        And the next incomplete section is highlighted
+
+  - id: 5
+    name: "Handle Partial Section (Items Not Bought)"
+    action: "Leave section with unchecked items, acknowledge skipped items"
+
+    shared_artifacts:
+      - name: "skipped_items"
+        source: "unchecked items in completed sections"
+        displayed_as: "count of not-bought items with carry-over notice"
+        consumers:
+          - "section detail screen"
+          - "trip completion summary"
+          - "next trip pre-load"
+
+    emotional_state:
+      entry: "Focused -- some items not available"
+      exit: "In flow -- acknowledged, will carry over, moving on"
+
+    integration_checkpoint: |
+      Skipped items tracked separately from checked items.
+      Skipped items will appear in trip completion for carryover decision.
+
+    gherkin: |
+      Scenario: Move on with unchecked items
+        Given Carlos is in Produce with 4 items
+        And Carlos has checked 3 items but not "Avocados"
+        When Carlos taps "Move on (1 not bought)"
+        Then Carlos proceeds to the next section
+        And avocados remains unchecked on the trip list
+
+  - id: 6
+    name: "Complete Trip"
+    action: "Finish shopping, review summary, trigger carryover logic"
+
+    shared_artifacts:
+      - name: "trip_result"
+        source: "aggregated check-off state across all sections"
+        displayed_as: "bought count, not-bought list, carryover notice, staple re-queue"
+        consumers:
+          - "trip completion screen"
+          - "next trip staple pre-load"
+          - "staple library (for re-queue)"
+
+    emotional_state:
+      entry: "In flow -- all sections visited"
+      exit: "Satisfied -- trip done, system handles the rest"
+
+    integration_checkpoint: |
+      Bought count matches total checked items across all sections.
+      Not-bought items listed with carryover indication.
+      Staples re-queued for next trip. Purchased one-offs cleared.
+      Skipped one-offs carried over.
+
+    gherkin: |
+      Scenario: Complete trip with all items bought
+        Given Carlos has checked all 22 items
+        When Carlos taps "Finish Trip"
+        Then the summary shows "22 of 22 items purchased"
+        And staple items are re-queued for the next trip
+        And purchased one-off items are cleared from the list
+
+      Scenario: Complete trip with unbought items
+        Given Carlos has checked 21 of 22 items
+        And "Avocados" (one-off) was not bought
+        When Carlos taps "Finish Trip"
+        Then the summary shows "21 of 22 items purchased"
+        And avocados is listed as "will carry to next trip"
+        And avocados appears on the next trip's list
+
+      Scenario: Staple auto-requeues after purchase
+        Given Carlos bought "Milk, whole" which is a staple
+        When Carlos finishes the trip
+        Then milk appears pre-loaded on the next trip's list
+        And milk's metadata (Aisle 3, Dairy, Fridge area) is preserved
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "trip_items"
+      must_match_across: [1, 2, 3, 6]
+      failure_message: "Trip item list from home sweep must be identical in store view, section details, check-off tracking, and trip completion"
+    - artifact: "check_off_state"
+      must_match_across: [3, 4, 5, 6]
+      failure_message: "Check-off state must be consistent between section view, navigation progress, skipped items, and trip completion"
+    - artifact: "store_sections"
+      must_match_across: [1, 2, 4]
+      failure_message: "Section list and order must be consistent between store view, section detail, and navigation"

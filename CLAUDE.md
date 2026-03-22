@@ -39,9 +39,25 @@ eas build --profile preview
 eas build --profile production
 ```
 
+## Development Paradigm
+
+This project follows the **functional programming** paradigm. Use @nw-functional-software-crafter for implementation. Factory functions, pure domain functions, hooks — no classes.
+
 ## Architecture
 
+- **Pattern**: Ports-and-adapters (hexagonal) with functional TypeScript
 - **Entry point**: `index.ts` registers the root component via Expo
 - **Root component**: `App.tsx` is the main application component
 - **Configuration**: `app.json` contains Expo configuration, `eas.json` contains EAS Build profiles
 - **TypeScript**: Extends `expo/tsconfig.base` with strict mode
+
+## Mutation Testing Strategy
+
+- **Strategy**: Per-feature (scoped to modified files in `src/domain/` and `src/ports/`)
+- **Tool**: Stryker (`@stryker-mutator/core` + `@stryker-mutator/jest-runner`)
+- **Kill rate threshold**: >= 80%
+- **Scope**: Domain logic and port interfaces only. UI components and adapters excluded (low mutation testing value).
+- **Trigger**: On push to `main` when `src/domain/**` or `src/ports/**` files change
+- **Duration target**: 5-15 minutes per delivery
+- **Config file**: `stryker.config.mjs`
+- **CI workflow**: `.github/workflows/mutation.yml`

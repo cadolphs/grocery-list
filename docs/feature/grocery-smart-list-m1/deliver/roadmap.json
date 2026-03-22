@@ -1,0 +1,218 @@
+{
+  "roadmap": {
+    "project_id": "grocery-smart-list-m1",
+    "created_at": "2026-03-18T19:00:00Z",
+    "total_steps": 21,
+    "phases": 5
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Skip Staple",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Skip a staple without removing from library",
+          "criteria": "Skipped staple has needed=false; stays in staple library; area neededCount decreases",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "skips a staple without removing from the library",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "01-02",
+          "name": "Skipped staple reappears on next trip",
+          "criteria": "After trip completion, starting a new trip pre-loads the skipped staple with needed=true",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "skipped staple reappears on next trip",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "01-03",
+          "name": "Re-add a skipped staple within same trip",
+          "criteria": "Unskipping a staple sets needed=true; item is back on the trip",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "re-adds a skipped staple within the same trip",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "01-04",
+          "name": "Skip multiple staples across areas",
+          "criteria": "Skipping items in different areas correctly decreases each area's neededCount",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "skip multiple staples across different areas",
+          "files_to_modify": ["src/domain/trip.ts"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Sweep Navigation",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Complete area and show sweep progress",
+          "criteria": "completeArea marks area done; getSweepProgress returns completedAreas, completedCount, totalAreas",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "marks an area as complete and shows sweep progress",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "02-02",
+          "name": "Navigate areas out of order",
+          "criteria": "Completing areas in non-sequential order preserves all progress",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "allows navigating areas out of order",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "02-03",
+          "name": "All areas complete triggers whiteboard",
+          "criteria": "When all 5 areas complete, allAreasComplete is true",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "all areas complete triggers whiteboard consolidation",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "02-04",
+          "name": "Area count updates on additions",
+          "criteria": "Adding items during sweep updates area totalCount via groupByArea",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "area item count updates when items are added during sweep",
+          "files_to_modify": ["src/domain/trip.ts"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Auto-Suggest",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Search staples by prefix",
+          "criteria": "library.search('gre') returns matching staples with metadata",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "suggests known staples by name prefix",
+          "files_to_modify": ["src/domain/staple-library.ts", "src/adapters/null/null-staple-storage.ts"]
+        },
+        {
+          "id": "03-02",
+          "name": "No suggestions for unknown item",
+          "criteria": "Searching for non-existent item returns empty array",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "returns no suggestions for unknown item",
+          "files_to_modify": ["src/domain/staple-library.ts"]
+        },
+        {
+          "id": "03-03",
+          "name": "Case-insensitive search",
+          "criteria": "Searching 'GREEK' finds 'Greek yogurt'",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "search is case-insensitive",
+          "files_to_modify": ["src/domain/staple-library.ts", "src/adapters/null/null-staple-storage.ts"]
+        },
+        {
+          "id": "03-04",
+          "name": "Multiple suggestions for partial match",
+          "criteria": "Searching 'ch' returns all items starting with 'ch'",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "multiple suggestions for partial match",
+          "files_to_modify": ["src/domain/staple-library.ts"]
+        },
+        {
+          "id": "03-05",
+          "name": "Empty input returns no suggestions",
+          "criteria": "Searching '' returns empty array",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "empty input returns no suggestions",
+          "files_to_modify": ["src/domain/staple-library.ts"]
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "Section Navigation",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "Determine next section in store order",
+          "criteria": "Completed section (all checked) followed by next section with unchecked items",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "determines next section in store order",
+          "files_to_modify": ["src/domain/item-grouping.ts"]
+        },
+        {
+          "id": "04-02",
+          "name": "Section progress with partial completion",
+          "criteria": "groupByAisle returns correct checkedCount/totalCount for partially complete section",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "section progress reflects partial completion",
+          "files_to_modify": ["src/domain/item-grouping.ts"]
+        },
+        {
+          "id": "04-03",
+          "name": "Section completion badges",
+          "criteria": "Can filter groups by complete vs incomplete status",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "section list shows completion badges",
+          "files_to_modify": ["src/domain/item-grouping.ts"]
+        },
+        {
+          "id": "04-04",
+          "name": "All sections complete enables trip completion",
+          "criteria": "When every group has checkedCount === totalCount, all sections are complete",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "all sections complete enables trip completion",
+          "files_to_modify": ["src/domain/item-grouping.ts"]
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "name": "Trip Summary",
+      "steps": [
+        {
+          "id": "05-01",
+          "name": "Trip summary with item breakdown",
+          "criteria": "getSummary returns totalItems, stapleCount, oneOffCount, sweepCount, whiteboardCount",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "shows trip summary with item breakdown",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "05-02",
+          "name": "Prep time display",
+          "criteria": "getSummary returns prepTimeMinutes based on elapsed time since trip start",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "displays prep time",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "05-03",
+          "name": "Summary reflects skipped staples",
+          "criteria": "Skipped items excluded from totalItems count (only needed items counted)",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "summary reflects skipped staples",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "05-04",
+          "name": "Store view transition from summary",
+          "criteria": "UI-level test — domain layer has no action needed",
+          "test_file": "tests/acceptance/grocery-smart-list/milestone-1-enhanced-management.test.tsx",
+          "scenario_name": "summary offers store view transition",
+          "files_to_modify": []
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "src/ports/", "src/adapters/null/"],
+    "test_directories": ["tests/acceptance/grocery-smart-list/", "tests/unit/domain/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-18T19:00:00Z"
+  }
+}

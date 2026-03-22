@@ -1,0 +1,218 @@
+journey:
+  id: customize-areas
+  name: Carlos Customizes His House Areas
+  feature_id: custom-house-areas
+  date: "2026-03-20"
+  persona: Carlos Rivera
+  goal: Make house areas match the user's actual home layout
+  emotional_arc: Ownership Building
+  emotional_arc_phases:
+    - phase: discovery
+      emotion: curious
+      description: "I can change things?"
+    - phase: modification
+      emotion: empowered
+      description: "This matches MY house now"
+    - phase: verification
+      emotion: reassured
+      description: "Everything still works"
+    - phase: confidence
+      emotion: satisfied
+      description: "The sweep fits my life"
+
+  changed_assumptions:
+    - original_decision: "House areas as fixed list -- 5 areas are stable"
+      original_rationale: "Dynamic management is over-engineering for initial scope"
+      new_decision: "House areas are user-configurable with 5 defaults"
+      new_rationale: "Different households have different rooms; configurable areas enable multi-household support"
+
+  default_areas:
+    - name: Bathroom
+      position: 1
+    - name: Garage Pantry
+      position: 2
+    - name: Kitchen Cabinets
+      position: 3
+    - name: Fridge
+      position: 4
+    - name: Freezer
+      position: 5
+
+  steps:
+    - id: discover-settings
+      name: Discover Area Settings
+      trigger: Carlos taps gear icon from home view
+      emotion: curious
+      artifacts_shown:
+        - area-list (ordered, with drag handles)
+      artifacts_created: []
+      user_actions:
+        - tap gear icon
+        - view current area list
+      error_paths: []
+
+    - id: add-area
+      name: Add a New Area
+      trigger: Carlos taps "+ Add Area"
+      emotion: empowered
+      artifacts_shown:
+        - area-name-input
+        - area-position-selector
+      artifacts_created:
+        - new-area (name, position)
+      user_actions:
+        - type area name
+        - save
+      error_paths:
+        - duplicate_name: "Area name already exists"
+        - empty_name: "Area name is required"
+        - long_name: "Truncate at 40 characters"
+      validation_rules:
+        - name must be non-empty
+        - name must be unique (case-insensitive)
+        - name max length 40 characters
+
+    - id: rename-area
+      name: Rename an Existing Area
+      trigger: Carlos taps chevron on an area
+      emotion: satisfied
+      artifacts_shown:
+        - area-name-input (prefilled)
+        - affected-staple-count
+        - affected-staple-names
+      artifacts_created:
+        - updated-area-name
+      user_actions:
+        - edit area name
+        - save
+      error_paths:
+        - duplicate_name: "New name already taken by another area"
+        - empty_name: "Area name is required"
+      propagation:
+        - all staples in this area update their houseArea field
+        - current trip items in this area update their houseArea field
+
+    - id: delete-area
+      name: Delete an Area
+      trigger: Carlos taps delete on an area detail screen
+      emotion: cautious
+      artifacts_shown:
+        - affected-staple-count
+        - affected-staple-names
+        - reassignment-target-picker
+      artifacts_created: []
+      user_actions:
+        - select reassignment target area
+        - confirm deletion
+      error_paths:
+        - last_area: "Cannot delete the last remaining area"
+      business_rules:
+        - if area has staples, user must pick a target area for reassignment
+        - if area has 0 staples, show simple confirmation
+        - staples are reassigned, never orphaned or deleted
+        - current trip items in this area are also reassigned
+
+    - id: reorder-areas
+      name: Reorder Areas
+      trigger: Carlos long-presses drag handle and drags
+      emotion: in_control
+      artifacts_shown:
+        - area-list (draggable)
+      artifacts_created:
+        - updated-area-order
+      user_actions:
+        - drag area to new position
+      error_paths: []
+      notes: Order determines sweep progression and home view display order
+
+    - id: verify-changes
+      name: Verify Changes in Home View
+      trigger: Carlos navigates back to home view
+      emotion: reassured
+      artifacts_shown:
+        - home-view with updated areas
+        - sweep progress with updated area count
+      artifacts_created: []
+      user_actions:
+        - scroll through areas
+        - verify names, order, counts
+      verification_points:
+        - renamed areas show new name
+        - new areas appear in correct position
+        - deleted areas are gone
+        - staple counts are correct after reassignment
+        - sweep progress total matches new area count
+
+    - id: sweep-with-custom-areas
+      name: Sweep with Custom Areas
+      trigger: Carlos starts sweep
+      emotion: confident
+      artifacts_shown:
+        - home-view with custom area names and order
+        - sweep progress (N of M areas, M is dynamic)
+      artifacts_created: []
+      user_actions:
+        - sweep rooms in custom order
+        - add staples to new areas
+      notes: Identical to existing sweep flow but with user-defined areas
+
+  shared_artifacts:
+    - id: area-list
+      description: Ordered list of user-defined house areas
+      source: AreaStorage
+      consumers:
+        - HomeView (display order)
+        - MetadataBottomSheet (area picker)
+        - groupByArea (grouping logic)
+        - getSweepProgress (total area count)
+        - AreaSection (area names)
+      persistence: local storage
+
+    - id: area-name
+      description: Name of a single house area
+      source: AreaStorage
+      consumers:
+        - StapleItem.houseArea
+        - TripItem.houseArea
+        - UI labels
+      propagation: rename updates all references
+
+    - id: area-order
+      description: Position/sort order of areas
+      source: AreaStorage
+      consumers:
+        - HomeView display order
+        - Sweep progression order
+      persistence: local storage (array index = position)
+
+  integration_checkpoints:
+    - id: ic-area-list-loads
+      description: Area list loads from storage on app start
+      from: AreaStorage
+      to: HomeView, MetadataBottomSheet, groupByArea, getSweepProgress
+      validation: All consumers read from same source
+
+    - id: ic-rename-propagates
+      description: Renaming an area updates all staples and trip items
+      from: Settings (rename action)
+      to: StapleStorage, TripStorage
+      validation: No staple or trip item references the old name after rename
+
+    - id: ic-delete-reassigns
+      description: Deleting an area reassigns all staples to chosen target
+      from: Settings (delete action)
+      to: StapleStorage, TripStorage
+      validation: Zero staples reference the deleted area; target area count increases
+
+    - id: ic-order-persists
+      description: Area order survives app restart
+      from: Settings (reorder action)
+      to: AreaStorage
+      validation: After restart, areas appear in the same order as set by user
+
+  constraints:
+    - offline-first (all area management works without network)
+    - functional TypeScript (no classes)
+    - existing 5 areas are the default starting set for new users
+    - area name max 40 characters
+    - minimum 1 area required (cannot delete all)

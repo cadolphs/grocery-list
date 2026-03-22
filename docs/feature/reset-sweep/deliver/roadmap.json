@@ -1,0 +1,42 @@
+{
+  "roadmap": {
+    "project_id": "reset-sweep",
+    "created_at": "2026-03-21T00:00:00Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Reset Sweep",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Domain: resetSweep method on TripService",
+          "criteria": "TripService.resetSweep() sets all staple trip items back to needed=true and checked=false, clears all completed areas. One-off items are removed. Trip is ready for a fresh sweep.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/domain/trip.ts"]
+        },
+        {
+          "id": "01-02",
+          "name": "UI: Reset Sweep button on HomeView",
+          "criteria": "HomeView shows a 'Reset Sweep' button. Tapping it calls resetSweep, refreshes the view. All staples show as needed, no items checked, sweep progress reset to 0.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/HomeView.tsx", "src/hooks/useTrip.ts"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "src/ui/", "src/hooks/"],
+    "test_directories": ["tests/unit/domain/", "tests/regression/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-21T00:00:00Z"
+  }
+}

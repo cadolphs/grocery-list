@@ -1,0 +1,284 @@
+journey:
+  name: "Add New Item with Metadata"
+  goal: "Carlos adds a new item to the trip with proper metadata (type, house area, store section, aisle) without breaking his flow"
+  persona: "Carlos Rivera - household grocery planner"
+
+  emotional_arc:
+    start: "Focused (mid-sweep or whiteboard entry, already in productive flow)"
+    middle: "Briefly paused (metadata decision moment — must be fast to maintain momentum)"
+    end: "Satisfied (item added with correct classification, back in flow)"
+
+  context_modes:
+    sweep:
+      house_area_default: "Pre-selected to active area"
+      type_default: "staple"
+      speed_priority: "Maximum — Carlos is walking room to room"
+    whiteboard:
+      house_area_default: "None — must choose"
+      type_default: "one-off"
+      speed_priority: "Moderate — Carlos is sitting, planning"
+
+steps:
+  - id: 1
+    name: "Name Entry & No Match"
+    action: "Carlos types item name in QuickAdd, no staple suggestion matches"
+
+    tui_mockup: |
+      +-------------------------------------------------------+
+      | [ ${item_name}                            ] [  Add  ]  |
+      |                                                        |
+      |  No matching staples found                             |
+      |  +-------------------------------------------------+  |
+      |  |  + Add "${item_name}" as new item...             |  |
+      |  +-------------------------------------------------+  |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "item_name"
+        source: "QuickAdd text input state"
+        displayed_as: "${item_name}"
+        consumers: ["Step 1 suggestion row", "Step 2 bottom sheet title"]
+
+    emotional_state:
+      entry: "Focused (mid-sweep flow)"
+      exit: "Curious (this is new, let me classify it)"
+
+    integration_checkpoint: |
+      QuickAdd search returns empty results for the typed name.
+      "Add as new item" row appears in the suggestion dropdown area.
+
+    gherkin: |
+      Scenario: New item prompt appears when no staple matches
+        Given Carlos is on the home view during a sweep
+        And the staple library does not contain "Oat milk"
+        When Carlos types "Oat milk" in the QuickAdd input
+        Then a suggestion row shows "Add 'Oat milk' as new item..."
+        And no staple suggestions are displayed
+
+  - id: 2
+    name: "Metadata Bottom Sheet"
+    action: "Carlos taps 'Add as new item' and fills metadata in bottom sheet"
+
+    tui_mockup: |
+      +-------------------------------------------------------+
+      | Add "${item_name}"                               [ X ] |
+      |                                                        |
+      |  Type:   ( * ${default_type} )  (   ${alt_type} )      |
+      |                                                        |
+      |  Area:   [  ${house_area}         v ]                  |
+      |                                                        |
+      |  Section: [ ${section_input}                 ]          |
+      |           Previously used: ${recent_sections}          |
+      |                                                        |
+      |  Aisle:   [ ${aisle_number}   ] (optional)             |
+      |                                                        |
+      |           [ Skip, add with defaults ]                  |
+      |                                     [  Add Item  ]     |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "item_name"
+        source: "QuickAdd text input state"
+        displayed_as: "${item_name}"
+        consumers: ["Bottom sheet title", "Confirmation toast"]
+      - name: "default_type"
+        source: "Context mode (sweep=staple, whiteboard=one-off)"
+        displayed_as: "${default_type}"
+        consumers: ["Type toggle pre-selection"]
+      - name: "house_area"
+        source: "HomeView activeArea state (sweep) or user selection (whiteboard)"
+        displayed_as: "${house_area}"
+        consumers: ["Area picker pre-selection", "AddTripItemRequest.houseArea"]
+      - name: "recent_sections"
+        source: "StapleLibrary — distinct section names from existing staples"
+        displayed_as: "${recent_sections}"
+        consumers: ["Section auto-suggest dropdown"]
+      - name: "section_input"
+        source: "User text input in section field"
+        displayed_as: "${section_input}"
+        consumers: ["AddTripItemRequest.storeLocation.section"]
+      - name: "aisle_number"
+        source: "User text input in aisle field (nullable)"
+        displayed_as: "${aisle_number}"
+        consumers: ["AddTripItemRequest.storeLocation.aisleNumber"]
+
+    emotional_state:
+      entry: "Brief pause (let me classify this quickly)"
+      exit: "Confident (correct metadata selected)"
+
+    integration_checkpoint: |
+      Bottom sheet receives item_name from Step 1.
+      House area pre-selected from HomeView activeArea (sweep mode) or blank (whiteboard).
+      Type default matches context mode.
+      Section auto-suggest populated from StapleLibrary distinct sections.
+
+    gherkin: |
+      Scenario: Bottom sheet shows smart defaults during sweep
+        Given Carlos is viewing the Fridge area during a sweep
+        When Carlos taps "Add 'Oat milk' as new item..."
+        Then a bottom sheet appears with title "Add 'Oat milk'"
+        And the type toggle defaults to "Staple"
+        And the area picker shows "Fridge" pre-selected
+        And the section field is empty with previously used sections listed below
+
+      Scenario: Bottom sheet shows no area default during whiteboard entry
+        Given Carlos is in whiteboard mode (all areas complete)
+        When Carlos taps "Add 'Paper towels' as new item..."
+        Then a bottom sheet appears with title "Add 'Paper towels'"
+        And the type toggle defaults to "One-off"
+        And the area picker shows no pre-selection
+
+  - id: 3
+    name: "Section Auto-Suggest"
+    action: "Carlos types a section name and sees suggestions from previously used sections"
+
+    tui_mockup: |
+      +-------------------------------------------------------+
+      |  Section: [ ${section_partial}               ]         |
+      |           +---------------------------------+          |
+      |           |  ${matched_section_1}           |          |
+      |           |  ${matched_section_2}           |          |
+      |           +---------------------------------+          |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "section_partial"
+        source: "User text input in section field"
+        displayed_as: "${section_partial}"
+        consumers: ["Section auto-suggest filter"]
+      - name: "matched_sections"
+        source: "StapleLibrary — sections matching partial input"
+        displayed_as: "${matched_section_1}, ${matched_section_2}"
+        consumers: ["Section suggestion dropdown"]
+
+    emotional_state:
+      entry: "Thinking (what section is this?)"
+      exit: "Recognized (the app remembers my sections)"
+
+    integration_checkpoint: |
+      Section suggestions come from StapleLibrary existing sections.
+      Tapping a suggestion fills the section field.
+      Typing a new section name creates a new section (free-text).
+
+    gherkin: |
+      Scenario: Previously used sections appear as suggestions
+        Given Carlos has staples in sections "Dairy", "Produce", and "Deli"
+        When Carlos types "Da" in the section field
+        Then "Dairy" appears as a suggestion
+        And "Deli" does not appear (does not match "Da")
+
+      Scenario: Carlos enters a brand new section
+        Given Carlos has no staples in section "International Foods"
+        When Carlos types "International Foods" in the section field
+        Then no suggestions match
+        And Carlos can submit with "International Foods" as the section
+
+  - id: 4
+    name: "Confirmation & Return"
+    action: "Carlos taps 'Add Item', bottom sheet dismisses, item appears in list"
+
+    tui_mockup: |
+      +-------------------------------------------------------+
+      |  [ "${item_name}" added to ${house_area} ]  <- toast   |
+      |                                                        |
+      |  [ Add an item...                     ] [  Add  ]      |
+      |                                                        |
+      |  --- ${house_area} ---                                 |
+      |  [ ] ${existing_item}    ${existing_section}           |
+      |  [ ] ${item_name}        ${section} / Aisle ${aisle}   |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "item_name"
+        source: "QuickAdd text input state (from Step 1)"
+        displayed_as: "${item_name}"
+        consumers: ["Toast message", "Trip item list row"]
+      - name: "house_area"
+        source: "Bottom sheet area selection (from Step 2)"
+        displayed_as: "${house_area}"
+        consumers: ["Toast message", "Area section header"]
+
+    emotional_state:
+      entry: "Anticipation (did it work?)"
+      exit: "Satisfied (item is right there, correctly classified)"
+
+    integration_checkpoint: |
+      Item added via addItem (one-off) or addStaple + addItem (staple).
+      Item appears in correct area group in HomeView.
+      Toast shows item name and house area.
+      QuickAdd input clears, ready for next item.
+
+    gherkin: |
+      Scenario: Staple item added and appears in correct area
+        Given Carlos has filled metadata: name "Oat milk", type Staple, area Fridge, section "Dairy", aisle 3
+        When Carlos taps "Add Item"
+        Then "Oat milk" appears in the Fridge area section
+        And "Oat milk" is saved to the staple library
+        And a toast shows "Oat milk added to Fridge"
+        And the QuickAdd input is cleared
+
+      Scenario: One-off item added without saving to staple library
+        Given Carlos has filled metadata: name "Birthday candles", type One-off, area Kitchen Cabinets, section "Baking", aisle 12
+        When Carlos taps "Add Item"
+        Then "Birthday candles" appears in the Kitchen Cabinets area section
+        And "Birthday candles" is NOT saved to the staple library
+        And a toast shows "Birthday candles added to Kitchen Cabinets"
+
+error_paths:
+  - id: "skip-metadata"
+    name: "Skip Metadata (Add with Defaults)"
+    trigger: "Carlos taps 'Skip, add with defaults' in the bottom sheet"
+    behavior: "Item added as one-off with current area (or Kitchen Cabinets), section 'Uncategorized', no aisle"
+    emotional_state: "Relieved (didn't slow down, can fix later)"
+    gherkin: |
+      Scenario: Carlos skips metadata to stay in flow
+        Given Carlos is viewing the Fridge area during a sweep
+        And Carlos has tapped "Add 'Sriracha' as new item..."
+        When Carlos taps "Skip, add with defaults"
+        Then "Sriracha" is added as one-off in Fridge area
+        And the section is "Uncategorized"
+        And no aisle number is set
+        And the bottom sheet dismisses
+
+  - id: "duplicate-detection"
+    name: "Duplicate Staple Detection"
+    trigger: "Carlos tries to add an item that already exists as a staple in the same area"
+    behavior: "Bottom sheet shows duplicate warning with option to add to trip instead"
+    emotional_state: "Mildly surprised, then guided (oh right, I already have that)"
+    gherkin: |
+      Scenario: Duplicate staple detected
+        Given "Whole milk" already exists as a staple in Fridge area
+        When Carlos tries to add "Whole milk" in Fridge area
+        Then the bottom sheet shows "Whole milk already exists in Fridge"
+        And offers "Add to trip instead" and "Cancel"
+
+      Scenario: Carlos adds existing staple to trip
+        Given the duplicate warning is showing for "Whole milk" in Fridge
+        When Carlos taps "Add to trip instead"
+        Then "Whole milk" is added to the current trip with its existing staple metadata
+        And the bottom sheet dismisses
+
+  - id: "dismiss-without-adding"
+    name: "Cancel / Dismiss"
+    trigger: "Carlos taps X or swipes down the bottom sheet"
+    behavior: "Bottom sheet dismisses, no item added, QuickAdd input preserved"
+    emotional_state: "Neutral (changed my mind, no harm done)"
+    gherkin: |
+      Scenario: Carlos dismisses the bottom sheet
+        Given Carlos has opened the metadata bottom sheet for "Oat milk"
+        When Carlos taps the X button
+        Then the bottom sheet dismisses
+        And no item is added
+        And the QuickAdd input still shows "Oat milk"
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "item_name"
+      must_match_across: [1, 2, 4]
+      failure_message: "Item name in bottom sheet title and confirmation toast must match the name typed in QuickAdd"
+    - artifact: "house_area"
+      must_match_across: [2, 4]
+      failure_message: "House area in confirmation must match the area selected in bottom sheet"
+    - artifact: "recent_sections"
+      must_match_across: [2, 3]
+      failure_message: "Section suggestions must come from StapleLibrary and update after new sections are created"

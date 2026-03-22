@@ -1,0 +1,214 @@
+journey:
+  name: "Home Sweep"
+  goal: "Capture all needed grocery items room-by-room during a physical walk-through, consolidate whiteboard items, and have a complete shopping list ready in under 5 minutes"
+  persona: "Carlos Rivera, household grocery planner, bi-weekly shopper, maintains a system"
+  job_stories:
+    - JS1 (Home Sweep Capture)
+    - JS2 (Whiteboard Consolidation)
+    - JS3 (Staple Item Management)
+
+  emotional_arc:
+    start: "Dread -- anticipates tedious 20-minute prep ritual"
+    middle: "Productive flow -- room-by-room capture feels natural and fast"
+    end: "Relief -- list complete in under 5 minutes, no consolidation needed"
+
+steps:
+  - id: 1
+    name: "Open App and Start Sweep"
+    action: "Open grocery app, see pre-loaded staples by house area"
+
+    shared_artifacts:
+      - name: "house_areas"
+        source: "app configuration (fixed list)"
+        displayed_as: "area checklist with staple counts"
+        consumers:
+          - "sweep progress screen"
+          - "area detail screen"
+          - "list review screen"
+      - name: "staple_library"
+        source: "persistent item database"
+        displayed_as: "pre-loaded items per area"
+        consumers:
+          - "area detail screen"
+          - "quick-add suggestions"
+          - "store view"
+
+    emotional_state:
+      entry: "Dread -- expects tedium"
+      exit: "Oriented -- sees staples pre-loaded, knows where to start"
+
+    integration_checkpoint: |
+      Staple library loaded. House areas displayed with correct staple counts.
+      Pre-loaded staples match the persisted staple library.
+
+    gherkin: |
+      Scenario: Pre-loaded staples shown on sweep start
+        Given Carlos Rivera has 21 items marked as staples across 5 house areas
+        When Carlos opens the app to start a sweep
+        Then the app shows 5 house areas with staple counts
+        And the total reads "21 staples pre-loaded"
+
+  - id: 2
+    name: "Select Area and Review Staples"
+    action: "Tap a house area to see pre-loaded staples for that room"
+
+    shared_artifacts:
+      - name: "area_items"
+        source: "staple_library filtered by house_area"
+        displayed_as: "checklist of staple items with aisle metadata"
+        consumers:
+          - "area detail screen"
+          - "trip item list"
+
+    emotional_state:
+      entry: "Oriented -- knows which area to check first"
+      exit: "Productive -- staples are pre-checked, just confirm or uncheck"
+
+    integration_checkpoint: |
+      Area items match staple library filter for selected area.
+      Aisle metadata displayed matches stored item metadata.
+
+    gherkin: |
+      Scenario: Area shows pre-loaded staples
+        Given Carlos selects "Bathroom" which has 3 staple items
+        When the area detail screen opens
+        Then Carlos sees toilet paper (Aisle 7), hand soap (Aisle 7), shampoo (Aisle 8)
+        And all staples are pre-checked as "needed"
+
+  - id: 3
+    name: "Add Items During Sweep"
+    action: "Add new items discovered during physical walk-through"
+
+    shared_artifacts:
+      - name: "item_suggestions"
+        source: "staple_library name index"
+        displayed_as: "type-ahead suggestions with aisle metadata"
+        consumers:
+          - "quick-add input"
+          - "whiteboard consolidation screen"
+
+    emotional_state:
+      entry: "Productive -- physically in the room, spotting missing items"
+      exit: "Productive -- item added in seconds, flow unbroken"
+
+    integration_checkpoint: |
+      New items added to trip list. Staple items added to staple library.
+      One-off items flagged as trip-only. Aisle metadata auto-assigned for known items.
+
+    gherkin: |
+      Scenario: Add known staple by suggestion
+        Given Carlos is in the Bathroom area and types "cotton sw"
+        When the suggestion "Cotton swabs - Aisle 8" appears
+        And Carlos taps the suggestion
+        Then cotton swabs is added to the Bathroom area as a staple
+        And its aisle metadata is set to Aisle 8
+
+      Scenario: Add new one-off item
+        Given Carlos is in the Kitchen Cabinets area
+        When Carlos types "birthday candles" with no matching suggestion
+        And Carlos adds it as a one-off item in Baking / Aisle 12
+        Then birthday candles appears in Kitchen Cabinets as a one-off
+        And it will not auto-populate on the next trip
+
+  - id: 4
+    name: "Navigate Between Areas"
+    action: "Mark current area done, move to next area"
+
+    shared_artifacts:
+      - name: "sweep_progress"
+        source: "area completion state"
+        displayed_as: "checklist with completed/remaining areas and item counts"
+        consumers:
+          - "sweep progress screen"
+          - "list review screen"
+
+    emotional_state:
+      entry: "Productive -- finishing one room"
+      exit: "In flow -- moving to next room matches physical movement"
+
+    integration_checkpoint: |
+      Completed area shows correct item count.
+      Remaining areas still show pre-loaded staple counts.
+
+    gherkin: |
+      Scenario: Complete an area and see progress
+        Given Carlos has reviewed all items in Bathroom (3 items captured)
+        When Carlos taps "Done with Bathroom"
+        Then the sweep progress shows Bathroom as complete with 3 items
+        And the next area (Garage Pantry) is highlighted
+
+  - id: 5
+    name: "Consolidate from Whiteboard"
+    action: "After physical sweep, add items from the shared whiteboard"
+
+    shared_artifacts:
+      - name: "whiteboard_items"
+        source: "user manual entry during consolidation"
+        displayed_as: "recently added items with auto-assigned metadata"
+        consumers:
+          - "whiteboard consolidation screen"
+          - "trip item list"
+          - "store view"
+
+    emotional_state:
+      entry: "Confident -- sweep is done, just capturing whiteboard extras"
+      exit: "Confident -- whiteboard items captured, list is complete"
+
+    integration_checkpoint: |
+      Whiteboard items added to trip list with correct area and aisle metadata.
+      Known staples auto-suggest metadata. New items prompt for metadata.
+
+    gherkin: |
+      Scenario: Add known item from whiteboard
+        Given Carlos reads "Greek yogurt" from the whiteboard
+        When Carlos types "greek yo" in the quick-add
+        Then the suggestion "Greek yogurt - Dairy / Aisle 3" appears
+        And Carlos taps to add it to the trip
+
+      Scenario: Add unknown item from whiteboard
+        Given Carlos reads "Deli turkey" from the whiteboard
+        When Carlos types "deli turkey" with no matching suggestion
+        And Carlos assigns it to Deli (no aisle number)
+        Then deli turkey is added as a one-off item in the Deli section
+
+  - id: 6
+    name: "Review Complete List"
+    action: "See summary of all captured items, ready for store"
+
+    shared_artifacts:
+      - name: "trip_summary"
+        source: "aggregated trip item list"
+        displayed_as: "item counts by source (sweep/whiteboard) and type (staple/one-off)"
+        consumers:
+          - "list review screen"
+          - "store view transition"
+
+    emotional_state:
+      entry: "Confident -- everything captured"
+      exit: "Relieved -- prep done in under 5 minutes"
+
+    integration_checkpoint: |
+      Total item count matches sum of sweep + whiteboard items.
+      Staple/one-off breakdown is accurate.
+      Prep time displayed. Switch to store view available.
+
+    gherkin: |
+      Scenario: Review complete list before trip
+        Given Carlos has completed the sweep (19 items) and whiteboard (3 items)
+        When Carlos views the trip summary
+        Then the list shows 22 total items
+        And the breakdown shows 17 staples and 5 one-offs
+        And the prep time is under 5 minutes
+        And a "Switch to Store View" button is available
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "staple_library"
+      must_match_across: [1, 2, 3, 5, 6]
+      failure_message: "Staple items must be consistent across sweep start, area detail, add suggestions, whiteboard suggestions, and trip summary"
+    - artifact: "house_areas"
+      must_match_across: [1, 2, 4, 6]
+      failure_message: "House area list and counts must be consistent across sweep start, area detail, navigation, and review"
+    - artifact: "item_aisle_metadata"
+      must_match_across: [2, 3, 5]
+      failure_message: "Aisle metadata shown in area detail must match what is stored when items are added and what appears in whiteboard consolidation"
