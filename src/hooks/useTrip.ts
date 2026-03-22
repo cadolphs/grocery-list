@@ -10,6 +10,7 @@ export type UseTripResult = {
   readonly items: TripItem[];
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly checkOff: (name: string) => void;
+  readonly toggleCheckOff: (name: string) => void;
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
   readonly completeArea: (area: HouseArea) => void;
@@ -36,6 +37,19 @@ export const useTrip = (): UseTripResult => {
   const checkOff = useCallback(
     (name: string): void => {
       tripService.checkOff(name);
+      setItems(tripService.getItems());
+    },
+    [tripService]
+  );
+
+  const toggleCheckOff = useCallback(
+    (name: string): void => {
+      const item = tripService.getItems().find((i) => i.name === name);
+      if (item?.checked) {
+        tripService.uncheckItem(name);
+      } else {
+        tripService.checkOff(name);
+      }
       setItems(tripService.getItems());
     },
     [tripService]
@@ -71,5 +85,5 @@ export const useTrip = (): UseTripResult => {
     setSweepProgress(tripService.getSweepProgress());
   }, [tripService]);
 
-  return { items, addItem, checkOff, skipItem, unskipItem, completeArea, resetSweep, sweepProgress };
+  return { items, addItem, checkOff, toggleCheckOff, skipItem, unskipItem, completeArea, resetSweep, sweepProgress };
 };

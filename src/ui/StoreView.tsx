@@ -11,7 +11,7 @@ import { AisleSection } from './AisleSection';
 import { TripSummaryView } from './TripSummaryView';
 
 export const StoreView = (): React.JSX.Element => {
-  const { items, checkOff } = useTrip();
+  const { items, toggleCheckOff } = useTrip();
   const { tripService, stapleLibrary } = useServices();
   const [tripResult, setTripResult] = useState<CompleteTripResult | null>(null);
   const [prepTimeMinutes, setPrepTimeMinutes] = useState<number | undefined>(undefined);
@@ -48,7 +48,7 @@ export const StoreView = (): React.JSX.Element => {
         <AisleSection
           key={`${aisleGroup.aisleNumber}-${aisleGroup.section}`}
           aisleGroup={aisleGroup}
-          onItemPress={checkOff}
+          onItemPress={toggleCheckOff}
         />
       ))}
       <Pressable style={styles.finishButton} onPress={handleFinishTrip}>
