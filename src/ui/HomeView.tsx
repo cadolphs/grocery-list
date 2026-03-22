@@ -12,6 +12,9 @@ import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
+import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
+
+type SettingsView = 'menu' | 'areas' | 'section-order';
 
 const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
   `${completedCount} of ${totalAreas} areas complete`;
@@ -29,10 +32,10 @@ export const HomeView = (): React.JSX.Element => {
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
-  const [showSettings, setShowSettings] = useState(false);
+  const [settingsView, setSettingsView] = useState<SettingsView | null>(null);
 
   const handleToggleSettings = useCallback(() => {
-    setShowSettings((prev) => !prev);
+    setSettingsView((prev) => (prev === null ? 'menu' : null));
   }, []);
 
   const handleSelectArea = useCallback((area: string) => {
@@ -78,7 +81,20 @@ export const HomeView = (): React.JSX.Element => {
     }
   }, [items, addItem]);
 
-  if (showSettings) {
+  if (settingsView === 'section-order') {
+    return (
+      <View style={styles.settingsContainer}>
+        <View style={styles.settingsHeader}>
+          <Pressable testID="settings-back-button" onPress={() => setSettingsView('menu')}>
+            <Text style={styles.backButtonText}>Back</Text>
+          </Pressable>
+        </View>
+        <SectionOrderSettingsScreen />
+      </View>
+    );
+  }
+
+  if (settingsView === 'menu') {
     return (
       <View style={styles.settingsContainer}>
         <View style={styles.settingsHeader}>
@@ -87,6 +103,11 @@ export const HomeView = (): React.JSX.Element => {
           </Pressable>
         </View>
         <AreaSettingsScreen />
+        <View style={styles.settingsMenuContainer}>
+          <Pressable style={styles.settingsMenuItem} onPress={() => setSettingsView('section-order')}>
+            <Text style={styles.settingsMenuItemText}>Section Order</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
@@ -255,6 +276,31 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#333333',
+    fontWeight: '600',
+  },
+  settingsMenuContainer: {
+    padding: 16,
+  },
+  settingsMenuHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  settingsMenuItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  settingsMenuItemText: {
+    fontSize: 16,
+    color: '#2196F3',
     fontWeight: '600',
   },
 });

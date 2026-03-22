@@ -1,0 +1,86 @@
+{
+  "roadmap": {
+    "project_id": "store-section-order",
+    "created_at": "2026-03-22T02:00:00Z",
+    "total_steps": 6,
+    "phases": 3
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Core Sort + Storage",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "sortByCustomOrder pure function",
+          "criteria": "sortByCustomOrder(groups, order) sorts AisleGroup[] by custom order. Null order returns default sort. Unknown sections append to end. Port + null adapter created.",
+          "test_file": "tests/acceptance/store-section-order/walking-skeleton.test.tsx",
+          "scenario_name": "sorts groups by custom section order",
+          "files_to_modify": ["src/domain/section-ordering.ts", "src/ports/section-order-storage.ts", "src/adapters/null/null-section-order-storage.ts"]
+        },
+        {
+          "id": "01-02",
+          "name": "SectionOrderStorage persistence",
+          "criteria": "SectionOrderStorage saves and loads custom order. Null adapter works with initial order. clearOrder removes custom order.",
+          "test_file": "tests/acceptance/store-section-order/walking-skeleton.test.tsx",
+          "scenario_name": "persists custom order to storage and loads it back",
+          "files_to_modify": ["src/adapters/null/null-section-order-storage.ts"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Auto-Append + Reset",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Auto-append new sections",
+          "criteria": "appendNewSections detects sections not in custom order and appends them. Multiple new sections appended in order.",
+          "test_file": "tests/acceptance/store-section-order/milestone-1-section-management.test.tsx",
+          "scenario_name": "new section from added item auto-appends to custom order",
+          "files_to_modify": ["src/domain/section-ordering.ts"]
+        },
+        {
+          "id": "02-02",
+          "name": "Reset to default order",
+          "criteria": "clearOrder removes custom order. After reset, default sort used. Can create new custom order after reset.",
+          "test_file": "tests/acceptance/store-section-order/milestone-1-section-management.test.tsx",
+          "scenario_name": "reset clears custom order and reverts to default sort",
+          "files_to_modify": ["src/domain/section-ordering.ts"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "UI Wiring + Settings",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "useSectionOrder hook + StoreView integration",
+          "criteria": "useSectionOrder hook exposes order, reorder, reset. StoreView uses sortByCustomOrder with the hook's order. AsyncStorage adapter created.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/hooks/useSectionOrder.ts", "src/ui/StoreView.tsx", "src/ui/ServiceProvider.tsx", "src/adapters/async-storage/async-section-order-storage.ts", "src/hooks/useAppInitialization.ts"]
+        },
+        {
+          "id": "03-02",
+          "name": "SectionOrderSettingsScreen",
+          "criteria": "Settings screen shows all known sections in current order. Drag-and-drop reordering. Reset to default button. Accessible from store view or home settings.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/SectionOrderSettingsScreen.tsx", "src/ui/HomeView.tsx"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "src/ports/", "src/adapters/", "src/ui/", "src/hooks/"],
+    "test_directories": ["tests/acceptance/store-section-order/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-22T02:00:00Z"
+  }
+}
