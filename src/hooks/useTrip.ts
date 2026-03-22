@@ -2,8 +2,9 @@
 // Reads items from context and exposes them as reactive state
 
 import { useState, useCallback } from 'react';
-import { TripItem, AddTripItemRequest, AddTripItemResult, HouseArea } from '../domain/types';
+import { TripItem, AddTripItemRequest, AddTripItemResult, HouseArea, StoreLocation } from '../domain/types';
 import { SweepProgress } from '../domain/trip';
+import { UpdateStapleChanges } from '../domain/staple-library';
 import { useServices } from '../ui/ServiceProvider';
 
 export type UseTripResult = {
@@ -15,6 +16,7 @@ export type UseTripResult = {
   readonly unskipItem: (name: string) => void;
   readonly completeArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
+  readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
   readonly sweepProgress: SweepProgress;
 };
 
@@ -85,5 +87,13 @@ export const useTrip = (): UseTripResult => {
     setSweepProgress(tripService.getSweepProgress());
   }, [tripService]);
 
-  return { items, addItem, checkOff, toggleCheckOff, skipItem, unskipItem, completeArea, resetSweep, sweepProgress };
+  const syncStapleUpdate = useCallback(
+    (stapleId: string, changes: UpdateStapleChanges): void => {
+      tripService.syncStapleUpdate(stapleId, changes);
+      setItems(tripService.getItems());
+    },
+    [tripService]
+  );
+
+  return { items, addItem, checkOff, toggleCheckOff, skipItem, unskipItem, completeArea, resetSweep, syncStapleUpdate, sweepProgress };
 };

@@ -21,7 +21,7 @@ const formatSweepProgress = (completedCount: number, totalAreas: number): string
 
 export const HomeView = (): React.JSX.Element => {
   const { areas } = useAreas();
-  const { items, addItem, skipItem, unskipItem, completeArea, resetSweep, sweepProgress } = useTrip();
+  const { items, addItem, skipItem, unskipItem, completeArea, resetSweep, syncStapleUpdate, sweepProgress } = useTrip();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
@@ -32,6 +32,9 @@ export const HomeView = (): React.JSX.Element => {
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
+  const [editStapleId, setEditStapleId] = useState<string | null>(null);
+  const [editStapleName, setEditStapleName] = useState<string>('');
+  const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
   const [settingsView, setSettingsView] = useState<SettingsView | null>(null);
 
   const handleToggleSettings = useCallback(() => {
@@ -47,9 +50,26 @@ export const HomeView = (): React.JSX.Element => {
     setMetadataSheetVisible(true);
   }, []);
 
+  const handleEditStaple = useCallback((stapleId: string) => {
+    const staple = stapleLibrary.listAll().find((s) => s.id === stapleId);
+    if (!staple) return;
+    setEditStapleId(stapleId);
+    setEditStapleName(staple.name);
+    setEditInitialValues({
+      houseArea: staple.houseArea,
+      section: staple.storeLocation.section,
+      aisleNumber: staple.storeLocation.aisleNumber,
+    });
+    setMetadataSheetItemName(staple.name);
+    setMetadataSheetVisible(true);
+  }, [stapleLibrary]);
+
   const handleDismissMetadataSheet = useCallback(() => {
     setMetadataSheetVisible(false);
     setMetadataSheetItemName('');
+    setEditStapleId(null);
+    setEditStapleName('');
+    setEditInitialValues(null);
   }, []);
 
   const handleSubmitStaple = useCallback((request: AddStapleRequest): void => {
@@ -59,6 +79,11 @@ export const HomeView = (): React.JSX.Element => {
   const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
     addItem(request);
   }, [addItem]);
+
+  const handleSaveEdit = useCallback((stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => {
+    stapleLibrary.updateStaple(stapleId, changes);
+    syncStapleUpdate(stapleId, changes);
+  }, [stapleLibrary, syncStapleUpdate]);
 
   const handleFindDuplicate = useCallback((name: string, area: HouseArea) => {
     return stapleLibrary.listAll().find(
@@ -132,6 +157,7 @@ export const HomeView = (): React.JSX.Element => {
           onUnskipItem={unskipItem}
           onCompleteArea={completeArea}
           onSelectArea={handleSelectArea}
+          onEditStaple={handleEditStaple}
           isCompleted={sweepProgress.completedAreas.includes(areaGroup.area)}
           isActive={activeArea === areaGroup.area}
         />
@@ -172,6 +198,9 @@ export const HomeView = (): React.JSX.Element => {
       <MetadataBottomSheet
         visible={metadataSheetVisible}
         itemName={metadataSheetItemName}
+        mode={editStapleId ? 'edit' : 'add'}
+        editStapleId={editStapleId}
+        initialValues={editInitialValues}
         defaultItemType={sweepProgress.allAreasComplete ? 'One-off' : 'Staple'}
         defaultArea={sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)}
         areas={areas as HouseArea[]}
@@ -180,6 +209,7 @@ export const HomeView = (): React.JSX.Element => {
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
         onSubmitTripItem={handleSubmitTripItem}
+        onSaveEdit={handleSaveEdit}
       />
     </ScrollView>
   );
