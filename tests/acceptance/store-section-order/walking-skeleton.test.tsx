@@ -235,23 +235,23 @@ describe('WS-6: null stored order means default sort', () => {
   // AC: null from storage = no custom order = default groupByAisle sort
   // Trace: US-SSO-02, null semantics from architecture design
 
-  it.skip('null order passes groups through unchanged', () => {
+  it('null order passes groups through unchanged', () => {
     // Given the stored section order is null
-    // const storage = createNullSectionOrderStorage();
-    // const loaded = storage.loadOrder();
-    // expect(loaded).toBeNull();
+    const storage = createNullSectionOrderStorage();
+    const loaded = storage.loadOrder();
+    expect(loaded).toBeNull();
 
     // When Carlos views the store layout with items in Dairy and Deli
-    // const items = [
-    //   tripItem('Whole milk', 'Dairy', 3),
-    //   tripItem('Deli turkey', 'Deli', null),
-    // ];
-    // const defaultGroups = groupByAisle(items);
-    // const sorted = sortByCustomOrder(defaultGroups, loaded);
+    const items = [
+      tripItem('Whole milk', 'Dairy', 3),
+      tripItem('Deli turkey', 'Deli', null),
+    ];
+    const defaultGroups = groupByAisle(items);
+    const sorted = sortByCustomOrder(defaultGroups, loaded);
 
     // Then Dairy appears before Deli (default: numbered aisles first)
-    // expect(sorted[0].section).toBe('Dairy');
-    // expect(sorted[1].section).toBe('Deli');
+    expect(sorted[0].section).toBe('Dairy');
+    expect(sorted[1].section).toBe('Deli');
   });
 });
 
@@ -263,20 +263,20 @@ describe('WS-7: Empty array order falls back to default sort', () => {
   // AC: Empty list should not reorder groups (edge case defense)
   // Trace: US-SSO-02, boundary condition
 
-  it.skip('empty array order does not reorder groups', () => {
+  it('empty array order does not reorder groups', () => {
     // Given the stored section order is an empty list
-    // const customOrder: string[] = [];
+    const customOrder: string[] = [];
 
     // When Carlos views the store layout
-    // const items = [
-    //   tripItem('Whole milk', 'Dairy', 3),
-    //   tripItem('Deli turkey', 'Deli', null),
-    // ];
-    // const defaultGroups = groupByAisle(items);
-    // const sorted = sortByCustomOrder(defaultGroups, customOrder);
+    const items = [
+      tripItem('Whole milk', 'Dairy', 3),
+      tripItem('Deli turkey', 'Deli', null),
+    ];
+    const defaultGroups = groupByAisle(items);
+    const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
     // Then default sort is preserved: Dairy before Deli
-    // expect(sorted[0].section).toBe('Dairy');
-    // expect(sorted[1].section).toBe('Deli');
+    expect(sorted[0].section).toBe('Dairy');
+    expect(sorted[1].section).toBe('Deli');
   });
 });
