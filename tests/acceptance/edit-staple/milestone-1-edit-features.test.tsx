@@ -161,7 +161,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
   // AC: Trip item store location updates when staple section/aisle changes
   // Trace: US-ES-04
 
-  it.skip('trip item moves to new area when staple area is edited', () => {
+  it('trip item moves to new area when staple area is edited', () => {
     // Given Carlos has an active trip with "Whole milk" in "Fridge"
     const stapleStorage = createNullStapleStorage([
       { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
@@ -190,7 +190,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     expect(fridgeItems[0].name).toBe('Butter');
   });
 
-  it.skip('trip item updates store section when staple section is edited', () => {
+  it('trip item updates store section when staple section is edited', () => {
     // Given Carlos has an active trip with "Canned beans" in "Canned Goods", aisle 5
     const stapleStorage = createNullStapleStorage([
       { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
@@ -215,7 +215,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     expect(beans?.storeLocation.aisleNumber).toBe(9);
   });
 
-  it.skip('editing a staple does not affect one-off items on the trip', () => {
+  it('editing a staple does not affect one-off items on the trip', () => {
     // Given the trip has staple "Whole milk" and one-off "Birthday cake"
     const stapleStorage = createNullStapleStorage([
       { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },

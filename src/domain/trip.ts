@@ -12,6 +12,9 @@ import {
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import { StapleLibrary } from './staple-library';
+import { UpdateStapleChanges } from './staple-library';
+
+export type StapleInput = AddStapleRequest & { readonly id?: string };
 
 export type TripSummary = {
   readonly totalItems: number;
@@ -38,7 +41,7 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 ];
 
 export type TripService = {
-  readonly start: (staples: ReadonlyArray<AddStapleRequest>, carryover?: readonly TripItem[]) => void;
+  readonly start: (staples: ReadonlyArray<StapleInput>, carryover?: readonly TripItem[]) => void;
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
@@ -52,18 +55,19 @@ export type TripService = {
   readonly loadFromStorage: () => void;
   readonly resetSweep: () => void;
   readonly complete: () => void;
+  readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
 };
 
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const stapleRequestToTripItem = (staple: AddStapleRequest): TripItem => ({
+const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   id: generateTripItemId(),
   name: staple.name,
   houseArea: staple.houseArea,
   storeLocation: staple.storeLocation,
   itemType: 'staple',
-  stapleId: null,
+  stapleId: staple.id ?? null,
   source: 'preloaded',
   needed: true,
   checked: false,
@@ -92,8 +96,8 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
   };
 
   return {
-    start: (staples: ReadonlyArray<AddStapleRequest>, carryover: readonly TripItem[] = []) => {
-      const stapleItems = staples.map(stapleRequestToTripItem);
+    start: (staples: ReadonlyArray<StapleInput>, carryover: readonly TripItem[] = []) => {
+      const stapleItems = staples.map(stapleInputToTripItem);
       items = [...stapleItems, ...carryover];
     },
 
@@ -201,6 +205,18 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         .map((item) => ({ ...item, needed: true, checked: false, checkedAt: null }));
       completedAreas.clear();
       persistTrip();
+    },
+
+    syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => {
+      items = items.map((item) =>
+        item.stapleId === stapleId
+          ? {
+              ...item,
+              houseArea: changes.houseArea ?? item.houseArea,
+              storeLocation: changes.storeLocation ?? item.storeLocation,
+            }
+          : item
+      );
     },
 
     complete: () => {
