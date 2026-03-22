@@ -1,12 +1,21 @@
 // Null adapter for StapleStorage - in-memory implementation for testing
 
-import { StapleItem } from '../../domain/types';
+import { AddStapleRequest, StapleItem } from '../../domain/types';
 import { StapleStorage } from '../../ports/staple-storage';
 
+type NullStapleInput = AddStapleRequest;
+
 export const createNullStapleStorage = (
-  initialItems: StapleItem[] = []
+  initialItems: NullStapleInput[] = []
 ): StapleStorage => {
-  const items: StapleItem[] = [...initialItems];
+  const items: StapleItem[] = initialItems.map((input, index) => ({
+    id: `staple-init-${index}`,
+    name: input.name,
+    houseArea: input.houseArea,
+    storeLocation: input.storeLocation,
+    type: 'staple' as const,
+    createdAt: new Date().toISOString(),
+  }));
 
   return {
     loadAll: () => [...items],
