@@ -120,53 +120,53 @@ describe('US-SSO-05: Reset Section Order to Default', () => {
   // AC: After reset, Carlos can create a new custom order
   // Trace: US-SSO-05, AC-3, AC-4, AC-5
 
-  it.skip('clears custom order and reverts to default sort', () => {
+  it('clears custom order and reverts to default sort', () => {
     // Given Carlos has a custom order
-    // const storage = createNullSectionOrderStorage(['Deli::null', 'Dairy::3', 'Canned Goods::5']);
+    const storage = createNullSectionOrderStorage(['Deli::null', 'Dairy::3', 'Canned Goods::5']);
 
     // When Carlos resets the section order to default
-    // storage.clearOrder();
+    storage.clearOrder();
 
     // Then the stored section order is null
-    // expect(storage.loadOrder()).toBeNull();
+    expect(storage.loadOrder()).toBeNull();
 
     // And the store view uses default sort
-    // const items = [
-    //   tripItem('Whole milk', 'Dairy', 3),
-    //   tripItem('Canned beans', 'Canned Goods', 5),
-    //   tripItem('Deli turkey', 'Deli', null),
-    // ];
-    // const groups = groupByAisle(items);
-    // const sorted = sortByCustomOrder(groups, storage.loadOrder());
-    // expect(sorted[0].section).toBe('Dairy');
-    // expect(sorted[1].section).toBe('Canned Goods');
-    // expect(sorted[2].section).toBe('Deli');
+    const items = [
+      tripItem('Whole milk', 'Dairy', 3),
+      tripItem('Canned beans', 'Canned Goods', 5),
+      tripItem('Deli turkey', 'Deli', null),
+    ];
+    const groups = groupByAisle(items);
+    const sorted = sortByCustomOrder(groups, storage.loadOrder());
+    expect(sorted[0].section).toBe('Dairy');
+    expect(sorted[1].section).toBe('Canned Goods');
+    expect(sorted[2].section).toBe('Deli');
   });
 
-  it.skip('allows creating new custom order after reset', () => {
+  it('allows creating new custom order after reset', () => {
     // Given Carlos has reset his section order
-    // const storage = createNullSectionOrderStorage(['Deli::null', 'Dairy::3']);
-    // storage.clearOrder();
-    // expect(storage.loadOrder()).toBeNull();
+    const storage = createNullSectionOrderStorage(['Deli::null', 'Dairy::3']);
+    storage.clearOrder();
+    expect(storage.loadOrder()).toBeNull();
 
     // When Carlos sets a new walking order
-    // const newOrder = ['Bakery::null', 'Produce::null', 'Dairy::3'];
-    // storage.saveOrder(newOrder);
+    const newOrder = ['Bakery::null', 'Produce::null', 'Dairy::3'];
+    storage.saveOrder(newOrder);
 
     // Then the stored order reflects the new customization
-    // expect(storage.loadOrder()).toEqual(['Bakery::null', 'Produce::null', 'Dairy::3']);
+    expect(storage.loadOrder()).toEqual(['Bakery::null', 'Produce::null', 'Dairy::3']);
 
     // And the store view uses the new custom order
-    // const items = [
-    //   tripItem('Bread', 'Bakery', null),
-    //   tripItem('Apples', 'Produce', null),
-    //   tripItem('Whole milk', 'Dairy', 3),
-    // ];
-    // const groups = groupByAisle(items);
-    // const sorted = sortByCustomOrder(groups, storage.loadOrder());
-    // expect(sorted[0].section).toBe('Bakery');
-    // expect(sorted[1].section).toBe('Produce');
-    // expect(sorted[2].section).toBe('Dairy');
+    const items = [
+      tripItem('Bread', 'Bakery', null),
+      tripItem('Apples', 'Produce', null),
+      tripItem('Whole milk', 'Dairy', 3),
+    ];
+    const groups = groupByAisle(items);
+    const sorted = sortByCustomOrder(groups, storage.loadOrder());
+    expect(sorted[0].section).toBe('Bakery');
+    expect(sorted[1].section).toBe('Produce');
+    expect(sorted[2].section).toBe('Dairy');
   });
 });
 
@@ -271,15 +271,15 @@ describe('Edge: Reset when no custom order exists', () => {
   // Clearing null order should be safe (no-op)
   // Trace: US-SSO-05, boundary condition
 
-  it.skip('reset when no custom order exists is safe', () => {
+  it('reset when no custom order exists is safe', () => {
     // Given no custom section order has been set
-    // const storage = createNullSectionOrderStorage();
-    // expect(storage.loadOrder()).toBeNull();
+    const storage = createNullSectionOrderStorage();
+    expect(storage.loadOrder()).toBeNull();
 
     // When Carlos resets the section order to default
-    // storage.clearOrder();
+    storage.clearOrder();
 
     // Then the stored section order is still null
-    // expect(storage.loadOrder()).toBeNull();
+    expect(storage.loadOrder()).toBeNull();
   });
 });
