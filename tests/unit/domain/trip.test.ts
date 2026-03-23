@@ -327,14 +327,15 @@ describe('Trip: resetSweep', () => {
   it('resets staple items to needed=true and checked=false', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    const staples = [
       { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
       { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    ]);
+    ];
+    trip.start(staples);
     trip.checkOff('Milk');
     trip.skipItem('Butter');
 
-    trip.resetSweep();
+    trip.resetSweep(staples);
 
     const items = trip.getItems();
     expect(items).toHaveLength(2);
@@ -350,9 +351,10 @@ describe('Trip: resetSweep', () => {
   it('removes one-off items from the trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    const staples = [
       { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    ]);
+    ];
+    trip.start(staples);
     trip.addItem({
       name: 'Birthday candles',
       houseArea: 'Kitchen Cabinets',
@@ -361,7 +363,7 @@ describe('Trip: resetSweep', () => {
       source: 'quick-add',
     });
 
-    trip.resetSweep();
+    trip.resetSweep(staples);
 
     const items = trip.getItems();
     expect(items).toHaveLength(1);
@@ -371,13 +373,14 @@ describe('Trip: resetSweep', () => {
   it('clears completed areas so sweep progress resets to zero', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    const staples = [
       { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    ]);
+    ];
+    trip.start(staples);
     trip.completeArea('Bathroom');
     trip.completeArea('Fridge');
 
-    trip.resetSweep();
+    trip.resetSweep(staples);
 
     const progress = trip.getSweepProgress();
     expect(progress.completedCount).toBe(0);
@@ -387,9 +390,10 @@ describe('Trip: resetSweep', () => {
   it('persists the reset trip to storage', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    const staples = [
       { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    ]);
+    ];
+    trip.start(staples);
     trip.checkOff('Milk');
     trip.addItem({
       name: 'Candles',
@@ -399,7 +403,7 @@ describe('Trip: resetSweep', () => {
       source: 'quick-add',
     });
 
-    trip.resetSweep();
+    trip.resetSweep(staples);
 
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();

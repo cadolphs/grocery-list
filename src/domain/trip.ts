@@ -53,7 +53,7 @@ export type TripService = {
   readonly getSummary: () => TripSummary;
   readonly setStartTime: (date: Date) => void;
   readonly loadFromStorage: () => void;
-  readonly resetSweep: () => void;
+  readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
   readonly complete: () => void;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
 };
@@ -199,10 +199,9 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
       }
     },
 
-    resetSweep: () => {
-      items = items
-        .filter((item) => item.itemType !== 'one-off')
-        .map((item) => ({ ...item, needed: true, checked: false, checkedAt: null }));
+    resetSweep: (staples: ReadonlyArray<StapleInput>) => {
+      const stapleItems = staples.map(stapleInputToTripItem);
+      items = stapleItems;
       completedAreas.clear();
       persistTrip();
     },

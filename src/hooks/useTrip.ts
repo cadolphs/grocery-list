@@ -21,7 +21,7 @@ export type UseTripResult = {
 };
 
 export const useTrip = (): UseTripResult => {
-  const { tripService } = useServices();
+  const { tripService, stapleLibrary } = useServices();
   const [items, setItems] = useState<TripItem[]>(() => tripService.getItems());
   const [sweepProgress, setSweepProgress] = useState<SweepProgress>(() => tripService.getSweepProgress());
 
@@ -82,10 +82,11 @@ export const useTrip = (): UseTripResult => {
   );
 
   const resetSweep = useCallback((): void => {
-    tripService.resetSweep();
+    const currentStaples = stapleLibrary.listAll();
+    tripService.resetSweep(currentStaples);
     setItems(tripService.getItems());
     setSweepProgress(tripService.getSweepProgress());
-  }, [tripService]);
+  }, [tripService, stapleLibrary]);
 
   const syncStapleUpdate = useCallback(
     (stapleId: string, changes: UpdateStapleChanges): void => {
