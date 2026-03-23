@@ -1,0 +1,42 @@
+{
+  "roadmap": {
+    "project_id": "fix-staple-tap-edit",
+    "created_at": "2026-03-22T05:00:00Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Fix staple tap edit",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Regression test: pre-loaded staple has null stapleId",
+          "criteria": "Test starts a trip with library.listAll(), verifies trip items have non-null stapleId. Test MUST FAIL against current code.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": []
+        },
+        {
+          "id": "01-02",
+          "name": "Fix: StapleInput type includes optional id",
+          "criteria": "trip.start() preserves staple IDs from library.listAll(). Pre-loaded trip items have stapleId set. Tapping staple in HomeView opens edit sheet.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/domain/trip.ts"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-22T05:00:00Z"
+  }
+}
