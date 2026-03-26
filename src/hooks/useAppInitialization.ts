@@ -42,7 +42,7 @@ const initializeApp = async (): Promise<AppServices> => {
   const tripService = createTrip(tripStorage, areas);
   const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
-  tripService.loadFromStorage();
+  tripService.initializeFromStorage(stapleLibrary.listAll());
 
   return { stapleLibrary, tripService, areaManagement, sectionOrderStorage };
 };
