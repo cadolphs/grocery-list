@@ -99,3 +99,32 @@ describe('bare add opens metadata sheet', () => {
     expect(input.props.value).toBe('');
   });
 });
+
+describe('store view metadata sheet uses store context', () => {
+  it('defaults to One-off item type when metadata sheet opens from store view', () => {
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const tripService = createTrip(tripStorage);
+    tripService.start(stapleLibrary.listAll());
+
+    render(
+      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    // Switch to Store view
+    fireEvent.press(screen.getByText('Store'));
+
+    // Type a new item and tap Add to open metadata sheet
+    const input = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(input, 'Paper Towels');
+    fireEvent.press(screen.getByText('Add'));
+
+    // The One-off toggle should be active (not Staple)
+    expect(screen.getByTestId('type-toggle-One-off-active')).toBeTruthy();
+  });
+});

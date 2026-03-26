@@ -105,6 +105,8 @@ export const StoreView = (): React.JSX.Element => {
       <MetadataBottomSheet
         visible={metadataSheetVisible}
         itemName={metadataSheetItemName}
+        defaultItemType="One-off"
+        defaultArea={null}
         areas={areas as HouseArea[]}
         existingSections={existingSections}
         onDismiss={handleDismissMetadataSheet}
