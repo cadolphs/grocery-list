@@ -44,3 +44,45 @@ describe('Regression: skip state persists across reload', () => {
     expect(milkAfter?.needed).toBe(false);
   });
 });
+
+describe('Regression: completed areas lost on reload', () => {
+  it('completed areas persist across reload', () => {
+    const tripStorage = createNullTripStorage();
+    const trip = createTrip(tripStorage);
+
+    trip.start([
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
+    ]);
+
+    // Persist initial state so storage has the trip
+    trip.checkOff('Bread');
+    trip.uncheckItem('Bread');
+
+    // Complete an area -- this is the operation under test
+    trip.completeArea('Fridge');
+
+    // Verify completion took effect in memory
+    const progressBeforeReload = trip.getSweepProgress();
+    expect(progressBeforeReload.completedAreas).toContain('Fridge');
+    expect(progressBeforeReload.completedCount).toBe(1);
+
+    // Simulate app restart: new TripService instance, same storage
+    // This mirrors what happens when the app is killed and relaunched
+    const reloadedTrip = createTrip(tripStorage);
+    reloadedTrip.loadFromStorage();
+
+    // After reload, completed areas should be preserved
+    const progressAfterReload = reloadedTrip.getSweepProgress();
+    expect(progressAfterReload.completedAreas).toContain('Fridge');
+    expect(progressAfterReload.completedCount).toBe(1);
+  });
+});
