@@ -6,9 +6,10 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
-import { groupByArea } from '../domain/item-grouping';
+import { groupByArea, getOneOffItems } from '../domain/item-grouping';
 import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
 import { AreaSection } from './AreaSection';
+import { TripItemRow } from './TripItemRow';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 import { StapleChecklist } from './StapleChecklist';
@@ -28,6 +29,7 @@ export const HomeView = (): React.JSX.Element => {
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
+  const oneOffItems = getOneOffItems(items);
   const allStaples = useMemo(() => stapleLibrary.listAll(), [stapleLibrary]);
   const existingSections = useMemo(
     () => [...new Set(allStaples.map((s) => s.storeLocation.section))],
@@ -219,6 +221,25 @@ export const HomeView = (): React.JSX.Element => {
               isActive={activeArea === areaGroup.area}
             />
           ))}
+          {oneOffItems.length > 0 && (
+            <View style={styles.oneOffsSection}>
+              <Text style={styles.oneOffsHeading}>One-offs ({oneOffItems.length})</Text>
+              {oneOffItems.map((item) => (
+                <TripItemRow
+                  key={item.id}
+                  item={item}
+                  mode="home"
+                  onPress={() => {
+                    if (item.needed) {
+                      skipItem(item.name);
+                    } else {
+                      unskipItem(item.name);
+                    }
+                  }}
+                />
+              ))}
+            </View>
+          )}
           <Pressable
             testID="reset-sweep-button"
             onPress={() => setShowResetConfirmation(true)}
@@ -341,6 +362,23 @@ const styles = StyleSheet.create({
     color: '#FF9800',
     textAlign: 'center',
     marginVertical: 8,
+  },
+  oneOffsSection: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  oneOffsHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 4,
   },
   resetSweepButton: {
     backgroundColor: '#FF5722',

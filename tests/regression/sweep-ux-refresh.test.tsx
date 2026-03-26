@@ -19,6 +19,12 @@ import { TripItemRow } from '../../src/ui/TripItemRow';
 import { AreaSection } from '../../src/ui/AreaSection';
 import { AreaGroup } from '../../src/domain/item-grouping';
 import { TripItem } from '../../src/domain/types';
+import { ServiceProvider } from '../../src/ui/ServiceProvider';
+import { AppShell } from '../../src/ui/AppShell';
+import { createStapleLibrary } from '../../src/domain/staple-library';
+import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
+import { createTrip } from '../../src/domain/trip';
 
 const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   id: 'item-1',
@@ -240,5 +246,72 @@ describe('groupByArea excludes one-offs from area groups', () => {
 
     expect(result).toHaveLength(2);
     expect(result.map((i: TripItem) => i.name)).toEqual(['Birthday Candles', 'Party Cups']);
+  });
+});
+
+describe('sweep mode shows one-offs section separately', () => {
+  function renderAppWithOneOff() {
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const tripService = createTrip(tripStorage);
+    tripService.start(stapleLibrary.listAll());
+
+    tripService.addItem({
+      name: 'Birthday Candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+
+    render(
+      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    return { tripService };
+  }
+
+  it('renders One-offs section with one-off items in sweep mode', () => {
+    renderAppWithOneOff();
+
+    expect(screen.getByText('One-offs (1)')).toBeTruthy();
+    expect(screen.getByText('Birthday Candles')).toBeTruthy();
+  });
+
+  it('does not render One-offs section when no one-off items exist', () => {
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const tripService = createTrip(tripStorage);
+    tripService.start(stapleLibrary.listAll());
+
+    render(
+      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    expect(screen.queryByText(/One-offs/)).toBeNull();
+  });
+
+  it('one-off item tap toggles needed state', () => {
+    renderAppWithOneOff();
+
+    const item = screen.getByText('Birthday Candles');
+    fireEvent.press(item);
+
+    // After tap, item should be skipped (grey strikethrough)
+    const flatStyle = Array.isArray(item.props.style)
+      ? Object.assign({}, ...item.props.style.filter(Boolean))
+      : item.props.style;
+
+    expect(flatStyle.color).toBe('#999999');
   });
 });
