@@ -12,7 +12,7 @@ type AreaSectionProps = {
   readonly onUnskipItem?: (name: string) => void;
   readonly onCompleteArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
-  readonly onEditStaple?: (stapleId: string) => void;
+  readonly onEditStaple?: (name: string, area: string) => void;
   readonly isCompleted?: boolean;
   readonly isActive?: boolean;
 };

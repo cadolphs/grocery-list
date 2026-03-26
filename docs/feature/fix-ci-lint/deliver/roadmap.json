@@ -1,0 +1,42 @@
+{
+  "roadmap": {
+    "project_id": "fix-ci-lint",
+    "created_at": "2026-03-22T03:00:00Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Fix CI Config",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Create ESLint config for TypeScript + React Native",
+          "criteria": "eslint.config.mjs created with TypeScript parser, React Native plugin. `npx eslint . --ext .ts,.tsx --max-warnings 0` exits 0 (or exits clean with reasonable rules). Install any needed ESLint dev dependencies.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["eslint.config.mjs", "package.json"]
+        },
+        {
+          "id": "01-02",
+          "name": "Fix or remove dependency-cruiser step from CI",
+          "criteria": "Either create .dependency-cruiser.cjs with ports-and-adapters rules OR remove the architecture enforcement step from ci.yml. CI workflow should pass end-to-end.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": [".github/workflows/ci.yml"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [".github/", "."],
+    "test_directories": [],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-22T03:00:00Z"
+  }
+}

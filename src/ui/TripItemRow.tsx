@@ -11,13 +11,23 @@ type TripItemRowProps = {
   readonly mode: ViewMode;
   readonly onPress?: () => void;
   readonly onSkip?: () => void;
+  readonly onEditStaple?: (name: string, area: string) => void;
 };
 
-export const TripItemRow = ({ item, mode, onPress, onSkip }: TripItemRowProps): React.JSX.Element => (
+export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple }: TripItemRowProps): React.JSX.Element => {
+  const handlePress = (): void => {
+    if (mode === 'home' && item.itemType === 'staple' && onEditStaple) {
+      onEditStaple(item.name, item.houseArea);
+    } else if (onPress) {
+      onPress();
+    }
+  };
+
+  return (
   <View style={styles.row}>
     <Pressable
       style={styles.itemPressable}
-      onPress={onPress}
+      onPress={handlePress}
       testID={item.checked ? `checked-${item.name}` : undefined}
     >
       <Text style={[
@@ -31,7 +41,8 @@ export const TripItemRow = ({ item, mode, onPress, onSkip }: TripItemRowProps): 
       </Pressable>
     )}
   </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   row: {

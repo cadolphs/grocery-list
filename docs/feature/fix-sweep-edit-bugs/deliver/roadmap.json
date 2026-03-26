@@ -1,0 +1,64 @@
+{
+  "roadmap": {
+    "project_id": "fix-sweep-edit-bugs",
+    "created_at": "2026-03-22T06:00:00Z",
+    "total_steps": 4,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Fix resetSweep re-population",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Regression test: resetSweep misses new staples",
+          "criteria": "Test adds a staple to library after trip.start(), calls resetSweep, verifies the new staple IS on the trip. MUST FAIL against current code.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": []
+        },
+        {
+          "id": "01-02",
+          "name": "Fix: resetSweep re-populates from staple library",
+          "criteria": "resetSweep accepts staples parameter, rebuilds trip items from library. New staples appear. Regression test passes.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/domain/trip.ts", "src/hooks/useTrip.ts", "src/ui/HomeView.tsx"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Fix staple tap edit matching",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Regression test: tap staple with null stapleId",
+          "criteria": "Test renders app with trip item that has stapleId=null but itemType=staple. Tapping should still trigger edit. MUST FAIL.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": []
+        },
+        {
+          "id": "02-02",
+          "name": "Fix: match by name+area instead of stapleId",
+          "criteria": "TripItemRow triggers edit for any staple item regardless of stapleId. onEditStaple receives name+area. HomeView looks up staple by name+area. Regression test passes.",
+          "test_file": "",
+          "scenario_name": "",
+          "files_to_modify": ["src/ui/TripItemRow.tsx", "src/ui/AreaSection.tsx", "src/ui/HomeView.tsx"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/domain/", "src/ui/", "src/hooks/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-03-22T06:00:00Z"
+  }
+}

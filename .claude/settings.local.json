@@ -64,7 +64,24 @@
       "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-staple-storage-types/deliver --feature-id fix-staple-storage-types)",
       "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-staple-storage-types/deliver/)",
       "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-ts-errors/deliver --feature-id fix-ts-errors)",
-      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-ts-errors/deliver/)"
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-ts-errors/deliver/)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/store-section-order/deliver --feature-id store-section-order)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/store-section-order/deliver/ 2>&1)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/store-section-order/deliver/)",
+      "Bash(ls:*)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-ci-lint/deliver --feature-id fix-ci-lint)",
+      "Bash(npx eslint:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-ci-lint/deliver/)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/edit-staple/deliver --feature-id edit-staple)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/edit-staple/deliver/ 2>&1)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/edit-staple/deliver/)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-staple-tap-edit/deliver --feature-id fix-staple-tap-edit)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-staple-tap-edit/deliver/)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/fix-sweep-edit-bugs/deliver --feature-id fix-sweep-edit-bugs)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-sweep-edit-bugs/deliver/ 2>&1)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.verify_deliver_integrity docs/feature/fix-sweep-edit-bugs/deliver/)",
+      "Bash(PYTHONPATH=$HOME/.claude/lib/python python -m des.cli.init_log --project-dir docs/feature/quick-add-oneoff/deliver --feature-id quick-add-oneoff)"
     ]
   }
 }

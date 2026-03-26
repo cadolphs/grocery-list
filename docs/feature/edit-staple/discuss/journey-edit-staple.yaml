@@ -1,0 +1,201 @@
+journey:
+  name: "Edit Staple Location"
+  goal: "Correct a staple's house area or store location when reality changes"
+  persona: "Carlos Rivera, household grocery planner"
+  job_story_trace: "JS3 (Staple Item Management)"
+  feature_id: "edit-staple"
+
+  emotional_arc:
+    start: "Mildly annoyed -- knows data is wrong, wants quick fix"
+    middle: "In control -- familiar form, pre-filled values, no re-entry"
+    end: "Satisfied -- system reflects reality, future trips correct"
+    pattern: "Problem Relief"
+
+steps:
+  - id: 1
+    name: "Notice Wrong Location"
+    action: "Carlos sees staple in wrong area during sweep or notices wrong aisle in store view"
+
+    emotional_state:
+      entry: "Mildly annoyed (data is stale)"
+      exit: "Motivated to fix it"
+
+    shared_artifacts:
+      - name: "staple_id"
+        source: "StapleStorage"
+        displayed_as: "${stapleId}"
+        consumers: ["TripItemRow", "EditBottomSheet", "StapleLibrary.updateStaple"]
+
+    integration_checkpoint: |
+      Staple must exist in library and be visible in current trip items.
+
+  - id: 2
+    name: "Open Edit Sheet"
+    action: "Carlos taps the staple item name in HomeView during sweep"
+
+    tui_mockup: |
+      +-- Edit 'Paper towels' -----------------------------------+
+      |  House Area:                                              |
+      |  [Bathroom] [Garage Pantry*] [Kitchen Cabinets]           |
+      |  [Fridge] [Freezer]                                       |
+      |                                                           |
+      |  Store section: [ Cleaning Supplies___ ]                  |
+      |  Aisle number:  [ 7___________________ ]                  |
+      |                                                           |
+      |  [         Save Changes          ]                        |
+      |  [            Cancel             ]                        |
+      |  [     Remove from Staples       ]                        |
+      +-----------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "current_house_area"
+        source: "StapleItem.houseArea via StapleStorage"
+        displayed_as: "${currentArea}"
+        consumers: ["EditBottomSheet area picker (pre-selected)"]
+      - name: "current_store_section"
+        source: "StapleItem.storeLocation.section via StapleStorage"
+        displayed_as: "${currentSection}"
+        consumers: ["EditBottomSheet section input (pre-filled)"]
+      - name: "current_aisle_number"
+        source: "StapleItem.storeLocation.aisleNumber via StapleStorage"
+        displayed_as: "${currentAisle}"
+        consumers: ["EditBottomSheet aisle input (pre-filled)"]
+      - name: "available_areas"
+        source: "AreaStorage.loadAll()"
+        displayed_as: "${areas}"
+        consumers: ["EditBottomSheet area picker buttons"]
+      - name: "existing_sections"
+        source: "StapleLibrary.listAll() -> unique sections"
+        displayed_as: "${existingSections}"
+        consumers: ["EditBottomSheet section auto-suggest"]
+
+    emotional_state:
+      entry: "Confident (knows where to tap)"
+      exit: "In control (current values visible, nothing lost)"
+
+    integration_checkpoint: |
+      Area picker must show all areas including custom areas.
+      Section auto-suggest must include sections from all existing staples.
+      All fields must be pre-filled with current staple data.
+
+    gherkin: |
+      Scenario: Open edit sheet for a staple
+        Given Carlos has "Paper towels" as a staple in "Kitchen Cabinets" with section "Cleaning" aisle 5
+        When Carlos taps "Paper towels" in the home view
+        Then the edit sheet opens with title "Edit 'Paper towels'"
+        And house area "Kitchen Cabinets" is pre-selected
+        And store section shows "Cleaning"
+        And aisle number shows "5"
+
+  - id: 3
+    name: "Change Location"
+    action: "Carlos selects a new area, edits section/aisle, and taps Save Changes"
+
+    shared_artifacts:
+      - name: "new_house_area"
+        source: "EditBottomSheet area picker selection"
+        displayed_as: "${newArea}"
+        consumers: ["StapleLibrary.updateStaple", "TripService current trip item"]
+      - name: "new_store_location"
+        source: "EditBottomSheet section + aisle inputs"
+        displayed_as: "${newSection}, ${newAisle}"
+        consumers: ["StapleLibrary.updateStaple", "TripService current trip item"]
+
+    emotional_state:
+      entry: "Focused (making the change)"
+      exit: "Satisfied (change saved)"
+
+    integration_checkpoint: |
+      Duplicate check: new name+area combo must not already exist.
+      Staple updated in StapleStorage.
+      Current trip item updated to reflect new location.
+
+    gherkin: |
+      Scenario: Change house area of a staple
+        Given Carlos is editing "Paper towels" currently in "Kitchen Cabinets"
+        When Carlos selects "Garage Pantry" as the new house area
+        And Carlos taps "Save Changes"
+        Then "Paper towels" is now in "Garage Pantry" in the staple library
+        And "Paper towels" appears under "Garage Pantry" in the home view
+        And "Paper towels" no longer appears under "Kitchen Cabinets"
+
+  - id: 4
+    name: "See Updated Staple"
+    action: "Carlos sees the staple in its new location in both home and store views"
+
+    shared_artifacts:
+      - name: "updated_staple"
+        source: "StapleStorage (persisted)"
+        displayed_as: "${updatedStaple}"
+        consumers: ["HomeView area grouping", "StoreView aisle grouping", "Future trip pre-loading"]
+
+    emotional_state:
+      entry: "Expectant (did it work?)"
+      exit: "Satisfied (system reflects reality)"
+
+    integration_checkpoint: |
+      Staple appears in correct area in HomeView.
+      Staple appears in correct section/aisle in StoreView.
+      Future trips will pre-load with updated location.
+
+    gherkin: |
+      Scenario: Updated staple reflects in store view
+        Given Carlos moved "Paper towels" to "Garage Pantry" with section "Cleaning Supplies" aisle 7
+        When Carlos switches to store view
+        Then "Paper towels" appears under "Cleaning Supplies" in Aisle 7
+
+error_paths:
+  - id: "E1"
+    name: "Duplicate on area change"
+    trigger: "Carlos moves a staple to an area that already has a staple with the same name"
+    behavior: "Show duplicate warning, allow picking different area or cancelling"
+    emotional_design: "No frustration -- clear message, easy recovery"
+    gherkin: |
+      Scenario: Duplicate detected when changing area
+        Given "Paper towels" exists as a staple in "Kitchen Cabinets"
+        And "Paper towels" also exists as a staple in "Garage Pantry"
+        When Carlos edits the Kitchen Cabinets "Paper towels" and selects "Garage Pantry"
+        And Carlos taps "Save Changes"
+        Then the app shows "Paper towels already exists in Garage Pantry"
+        And the edit is not saved
+        And Carlos can pick a different area or cancel
+
+  - id: "E2"
+    name: "Cancel without saving"
+    trigger: "Carlos opens edit sheet but taps Cancel"
+    behavior: "Sheet dismisses, no changes made"
+    emotional_design: "Safe to explore -- nothing changes without explicit save"
+    gherkin: |
+      Scenario: Cancel edit without changes
+        Given Carlos is editing "Paper towels" in "Kitchen Cabinets"
+        When Carlos taps "Cancel"
+        Then the edit sheet closes
+        And "Paper towels" remains in "Kitchen Cabinets" unchanged
+
+  - id: "E3"
+    name: "Remove staple from edit sheet"
+    trigger: "Carlos taps 'Remove from Staples' in the edit sheet"
+    behavior: "Staple removed from library, trip item becomes one-off or removed"
+    emotional_design: "Destructive action needs confirmation -- no accidental deletion"
+    gherkin: |
+      Scenario: Remove staple from edit sheet
+        Given Carlos is editing "Fancy crackers" in "Kitchen Cabinets"
+        When Carlos taps "Remove from Staples"
+        And Carlos confirms the removal
+        Then "Fancy crackers" is removed from the staple library
+        And "Fancy crackers" becomes a one-off item on the current trip
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "staple_id"
+      must_match_across: [1, 2, 3, 4]
+      failure_message: "Staple ID must be consistent from tap through save to display"
+    - artifact: "available_areas"
+      must_match_across: [2]
+      failure_message: "Area picker must reflect current area list including custom areas"
+    - artifact: "existing_sections"
+      must_match_across: [2]
+      failure_message: "Section auto-suggest must include all sections from staple library"
+    - artifact: "updated_staple"
+      must_match_across: [3, 4]
+      failure_message: "Updated staple in storage must match what HomeView and StoreView display"

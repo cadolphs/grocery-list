@@ -50,10 +50,10 @@ export const HomeView = (): React.JSX.Element => {
     setMetadataSheetVisible(true);
   }, []);
 
-  const handleEditStaple = useCallback((stapleId: string) => {
-    const staple = stapleLibrary.listAll().find((s) => s.id === stapleId);
+  const handleEditStaple = useCallback((name: string, area: string) => {
+    const staple = stapleLibrary.listAll().find((s) => s.name === name && s.houseArea === area);
     if (!staple) return;
-    setEditStapleId(stapleId);
+    setEditStapleId(staple.id);
     setEditStapleName(staple.name);
     setEditInitialValues({
       houseArea: staple.houseArea,

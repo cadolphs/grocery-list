@@ -7,10 +7,20 @@ import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../
 
 type ItemTypeSelection = 'Staple' | 'One-off';
 type SheetMode = 'form' | 'duplicate-warning';
+type EditMode = 'add' | 'edit';
+
+type EditInitialValues = {
+  readonly houseArea: HouseArea;
+  readonly section: string;
+  readonly aisleNumber: number | null;
+};
 
 type MetadataBottomSheetProps = {
   readonly visible: boolean;
   readonly itemName: string;
+  readonly mode?: EditMode;
+  readonly editStapleId?: string | null;
+  readonly initialValues?: EditInitialValues | null;
   readonly defaultItemType?: ItemTypeSelection;
   readonly defaultArea?: HouseArea | null;
   readonly areas: readonly HouseArea[];
@@ -19,6 +29,7 @@ type MetadataBottomSheetProps = {
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
+  readonly onSaveEdit?: (stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => void;
 };
 
 const filterSectionSuggestions = (
@@ -34,6 +45,9 @@ const filterSectionSuggestions = (
 export const MetadataBottomSheet = ({
   visible,
   itemName,
+  mode = 'add',
+  editStapleId,
+  initialValues,
   defaultItemType,
   defaultArea,
   areas,
@@ -42,7 +56,10 @@ export const MetadataBottomSheet = ({
   onDismiss,
   onSubmitStaple,
   onSubmitTripItem,
+  onSaveEdit,
 }: MetadataBottomSheetProps): React.JSX.Element => {
+  const isEditMode = mode === 'edit';
+
   const resolveDefaultArea = (): HouseArea | null =>
     defaultArea === undefined ? 'Kitchen Cabinets' : defaultArea;
 
@@ -57,15 +74,22 @@ export const MetadataBottomSheet = ({
   // Re-initialize defaults when sheet opens or defaults change
   useEffect(() => {
     if (visible) {
-      setSelectedType(defaultItemType ?? 'Staple');
-      setSelectedArea(resolveDefaultArea());
-      setSection('');
+      if (isEditMode && initialValues) {
+        setSelectedType('Staple');
+        setSelectedArea(initialValues.houseArea);
+        setSection(initialValues.section);
+        setAisleText(initialValues.aisleNumber !== null ? String(initialValues.aisleNumber) : '');
+      } else {
+        setSelectedType(defaultItemType ?? 'Staple');
+        setSelectedArea(resolveDefaultArea());
+        setSection('');
+        setAisleText('');
+      }
       setSectionSuggestions([]);
-      setAisleText('');
       setSheetMode('form');
       setDuplicateStaple(null);
     }
-  }, [visible, defaultItemType, defaultArea]);
+  }, [visible, defaultItemType, defaultArea, isEditMode, initialValues]);
 
   const handleSectionChange = (text: string): void => {
     setSection(text);
@@ -75,6 +99,22 @@ export const MetadataBottomSheet = ({
   const handleSelectSectionSuggestion = (sectionName: string): void => {
     setSection(sectionName);
     setSectionSuggestions([]);
+  };
+
+  const handleSaveEdit = (): void => {
+    if (selectedArea === null || !editStapleId || !onSaveEdit) return;
+
+    const storeLocation = {
+      section,
+      aisleNumber: aisleText ? parseInt(aisleText, 10) : null,
+    };
+
+    onSaveEdit(editStapleId, {
+      houseArea: selectedArea,
+      storeLocation,
+    });
+
+    onDismiss();
   };
 
   const handleSubmit = (): void => {
@@ -177,9 +217,10 @@ export const MetadataBottomSheet = ({
             </>
           ) : (
             <>
-          <Text style={styles.title}>Add &apos;{itemName}&apos;</Text>
+          <Text style={styles.title}>{isEditMode ? `Edit '${itemName}'` : `Add '${itemName}'`}</Text>
 
-          {/* Type toggle */}
+          {/* Type toggle - hidden in edit mode */}
+          {!isEditMode && (
           <View style={styles.typeToggleContainer}>
             <Pressable
               testID={selectedType === 'Staple' ? 'type-toggle-Staple-active' : 'type-toggle-Staple'}
@@ -216,6 +257,7 @@ export const MetadataBottomSheet = ({
               </Text>
             </Pressable>
           </View>
+          )}
 
           {/* Area picker */}
           <View style={styles.areaContainer}>
@@ -274,13 +316,21 @@ export const MetadataBottomSheet = ({
           />
 
           {/* Action buttons */}
-          <Pressable style={styles.addButton} onPress={handleSubmit}>
-            <Text style={styles.addButtonText}>Add Item</Text>
-          </Pressable>
+          {isEditMode ? (
+            <Pressable style={styles.addButton} onPress={handleSaveEdit}>
+              <Text style={styles.addButtonText}>Save Changes</Text>
+            </Pressable>
+          ) : (
+            <>
+              <Pressable style={styles.addButton} onPress={handleSubmit}>
+                <Text style={styles.addButtonText}>Add Item</Text>
+              </Pressable>
 
-          <Pressable style={styles.skipButton} onPress={handleSkip}>
-            <Text style={styles.skipButtonText}>Skip, add with defaults</Text>
-          </Pressable>
+              <Pressable style={styles.skipButton} onPress={handleSkip}>
+                <Text style={styles.skipButtonText}>Skip, add with defaults</Text>
+              </Pressable>
+            </>
+          )}
             </>
           )}
         </View>
