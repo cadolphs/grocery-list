@@ -71,3 +71,37 @@ describe('home view has sweep checklist toggle', () => {
     expect(checklistButton).not.toHaveStyle({ backgroundColor: '#2196F3' });
   });
 });
+
+describe('checklist mode shows alphabetic list and quick add', () => {
+  it('in checklist mode: StapleChecklist is visible, area sections and sweep progress are not', () => {
+    renderApp();
+
+    // Switch to checklist mode
+    fireEvent.press(screen.getByTestId('home-mode-checklist'));
+
+    // StapleChecklist should be visible (staple-row for Milk from renderApp setup)
+    expect(screen.getByTestId('staple-row-Milk')).toBeTruthy();
+
+    // Sweep progress text should NOT be visible
+    expect(screen.queryByText(/areas complete/)).toBeNull();
+
+    // Area sections should NOT be visible (complete buttons won't exist)
+    expect(screen.queryAllByTestId(/^complete-/).length).toBe(0);
+
+    // Reset sweep button should NOT be visible
+    expect(screen.queryByTestId('reset-sweep-button')).toBeNull();
+  });
+
+  it('in sweep mode: area sections visible, StapleChecklist not visible', () => {
+    renderApp();
+
+    // Default is sweep mode -- area sections should be visible (complete buttons exist)
+    expect(screen.queryAllByTestId(/^complete-/).length).toBeGreaterThan(0);
+
+    // Sweep progress should be visible
+    expect(screen.getByText(/areas complete/)).toBeTruthy();
+
+    // StapleChecklist should NOT be visible
+    expect(screen.queryByTestId('staple-row-Milk')).toBeNull();
+  });
+});

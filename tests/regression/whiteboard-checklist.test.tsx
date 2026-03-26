@@ -139,7 +139,7 @@ describe('staple checklist renders sorted list with toggle', () => {
   });
 });
 
-function renderAppWithAllAreasComplete() {
+function renderAppInChecklistMode() {
   const stapleStorage = createNullStapleStorage([
     { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
     { name: 'Bread', houseArea: 'Pantry', storeLocation: { section: 'Bakery', aisleNumber: null } },
@@ -150,19 +150,17 @@ function renderAppWithAllAreasComplete() {
   const tripService = createTrip(tripStorage, tripAreas);
   tripService.start(stapleLibrary.listAll());
 
-  // Complete all areas so whiteboard phase activates
-  for (const area of tripAreas) {
-    tripService.completeArea(area);
-  }
-
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
-  return render(
+  render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
       <AppShell />
     </ServiceProvider>
   );
+
+  // Switch to checklist mode to see the StapleChecklist
+  fireEvent.press(screen.getByTestId('home-mode-checklist'));
 }
 
 describe('preloaded staples show as already on trip', () => {
@@ -181,11 +179,6 @@ describe('preloaded staples show as already on trip', () => {
     // Skip Eggs during the sweep phase (needed becomes false)
     tripService.skipItem('Eggs');
 
-    // Complete all areas so whiteboard phase activates
-    for (const area of tripAreas) {
-      tripService.completeArea(area);
-    }
-
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
@@ -194,6 +187,9 @@ describe('preloaded staples show as already on trip', () => {
         <AppShell />
       </ServiceProvider>
     );
+
+    // Switch to checklist mode to see StapleChecklist
+    fireEvent.press(screen.getByTestId('home-mode-checklist'));
 
     // Preloaded and still needed -> checked
     expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('checked');
@@ -204,20 +200,17 @@ describe('preloaded staples show as already on trip', () => {
   });
 });
 
-describe('whiteboard phase shows staple checklist', () => {
-  it('renders StapleChecklist when all areas are complete', () => {
-    renderAppWithAllAreasComplete();
-
-    // Whiteboard prompt should be visible
-    expect(screen.getByText('Add from whiteboard')).toBeTruthy();
+describe('checklist mode shows staple checklist', () => {
+  it('renders StapleChecklist in checklist mode', () => {
+    renderAppInChecklistMode();
 
     // Staple checklist rows should appear
     expect(screen.getByTestId('staple-row-Bread')).toBeTruthy();
     expect(screen.getByTestId('staple-row-Milk')).toBeTruthy();
   });
 
-  it('adding a staple from checklist adds it to the trip with source whiteboard', () => {
-    renderAppWithAllAreasComplete();
+  it('preloaded staples show as checked in checklist mode', () => {
+    renderAppInChecklistMode();
 
     // Both staples are already on the trip from preload, so they should be checked
     expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('checked');
@@ -225,7 +218,7 @@ describe('whiteboard phase shows staple checklist', () => {
   });
 
   it('tapping a checked staple skips it from the trip', () => {
-    renderAppWithAllAreasComplete();
+    renderAppInChecklistMode();
 
     // Tap Milk (already on trip = checked) to remove/skip it
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
@@ -235,7 +228,7 @@ describe('whiteboard phase shows staple checklist', () => {
   });
 
   it('tapping an unchecked staple adds it to the trip', () => {
-    renderAppWithAllAreasComplete();
+    renderAppInChecklistMode();
 
     // First skip Milk to make it unchecked
     fireEvent.press(screen.getByTestId('staple-row-Milk'));

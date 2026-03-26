@@ -165,22 +165,20 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
   });
 
-  it('shows whiteboard prompt when all areas complete', () => {
-    // Given Carlos has marked all 5 areas as done
+  it('checklist mode shows staple checklist without needing to complete all areas', () => {
+    // Given Carlos is on the home screen
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
       </ServiceProvider>
     );
-    ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']
-      .forEach(area => fireEvent.press(screen.getByTestId(`complete-${area}`)));
 
-    // When Carlos views the sweep screen
-    // (already viewing it)
+    // When Carlos switches to checklist mode
+    fireEvent.press(screen.getByTestId('home-mode-checklist'));
 
-    // Then "Add from whiteboard" is prominently displayed
-    expect(screen.getByText('Add from whiteboard')).toBeTruthy();
+    // Then the staple checklist is visible
+    expect(screen.queryAllByTestId(/^staple-row-/).length).toBeGreaterThan(0);
   });
 });
 

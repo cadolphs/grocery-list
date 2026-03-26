@@ -188,64 +188,65 @@ export const HomeView = (): React.JSX.Element => {
         </Pressable>
       </View>
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
-      <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
-      {sweepProgress.allAreasComplete && (
-        <>
-          <Text style={styles.whiteboardPrompt}>Add from whiteboard</Text>
-          <StapleChecklist
-            staples={allStaples}
-            tripItemNames={tripItemNameSet}
-            onAddStaple={handleAddFromChecklist}
-            onRemoveStaple={handleRemoveFromChecklist}
-          />
-        </>
-      )}
-      {areaGroups.map((areaGroup) => (
-        <AreaSection
-          key={areaGroup.area}
-          areaGroup={areaGroup}
-          onSkipItem={skipItem}
-          onUnskipItem={unskipItem}
-          onCompleteArea={completeArea}
-          onUncompleteArea={uncompleteArea}
-          onSelectArea={handleSelectArea}
-          onEditStaple={handleEditStaple}
-          isCompleted={sweepProgress.completedAreas.includes(areaGroup.area)}
-          isActive={activeArea === areaGroup.area}
+      {homeMode === 'checklist' && (
+        <StapleChecklist
+          staples={allStaples}
+          tripItemNames={tripItemNameSet}
+          onAddStaple={handleAddFromChecklist}
+          onRemoveStaple={handleRemoveFromChecklist}
         />
-      ))}
-      <Pressable
-        testID="reset-sweep-button"
-        onPress={() => setShowResetConfirmation(true)}
-        style={styles.resetSweepButton}
-      >
-        <Text style={styles.resetSweepButtonText}>Reset Sweep</Text>
-      </Pressable>
-      {showResetConfirmation && (
-        <View style={styles.resetConfirmation}>
-          <Text style={styles.resetConfirmationText}>
-            Are you sure? This will reset all items and remove one-offs.
-          </Text>
-          <View style={styles.resetConfirmationButtons}>
-            <Pressable
-              testID="confirm-reset-sweep"
-              onPress={() => {
-                resetSweep();
-                setShowResetConfirmation(false);
-              }}
-              style={styles.confirmButton}
-            >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
-            </Pressable>
-            <Pressable
-              testID="cancel-reset-sweep"
-              onPress={() => setShowResetConfirmation(false)}
-              style={styles.cancelButton}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
+      )}
+      {homeMode === 'sweep' && (
+        <>
+          <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
+          {areaGroups.map((areaGroup) => (
+            <AreaSection
+              key={areaGroup.area}
+              areaGroup={areaGroup}
+              onSkipItem={skipItem}
+              onUnskipItem={unskipItem}
+              onCompleteArea={completeArea}
+              onUncompleteArea={uncompleteArea}
+              onSelectArea={handleSelectArea}
+              onEditStaple={handleEditStaple}
+              isCompleted={sweepProgress.completedAreas.includes(areaGroup.area)}
+              isActive={activeArea === areaGroup.area}
+            />
+          ))}
+          <Pressable
+            testID="reset-sweep-button"
+            onPress={() => setShowResetConfirmation(true)}
+            style={styles.resetSweepButton}
+          >
+            <Text style={styles.resetSweepButtonText}>Reset Sweep</Text>
+          </Pressable>
+          {showResetConfirmation && (
+            <View style={styles.resetConfirmation}>
+              <Text style={styles.resetConfirmationText}>
+                Are you sure? This will reset all items and remove one-offs.
+              </Text>
+              <View style={styles.resetConfirmationButtons}>
+                <Pressable
+                  testID="confirm-reset-sweep"
+                  onPress={() => {
+                    resetSweep();
+                    setShowResetConfirmation(false);
+                  }}
+                  style={styles.confirmButton}
+                >
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                </Pressable>
+                <Pressable
+                  testID="cancel-reset-sweep"
+                  onPress={() => setShowResetConfirmation(false)}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </>
       )}
       <MetadataBottomSheet
         visible={metadataSheetVisible}
