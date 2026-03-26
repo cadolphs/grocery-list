@@ -1,7 +1,9 @@
 // Trip lifecycle: complete() persists trip and saves carryover items
 
-import { createTrip } from '../../src/domain/trip';
+import { createTrip, completeTrip } from '../../src/domain/trip';
+import { createStapleLibrary } from '../../src/domain/staple-library';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
+import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
 
 describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
   it('complete() marks trip as completed, persists to storage, saves unbought as carryover, returns CompleteTripResult', () => {
@@ -179,5 +181,74 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // Carryover should be cleared from storage after starting new trip
     const remainingCarryover2 = storage.loadCarryover();
     expect(remainingCarryover2).toHaveLength(0);
+  });
+
+  it('finish trip button triggers domain completion', () => {
+    // Regression: StoreView must call tripService.complete() (which persists)
+    // not the standalone completeTrip() (which only categorizes items).
+    // This test documents the contract difference.
+
+    const storage = createNullTripStorage();
+    const tripService = createTrip(storage);
+
+    tripService.start([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        id: 'staple-2',
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
+    ]);
+
+    tripService.checkOff('Milk');
+
+    // Simulate what handleFinishTrip SHOULD do: call tripService.complete()
+    const result = tripService.complete();
+
+    // The result categorizes items correctly
+    expect(result.purchasedStaples).toHaveLength(1);
+    expect(result.purchasedStaples[0].name).toBe('Milk');
+    expect(result.unboughtItems).toHaveLength(1);
+    expect(result.unboughtItems[0].name).toBe('Bread');
+
+    // CRITICAL: trip is persisted as completed in storage
+    const savedTrip = storage.loadTrip();
+    expect(savedTrip).not.toBeNull();
+    expect(savedTrip!.status).toBe('completed');
+
+    // CRITICAL: carryover is saved for unbought items
+    const carryover = storage.loadCarryover();
+    expect(carryover).toHaveLength(1);
+    expect(carryover[0].name).toBe('Bread');
+    expect(carryover[0].source).toBe('carryover');
+
+    // Contrast: standalone completeTrip() does NOT persist
+    const storage2 = createNullTripStorage();
+    const tripService2 = createTrip(storage2);
+    tripService2.start([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+    tripService2.checkOff('Milk');
+
+    const stapleLibrary = createStapleLibrary(createNullStapleStorage());
+    const standaloneResult = completeTrip(tripService2, stapleLibrary);
+
+    // Standalone function returns correct categorization...
+    expect(standaloneResult.purchasedStaples).toHaveLength(1);
+
+    // ...but does NOT persist trip or save carryover
+    const savedTrip2 = storage2.loadTrip();
+    expect(savedTrip2?.status).not.toBe('completed');
   });
 });

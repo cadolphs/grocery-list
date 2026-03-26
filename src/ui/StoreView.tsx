@@ -8,13 +8,13 @@ import { useSectionOrder } from '../hooks/useSectionOrder';
 import { useServices } from './ServiceProvider';
 import { groupByAisle } from '../domain/item-grouping';
 import { sortByCustomOrder } from '../domain/section-ordering';
-import { completeTrip, CompleteTripResult } from '../domain/trip';
+import { CompleteTripResult } from '../domain/trip';
 import { AisleSection } from './AisleSection';
 import { TripSummaryView } from './TripSummaryView';
 
 export const StoreView = (): React.JSX.Element => {
   const { items, toggleCheckOff } = useTrip();
-  const { tripService, stapleLibrary } = useServices();
+  const { tripService } = useServices();
   const { order: sectionOrder } = useSectionOrder();
   const [tripResult, setTripResult] = useState<CompleteTripResult | null>(null);
   const [prepTimeMinutes, setPrepTimeMinutes] = useState<number | undefined>(undefined);
@@ -23,7 +23,7 @@ export const StoreView = (): React.JSX.Element => {
   const handleFinishTrip = (): void => {
     const summary = tripService.getSummary();
     setPrepTimeMinutes(summary.prepTimeMinutes);
-    const result = completeTrip(tripService, stapleLibrary);
+    const result = tripService.complete();
     setTripResult(result);
     setShowSummary(true);
   };
