@@ -30,6 +30,7 @@ type MetadataBottomSheetProps = {
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
   readonly onSaveEdit?: (stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => void;
+  readonly onDeleteStaple?: (stapleId: string) => void;
 };
 
 const filterSectionSuggestions = (
@@ -57,6 +58,7 @@ export const MetadataBottomSheet = ({
   onSubmitStaple,
   onSubmitTripItem,
   onSaveEdit,
+  onDeleteStaple,
 }: MetadataBottomSheetProps): React.JSX.Element => {
   const isEditMode = mode === 'edit';
 
@@ -114,6 +116,12 @@ export const MetadataBottomSheet = ({
       storeLocation,
     });
 
+    onDismiss();
+  };
+
+  const handleDeleteStaple = (): void => {
+    if (!editStapleId || !onDeleteStaple) return;
+    onDeleteStaple(editStapleId);
     onDismiss();
   };
 
@@ -317,9 +325,16 @@ export const MetadataBottomSheet = ({
 
           {/* Action buttons */}
           {isEditMode ? (
-            <Pressable style={styles.addButton} onPress={handleSaveEdit}>
-              <Text style={styles.addButtonText}>Save Changes</Text>
-            </Pressable>
+            <>
+              <Pressable style={styles.addButton} onPress={handleSaveEdit}>
+                <Text style={styles.addButtonText}>Save Changes</Text>
+              </Pressable>
+              {onDeleteStaple && editStapleId && (
+                <Pressable style={styles.deleteButton} onPress={handleDeleteStaple}>
+                  <Text style={styles.deleteButtonText}>Delete Staple</Text>
+                </Pressable>
+              )}
+            </>
           ) : (
             <>
               <Pressable style={styles.addButton} onPress={handleSubmit}>
@@ -457,6 +472,21 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  deleteButton: {
+    borderWidth: 1,
+    borderColor: '#d32f2f',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 8,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  deleteButtonText: {
+    color: '#d32f2f',
     fontWeight: '600',
     fontSize: 16,
   },
