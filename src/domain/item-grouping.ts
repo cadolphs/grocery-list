@@ -67,8 +67,11 @@ export const groupByAisle = (items: TripItem[]): AisleGroup[] => {
     .sort(compareAisleGroups);
 };
 
+const isStaple = (item: TripItem): boolean => item.itemType !== 'one-off';
+
 export const groupByArea = (items: TripItem[], areas: readonly string[]): AreaGroup[] => {
-  const itemsByArea = items.reduce<Record<string, TripItem[]>>(
+  const stapleItems = items.filter(isStaple);
+  const itemsByArea = stapleItems.reduce<Record<string, TripItem[]>>(
     (groups, item) => ({
       ...groups,
       [item.houseArea]: [...(groups[item.houseArea] ?? []), item],
@@ -80,3 +83,6 @@ export const groupByArea = (items: TripItem[], areas: readonly string[]): AreaGr
     createAreaGroup(area, itemsByArea[area] ?? [])
   );
 };
+
+export const getOneOffItems = (items: TripItem[]): TripItem[] =>
+  items.filter((item) => item.itemType === 'one-off');

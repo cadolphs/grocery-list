@@ -190,3 +190,55 @@ describe('home mode long-press opens edit and no skip section', () => {
     expect(onItemPress).toHaveBeenCalledWith('Milk');
   });
 });
+
+describe('groupByArea excludes one-offs from area groups', () => {
+  const { groupByArea } = require('../../src/domain/item-grouping');
+  const { getOneOffItems } = require('../../src/domain/item-grouping');
+
+  const ALL_AREAS = ['Fridge', 'Bathroom', 'Kitchen Cabinets'] as const;
+
+  const makeItem = (overrides: Partial<TripItem>): TripItem => ({
+    id: 'item-1',
+    name: 'Milk',
+    houseArea: 'Fridge',
+    storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    itemType: 'staple',
+    stapleId: 'staple-1',
+    source: 'preloaded',
+    needed: true,
+    checked: false,
+    checkedAt: null,
+    ...overrides,
+  });
+
+  it('area groups contain only staple items when mix of staples and one-offs provided', () => {
+    const staple = makeItem({ id: 's1', name: 'Milk', itemType: 'staple', houseArea: 'Fridge' });
+    const oneOff = makeItem({ id: 'o1', name: 'Birthday Candles', itemType: 'one-off', houseArea: 'Fridge' });
+
+    const result = groupByArea([staple, oneOff], ALL_AREAS);
+
+    const fridgeGroup = result.find((g: { area: string }) => g.area === 'Fridge')!;
+    expect(fridgeGroup.items).toHaveLength(1);
+    expect(fridgeGroup.items[0].name).toBe('Milk');
+  });
+
+  it('one-off items are excluded from all area groups', () => {
+    const oneOff = makeItem({ id: 'o1', name: 'Party Cups', itemType: 'one-off', houseArea: 'Bathroom' });
+
+    const result = groupByArea([oneOff], ALL_AREAS);
+
+    const allItems = result.flatMap((g: { items: TripItem[] }) => g.items);
+    expect(allItems).toHaveLength(0);
+  });
+
+  it('getOneOffItems returns only one-off items', () => {
+    const staple = makeItem({ id: 's1', name: 'Milk', itemType: 'staple' });
+    const oneOff1 = makeItem({ id: 'o1', name: 'Birthday Candles', itemType: 'one-off' });
+    const oneOff2 = makeItem({ id: 'o2', name: 'Party Cups', itemType: 'one-off' });
+
+    const result = getOneOffItems([staple, oneOff1, oneOff2]);
+
+    expect(result).toHaveLength(2);
+    expect(result.map((i: TripItem) => i.name)).toEqual(['Birthday Candles', 'Party Cups']);
+  });
+});
