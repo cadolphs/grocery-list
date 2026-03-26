@@ -21,7 +21,7 @@ const formatSweepProgress = (completedCount: number, totalAreas: number): string
 
 export const HomeView = (): React.JSX.Element => {
   const { areas } = useAreas();
-  const { items, addItem, skipItem, unskipItem, completeArea, resetSweep, syncStapleUpdate, sweepProgress } = useTrip();
+  const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, sweepProgress } = useTrip();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
@@ -156,6 +156,7 @@ export const HomeView = (): React.JSX.Element => {
           onSkipItem={skipItem}
           onUnskipItem={unskipItem}
           onCompleteArea={completeArea}
+          onUncompleteArea={uncompleteArea}
           onSelectArea={handleSelectArea}
           onEditStaple={handleEditStaple}
           isCompleted={sweepProgress.completedAreas.includes(areaGroup.area)}

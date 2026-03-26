@@ -11,6 +11,7 @@ type AreaSectionProps = {
   readonly onSkipItem?: (name: string) => void;
   readonly onUnskipItem?: (name: string) => void;
   readonly onCompleteArea?: (area: string) => void;
+  readonly onUncompleteArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
   readonly onEditStaple?: (name: string, area: string) => void;
   readonly isCompleted?: boolean;
@@ -20,7 +21,7 @@ type AreaSectionProps = {
 const formatAreaHeading = (area: string, neededCount: number): string =>
   `${area} (${neededCount})`;
 
-export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteArea, onSelectArea, onEditStaple, isCompleted, isActive }: AreaSectionProps): React.JSX.Element => {
+export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteArea, onUncompleteArea, onSelectArea, onEditStaple, isCompleted, isActive }: AreaSectionProps): React.JSX.Element => {
   const neededItems = areaGroup.items.filter((item) => item.needed);
   const skippedItems = areaGroup.items.filter((item) => !item.needed);
 
@@ -30,7 +31,12 @@ export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteAre
         <Pressable onPress={onSelectArea ? () => onSelectArea(areaGroup.area) : undefined}>
           <Text style={styles.heading}>{formatAreaHeading(areaGroup.area, neededItems.length)}</Text>
         </Pressable>
-        {isCompleted && (
+        {isCompleted && onUncompleteArea && (
+          <Pressable style={styles.badge} testID={`badge-${areaGroup.area}`} onPress={() => onUncompleteArea(areaGroup.area)}>
+            <Text style={styles.badgeText}>Undo</Text>
+          </Pressable>
+        )}
+        {isCompleted && !onUncompleteArea && (
           <View style={styles.badge} testID={`badge-${areaGroup.area}`}>
             <Text style={styles.badgeText}>Complete</Text>
           </View>
