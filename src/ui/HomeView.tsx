@@ -11,6 +11,7 @@ import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../
 import { AreaSection } from './AreaSection';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
+import { StapleChecklist } from './StapleChecklist';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
 import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
 
@@ -25,9 +26,14 @@ export const HomeView = (): React.JSX.Element => {
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
+  const allStaples = useMemo(() => stapleLibrary.listAll(), [stapleLibrary]);
   const existingSections = useMemo(
-    () => [...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section))],
-    [stapleLibrary],
+    () => [...new Set(allStaples.map((s) => s.storeLocation.section))],
+    [allStaples],
+  );
+  const tripItemNameSet = useMemo(
+    () => new Set(items.filter((i) => i.needed).map((i) => i.name)),
+    [items],
   );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
@@ -96,6 +102,20 @@ export const HomeView = (): React.JSX.Element => {
     );
   }, [stapleLibrary]);
 
+  const handleAddFromChecklist = useCallback((staple: StapleItem): void => {
+    addItem({
+      name: staple.name,
+      houseArea: staple.houseArea,
+      storeLocation: staple.storeLocation,
+      itemType: 'staple',
+      source: 'whiteboard',
+    });
+  }, [addItem]);
+
+  const handleRemoveFromChecklist = useCallback((name: string): void => {
+    skipItem(name);
+  }, [skipItem]);
+
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
     const alreadyInTrip = items.some(
       (item) => item.name === staple.name && item.houseArea === staple.houseArea
@@ -152,7 +172,15 @@ export const HomeView = (): React.JSX.Element => {
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
       <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
-        <Text style={styles.whiteboardPrompt}>Add from whiteboard</Text>
+        <>
+          <Text style={styles.whiteboardPrompt}>Add from whiteboard</Text>
+          <StapleChecklist
+            staples={allStaples}
+            tripItemNames={tripItemNameSet}
+            onAddStaple={handleAddFromChecklist}
+            onRemoveStaple={handleRemoveFromChecklist}
+          />
+        </>
       )}
       {areaGroups.map((areaGroup) => (
         <AreaSection

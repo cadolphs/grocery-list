@@ -5,11 +5,22 @@
  * Each staple shows its name and a toggle button.
  * Staples already on the trip show as checked.
  * Tapping unchecked staple calls onAddStaple; tapping checked calls onRemoveStaple.
+ *
+ * Integration: when all areas are complete in HomeView, StapleChecklist appears
+ * below the whiteboard prompt. Adding/removing staples updates the trip.
  */
 
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react-native';
 import { StapleChecklist } from '../../src/ui/StapleChecklist';
+import { ServiceProvider } from '../../src/ui/ServiceProvider';
+import { AppShell } from '../../src/ui/AppShell';
+import { createStapleLibrary } from '../../src/domain/staple-library';
+import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
+import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage';
+import { createTrip } from '../../src/domain/trip';
+import { createAreaManagement } from '../../src/domain/area-management';
 import { StapleItem } from '../../src/domain/types';
 
 const createStaple = (name: string, houseArea: string): StapleItem => ({
@@ -125,5 +136,74 @@ describe('staple checklist renders sorted list with toggle', () => {
 
     expect(onRemoveStaple).toHaveBeenCalledTimes(1);
     expect(onRemoveStaple).toHaveBeenCalledWith('Milk');
+  });
+});
+
+function renderAppWithAllAreasComplete() {
+  const stapleStorage = createNullStapleStorage([
+    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    { name: 'Bread', houseArea: 'Pantry', storeLocation: { section: 'Bakery', aisleNumber: null } },
+  ]);
+  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const tripStorage = createNullTripStorage();
+  const tripAreas = ['Fridge', 'Pantry'];
+  const tripService = createTrip(tripStorage, tripAreas);
+  tripService.start(stapleLibrary.listAll());
+
+  // Complete all areas so whiteboard phase activates
+  for (const area of tripAreas) {
+    tripService.completeArea(area);
+  }
+
+  const areaStorage = createNullAreaStorage(tripAreas);
+  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+
+  return render(
+    <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+      <AppShell />
+    </ServiceProvider>
+  );
+}
+
+describe('whiteboard phase shows staple checklist', () => {
+  it('renders StapleChecklist when all areas are complete', () => {
+    renderAppWithAllAreasComplete();
+
+    // Whiteboard prompt should be visible
+    expect(screen.getByText('Add from whiteboard')).toBeTruthy();
+
+    // Staple checklist rows should appear
+    expect(screen.getByTestId('staple-row-Bread')).toBeTruthy();
+    expect(screen.getByTestId('staple-row-Milk')).toBeTruthy();
+  });
+
+  it('adding a staple from checklist adds it to the trip with source whiteboard', () => {
+    renderAppWithAllAreasComplete();
+
+    // Both staples are already on the trip from preload, so they should be checked
+    expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('checked');
+    expect(screen.getByTestId('toggle-Bread')).toHaveTextContent('checked');
+  });
+
+  it('tapping a checked staple skips it from the trip', () => {
+    renderAppWithAllAreasComplete();
+
+    // Tap Milk (already on trip = checked) to remove/skip it
+    fireEvent.press(screen.getByTestId('staple-row-Milk'));
+
+    // After removal, Milk should show as unchecked
+    expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('unchecked');
+  });
+
+  it('tapping an unchecked staple adds it to the trip', () => {
+    renderAppWithAllAreasComplete();
+
+    // First skip Milk to make it unchecked
+    fireEvent.press(screen.getByTestId('staple-row-Milk'));
+    expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('unchecked');
+
+    // Now tap Milk again to add it back
+    fireEvent.press(screen.getByTestId('staple-row-Milk'));
+    expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('checked');
   });
 });
