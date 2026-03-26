@@ -50,6 +50,7 @@ export type TripService = {
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
   readonly completeArea: (area: HouseArea) => void;
+  readonly uncompleteArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
   readonly getSummary: () => TripSummary;
   readonly setStartTime: (date: Date) => void;
@@ -172,6 +173,11 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
 
     completeArea: (area: HouseArea) => {
       completedAreas.add(area);
+      persistTrip();
+    },
+
+    uncompleteArea: (area: HouseArea) => {
+      completedAreas.delete(area);
       persistTrip();
     },
 
