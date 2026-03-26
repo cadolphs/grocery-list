@@ -9,7 +9,37 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QuickAdd } from '../../src/ui/QuickAdd';
+import { ServiceProvider } from '../../src/ui/ServiceProvider';
+import { AppShell } from '../../src/ui/AppShell';
+import { createStapleLibrary } from '../../src/domain/staple-library';
+import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
+import { createTrip } from '../../src/domain/trip';
 import { AddTripItemResult } from '../../src/domain/types';
+
+describe('store view has quick add bar', () => {
+  it('renders QuickAdd component at the top of StoreView', () => {
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const tripService = createTrip(tripStorage);
+    tripService.start(stapleLibrary.listAll());
+
+    render(
+      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    // Switch to Store view
+    fireEvent.press(screen.getByText('Store'));
+
+    // QuickAdd should be present - it renders the "Add an item..." placeholder
+    expect(screen.getByPlaceholderText('Add an item...')).toBeTruthy();
+  });
+});
 
 describe('bare add opens metadata sheet', () => {
   it('calls onOpenMetadataSheet with input text instead of onAddItem when Add is tapped', () => {
