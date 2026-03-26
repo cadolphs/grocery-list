@@ -1,0 +1,106 @@
+{
+  "roadmap": {
+    "project_id": "trip-lifecycle",
+    "created_at": "2026-03-26T17:22:39Z",
+    "total_steps": 5,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Trip Completion Domain",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Wire complete() to persist and save carryover",
+          "criteria": "tripService.complete() marks trip status as completed, persists to storage, saves unbought items as carryover via TripStorage.saveCarryover; returns CompleteTripResult",
+          "test_file": "tests/regression/trip-lifecycle.test.ts",
+          "scenario_name": "complete() persists trip and saves carryover items",
+          "files_to_modify": [
+            "tests/regression/trip-lifecycle.test.ts",
+            "src/domain/trip.ts",
+            "src/ports/trip-storage.ts",
+            "src/adapters/null/null-trip-storage.ts",
+            "src/adapters/async-storage/async-trip-storage.ts"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Start new trip with carryover from storage",
+          "criteria": "TripStorage.loadCarryover retrieves saved carryover items; trip.start() receives them and they appear in getItems() with source 'carryover'; carryover cleared from storage after loading",
+          "test_file": "tests/regression/trip-lifecycle.test.ts",
+          "scenario_name": "new trip loads carryover from completed trip",
+          "files_to_modify": [
+            "tests/regression/trip-lifecycle.test.ts",
+            "src/domain/trip.ts",
+            "src/ports/trip-storage.ts",
+            "src/adapters/null/null-trip-storage.ts",
+            "src/adapters/async-storage/async-trip-storage.ts"
+          ]
+        },
+        {
+          "id": "01-03",
+          "name": "Full trip cycle: complete then start new with carryover",
+          "criteria": "End-to-end: start trip with staples, check some off, complete trip, start new trip — new trip has staples plus carryover (unbought items from previous); carryover items have source 'carryover'",
+          "test_file": "tests/regression/trip-lifecycle.test.ts",
+          "scenario_name": "full trip cycle with carryover",
+          "files_to_modify": [
+            "tests/regression/trip-lifecycle.test.ts",
+            "src/domain/trip.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "UI Integration",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "StoreView handleFinishTrip calls complete()",
+          "criteria": "handleFinishTrip in StoreView calls tripService.complete() after computing summary; trip result still shown in TripSummaryView",
+          "test_file": "tests/regression/trip-lifecycle.test.ts",
+          "scenario_name": "finish trip button triggers domain completion",
+          "files_to_modify": [
+            "tests/regression/trip-lifecycle.test.ts",
+            "src/ui/StoreView.tsx"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "App init detects completed trip and starts new with carryover",
+          "criteria": "On app initialization, if stored trip has status 'completed', load carryover, start fresh trip with staples + carryover, clear carryover from storage",
+          "test_file": "tests/regression/trip-lifecycle.test.ts",
+          "scenario_name": "app init starts new trip with carryover from completed trip",
+          "files_to_modify": [
+            "tests/regression/trip-lifecycle.test.ts",
+            "src/domain/trip.ts",
+            "src/hooks/useTrip.ts"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/ports/",
+      "src/adapters/null/",
+      "src/adapters/async-storage/",
+      "src/ui/",
+      "src/hooks/"
+    ],
+    "test_directories": [
+      "tests/regression/"
+    ],
+    "excluded_patterns": [
+      "node_modules/**",
+      "dist/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed-bugfix",
+    "approved_at": "2026-03-26T17:22:39Z"
+  }
+}

@@ -3,11 +3,12 @@
 // Writes update cache synchronously and persist to AsyncStorage in background.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Trip } from '../../domain/types';
+import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
 
 const TRIP_KEY = '@grocery/active_trip';
 const CHECKOFFS_KEY = '@grocery/trip_checkoffs';
+const CARRYOVER_KEY = '@grocery/trip_carryover';
 
 export type AsyncTripStorage = TripStorage & {
   readonly initialize: () => Promise<void>;
@@ -40,18 +41,30 @@ const checkoffsToJson = (checkoffs: ReadonlyMap<string, string>): string => {
   return JSON.stringify(obj);
 };
 
+const parseCarryover = (raw: string | null): readonly TripItem[] => {
+  if (raw === null) return [];
+  try {
+    return JSON.parse(raw) as TripItem[];
+  } catch {
+    return [];
+  }
+};
+
 export const createAsyncTripStorage = (): AsyncTripStorage => {
   let cachedTrip: Trip | null = null;
   let cachedCheckoffs: Map<string, string> = new Map();
+  let cachedCarryover: readonly TripItem[] = [];
 
   return {
     initialize: async (): Promise<void> => {
-      const [tripRaw, checkoffsRaw] = await Promise.all([
+      const [tripRaw, checkoffsRaw, carryoverRaw] = await Promise.all([
         AsyncStorage.getItem(TRIP_KEY),
         AsyncStorage.getItem(CHECKOFFS_KEY),
+        AsyncStorage.getItem(CARRYOVER_KEY),
       ]);
       cachedTrip = parseTrip(tripRaw);
       cachedCheckoffs = parseCheckoffs(checkoffsRaw);
+      cachedCarryover = parseCarryover(carryoverRaw);
     },
 
     loadTrip: (): Trip | null => cachedTrip,
@@ -81,5 +94,10 @@ export const createAsyncTripStorage = (): AsyncTripStorage => {
         AsyncStorage.setItem(TRIP_KEY, JSON.stringify(cachedTrip));
       }
     },
+    saveCarryover: (items: readonly TripItem[]): void => {
+      cachedCarryover = [...items];
+      AsyncStorage.setItem(CARRYOVER_KEY, JSON.stringify(items));
+    },
+    loadCarryover: (): readonly TripItem[] => [...cachedCarryover],
   };
 };

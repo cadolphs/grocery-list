@@ -1,7 +1,7 @@
 // Driven port: Trip Storage
 // Pure interface - no implementation details
 
-import { Trip } from '../domain/types';
+import { Trip, TripItem } from '../domain/types';
 
 export type TripStorage = {
   readonly loadTrip: () => Trip | null;
@@ -9,4 +9,6 @@ export type TripStorage = {
   readonly loadCheckoffs: () => ReadonlyMap<string, string>;
   readonly saveCheckoffs: (checkoffs: ReadonlyMap<string, string>) => void;
   readonly updateItemArea: (oldName: string, newName: string) => void;
+  readonly saveCarryover: (items: readonly TripItem[]) => void;
+  readonly loadCarryover: () => readonly TripItem[];
 };

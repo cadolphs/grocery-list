@@ -54,7 +54,7 @@ export type TripService = {
   readonly setStartTime: (date: Date) => void;
   readonly loadFromStorage: () => void;
   readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
-  readonly complete: () => void;
+  readonly complete: () => CompleteTripResult;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
 };
 
@@ -224,8 +224,34 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
       );
     },
 
-    complete: () => {
-      // Will be implemented in a later step
+    complete: (): CompleteTripResult => {
+      const checkedItems = items.filter(isChecked);
+      const uncheckedItems = items.filter((item) => !isChecked(item));
+
+      const result: CompleteTripResult = {
+        purchasedStaples: checkedItems.filter(isStaple),
+        purchasedOneOffs: checkedItems.filter(isOneOff),
+        unboughtItems: uncheckedItems,
+      };
+
+      // Save carryover: unbought items with source changed to 'carryover'
+      const carryoverItems = uncheckedItems.map((item) => ({
+        ...item,
+        source: 'carryover' as const,
+      }));
+      storage.saveCarryover(carryoverItems);
+
+      // Persist trip as completed
+      const completedTrip: Trip = {
+        id: tripId,
+        items: [...items],
+        status: 'completed',
+        createdAt,
+        completedAreas: [...completedAreas],
+      };
+      storage.saveTrip(completedTrip);
+
+      return result;
     },
   };
 };

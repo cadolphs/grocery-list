@@ -1,11 +1,12 @@
 // Null adapter for TripStorage - in-memory implementation for testing
 
-import { Trip } from '../../domain/types';
+import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
 
 export const createNullTripStorage = (): TripStorage => {
   let storedTrip: Trip | null = null;
   let storedCheckoffs: Map<string, string> = new Map();
+  let storedCarryover: readonly TripItem[] = [];
 
   return {
     loadTrip: () => storedTrip,
@@ -28,5 +29,9 @@ export const createNullTripStorage = (): TripStorage => {
         };
       }
     },
+    saveCarryover: (items: readonly TripItem[]) => {
+      storedCarryover = [...items];
+    },
+    loadCarryover: () => [...storedCarryover],
   };
 };
