@@ -16,6 +16,7 @@ import { AreaSettingsScreen } from './AreaSettingsScreen';
 import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
 
 type SettingsView = 'menu' | 'areas' | 'section-order';
+type HomeMode = 'sweep' | 'checklist';
 
 const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
   `${completedCount} of ${totalAreas} areas complete`;
@@ -23,6 +24,7 @@ const formatSweepProgress = (completedCount: number, totalAreas: number): string
 export const HomeView = (): React.JSX.Element => {
   const { areas } = useAreas();
   const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, removeItemByStapleId, sweepProgress } = useTrip();
+  const [homeMode, setHomeMode] = useState<HomeMode>('sweep');
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
@@ -169,6 +171,22 @@ export const HomeView = (): React.JSX.Element => {
           <Text style={styles.settingsButtonText}>Settings</Text>
         </Pressable>
       </View>
+      <View style={styles.modeToggleRow}>
+        <Pressable
+          testID="home-mode-sweep"
+          onPress={() => setHomeMode('sweep')}
+          style={[styles.modeToggleButton, homeMode === 'sweep' && styles.modeToggleButtonActive]}
+        >
+          <Text style={[styles.modeToggleText, homeMode === 'sweep' && styles.modeToggleTextActive]}>Sweep</Text>
+        </Pressable>
+        <Pressable
+          testID="home-mode-checklist"
+          onPress={() => setHomeMode('checklist')}
+          style={[styles.modeToggleButton, homeMode === 'checklist' && styles.modeToggleButtonActive]}
+        >
+          <Text style={[styles.modeToggleText, homeMode === 'checklist' && styles.modeToggleTextActive]}>Checklist</Text>
+        </Pressable>
+      </View>
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
       <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
       {sweepProgress.allAreasComplete && (
@@ -264,6 +282,29 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     padding: 8,
+  },
+  modeToggleRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  modeToggleButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    backgroundColor: '#E0E0E0',
+  },
+  modeToggleButtonActive: {
+    backgroundColor: '#2196F3',
+  },
+  modeToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  modeToggleTextActive: {
+    color: '#FFFFFF',
   },
   settingsButtonText: {
     fontSize: 16,
