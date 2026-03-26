@@ -1,0 +1,107 @@
+{
+  "roadmap": {
+    "project_id": "fix-persistence-gaps",
+    "created_at": "2026-03-26T16:19:11Z",
+    "total_steps": 6,
+    "phases": 3
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Persist Skip State",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Regression test: skip state lost on reload",
+          "criteria": "Test creates trip, skips an item, simulates reload via loadFromStorage, asserts skipped item still has needed=false",
+          "test_file": "tests/regression/fix-persistence-gaps.test.ts",
+          "scenario_name": "skip state persists across reload",
+          "files_to_modify": [
+            "tests/regression/fix-persistence-gaps.test.ts"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Add persistTrip to skipItem and unskipItem",
+          "criteria": "skipItem and unskipItem call persistTrip after mutation; regression test passes; all existing tests pass",
+          "test_file": "tests/regression/fix-persistence-gaps.test.ts",
+          "scenario_name": "skip state persists across reload",
+          "files_to_modify": [
+            "src/domain/trip.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Persist Completed Areas",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Regression test: completed areas lost on reload",
+          "criteria": "Test creates trip, completes an area, simulates reload, asserts getSweepProgress shows area still completed",
+          "test_file": "tests/regression/fix-persistence-gaps.test.ts",
+          "scenario_name": "completed areas persist across reload",
+          "files_to_modify": [
+            "tests/regression/fix-persistence-gaps.test.ts"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Add completedAreas to Trip type and persistence",
+          "criteria": "completedAreas added to Trip type; buildTrip includes completedAreas; loadFromStorage restores completedAreas; completeArea calls persistTrip; regression test passes",
+          "test_file": "tests/regression/fix-persistence-gaps.test.ts",
+          "scenario_name": "completed areas persist across reload",
+          "files_to_modify": [
+            "src/domain/types.ts",
+            "src/domain/trip.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Skipped Item Display",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Regression test: skipped row shows no item name",
+          "criteria": "Test renders AreaSection with skipped items, asserts item name text is visible alongside Re-add button",
+          "test_file": "tests/regression/fix-persistence-gaps-ui.test.tsx",
+          "scenario_name": "skipped item row displays item name",
+          "files_to_modify": [
+            "tests/regression/fix-persistence-gaps-ui.test.tsx"
+          ]
+        },
+        {
+          "id": "03-02",
+          "name": "Add item name to skipped row in AreaSection",
+          "criteria": "Skipped items render item.name text with strikethrough style alongside Re-add button; skippedRow uses flexDirection row; regression test passes",
+          "test_file": "tests/regression/fix-persistence-gaps-ui.test.tsx",
+          "scenario_name": "skipped item row displays item name",
+          "files_to_modify": [
+            "src/ui/AreaSection.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/ui/"
+    ],
+    "test_directories": [
+      "tests/regression/"
+    ],
+    "excluded_patterns": [
+      "node_modules/**",
+      "dist/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed-bugfix",
+    "approved_at": "2026-03-26T16:20:00Z"
+  }
+}
