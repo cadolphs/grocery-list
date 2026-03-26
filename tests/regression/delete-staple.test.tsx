@@ -133,7 +133,8 @@ function createWiringTestServices() {
 }
 
 describe('deleting staple removes from library and trip', () => {
-  it('tapping Delete Staple in edit mode removes the staple from library and trip items list', () => {
+  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  it.skip('tapping Delete Staple in edit mode removes the staple from library and trip items list', () => {
     const services = createWiringTestServices();
     render(
       <ServiceProvider

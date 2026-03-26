@@ -23,9 +23,7 @@ export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongP
   };
 
   const handlePress = (): void => {
-    if (mode === 'home' && item.itemType === 'staple' && onEditStaple) {
-      onEditStaple(item.name, item.houseArea);
-    } else if (onPress) {
+    if (onPress) {
       onPress();
     }
   };
@@ -41,9 +39,11 @@ export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongP
       <Text style={[
         styles.itemName,
         item.checked && mode === 'store' && styles.checkedText,
+        mode === 'home' && item.needed && styles.neededText,
+        mode === 'home' && !item.needed && styles.skippedText,
       ]}>{item.name}</Text>
     </Pressable>
-    {mode === 'home' && onSkip && (
+    {mode === 'store' && onSkip && (
       <Pressable style={styles.skipButton} onPress={onSkip} testID={`skip-${item.name}`}>
         <Text style={styles.skipText}>Skip</Text>
       </Pressable>
@@ -71,6 +71,13 @@ const styles = StyleSheet.create({
   checkedText: {
     textDecorationLine: 'line-through',
     color: '#4CAF50',
+  },
+  neededText: {
+    color: '#4CAF50',
+  },
+  skippedText: {
+    color: '#999999',
+    textDecorationLine: 'line-through',
   },
   skipButton: {
     paddingVertical: 8,

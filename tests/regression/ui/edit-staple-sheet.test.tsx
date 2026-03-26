@@ -47,7 +47,8 @@ function renderApp() {
 }
 
 describe('Edit Staple via MetadataBottomSheet', () => {
-  it('tapping a staple name opens edit sheet with pre-filled values and Save Changes button', () => {
+  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  it.skip('tapping a staple name opens edit sheet with pre-filled values and Save Changes button', () => {
     renderApp();
 
     // Tap the "Butter" item name to open edit sheet
@@ -76,7 +77,8 @@ describe('Edit Staple via MetadataBottomSheet', () => {
     expect(screen.getByDisplayValue('3')).toBeTruthy();
   });
 
-  it('Save Changes updates the staple and syncs the trip', () => {
+  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  it.skip('Save Changes updates the staple and syncs the trip', () => {
     renderApp();
 
     // Tap "Butter" to open edit sheet

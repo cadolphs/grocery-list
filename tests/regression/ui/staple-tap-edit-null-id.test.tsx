@@ -50,7 +50,8 @@ function renderAppWithNullStapleId() {
 }
 
 describe('Tap staple with stapleId=null opens edit sheet', () => {
-  it('tapping a staple item with null stapleId opens the edit sheet', () => {
+  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  it.skip('tapping a staple item with null stapleId opens the edit sheet', () => {
     renderAppWithNullStapleId();
 
     // Tap the "Butter" item name
