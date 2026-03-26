@@ -33,5 +33,8 @@ export const createNullTripStorage = (): TripStorage => {
       storedCarryover = [...items];
     },
     loadCarryover: () => [...storedCarryover],
+    clearCarryover: () => {
+      storedCarryover = [];
+    },
   };
 };

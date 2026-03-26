@@ -11,4 +11,5 @@ export type TripStorage = {
   readonly updateItemArea: (oldName: string, newName: string) => void;
   readonly saveCarryover: (items: readonly TripItem[]) => void;
   readonly loadCarryover: () => readonly TripItem[];
+  readonly clearCarryover: () => void;
 };

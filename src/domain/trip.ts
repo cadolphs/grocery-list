@@ -42,6 +42,7 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 
 export type TripService = {
   readonly start: (staples: ReadonlyArray<StapleInput>, carryover?: readonly TripItem[]) => void;
+  readonly startWithCarryover: (staples: ReadonlyArray<StapleInput>) => void;
   readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
@@ -100,6 +101,13 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
     start: (staples: ReadonlyArray<StapleInput>, carryover: readonly TripItem[] = []) => {
       const stapleItems = staples.map(stapleInputToTripItem);
       items = [...stapleItems, ...carryover];
+    },
+
+    startWithCarryover: (staples: ReadonlyArray<StapleInput>) => {
+      const carryover = storage.loadCarryover();
+      const stapleItems = staples.map(stapleInputToTripItem);
+      items = [...stapleItems, ...carryover];
+      storage.clearCarryover();
     },
 
     addItem: (request: AddTripItemRequest): AddTripItemResult => {

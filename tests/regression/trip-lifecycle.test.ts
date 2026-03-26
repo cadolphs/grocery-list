@@ -60,4 +60,57 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(carryover[0].name).toBe('Bread');
     expect(carryover[0].source).toBe('carryover');
   });
+
+  it('new trip loads carryover from completed trip', () => {
+    const storage = createNullTripStorage();
+    const trip1 = createTrip(storage);
+
+    // Start first trip with two staples
+    trip1.start([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        id: 'staple-2',
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
+    ]);
+
+    // Check off Milk, leave Bread unbought
+    trip1.checkOff('Milk');
+
+    // Complete trip — Bread becomes carryover
+    trip1.complete();
+
+    // Start a new trip from the same storage
+    const trip2 = createTrip(storage);
+    trip2.startWithCarryover([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+
+    // Carryover items should appear in new trip
+    const items = trip2.getItems();
+    const carryoverItems = items.filter((item) => item.source === 'carryover');
+    expect(carryoverItems).toHaveLength(1);
+    expect(carryoverItems[0].name).toBe('Bread');
+
+    // Staples should also be present
+    const stapleItems = items.filter((item) => item.source === 'preloaded');
+    expect(stapleItems).toHaveLength(1);
+    expect(stapleItems[0].name).toBe('Milk');
+
+    // Carryover should be cleared from storage after loading
+    const remainingCarryover = storage.loadCarryover();
+    expect(remainingCarryover).toHaveLength(0);
+  });
 });

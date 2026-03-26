@@ -99,5 +99,9 @@ export const createAsyncTripStorage = (): AsyncTripStorage => {
       AsyncStorage.setItem(CARRYOVER_KEY, JSON.stringify(items));
     },
     loadCarryover: (): readonly TripItem[] => [...cachedCarryover],
+    clearCarryover: (): void => {
+      cachedCarryover = [];
+      AsyncStorage.removeItem(CARRYOVER_KEY);
+    },
   };
 };
