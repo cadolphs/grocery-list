@@ -148,6 +148,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
           ? { ...item, needed: false }
           : item
       );
+      persistTrip();
     },
 
     unskipItem: (name: string) => {
@@ -156,6 +157,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
           ? { ...item, needed: true }
           : item
       );
+      persistTrip();
     },
 
     completeArea: (area: HouseArea) => {
