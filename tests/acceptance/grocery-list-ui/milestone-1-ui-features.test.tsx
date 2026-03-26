@@ -71,11 +71,12 @@ describe('US-07: Skip staple from home screen', () => {
     // When Carlos taps "skip" on "Shampoo"
     fireEvent.press(screen.getByTestId('skip-Shampoo'));
 
-    // Then "Shampoo" is no longer visible in the "Bathroom" area
-    expect(screen.queryByText('Shampoo')).toBeNull();
-
-    // And the "Bathroom" area shows 1 item remaining
+    // Then "Shampoo" is removed from the needed items (area count drops)
     expect(screen.getByText('Bathroom (1)')).toBeTruthy();
+
+    // And "Shampoo" still appears as a skipped item (with strikethrough + Re-add)
+    expect(screen.getByText('Shampoo')).toBeTruthy();
+    expect(screen.getByTestId('readd-Shampoo')).toBeTruthy();
   });
 
   it('skipped item does not appear in store view', () => {
@@ -104,7 +105,10 @@ describe('US-07: Skip staple from home screen', () => {
       </ServiceProvider>
     );
     fireEvent.press(screen.getByTestId('skip-Butter'));
-    expect(screen.queryByText('Butter')).toBeNull();
+
+    // Butter is visible in skipped row (with strikethrough + Re-add)
+    expect(screen.getByText('Butter')).toBeTruthy();
+    expect(screen.getByTestId('readd-Butter')).toBeTruthy();
 
     // When Carlos taps "re-add" on "Butter"
     fireEvent.press(screen.getByTestId('readd-Butter'));

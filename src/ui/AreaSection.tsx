@@ -49,6 +49,7 @@ export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteAre
       ))}
       {skippedItems.map((item) => (
         <View key={item.id} style={styles.skippedRow}>
+          <Text style={styles.skippedName}>{item.name}</Text>
           <Pressable
             style={styles.readdButton}
             testID={`readd-${item.name}`}
@@ -105,7 +106,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
   },
   skippedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 4,
+  },
+  skippedName: {
+    color: '#999999',
+    textDecorationLine: 'line-through',
+    fontSize: 14,
   },
   readdButton: {
     paddingVertical: 6,
