@@ -183,6 +183,140 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(remainingCarryover2).toHaveLength(0);
   });
 
+  it('app init starts new trip with carryover from completed trip', () => {
+    const storage = createNullTripStorage();
+
+    // --- Setup: simulate a previous session that completed a trip ---
+    const previousTrip = createTrip(storage);
+    previousTrip.start([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        id: 'staple-2',
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
+      {
+        id: 'staple-3',
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+
+    // Buy Milk and Eggs, leave Bread unbought
+    previousTrip.checkOff('Milk');
+    previousTrip.checkOff('Eggs');
+    previousTrip.complete();
+
+    // Verify preconditions: storage has completed trip + carryover
+    expect(storage.loadTrip()!.status).toBe('completed');
+    expect(storage.loadCarryover()).toHaveLength(1);
+    expect(storage.loadCarryover()[0].name).toBe('Bread');
+
+    // --- App init: new session creates fresh trip service, calls initializeFromStorage ---
+    const currentStaples = [
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        id: 'staple-2',
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
+      {
+        id: 'staple-3',
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ];
+
+    const newTripService = createTrip(storage);
+    newTripService.initializeFromStorage(currentStaples);
+
+    // 1. New trip has staples + carryover items
+    const items = newTripService.getItems();
+    const preloadedItems = items.filter((item) => item.source === 'preloaded');
+    const carryoverItems = items.filter((item) => item.source === 'carryover');
+
+    expect(preloadedItems).toHaveLength(3);
+    expect(preloadedItems.map((i) => i.name).sort()).toEqual(['Bread', 'Eggs', 'Milk']);
+
+    expect(carryoverItems).toHaveLength(1);
+    expect(carryoverItems[0].name).toBe('Bread');
+    expect(carryoverItems[0].source).toBe('carryover');
+
+    // 2. Total items = 3 staples + 1 carryover = 4
+    expect(items).toHaveLength(4);
+
+    // 3. Carryover cleared from storage
+    expect(storage.loadCarryover()).toHaveLength(0);
+  });
+
+  it('app init loads active trip from storage without starting new one', () => {
+    const storage = createNullTripStorage();
+
+    // Setup: simulate a previous session with an active (in-progress) trip
+    const previousTrip = createTrip(storage);
+    previousTrip.start([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+    previousTrip.checkOff('Milk'); // This persists the trip as active
+
+    // App init: new session
+    const newTripService = createTrip(storage);
+    newTripService.initializeFromStorage([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+
+    // Should load the existing active trip items, not start fresh
+    const items = newTripService.getItems();
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe('Milk');
+    expect(items[0].checked).toBe(true);
+  });
+
+  it('app init starts fresh trip when no stored trip exists', () => {
+    const storage = createNullTripStorage();
+
+    const tripService = createTrip(storage);
+    tripService.initializeFromStorage([
+      {
+        id: 'staple-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+
+    // Should start fresh trip with staples
+    const items = tripService.getItems();
+    expect(items).toHaveLength(1);
+    expect(items[0].name).toBe('Milk');
+    expect(items[0].source).toBe('preloaded');
+    expect(items[0].checked).toBe(false);
+  });
+
   it('finish trip button triggers domain completion', () => {
     // Regression: StoreView must call tripService.complete() (which persists)
     // not the standalone completeTrip() (which only categorizes items).

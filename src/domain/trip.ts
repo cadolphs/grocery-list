@@ -56,6 +56,7 @@ export type TripService = {
   readonly loadFromStorage: () => void;
   readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
   readonly complete: () => CompleteTripResult;
+  readonly initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => void;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
 };
 
@@ -230,6 +231,33 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
             }
           : item
       );
+    },
+
+    initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => {
+      const savedTrip = storage.loadTrip();
+      if (!savedTrip) {
+        // No stored trip: start fresh with staples
+        const stapleItems = staples.map(stapleInputToTripItem);
+        items = [...stapleItems];
+        return;
+      }
+      if (savedTrip.status === 'completed') {
+        // Completed trip: start new trip with carryover
+        const carryover = storage.loadCarryover();
+        const stapleItems = staples.map(stapleInputToTripItem);
+        items = [...stapleItems, ...carryover];
+        storage.clearCarryover();
+        tripId = generateTripId();
+        createdAt = new Date().toISOString();
+        completedAreas.clear();
+        return;
+      }
+      // Active trip: load existing items
+      tripId = savedTrip.id;
+      createdAt = savedTrip.createdAt;
+      items = [...savedTrip.items];
+      completedAreas.clear();
+      (savedTrip.completedAreas ?? []).forEach(a => completedAreas.add(a));
     },
 
     complete: (): CompleteTripResult => {
