@@ -33,6 +33,22 @@ describe('bare add opens metadata sheet', () => {
     expect(mockOnAddItem).not.toHaveBeenCalled();
   });
 
+  it('add button requires metadata sheet handler', () => {
+    const mockOnAddItem = jest.fn<AddTripItemResult, [any]>().mockReturnValue({ success: true });
+
+    render(
+      <QuickAdd
+        onAddItem={mockOnAddItem}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(input, 'Gift Wrap');
+
+    const addButton = screen.getByText('Add');
+    expect(addButton).toBeDisabled();
+  });
+
   it('clears input text after opening metadata sheet', () => {
     const mockOnAddItem = jest.fn<AddTripItemResult, [any]>().mockReturnValue({ success: true });
     const mockOnOpenMetadataSheet = jest.fn();

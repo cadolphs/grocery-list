@@ -65,7 +65,7 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
           value={inputText}
           onChangeText={handleChangeText}
         />
-        <Pressable style={styles.addButton} onPress={handleAdd}>
+        <Pressable style={styles.addButton} onPress={handleAdd} disabled={!onOpenMetadataSheet}>
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
       </View>
