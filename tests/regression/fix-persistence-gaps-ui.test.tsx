@@ -1,8 +1,9 @@
 /**
- * Regression test: skipped item row displays item name.
+ * Regression test: skipped item displays item name.
  *
- * Bug: AreaSection renders skipped items (needed=false) with only a "Re-add"
- * button and no item name text. Users cannot tell which item was skipped.
+ * Original bug: AreaSection rendered skipped items without visible name.
+ * Updated: skipped items now render inline via TripItemRow with grey
+ * strikethrough styling (sweep-ux-refresh 01-02 removed separate skipped section).
  */
 
 import React from 'react';
@@ -32,13 +33,13 @@ const areaGroupWithSkippedItem: AreaGroup = {
 };
 
 describe('Skipped item row displays item name', () => {
-  it('renders the item name alongside the Re-add button for skipped items', () => {
+  it('renders the skipped item name inline (no separate skipped section)', () => {
     render(<AreaSection areaGroup={areaGroupWithSkippedItem} />);
 
-    // The Re-add button should be present
-    expect(screen.getByText('Re-add')).toBeTruthy();
-
-    // The item name should also be visible so users know what was skipped
+    // The item name should be visible so users know what was skipped
     expect(screen.getByText('Paper Towels')).toBeTruthy();
+
+    // Re-add button no longer exists (items toggle via tap)
+    expect(screen.queryByText('Re-add')).toBeNull();
   });
 });

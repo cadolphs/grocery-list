@@ -17,7 +17,7 @@ type TripItemRowProps = {
 
 export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongPress }: TripItemRowProps): React.JSX.Element => {
   const handleLongPress = (): void => {
-    if (mode === 'store' && item.itemType === 'staple' && onLongPress) {
+    if ((mode === 'store' || mode === 'home') && item.itemType === 'staple' && onLongPress) {
       onLongPress(item.name, item.houseArea);
     }
   };

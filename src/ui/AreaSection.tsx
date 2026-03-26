@@ -14,6 +14,8 @@ type AreaSectionProps = {
   readonly onUncompleteArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
   readonly onEditStaple?: (name: string, area: string) => void;
+  readonly onItemPress?: (name: string) => void;
+  readonly onItemLongPress?: (name: string, area: string) => void;
   readonly isCompleted?: boolean;
   readonly isActive?: boolean;
 };
@@ -21,15 +23,14 @@ type AreaSectionProps = {
 const formatAreaHeading = (area: string, neededCount: number): string =>
   `${area} (${neededCount})`;
 
-export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteArea, onUncompleteArea, onSelectArea, onEditStaple, isCompleted, isActive }: AreaSectionProps): React.JSX.Element => {
-  const neededItems = areaGroup.items.filter((item) => item.needed);
-  const skippedItems = areaGroup.items.filter((item) => !item.needed);
+export const AreaSection = ({ areaGroup, onCompleteArea, onUncompleteArea, onSelectArea, onItemPress, onItemLongPress, isCompleted, isActive }: AreaSectionProps): React.JSX.Element => {
+  const neededCount = areaGroup.items.filter((item) => item.needed).length;
 
   return (
     <View style={styles.card} testID={isActive ? `active-area-${areaGroup.area}` : undefined}>
       <View style={styles.header}>
         <Pressable onPress={onSelectArea ? () => onSelectArea(areaGroup.area) : undefined}>
-          <Text style={styles.heading}>{formatAreaHeading(areaGroup.area, neededItems.length)}</Text>
+          <Text style={styles.heading}>{formatAreaHeading(areaGroup.area, neededCount)}</Text>
         </Pressable>
         {isCompleted && onUncompleteArea && (
           <Pressable style={styles.badge} testID={`badge-${areaGroup.area}`} onPress={() => onUncompleteArea(areaGroup.area)}>
@@ -42,27 +43,15 @@ export const AreaSection = ({ areaGroup, onSkipItem, onUnskipItem, onCompleteAre
           </View>
         )}
       </View>
-      {neededItems.map((item, index) => (
+      {areaGroup.items.map((item, index) => (
         <View key={item.id}>
           {index > 0 && <View style={styles.separator} />}
           <TripItemRow
             item={item}
             mode="home"
-            onSkip={onSkipItem ? () => onSkipItem(item.name) : undefined}
-            onEditStaple={onEditStaple}
+            onPress={onItemPress ? () => onItemPress(item.name) : undefined}
+            onLongPress={onItemLongPress}
           />
-        </View>
-      ))}
-      {skippedItems.map((item) => (
-        <View key={item.id} style={styles.skippedRow}>
-          <Text style={styles.skippedName}>{item.name}</Text>
-          <Pressable
-            style={styles.readdButton}
-            testID={`readd-${item.name}`}
-            onPress={onUnskipItem ? () => onUnskipItem(item.name) : undefined}
-          >
-            <Text style={styles.readdText}>Re-add</Text>
-          </Pressable>
         </View>
       ))}
       {onCompleteArea && !isCompleted && (

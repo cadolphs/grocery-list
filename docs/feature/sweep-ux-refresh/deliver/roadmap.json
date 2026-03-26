@@ -1,0 +1,78 @@
+{
+  "roadmap": {
+    "project_id": "sweep-ux-refresh",
+    "created_at": "2026-03-26T22:25:54Z",
+    "total_steps": 4,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Toggle and long-press interaction",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "TripItemRow home mode: tap toggles needed, green/grey styling",
+          "criteria": "In home mode, tapping a trip item toggles its needed state (calls onToggleNeeded); needed items show green text, skipped items show grey with strikethrough; Skip button is removed; onEditStaple tap handler removed from home mode",
+          "test_file": "tests/regression/sweep-ux-refresh.test.tsx",
+          "scenario_name": "home mode tap toggles needed state with green/grey",
+          "files_to_modify": [
+            "tests/regression/sweep-ux-refresh.test.tsx",
+            "src/ui/TripItemRow.tsx"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Home mode long-press opens edit sheet",
+          "criteria": "In home mode, long-pressing a staple item calls onLongPress with name and area (same as store mode); AreaSection removes skipped items section and Re-add buttons; HomeView wires long-press to edit handler",
+          "test_file": "tests/regression/sweep-ux-refresh.test.tsx",
+          "scenario_name": "home mode long-press opens edit and no skip section",
+          "files_to_modify": [
+            "tests/regression/sweep-ux-refresh.test.tsx",
+            "src/ui/TripItemRow.tsx",
+            "src/ui/AreaSection.tsx",
+            "src/ui/HomeView.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "One-offs grouping",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "groupByArea separates one-offs from staples",
+          "criteria": "groupByArea returns area groups containing only staple items; one-off items are excluded from area groups; a new function or variant returns one-off items separately",
+          "test_file": "tests/regression/sweep-ux-refresh.test.ts",
+          "scenario_name": "groupByArea excludes one-offs from area groups",
+          "files_to_modify": [
+            "tests/regression/sweep-ux-refresh.test.ts",
+            "src/domain/item-grouping.ts"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "HomeView renders One-offs section in sweep mode",
+          "criteria": "In sweep mode, one-off items appear in a separate 'One-offs' section below the area sections; the section only renders when one-off items exist on the trip",
+          "test_file": "tests/regression/sweep-ux-refresh.test.tsx",
+          "scenario_name": "sweep mode shows one-offs section separately",
+          "files_to_modify": [
+            "tests/regression/sweep-ux-refresh.test.tsx",
+            "src/ui/HomeView.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/", "src/domain/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed",
+    "approved_at": "2026-03-26T22:25:54Z"
+  }
+}

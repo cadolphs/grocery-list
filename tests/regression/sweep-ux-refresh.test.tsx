@@ -1,18 +1,23 @@
 /**
- * Sweep UX Refresh - Step 01-01
+ * Sweep UX Refresh - Steps 01-01 and 01-02
  *
- * Home mode tap toggles needed state with green/grey styling.
+ * 01-01: Home mode tap toggles needed state with green/grey styling.
+ * 01-02: Home mode long-press opens edit sheet; no skip section in AreaSection.
  *
  * New behavior:
  * - Tap calls onPress (not onEditStaple)
  * - No Skip button in home mode
  * - Needed items: green text (#4CAF50)
  * - Skipped items: grey text (#999999) with strikethrough
+ * - Long-press calls onLongPress in home mode (same as store mode)
+ * - AreaSection renders all items inline (no separate skipped section or Re-add buttons)
  */
 
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react-native';
 import { TripItemRow } from '../../src/ui/TripItemRow';
+import { AreaSection } from '../../src/ui/AreaSection';
+import { AreaGroup } from '../../src/domain/item-grouping';
 import { TripItem } from '../../src/domain/types';
 
 const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
@@ -100,5 +105,88 @@ describe('home mode tap toggles needed state with green/grey', () => {
 
     expect(flatStyle.color).toBe('#999999');
     expect(flatStyle.textDecorationLine).toBe('line-through');
+  });
+});
+
+describe('home mode long-press opens edit and no skip section', () => {
+  const createAreaGroup = (items: TripItem[]): AreaGroup => ({
+    area: 'Fridge',
+    items,
+    neededCount: items.filter((i) => i.needed).length,
+    totalCount: items.length,
+  });
+
+  it('long-press calls onLongPress with name and area in home mode', () => {
+    const onLongPress = jest.fn();
+    const item = createTripItem();
+
+    render(
+      <TripItemRow
+        item={item}
+        mode="home"
+        onLongPress={onLongPress}
+      />
+    );
+
+    fireEvent(screen.getByText('Milk'), 'longPress');
+
+    expect(onLongPress).toHaveBeenCalledWith('Milk', 'Fridge');
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('AreaSection does not render Re-add buttons', () => {
+    const skippedItem = createTripItem({ id: 'item-2', name: 'Butter', needed: false });
+    const areaGroup = createAreaGroup([createTripItem(), skippedItem]);
+
+    render(<AreaSection areaGroup={areaGroup} />);
+
+    expect(screen.queryByText('Re-add')).toBeNull();
+    expect(screen.queryByTestId('readd-Butter')).toBeNull();
+  });
+
+  it('AreaSection renders both needed and skipped items inline', () => {
+    const neededItem = createTripItem({ id: 'item-1', name: 'Milk', needed: true });
+    const skippedItem = createTripItem({ id: 'item-2', name: 'Butter', needed: false });
+    const areaGroup = createAreaGroup([neededItem, skippedItem]);
+
+    render(<AreaSection areaGroup={areaGroup} />);
+
+    // Both items visible
+    expect(screen.getByText('Milk')).toBeTruthy();
+    expect(screen.getByText('Butter')).toBeTruthy();
+  });
+
+  it('AreaSection passes onItemLongPress to TripItemRow', () => {
+    const onItemLongPress = jest.fn();
+    const item = createTripItem();
+    const areaGroup = createAreaGroup([item]);
+
+    render(
+      <AreaSection
+        areaGroup={areaGroup}
+        onItemLongPress={onItemLongPress}
+      />
+    );
+
+    fireEvent(screen.getByText('Milk'), 'longPress');
+
+    expect(onItemLongPress).toHaveBeenCalledWith('Milk', 'Fridge');
+  });
+
+  it('AreaSection passes onItemPress for toggle', () => {
+    const onItemPress = jest.fn();
+    const item = createTripItem();
+    const areaGroup = createAreaGroup([item]);
+
+    render(
+      <AreaSection
+        areaGroup={areaGroup}
+        onItemPress={onItemPress}
+      />
+    );
+
+    fireEvent.press(screen.getByText('Milk'));
+
+    expect(onItemPress).toHaveBeenCalledWith('Milk');
   });
 });

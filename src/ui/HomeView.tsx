@@ -203,12 +203,18 @@ export const HomeView = (): React.JSX.Element => {
             <AreaSection
               key={areaGroup.area}
               areaGroup={areaGroup}
-              onSkipItem={skipItem}
-              onUnskipItem={unskipItem}
+              onItemPress={(name: string) => {
+                const item = areaGroup.items.find((i) => i.name === name);
+                if (item?.needed) {
+                  skipItem(name);
+                } else {
+                  unskipItem(name);
+                }
+              }}
+              onItemLongPress={handleEditStaple}
               onCompleteArea={completeArea}
               onUncompleteArea={uncompleteArea}
               onSelectArea={handleSelectArea}
-              onEditStaple={handleEditStaple}
               isCompleted={sweepProgress.completedAreas.includes(areaGroup.area)}
               isActive={activeArea === areaGroup.area}
             />
