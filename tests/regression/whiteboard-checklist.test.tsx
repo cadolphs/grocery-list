@@ -165,6 +165,45 @@ function renderAppWithAllAreasComplete() {
   );
 }
 
+describe('preloaded staples show as already on trip', () => {
+  it('preloaded staples that are needed show checked; skipped staples show unchecked', () => {
+    const stapleStorage = createNullStapleStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Bread', houseArea: 'Pantry', storeLocation: { section: 'Bakery', aisleNumber: null } },
+      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    ]);
+    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const tripAreas = ['Fridge', 'Pantry'];
+    const tripService = createTrip(tripStorage, tripAreas);
+    tripService.start(stapleLibrary.listAll());
+
+    // Skip Eggs during the sweep phase (needed becomes false)
+    tripService.skipItem('Eggs');
+
+    // Complete all areas so whiteboard phase activates
+    for (const area of tripAreas) {
+      tripService.completeArea(area);
+    }
+
+    const areaStorage = createNullAreaStorage(tripAreas);
+    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+
+    render(
+      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    // Preloaded and still needed -> checked
+    expect(screen.getByTestId('toggle-Milk')).toHaveTextContent('checked');
+    expect(screen.getByTestId('toggle-Bread')).toHaveTextContent('checked');
+
+    // Preloaded but skipped (needed=false) -> unchecked
+    expect(screen.getByTestId('toggle-Eggs')).toHaveTextContent('unchecked');
+  });
+});
+
 describe('whiteboard phase shows staple checklist', () => {
   it('renders StapleChecklist when all areas are complete', () => {
     renderAppWithAllAreasComplete();
