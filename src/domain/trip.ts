@@ -77,11 +77,12 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
 const generateTripId = (): string =>
   `trip-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const buildTrip = (tripId: string, items: TripItem[], createdAt: string): Trip => ({
+const buildTrip = (tripId: string, items: TripItem[], createdAt: string, completed: ReadonlySet<HouseArea>): Trip => ({
   id: tripId,
   items: [...items],
   status: 'active',
   createdAt,
+  completedAreas: [...completed],
 });
 
 export const createTrip = (storage: TripStorage, areas?: readonly string[]): TripService => {
@@ -92,7 +93,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
   const completedAreas = new Set<HouseArea>();
 
   const persistTrip = (): void => {
-    storage.saveTrip(buildTrip(tripId, items, createdAt));
+    storage.saveTrip(buildTrip(tripId, items, createdAt, completedAreas));
   };
 
   return {
@@ -162,6 +163,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
 
     completeArea: (area: HouseArea) => {
       completedAreas.add(area);
+      persistTrip();
     },
 
     getSweepProgress: (): SweepProgress => {
@@ -198,6 +200,8 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         tripId = savedTrip.id;
         createdAt = savedTrip.createdAt;
         items = [...savedTrip.items];
+        completedAreas.clear();
+        (savedTrip.completedAreas ?? []).forEach(a => completedAreas.add(a));
       }
     },
 
