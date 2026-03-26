@@ -1,0 +1,76 @@
+{
+  "roadmap": {
+    "project_id": "quick-add-improvements",
+    "created_at": "2026-03-26T18:00:00Z",
+    "total_steps": 4,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Fix Bare Add Default",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Bare Add opens metadata sheet instead of hardcoding Kitchen Cabinets",
+          "criteria": "When user types text and taps Add button, onOpenMetadataSheet is called with the input text instead of directly calling onAddItem with hardcoded Kitchen Cabinets; input text is cleared after opening sheet",
+          "test_file": "tests/regression/quick-add-improvements.test.tsx",
+          "scenario_name": "bare add opens metadata sheet",
+          "files_to_modify": [
+            "tests/regression/quick-add-improvements.test.tsx",
+            "src/ui/QuickAdd.tsx"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Remove dead code path for direct one-off add",
+          "criteria": "The hardcoded Kitchen Cabinets fallback in handleAdd is removed; if onOpenMetadataSheet is not provided, Add button is disabled or hidden; all tests pass",
+          "test_file": "tests/regression/quick-add-improvements.test.tsx",
+          "scenario_name": "add button requires metadata sheet handler",
+          "files_to_modify": [
+            "tests/regression/quick-add-improvements.test.tsx",
+            "src/ui/QuickAdd.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Store View QuickAdd",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Add QuickAdd bar to StoreView top",
+          "criteria": "StoreView renders QuickAdd component at the top; onSearch wired to staple library search; onSelectSuggestion adds staple to trip; onOpenMetadataSheet opens sheet for new items",
+          "test_file": "tests/regression/quick-add-improvements.test.tsx",
+          "scenario_name": "store view has quick add bar",
+          "files_to_modify": [
+            "tests/regression/quick-add-improvements.test.tsx",
+            "src/ui/StoreView.tsx"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Store view metadata sheet defaults to store section context",
+          "criteria": "When opening metadata sheet from store view, default itemType is contextual (one-off for new items, staple for suggestions); store section field is prominent since user is already at the store",
+          "test_file": "tests/regression/quick-add-improvements.test.tsx",
+          "scenario_name": "store view metadata sheet uses store context",
+          "files_to_modify": [
+            "tests/regression/quick-add-improvements.test.tsx",
+            "src/ui/StoreView.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed",
+    "approved_at": "2026-03-26T18:00:00Z"
+  }
+}

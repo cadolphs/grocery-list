@@ -48,13 +48,9 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
     const trimmed = inputText.trim();
     if (trimmed === '') return;
 
-    onAddItem({
-      name: trimmed,
-      houseArea: 'Kitchen Cabinets',
-      storeLocation: { section: 'Unknown', aisleNumber: null },
-      itemType: 'one-off',
-      source: 'quick-add',
-    });
+    if (onOpenMetadataSheet) {
+      onOpenMetadataSheet(trimmed);
+    }
 
     setInputText('');
     setSuggestions([]);

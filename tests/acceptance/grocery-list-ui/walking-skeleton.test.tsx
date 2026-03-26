@@ -106,10 +106,13 @@ describe('UI-WS-2: Quick-add places a new item on the trip', () => {
       </ServiceProvider>
     );
 
-    // When Carlos types "Greek yogurt" in the quick-add field and submits
+    // When Carlos types "Greek yogurt" in the quick-add field and taps Add
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(quickAddInput, 'Greek yogurt');
     fireEvent.press(screen.getByText('Add'));
+
+    // Then the metadata sheet opens; Carlos skips metadata and adds with defaults
+    fireEvent.press(screen.getByText('Skip, add with defaults'));
 
     // Then "Greek yogurt" appears on the home screen
     expect(screen.getByText('Greek yogurt')).toBeTruthy();
