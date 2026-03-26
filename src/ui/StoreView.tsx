@@ -17,7 +17,7 @@ import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 
 export const StoreView = (): React.JSX.Element => {
-  const { items, addItem, toggleCheckOff } = useTrip();
+  const { items, addItem, toggleCheckOff, syncStapleUpdate } = useTrip();
   const { tripService, stapleLibrary } = useServices();
   const { areas } = useAreas();
   const { order: sectionOrder } = useSectionOrder();
@@ -26,6 +26,9 @@ export const StoreView = (): React.JSX.Element => {
   const [showSummary, setShowSummary] = useState(true);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
+  const [editStapleId, setEditStapleId] = useState<string | null>(null);
+  const [editStapleName, setEditStapleName] = useState<string>('');
+  const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
   const existingSections = useMemo(
     () => [...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section))],
     [stapleLibrary],
@@ -48,9 +51,26 @@ export const StoreView = (): React.JSX.Element => {
     setMetadataSheetVisible(true);
   }, []);
 
+  const handleEditStaple = useCallback((name: string, area: string) => {
+    const staple = stapleLibrary.listAll().find((s) => s.name === name && s.houseArea === area);
+    if (!staple) return;
+    setEditStapleId(staple.id);
+    setEditStapleName(staple.name);
+    setEditInitialValues({
+      houseArea: staple.houseArea,
+      section: staple.storeLocation.section,
+      aisleNumber: staple.storeLocation.aisleNumber,
+    });
+    setMetadataSheetItemName(staple.name);
+    setMetadataSheetVisible(true);
+  }, [stapleLibrary]);
+
   const handleDismissMetadataSheet = useCallback(() => {
     setMetadataSheetVisible(false);
     setMetadataSheetItemName('');
+    setEditStapleId(null);
+    setEditStapleName('');
+    setEditInitialValues(null);
   }, []);
 
   const handleSubmitStaple = useCallback((request: AddStapleRequest): void => {
@@ -60,6 +80,11 @@ export const StoreView = (): React.JSX.Element => {
   const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
     addItem(request);
   }, [addItem]);
+
+  const handleSaveEdit = useCallback((stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => {
+    stapleLibrary.updateStaple(stapleId, changes);
+    syncStapleUpdate(stapleId, changes);
+  }, [stapleLibrary, syncStapleUpdate]);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
     const alreadyInTrip = items.some(
@@ -97,6 +122,7 @@ export const StoreView = (): React.JSX.Element => {
           key={`${aisleGroup.aisleNumber}-${aisleGroup.section}`}
           aisleGroup={aisleGroup}
           onItemPress={toggleCheckOff}
+          onItemLongPress={handleEditStaple}
         />
       ))}
       <Pressable style={styles.finishButton} onPress={handleFinishTrip}>
@@ -105,6 +131,9 @@ export const StoreView = (): React.JSX.Element => {
       <MetadataBottomSheet
         visible={metadataSheetVisible}
         itemName={metadataSheetItemName}
+        mode={editStapleId ? 'edit' : 'add'}
+        editStapleId={editStapleId}
+        initialValues={editInitialValues}
         defaultItemType="One-off"
         defaultArea={null}
         areas={areas as HouseArea[]}
@@ -112,6 +141,7 @@ export const StoreView = (): React.JSX.Element => {
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
         onSubmitTripItem={handleSubmitTripItem}
+        onSaveEdit={handleSaveEdit}
       />
     </ScrollView>
   );

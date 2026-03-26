@@ -9,6 +9,7 @@ import { TripItemRow } from './TripItemRow';
 type AisleSectionProps = {
   readonly aisleGroup: AisleGroup;
   readonly onItemPress?: (name: string) => void;
+  readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
 const formatAisleHeading = (aisleGroup: AisleGroup): string =>
@@ -22,7 +23,7 @@ const formatProgress = (aisleGroup: AisleGroup): string =>
 const isSectionComplete = (aisleGroup: AisleGroup): boolean =>
   aisleGroup.checkedCount === aisleGroup.totalCount;
 
-export const AisleSection = ({ aisleGroup, onItemPress }: AisleSectionProps): React.JSX.Element => (
+export const AisleSection = ({ aisleGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => (
   <View style={styles.card} testID={`aisle-section-${aisleGroup.section}`}>
     <View style={styles.header}>
       <Text style={styles.heading}>{formatAisleHeading(aisleGroup)}</Text>
@@ -40,6 +41,7 @@ export const AisleSection = ({ aisleGroup, onItemPress }: AisleSectionProps): Re
           item={item}
           mode="store"
           onPress={onItemPress ? () => onItemPress(item.name) : undefined}
+          onLongPress={onItemLongPress ? () => onItemLongPress(item.name, item.houseArea) : undefined}
         />
       </View>
     ))}
