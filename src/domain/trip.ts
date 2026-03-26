@@ -59,6 +59,7 @@ export type TripService = {
   readonly complete: () => CompleteTripResult;
   readonly initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => void;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
+  readonly removeItemByStapleId: (stapleId: string) => void;
 };
 
 const generateTripItemId = (): string =>
@@ -237,6 +238,11 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
             }
           : item
       );
+    },
+
+    removeItemByStapleId: (stapleId: string) => {
+      items = items.filter((item) => item.stapleId !== stapleId);
+      persistTrip();
     },
 
     initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => {

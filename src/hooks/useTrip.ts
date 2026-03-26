@@ -18,6 +18,7 @@ export type UseTripResult = {
   readonly uncompleteArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
+  readonly removeItemByStapleId: (stapleId: string) => void;
   readonly sweepProgress: SweepProgress;
 };
 
@@ -105,5 +106,13 @@ export const useTrip = (): UseTripResult => {
     [tripService]
   );
 
-  return { items, addItem, checkOff, toggleCheckOff, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, sweepProgress };
+  const removeItemByStapleId = useCallback(
+    (stapleId: string): void => {
+      tripService.removeItemByStapleId(stapleId);
+      setItems(tripService.getItems());
+    },
+    [tripService]
+  );
+
+  return { items, addItem, checkOff, toggleCheckOff, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, removeItemByStapleId, sweepProgress };
 };

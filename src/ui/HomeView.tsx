@@ -21,7 +21,7 @@ const formatSweepProgress = (completedCount: number, totalAreas: number): string
 
 export const HomeView = (): React.JSX.Element => {
   const { areas } = useAreas();
-  const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, sweepProgress } = useTrip();
+  const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, removeItemByStapleId, sweepProgress } = useTrip();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
@@ -84,6 +84,11 @@ export const HomeView = (): React.JSX.Element => {
     stapleLibrary.updateStaple(stapleId, changes);
     syncStapleUpdate(stapleId, changes);
   }, [stapleLibrary, syncStapleUpdate]);
+
+  const handleDeleteStaple = useCallback((stapleId: string) => {
+    stapleLibrary.remove(stapleId);
+    removeItemByStapleId(stapleId);
+  }, [stapleLibrary, removeItemByStapleId]);
 
   const handleFindDuplicate = useCallback((name: string, area: HouseArea) => {
     return stapleLibrary.listAll().find(
@@ -211,6 +216,7 @@ export const HomeView = (): React.JSX.Element => {
         onSubmitStaple={handleSubmitStaple}
         onSubmitTripItem={handleSubmitTripItem}
         onSaveEdit={handleSaveEdit}
+        onDeleteStaple={handleDeleteStaple}
       />
     </ScrollView>
   );
