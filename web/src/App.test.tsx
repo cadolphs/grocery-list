@@ -11,6 +11,10 @@ vi.mock('./hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
+vi.mock('./hooks/useStaples', () => ({
+  useStaples: vi.fn(() => ({ staples: [], loading: false })),
+}));
+
 import { App } from './App';
 import { useAuth } from './hooks/useAuth';
 

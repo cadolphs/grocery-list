@@ -1,4 +1,20 @@
 import { useAuth } from './hooks/useAuth';
+import { useStaples } from './hooks/useStaples';
+import { StapleTable } from './components/StapleTable';
+import { getFirebaseDb } from './firebase-config';
+
+const AuthenticatedApp = ({ uid, email }: { uid: string; email: string | null }) => {
+  const db = getFirebaseDb();
+  const { staples, loading: staplesLoading } = useStaples(db, uid);
+
+  return (
+    <div>
+      <h1>Grocery Staple Manager</h1>
+      <p>Welcome, {email}</p>
+      {staplesLoading ? <p>Loading staples...</p> : <StapleTable staples={staples} />}
+    </div>
+  );
+};
 
 export const App = () => {
   const { user, loading } = useAuth();
@@ -16,10 +32,5 @@ export const App = () => {
     );
   }
 
-  return (
-    <div>
-      <h1>Grocery Staple Manager</h1>
-      <p>Welcome, {user.email}</p>
-    </div>
-  );
+  return <AuthenticatedApp uid={user.uid} email={user.email} />;
 };
