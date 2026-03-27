@@ -15,3 +15,11 @@ jest.mock('firebase/auth', () => ({
   signOut: jest.fn(),
   onAuthStateChanged: jest.fn(),
 }));
+
+jest.mock('firebase/firestore', () => ({
+  initializeFirestore: jest.fn(() => ({})),
+  persistentLocalCache: jest.fn(() => ({})),
+  doc: jest.fn(),
+  getDoc: jest.fn(),
+  setDoc: jest.fn(),
+}));
