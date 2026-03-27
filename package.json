@@ -39,6 +39,10 @@
     "preset": "jest-expo",
     "setupFilesAfterEnv": [
       "./jest.setup.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/web/"
     ]
   },
   "private": true
