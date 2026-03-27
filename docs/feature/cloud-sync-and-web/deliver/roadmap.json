@@ -2,8 +2,8 @@
   "roadmap": {
     "project_id": "cloud-sync-and-web",
     "created_at": "2026-03-27T17:24:03Z",
-    "total_steps": 9,
-    "phases": 4
+    "total_steps": 12,
+    "phases": 5
   },
   "phases": [
     {
@@ -138,12 +138,54 @@
         }
       ]
     }
+    ,
+    {
+      "id": "05",
+      "name": "User-Facing Auth Flow",
+      "steps": [
+        {
+          "id": "05-01",
+          "name": "useAuth hook for mobile app",
+          "criteria": "Given the app starts, when useAuth is called, then it returns the current auth state (user or null) and loading status by listening to AuthService.onAuthStateChanged; Given the auth state changes from null to a user, when the listener fires, then useAuth returns the updated user",
+          "test_file": "src/hooks/useAuth.test.ts",
+          "scenario_name": "useAuth tracks auth state changes",
+          "files_to_modify": [
+            "src/hooks/useAuth.test.ts",
+            "src/hooks/useAuth.ts"
+          ]
+        },
+        {
+          "id": "05-02",
+          "name": "Login screen component",
+          "criteria": "Given the user is not authenticated, when the login screen renders, then it shows an email input and a send link button; Given the user enters a valid email and taps send link, when the button is pressed, then sendSignInLink is called with the email and a confirmation message is shown; Given the user enters an invalid email, when the button is pressed, then an error message is shown",
+          "test_file": "src/ui/LoginScreen.test.tsx",
+          "scenario_name": "login screen sends sign-in link for valid email",
+          "files_to_modify": [
+            "src/ui/LoginScreen.test.tsx",
+            "src/ui/LoginScreen.tsx"
+          ]
+        },
+        {
+          "id": "05-03",
+          "name": "Wire auth into App.tsx with deep link handling",
+          "criteria": "Given the user is not authenticated, when App renders, then the LoginScreen is shown instead of AppShell; Given the user is authenticated, when App renders, then useAppInitialization receives the auth user and the main app loads with Firestore adapters; Given the app receives a deep link with a sign-in URL, when the link is handled, then handleSignInLink is called and the user becomes authenticated",
+          "test_file": "App.test.tsx",
+          "scenario_name": "app shows login when not authenticated and main app when authenticated",
+          "files_to_modify": [
+            "App.test.tsx",
+            "App.tsx",
+            "app.json"
+          ]
+        }
+      ]
+    }
   ],
   "implementation_scope": {
     "source_directories": [
       "src/adapters/firestore/",
       "src/auth/",
       "src/hooks/",
+      "src/ui/",
       "web/src/"
     ],
     "test_directories": [
