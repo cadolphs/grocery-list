@@ -1,0 +1,122 @@
+# Journey Schema: Staple Management Across Devices
+name: staple-management-across-devices
+feature: cloud-sync-and-web
+personas:
+  - id: user
+    description: Solo household member managing grocery staples across devices
+
+phases:
+  - id: manage
+    name: Manage (Home/Laptop)
+    device: web
+    steps:
+      - id: open-web
+        action: Open web app in browser
+        output: Staple library displayed
+        emotion: ready
+        artifacts_read: []
+        artifacts_write: []
+
+      - id: browse-staples
+        action: Browse staples organized by area and section
+        output: Full-screen table/list view
+        emotion: clarity
+        artifacts_read: [staple-library, area-list, section-order]
+        artifacts_write: []
+
+      - id: edit-staples
+        action: Add, edit, delete, or reorganize staples
+        output: Changes reflected in UI immediately
+        emotion: productive
+        artifacts_read: [staple-library]
+        artifacts_write: [staple-library, area-list, section-order]
+
+      - id: auto-save
+        action: Changes auto-save to cloud
+        output: Cloud state updated
+        emotion: trust
+        artifacts_read: []
+        artifacts_write: [staple-library]
+
+  - id: shop
+    name: Shop (Store/Phone)
+    device: mobile
+    steps:
+      - id: open-mobile
+        action: Open mobile app
+        output: App syncs latest data from cloud
+        emotion: confidence
+        artifacts_read: [staple-library, area-list, section-order]
+        artifacts_write: []
+
+      - id: start-trip
+        action: Start shopping trip
+        output: Staples auto-loaded into trip
+        emotion: effortless
+        artifacts_read: [staple-library]
+        artifacts_write: [active-trip]
+
+      - id: check-items
+        action: Check items off while shopping
+        output: Items marked as checked
+        emotion: focused
+        artifacts_read: [active-trip]
+        artifacts_write: [active-trip]
+
+      - id: quick-add-staple
+        action: Discover new item, quick-add as staple
+        output: New staple saved to cloud
+        emotion: seamless
+        artifacts_read: []
+        artifacts_write: [staple-library]
+
+shared_artifacts:
+  - id: staple-library
+    description: Canonical list of staples with area and section assignments
+    source: cloud
+    cache: local (on-device)
+
+  - id: section-order
+    description: User's preferred store section ordering
+    source: cloud
+    cache: local
+
+  - id: area-list
+    description: Custom house areas
+    source: cloud
+    cache: local
+
+  - id: active-trip
+    description: Current shopping trip state
+    source: local (on-device)
+    sync: optional
+
+constraints:
+  - id: offline-first-mobile
+    description: Store has spotty wifi. Mobile app must be offline-first with gradual eventual sync.
+    implications:
+      - All data cached locally on device
+      - No blocking network calls during shopping
+      - Background sync when connectivity allows
+      - App never stalls or errors due to poor connectivity
+
+error_paths:
+  - id: spotty-wifi
+    trigger: Intermittent connectivity at the store
+    behavior: App works from local cache. Background sync pushes/pulls when packets get through. No user-visible errors.
+    priority: must-have
+
+  - id: offline-at-store
+    trigger: No internet at store
+    behavior: App works from local cache, syncs when back online
+    priority: must-have
+
+  - id: sync-conflict
+    trigger: Same staple edited on web and phone before sync
+    behavior: Last-write-wins (acceptable for single user)
+    priority: nice-to-have
+
+  - id: cloud-unavailable
+    trigger: Cloud backend is down
+    behavior: Graceful degradation to local-only mode (existing behavior preserved)
+    priority: must-have

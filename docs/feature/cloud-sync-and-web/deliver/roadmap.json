@@ -1,0 +1,167 @@
+{
+  "roadmap": {
+    "project_id": "cloud-sync-and-web",
+    "created_at": "2026-03-27T17:24:03Z",
+    "total_steps": 9,
+    "phases": 4
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Firebase Foundation",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Firebase config and initialization module",
+          "criteria": "Given the app starts, when the Firebase config module is imported, then it exports a valid Firestore instance configured with offline persistence and a valid Auth instance; Given Firebase has already been initialized, when the config module is imported again, then it reuses the existing app instance rather than creating a duplicate",
+          "test_file": "src/adapters/firestore/firebase-config.test.ts",
+          "scenario_name": "firebase config exports valid firestore and auth instances",
+          "files_to_modify": [
+            "src/adapters/firestore/firebase-config.test.ts",
+            "src/adapters/firestore/firebase-config.ts"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Email link auth service",
+          "criteria": "Given a user provides a valid email, when sendSignInLink is called, then a sign-in link is sent to that email address; Given a user clicks a valid sign-in link, when handleSignInLink is called with the URL, then the user is authenticated and getCurrentUser returns the authenticated user; Given the auth state changes, when onAuthStateChanged has a registered callback, then the callback is invoked with the current user or null",
+          "test_file": "src/auth/AuthService.test.ts",
+          "scenario_name": "email link auth sends link and handles callback",
+          "files_to_modify": [
+            "src/auth/AuthService.test.ts",
+            "src/auth/AuthService.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Firestore Storage Adapters",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Firestore staple storage adapter",
+          "criteria": "Given a Firestore staple storage is created with a db and uid, when save is called with a staple item, then the item is persisted to the users/{uid}/data/staples document; Given staples exist in Firestore, when loadAll is called, then all staple items are returned; Given a staple exists, when remove is called with its id, then the item is removed from storage; Given a staple exists, when update is called with modified data, then the stored item reflects the changes; Given staples exist, when search is called with a query, then only matching items are returned; Given staples exist in an area, when updateArea is called with old and new area names, then all matching items have their area updated",
+          "test_file": "src/adapters/firestore/firestore-staple-storage.test.ts",
+          "scenario_name": "firestore staple storage implements staple storage port",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-staple-storage.test.ts",
+            "src/adapters/firestore/firestore-staple-storage.ts"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Firestore area storage adapter",
+          "criteria": "Given a Firestore area storage is created with a db and uid, when saveAll is called with a list of areas, then the areas are persisted to the users/{uid}/data/areas document; Given areas exist in Firestore, when loadAll is called, then all area names are returned",
+          "test_file": "src/adapters/firestore/firestore-area-storage.test.ts",
+          "scenario_name": "firestore area storage implements area storage port",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-area-storage.test.ts",
+            "src/adapters/firestore/firestore-area-storage.ts"
+          ]
+        },
+        {
+          "id": "02-03",
+          "name": "Firestore section order storage adapter",
+          "criteria": "Given a Firestore section order storage is created with a db and uid, when saveOrder is called with an ordered list, then the order is persisted to the users/{uid}/data/sectionOrder document; Given an order exists in Firestore, when loadOrder is called, then the stored order is returned; Given no order exists, when loadOrder is called, then null is returned; Given an order exists, when clearOrder is called, then loadOrder returns null afterward",
+          "test_file": "src/adapters/firestore/firestore-section-order-storage.test.ts",
+          "scenario_name": "firestore section order storage implements section order storage port",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-section-order-storage.test.ts",
+            "src/adapters/firestore/firestore-section-order-storage.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Mobile App Integration",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Data migration service from AsyncStorage to Firestore",
+          "criteria": "Given a user has data in AsyncStorage and no data in Firestore, when migrateToFirestore is called, then all staples, areas, and section order are copied from AsyncStorage adapters to Firestore adapters; Given Firestore already contains data for the user, when migrationNeeded is called, then it returns false and no migration occurs; Given AsyncStorage is empty, when migrateToFirestore is called, then the migration completes without error and Firestore remains empty",
+          "test_file": "src/adapters/firestore/migration.test.ts",
+          "scenario_name": "migration service transfers data from async storage to firestore",
+          "files_to_modify": [
+            "src/adapters/firestore/migration.test.ts",
+            "src/adapters/firestore/migration.ts"
+          ]
+        },
+        {
+          "id": "03-02",
+          "name": "Wire Firestore adapters into app initialization",
+          "criteria": "Given a user is authenticated, when the app initializes, then Firestore adapters are created and injected into domain services for staples, areas, and section order while TripStorage continues to use AsyncStorage; Given a user is not authenticated, when the app initializes, then the app signals a needs_auth status and does not create Firestore adapters; Given a user is authenticated and migration is needed, when the app initializes, then data is migrated from AsyncStorage to Firestore before services become available",
+          "test_file": "src/hooks/useAppInitialization.test.ts",
+          "scenario_name": "initialization creates firestore adapters when authenticated",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.test.ts",
+            "src/hooks/useAppInitialization.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "Web App Walking Skeleton",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "Web app scaffold with Vite, React, Firebase",
+          "criteria": "Given the web directory exists, when npm run build is executed in web/, then a production build completes without errors; Given the web app is loaded in a browser, when the page renders, then Firebase is initialized and an auth hook reports the current authentication state",
+          "test_file": "web/src/App.test.tsx",
+          "scenario_name": "web app builds and renders with firebase initialized",
+          "files_to_modify": [
+            "web/package.json",
+            "web/tsconfig.json",
+            "web/vite.config.ts",
+            "web/index.html",
+            "web/src/main.tsx",
+            "web/src/App.tsx",
+            "web/src/App.test.tsx",
+            "web/src/firebase-config.ts",
+            "web/src/hooks/useAuth.ts"
+          ]
+        },
+        {
+          "id": "04-02",
+          "name": "Read-only staple list on web",
+          "criteria": "Given a user is authenticated on the web app, when the staple list page loads, then all staples from Firestore are displayed grouped by area in a desktop-optimized table; Given staples are updated in Firestore by the mobile app, when the web app is open, then the staple list updates in real time without a page refresh; Given a user is not authenticated, when the staple list page is accessed, then the user is prompted to sign in",
+          "test_file": "web/src/components/StapleTable.test.tsx",
+          "scenario_name": "staple list renders items from firestore grouped by area",
+          "files_to_modify": [
+            "web/src/components/StapleTable.test.tsx",
+            "web/src/components/StapleTable.tsx",
+            "web/src/hooks/useStaples.ts",
+            "web/src/App.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/adapters/firestore/",
+      "src/auth/",
+      "src/hooks/",
+      "web/src/"
+    ],
+    "test_directories": [
+      "src/adapters/firestore/",
+      "src/auth/",
+      "src/hooks/",
+      "web/src/"
+    ],
+    "excluded_patterns": [
+      "node_modules/**",
+      "dist/**",
+      "web/node_modules/**",
+      "web/dist/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "nw-software-crafter-reviewer",
+    "approved_at": "2026-03-27T17:30:00Z"
+  }
+}
