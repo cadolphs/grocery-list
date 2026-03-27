@@ -1,0 +1,48 @@
+{
+  "roadmap": {
+    "project_id": "checklist-toggle",
+    "created_at": "2026-03-26T22:11:05Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Sweep/Checklist toggle",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Add Sweep/Checklist toggle to HomeView",
+          "criteria": "HomeView shows a toggle (Sweep | Checklist) at the top; default is Sweep; tapping Checklist switches to checklist mode; tapping Sweep switches back; toggle state is local UI state",
+          "test_file": "tests/regression/checklist-toggle.test.tsx",
+          "scenario_name": "home view has sweep checklist toggle",
+          "files_to_modify": [
+            "tests/regression/checklist-toggle.test.tsx",
+            "src/ui/HomeView.tsx"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Checklist mode shows StapleChecklist with QuickAdd",
+          "criteria": "In Checklist mode: QuickAdd bar at top, StapleChecklist below, no area sections, no sweep progress; the allAreasComplete gate on StapleChecklist is removed; Sweep mode shows existing area-based view unchanged",
+          "test_file": "tests/regression/checklist-toggle.test.tsx",
+          "scenario_name": "checklist mode shows alphabetic list and quick add",
+          "files_to_modify": [
+            "tests/regression/checklist-toggle.test.tsx",
+            "src/ui/HomeView.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed",
+    "approved_at": "2026-03-26T22:11:05Z"
+  }
+}

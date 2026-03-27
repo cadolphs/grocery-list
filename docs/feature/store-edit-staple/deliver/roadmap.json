@@ -1,0 +1,49 @@
+{
+  "roadmap": {
+    "project_id": "store-edit-staple",
+    "created_at": "2026-03-26T21:23:11Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Long-press to edit in store view",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Add onLongPress to TripItemRow for store mode edit",
+          "criteria": "TripItemRow accepts onLongPress prop; in store mode, long-pressing a staple item calls onLongPress with item name and area; short tap still triggers check-off",
+          "test_file": "tests/regression/store-edit-staple.test.tsx",
+          "scenario_name": "long press on store item triggers edit callback",
+          "files_to_modify": [
+            "tests/regression/store-edit-staple.test.tsx",
+            "src/ui/TripItemRow.tsx"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Wire StoreView long-press to MetadataBottomSheet edit mode",
+          "criteria": "StoreView passes onLongPress handler to AisleSection items that opens MetadataBottomSheet in edit mode; saving changes updates staple library and syncs to active trip",
+          "test_file": "tests/regression/store-edit-staple.test.tsx",
+          "scenario_name": "store view long-press opens edit sheet and saves changes",
+          "files_to_modify": [
+            "tests/regression/store-edit-staple.test.tsx",
+            "src/ui/StoreView.tsx",
+            "src/ui/AisleSection.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed",
+    "approved_at": "2026-03-26T21:23:11Z"
+  }
+}

@@ -64,6 +64,83 @@
       "s": "EXECUTED",
       "d": "PASS",
       "t": "2026-03-26T22:38:17Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T22:38:54Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T22:40:41Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "RED_ACCEPTANCE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T22:41:16Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: acceptance tests ARE the unit tests for pure domain functions",
+      "t": "2026-03-26T22:41:21Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T22:54:26Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T22:56:41Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T23:31:34Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "RED_ACCEPTANCE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T23:32:21Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: UI rendering test covered by acceptance test",
+      "t": "2026-03-26T23:32:25Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T23:55:57Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-03-26T23:56:19Z"
     }
   ]
 }

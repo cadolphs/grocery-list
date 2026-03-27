@@ -1,0 +1,65 @@
+{
+  "roadmap": {
+    "project_id": "whiteboard-checklist",
+    "created_at": "2026-03-26T21:52:16Z",
+    "total_steps": 3,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "StapleChecklist component",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Create StapleChecklist component",
+          "criteria": "StapleChecklist component renders alphabetically sorted list of all staples; each staple shows name and a toggle button; staples already on the trip show as checked; tapping an unchecked staple calls onAddStaple; tapping a checked staple calls onRemoveStaple",
+          "test_file": "tests/regression/whiteboard-checklist.test.tsx",
+          "scenario_name": "staple checklist renders sorted list with toggle",
+          "files_to_modify": [
+            "tests/regression/whiteboard-checklist.test.tsx",
+            "src/ui/StapleChecklist.tsx"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Integrate StapleChecklist into HomeView whiteboard phase",
+          "criteria": "When all areas are complete in HomeView, StapleChecklist appears below the whiteboard prompt and QuickAdd; adding a staple from the checklist adds it to the trip with source 'whiteboard'; removing it removes from trip",
+          "test_file": "tests/regression/whiteboard-checklist.test.tsx",
+          "scenario_name": "whiteboard phase shows staple checklist",
+          "files_to_modify": [
+            "tests/regression/whiteboard-checklist.test.tsx",
+            "src/ui/HomeView.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Already-on-trip awareness",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Staples already on trip show as checked in checklist",
+          "criteria": "Staples that were preloaded during the sweep phase appear as already checked in the checklist; only staples NOT currently on the trip show as unchecked and available to add",
+          "test_file": "tests/regression/whiteboard-checklist.test.tsx",
+          "scenario_name": "preloaded staples show as already on trip",
+          "files_to_modify": [
+            "tests/regression/whiteboard-checklist.test.tsx",
+            "src/ui/StapleChecklist.tsx"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": ["src/ui/"],
+    "test_directories": ["tests/regression/"],
+    "excluded_patterns": ["node_modules/**", "dist/**"]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "self-reviewed",
+    "approved_at": "2026-03-26T21:52:16Z"
+  }
+}
