@@ -1,10 +1,4 @@
 import {
-  initializeApp,
-  getApps,
-  FirebaseApp,
-} from 'firebase/app';
-import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -12,10 +6,10 @@ import {
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
   signInWithEmailLink,
-  Auth,
   User,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirebaseAuth } from '../adapters/firestore/firebase-config';
 
 const EMAIL_LINK_STORAGE_KEY = 'emailForSignIn';
 
@@ -45,16 +39,6 @@ export interface AuthService {
   handleSignInLink(url: string): Promise<AuthResult>;
 }
 
-// Firebase configuration - should be set via environment variables in production
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-};
-
 function toAuthUser(user: User): AuthUser {
   return {
     uid: user.uid,
@@ -63,13 +47,7 @@ function toAuthUser(user: User): AuthUser {
 }
 
 export function createAuthService(): AuthService {
-  let app: FirebaseApp;
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-  const auth: Auth = getAuth(app);
+  const auth = getFirebaseAuth();
 
   return {
     async signUp(email: string, password: string): Promise<AuthResult> {
