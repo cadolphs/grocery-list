@@ -1,0 +1,13 @@
+# Web app is a separate project, not part of the mobile build
+web/
+
+# Documentation
+docs/
+
+# Stryker mutation testing
+.stryker-tmp/
+reports/
+stryker.config.mjs
+
+# nWave
+.nwave/
