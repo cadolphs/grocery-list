@@ -26,19 +26,8 @@ jest.mock('./src/ui/AppShell', () => ({
   },
 }));
 
-// Mock Linking for deep link handling
-import { Linking } from 'react-native';
-
-const mockGetInitialURL = jest
-  .spyOn(Linking, 'getInitialURL')
-  .mockResolvedValue(null);
-const mockAddEventListener = jest
-  .spyOn(Linking, 'addEventListener')
-  .mockReturnValue({ remove: jest.fn() } as any);
-
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGetInitialURL.mockResolvedValue(null);
   // Default: not ready (loading state for app init)
   mockUseAppInitialization.mockReturnValue({
     isReady: false,
@@ -53,8 +42,8 @@ describe('App', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: true,
-      sendSignInLink: jest.fn(),
-      handleSignInLink: jest.fn(),
+      signIn: jest.fn(),
+      signUp: jest.fn(),
       signOut: jest.fn(),
     });
 
@@ -66,21 +55,21 @@ describe('App', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       loading: false,
-      sendSignInLink: jest.fn(),
-      handleSignInLink: jest.fn(),
+      signIn: jest.fn(),
+      signUp: jest.fn(),
       signOut: jest.fn(),
     });
 
     const { getByText } = render(<App />);
-    expect(getByText('Send Sign-In Link')).toBeTruthy();
+    expect(getByText('Sign In')).toBeTruthy();
   });
 
   test('shows main app when user is authenticated', async () => {
     mockUseAuth.mockReturnValue({
       user: { uid: 'test-user', email: 'test@example.com' },
       loading: false,
-      sendSignInLink: jest.fn(),
-      handleSignInLink: jest.fn(),
+      signIn: jest.fn(),
+      signUp: jest.fn(),
       signOut: jest.fn(),
     });
 
@@ -101,27 +90,6 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(getByText('Home')).toBeTruthy();
-    });
-  });
-
-  test('handles initial deep link URL on launch', async () => {
-    const mockHandleSignInLink = jest.fn().mockResolvedValue({ success: true });
-    mockGetInitialURL.mockResolvedValue('https://grocery-list-cad.firebaseapp.com?oobCode=abc');
-
-    mockUseAuth.mockReturnValue({
-      user: null,
-      loading: false,
-      sendSignInLink: jest.fn(),
-      handleSignInLink: mockHandleSignInLink,
-      signOut: jest.fn(),
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(mockHandleSignInLink).toHaveBeenCalledWith(
-        'https://grocery-list-cad.firebaseapp.com?oobCode=abc',
-      );
     });
   });
 });

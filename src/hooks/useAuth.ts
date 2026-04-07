@@ -4,8 +4,8 @@ import { AuthService, AuthUser, AuthResult } from '../auth/AuthService';
 export type UseAuthResult = {
   readonly user: AuthUser | null;
   readonly loading: boolean;
-  readonly sendSignInLink: (email: string) => Promise<AuthResult>;
-  readonly handleSignInLink: (url: string) => Promise<AuthResult>;
+  readonly signIn: (email: string, password: string) => Promise<AuthResult>;
+  readonly signUp: (email: string, password: string) => Promise<AuthResult>;
   readonly signOut: () => Promise<void>;
 };
 
@@ -21,13 +21,13 @@ export const useAuth = (authService: AuthService): UseAuthResult => {
     return unsubscribe;
   }, [authService]);
 
-  const sendSignInLink = useCallback(
-    (email: string): Promise<AuthResult> => authService.sendSignInLink(email),
+  const signIn = useCallback(
+    (email: string, password: string): Promise<AuthResult> => authService.signIn(email, password),
     [authService],
   );
 
-  const handleSignInLink = useCallback(
-    (url: string): Promise<AuthResult> => authService.handleSignInLink(url),
+  const signUp = useCallback(
+    (email: string, password: string): Promise<AuthResult> => authService.signUp(email, password),
     [authService],
   );
 
@@ -36,5 +36,5 @@ export const useAuth = (authService: AuthService): UseAuthResult => {
     [authService],
   );
 
-  return { user, loading, sendSignInLink, handleSignInLink, signOut };
+  return { user, loading, signIn, signUp, signOut };
 };

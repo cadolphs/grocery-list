@@ -1,0 +1,195 @@
+{
+  "roadmap": {
+    "project_id": "auth-password-migration",
+    "created_at": "2026-04-07T19:15:32Z",
+    "total_steps": 20,
+    "phases": 4
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Walking Skeleton",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Returning user signs in with email and password",
+          "criteria": "Given a returning user with valid credentials, when they enter email and password and tap Sign In, then they are authenticated successfully.",
+          "test_file": "tests/acceptance/auth-password-migration/walking-skeleton.test.tsx",
+          "scenario_name": "signs in Maria with email and password, resulting in successful auth"
+        },
+        {
+          "id": "01-02",
+          "name": "New user signs up with email and password",
+          "criteria": "Given a new user, when they enter email and password and tap Sign Up, then their account is created and they are authenticated.",
+          "test_file": "tests/acceptance/auth-password-migration/walking-skeleton.test.tsx",
+          "scenario_name": "signs up Ana with email and password, resulting in account creation"
+        },
+        {
+          "id": "01-03",
+          "name": "Login screen displays password fields, not email-link",
+          "criteria": "When the login screen renders, then it shows an email field, a password field, and a Sign In button. No 'Send Sign-In Link' button is present.",
+          "test_file": "tests/acceptance/auth-password-migration/walking-skeleton.test.tsx",
+          "scenario_name": "shows email field, password field, and Sign In button"
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Sign Up and Mode Toggle",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "New user creates account successfully",
+          "criteria": "Given a new user in Sign Up mode, when they submit valid email and password, then their account is created and they are authenticated.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-1-sign-up.test.tsx",
+          "scenario_name": "creates account for Ana and authenticates her"
+        },
+        {
+          "id": "02-02",
+          "name": "Switch from Sign In to Sign Up mode",
+          "criteria": "Given the login screen in Sign In mode, when the user taps the mode toggle, then the submit button label changes to 'Sign Up'.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-1-sign-up.test.tsx",
+          "scenario_name": "changes submit button to \"Sign Up\" after tapping toggle"
+        },
+        {
+          "id": "02-03",
+          "name": "Switch from Sign Up to Sign In mode",
+          "criteria": "Given the login screen in Sign Up mode, when the user taps the mode toggle, then the submit button label changes to 'Sign In'.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-1-sign-up.test.tsx",
+          "scenario_name": "changes submit button to \"Sign In\" after tapping toggle"
+        },
+        {
+          "id": "02-04",
+          "name": "Email persists across mode switches",
+          "criteria": "Given the user has entered an email address, when they switch between Sign In and Sign Up modes, then the email value is retained in the input field.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-1-sign-up.test.tsx",
+          "scenario_name": "retains email value after switching from Sign In to Sign Up"
+        },
+        {
+          "id": "02-05",
+          "name": "Error clears when switching modes",
+          "criteria": "Given an error message is displayed, when the user switches modes via the toggle, then the error message is cleared.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-1-sign-up.test.tsx",
+          "scenario_name": "clears error message after mode toggle"
+        },
+        {
+          "id": "02-06",
+          "name": "Loading indicator during sign-up",
+          "criteria": "When the user submits a sign-up request, then a loading indicator is shown and the submit button is disabled until the request completes.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-1-sign-up.test.tsx",
+          "scenario_name": "shows loading state and disables button during sign-up"
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Error Handling",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Wrong password error",
+          "criteria": "Given a user enters a wrong password for an existing account, when they tap Sign In, then a wrong password error is displayed and they remain on the login screen.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "displays wrong password error and stays on login screen"
+        },
+        {
+          "id": "03-02",
+          "name": "Non-existent account suggests signing up",
+          "criteria": "Given a user enters an email that has no account, when they tap Sign In, then an error is displayed suggesting they sign up instead.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "displays non-existent account error with sign-up suggestion"
+        },
+        {
+          "id": "03-03",
+          "name": "Weak password rejected",
+          "criteria": "Given a user enters a password shorter than the minimum length, when they tap Sign Up, then a minimum password length error is displayed.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "displays minimum password length error"
+        },
+        {
+          "id": "03-04",
+          "name": "Existing email rejected on sign-up",
+          "criteria": "Given a user enters an email that already has an account, when they tap Sign Up, then an error is displayed suggesting they sign in instead.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "displays existing account error with sign-in suggestion"
+        },
+        {
+          "id": "03-05",
+          "name": "Empty email validation on sign-in",
+          "criteria": "Given the email field is empty, when the user taps Sign In, then an empty email error is shown and the auth service is not called.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "shows empty email error without calling auth service"
+        },
+        {
+          "id": "03-06",
+          "name": "Empty email validation on sign-up",
+          "criteria": "Given the email field is empty in Sign Up mode, when the user taps Sign Up, then an empty email error is shown.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "shows empty email error in sign-up mode"
+        },
+        {
+          "id": "03-07",
+          "name": "Invalid email format validation",
+          "criteria": "Given the user enters an improperly formatted email, when they submit, then an email format error is displayed.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "shows email format error for invalid email"
+        },
+        {
+          "id": "03-08",
+          "name": "Sign In button disabled during auth",
+          "criteria": "When an auth request is in progress, then the Sign In button is disabled until the request completes.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-2-error-handling.test.tsx",
+          "scenario_name": "disables Sign In button during auth request"
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "Cleanup",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "No email-link UI on login screen",
+          "criteria": "When the login screen renders, then no email-link UI elements (Send Sign-In Link, check your email, etc.) are present.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-3-cleanup.test.tsx",
+          "scenario_name": "does not show any email-link UI elements"
+        },
+        {
+          "id": "04-02",
+          "name": "useAuth exposes password auth methods",
+          "criteria": "The useAuth hook exposes signIn, signUp, and signOut functions but does not expose sendSignInLink or handleSignInLink.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-3-cleanup.test.tsx",
+          "scenario_name": "exposes signIn, signUp, signOut but not email-link methods"
+        },
+        {
+          "id": "04-03",
+          "name": "App does not handle auth deep links",
+          "criteria": "The app does not register deep link handlers for auth email links. Legacy LoginScreen component files are removed.",
+          "test_file": "tests/acceptance/auth-password-migration/milestone-3-cleanup.test.tsx",
+          "scenario_name": "app does not register deep link handlers for auth"
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/auth/",
+      "src/hooks/",
+      "src/ui/",
+      "src/components/",
+      "App.tsx"
+    ],
+    "test_directories": [
+      "tests/acceptance/auth-password-migration/"
+    ],
+    "excluded_patterns": [
+      "node_modules/**",
+      "*.json"
+    ]
+  },
+  "validation": {
+    "status": "pending",
+    "reviewer": "TODO",
+    "approved_at": "TODO"
+  }
+}

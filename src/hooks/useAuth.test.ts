@@ -24,7 +24,7 @@ describe('useAuth', () => {
 
       // Sign in triggers onAuthStateChanged
       await act(async () => {
-        await authService.signIn('test@example.com', 'password123');
+        await result.current.signIn('test@example.com', 'password123');
       });
 
       expect(result.current.user).not.toBeNull();
@@ -46,32 +46,26 @@ describe('useAuth', () => {
   });
 
   describe('unit: convenience passthrough functions', () => {
-    test('sendSignInLink delegates to authService', async () => {
+    test('signIn delegates to authService', async () => {
       const authService = createNullAuthService(null);
       const { result } = renderHook(() => useAuth(authService));
 
       let authResult: any;
       await act(async () => {
-        authResult = await result.current.sendSignInLink('bob@example.com');
+        authResult = await result.current.signIn('bob@example.com', 'SecurePass1!');
       });
 
       expect(authResult.success).toBe(true);
+      expect(result.current.user?.email).toBe('bob@example.com');
     });
 
-    test('handleSignInLink delegates to authService', async () => {
+    test('signUp delegates to authService', async () => {
       const authService = createNullAuthService(null);
       const { result } = renderHook(() => useAuth(authService));
 
-      // First send a link to set up pending email
-      await act(async () => {
-        await result.current.sendSignInLink('bob@example.com');
-      });
-
       let authResult: any;
       await act(async () => {
-        authResult = await result.current.handleSignInLink(
-          'https://grocery-list-cad.firebaseapp.com?link=test',
-        );
+        authResult = await result.current.signUp('bob@example.com', 'SecurePass1!');
       });
 
       expect(authResult.success).toBe(true);

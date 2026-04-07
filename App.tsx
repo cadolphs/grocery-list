@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Linking, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useAppInitialization } from './src/hooks/useAppInitialization';
 import { useAuth } from './src/hooks/useAuth';
 import { createAuthService, AuthService } from './src/auth/AuthService';
@@ -9,35 +9,11 @@ import { AppShell } from './src/ui/AppShell';
 import { LoadingScreen } from './src/ui/LoadingScreen';
 import { LoginScreen } from './src/ui/LoginScreen';
 
-const useDeepLinkHandler = (
-  handleSignInLink: (url: string) => Promise<unknown>,
-) => {
-  useEffect(() => {
-    // Check initial URL on app launch
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        handleSignInLink(url);
-      }
-    });
-
-    // Listen for incoming URLs while app is open
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      handleSignInLink(url);
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [handleSignInLink]);
-};
-
 export default function App() {
   const authServiceRef = useRef<AuthService>(createAuthService());
-  const { user, loading, sendSignInLink, handleSignInLink, signOut } = useAuth(
+  const { user, loading, signIn, signUp } = useAuth(
     authServiceRef.current,
   );
-
-  useDeepLinkHandler(handleSignInLink);
 
   const { isReady, services } = useAppInitialization(
     user ? user : undefined,
@@ -48,7 +24,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginScreen sendSignInLink={sendSignInLink} />;
+    return <LoginScreen signIn={signIn} signUp={signUp} />;
   }
 
   if (!isReady || services === null) {

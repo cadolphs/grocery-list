@@ -1,0 +1,148 @@
+journey:
+  name: "Auth Password Migration"
+  goal: "User authenticates with email and password instead of deprecated email link"
+  persona: "Grocery list user (existing or new)"
+  trigger: "Firebase Dynamic Links deprecation breaks email-link auth flow"
+
+  emotional_arc:
+    start: "Uncertain -- will my login still work?"
+    middle: "Focused -- familiar email/password pattern"
+    end: "Relieved -- signed in, app loads normally"
+
+steps:
+  - id: 1
+    name: "View Login Screen"
+    action: "User opens app while not authenticated"
+
+    shared_artifacts:
+      - name: "screen_mode"
+        source: "LoginScreen component state"
+        displayed_as: "Sign In / Sign Up toggle"
+        consumers: ["LoginScreen header", "submit button label", "toggle link text"]
+
+    emotional_state:
+      entry: "Uncertain -- app requires login"
+      exit: "Familiar -- recognizes standard email/password form"
+
+    integration_checkpoint: |
+      LoginScreen renders with email and password fields.
+      No email-link UI elements present.
+
+  - id: 2
+    name: "Enter Credentials"
+    action: "User types email and password"
+
+    shared_artifacts:
+      - name: "email"
+        source: "TextInput value (user input)"
+        displayed_as: "Email field content"
+        consumers: ["AuthService.signIn", "AuthService.signUp", "error messages"]
+      - name: "password"
+        source: "TextInput value (user input)"
+        displayed_as: "Password field content (masked)"
+        consumers: ["AuthService.signIn", "AuthService.signUp"]
+
+    emotional_state:
+      entry: "Focused -- filling in credentials"
+      exit: "Anticipating -- ready to submit"
+
+    integration_checkpoint: |
+      Both fields accept input. Submit button enabled when both non-empty.
+
+  - id: 3
+    name: "Submit and Authenticate"
+    action: "User taps Sign In or Sign Up button"
+
+    shared_artifacts:
+      - name: "auth_result"
+        source: "AuthService.signIn() or AuthService.signUp() return value"
+        displayed_as: "Success (redirect) or error message"
+        consumers: ["LoginScreen error display", "App.tsx auth gate", "useAuth hook state"]
+
+    emotional_state:
+      entry: "Anticipating -- waiting for response"
+      exit: "Relieved (success) or frustrated-but-guided (error with clear message)"
+
+    integration_checkpoint: |
+      On success: useAuth.user is set, App.tsx renders AppShell.
+      On error: LoginScreen displays actionable error message.
+
+  - id: 4
+    name: "App Loads (Post-Auth)"
+    action: "Authenticated user sees grocery list"
+
+    emotional_state:
+      entry: "Relieved -- authentication succeeded"
+      exit: "Confident -- ready to use the app"
+
+    integration_checkpoint: |
+      useAuth.user is non-null. App.tsx renders ServiceProvider + AppShell.
+
+error_paths:
+  - id: "E1"
+    name: "Wrong Password"
+    trigger: "User enters incorrect password for existing account"
+    user_sees: "Incorrect password. Please try again."
+    recovery: "User re-enters password"
+    emotional_impact: "Mild frustration, guided by clear message"
+
+  - id: "E2"
+    name: "Account Already Exists (Sign Up)"
+    trigger: "User tries to sign up with email that already has an account"
+    user_sees: "An account with this email already exists. Try signing in instead."
+    recovery: "User switches to Sign In mode"
+    emotional_impact: "Brief confusion, resolved by suggestion"
+
+  - id: "E3"
+    name: "Weak Password (Sign Up)"
+    trigger: "User enters password shorter than 8 characters"
+    user_sees: "Password must be at least 8 characters."
+    recovery: "User enters stronger password"
+    emotional_impact: "Minor friction, clear guidance"
+
+  - id: "E4"
+    name: "Invalid Email Format"
+    trigger: "User enters malformed email"
+    user_sees: "Please enter a valid email address."
+    recovery: "User corrects email"
+    emotional_impact: "Quick self-correction"
+
+  - id: "E5"
+    name: "No Account Found (Sign In)"
+    trigger: "User tries to sign in with email that has no account"
+    user_sees: "No account found with this email. Try signing up instead."
+    recovery: "User switches to Sign Up mode"
+    emotional_impact: "Brief confusion, resolved by suggestion"
+
+  - id: "E6"
+    name: "Network Error"
+    trigger: "Device is offline or Firebase unreachable"
+    user_sees: "Unable to connect. Please check your internet connection and try again."
+    recovery: "User checks connectivity and retries"
+    emotional_impact: "Frustrated but understands cause"
+
+cleanup:
+  removed_ui:
+    - "Send Sign-In Link button"
+    - "Check your email success message"
+    - "Email-link-only ScreenState variants (sending, success)"
+  removed_hooks:
+    - "useAuth.sendSignInLink"
+    - "useAuth.handleSignInLink"
+  removed_app_logic:
+    - "useDeepLinkHandler hook in App.tsx"
+    - "Linking.getInitialURL auth check"
+    - "Linking.addEventListener for auth URLs"
+  removed_service_exposure:
+    - "sendSignInLink and handleSignInLink no longer called from UI"
+    - "EMAIL_LINK_STORAGE_KEY AsyncStorage usage"
+  note: "AuthService interface methods sendSignInLink/handleSignInLink may be kept for backward compat or removed -- DESIGN wave decision"
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "auth_result"
+      must_match_across: [3, 4]
+      failure_message: "Auth result from service must drive both error display and app navigation"
+    - artifact: "screen_mode"
+      must_match_across: [1, 2, 3]
+      failure_message: "Sign In vs Sign Up mode must be consistent across form, button label, and service call"

@@ -4,67 +4,68 @@ import { AuthResult } from '../auth/AuthService';
 
 type ScreenState =
   | { kind: 'initial' }
-  | { kind: 'sending' }
-  | { kind: 'success'; email: string }
+  | { kind: 'submitting' }
   | { kind: 'error'; message: string };
 
 interface LoginScreenProps {
-  sendSignInLink: (email: string) => Promise<AuthResult>;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
+  signUp: (email: string, password: string) => Promise<AuthResult>;
 }
 
-export const LoginScreen = ({ sendSignInLink }: LoginScreenProps): React.JSX.Element => {
+export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Element => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [screenState, setScreenState] = useState<ScreenState>({ kind: 'initial' });
 
-  const handleSendLink = async () => {
+  const handleSignIn = async () => {
     if (!email.trim()) {
       setScreenState({ kind: 'error', message: 'Please enter your email address' });
       return;
     }
 
-    setScreenState({ kind: 'sending' });
-    const result = await sendSignInLink(email);
+    setScreenState({ kind: 'submitting' });
+    const result = await signIn(email, password);
 
     if (result.success) {
-      setScreenState({ kind: 'success', email });
+      setScreenState({ kind: 'initial' });
     } else {
-      setScreenState({ kind: 'error', message: result.error || 'Failed to send sign-in link' });
+      setScreenState({ kind: 'error', message: result.error || 'Failed to sign in' });
     }
   };
 
-  const isSending = screenState.kind === 'sending';
+  const isSubmitting = screenState.kind === 'submitting';
 
   return (
     <View style={styles.container}>
-      {screenState.kind === 'success' ? (
-        <Text style={styles.successText}>
-          Check your email! We sent a sign-in link to {screenState.email}.
-        </Text>
-      ) : (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!isSending}
-          />
-          {screenState.kind === 'error' && (
-            <Text style={styles.errorText}>{screenState.message}</Text>
-          )}
-          <Pressable
-            style={[styles.button, isSending && styles.buttonDisabled]}
-            onPress={handleSendLink}
-            disabled={isSending}
-          >
-            <Text style={styles.buttonText}>
-              {isSending ? 'Sending...' : 'Send Sign-In Link'}
-            </Text>
-          </Pressable>
-        </>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        editable={!isSubmitting}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        editable={!isSubmitting}
+      />
+      {screenState.kind === 'error' && (
+        <Text style={styles.errorText}>{screenState.message}</Text>
       )}
+      <Pressable
+        style={[styles.button, isSubmitting && styles.buttonDisabled]}
+        onPress={handleSignIn}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.buttonText}>
+          {isSubmitting ? 'Signing In...' : 'Sign In'}
+        </Text>
+      </Pressable>
     </View>
   );
 };
@@ -104,12 +105,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  successText: {
-    fontSize: 16,
-    color: '#2e7d32',
-    textAlign: 'center',
-    lineHeight: 24,
   },
   errorText: {
     fontSize: 14,
