@@ -7,31 +7,49 @@ type ScreenState =
   | { kind: 'submitting' }
   | { kind: 'error'; message: string };
 
+type AuthMode = 'signIn' | 'signUp';
+
 interface LoginScreenProps {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
 }
 
+const submitLabel = (mode: AuthMode, isSubmitting: boolean): string => {
+  if (mode === 'signUp') return isSubmitting ? 'Signing Up...' : 'Sign Up';
+  return isSubmitting ? 'Signing In...' : 'Sign In';
+};
+
+const toggleLabel = (mode: AuthMode): string =>
+  mode === 'signIn'
+    ? "Don't have an account? Sign Up"
+    : 'Already have an account? Sign In';
+
 export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Element => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [screenState, setScreenState] = useState<ScreenState>({ kind: 'initial' });
+  const [mode, setMode] = useState<AuthMode>('signIn');
 
-  const handleSignIn = async () => {
+  const handleSubmit = async () => {
     if (!email.trim()) {
       setScreenState({ kind: 'error', message: 'Please enter your email address' });
       return;
     }
 
     setScreenState({ kind: 'submitting' });
-    const result = await signIn(email, password);
+    const action = mode === 'signUp' ? signUp : signIn;
+    const result = await action(email, password);
 
     if (result.success) {
       setScreenState({ kind: 'initial' });
     } else {
-      setScreenState({ kind: 'error', message: result.error || 'Failed to sign in' });
+      const fallback = mode === 'signUp' ? 'Failed to sign up' : 'Failed to sign in';
+      setScreenState({ kind: 'error', message: result.error || fallback });
     }
   };
+
+  const toggleMode = () =>
+    setMode(current => (current === 'signIn' ? 'signUp' : 'signIn'));
 
   const isSubmitting = screenState.kind === 'submitting';
 
@@ -59,12 +77,15 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
       )}
       <Pressable
         style={[styles.button, isSubmitting && styles.buttonDisabled]}
-        onPress={handleSignIn}
+        onPress={handleSubmit}
         disabled={isSubmitting}
       >
         <Text style={styles.buttonText}>
-          {isSubmitting ? 'Signing In...' : 'Sign In'}
+          {submitLabel(mode, isSubmitting)}
         </Text>
+      </Pressable>
+      <Pressable onPress={toggleMode} disabled={isSubmitting}>
+        <Text style={styles.toggleText}>{toggleLabel(mode)}</Text>
       </Pressable>
     </View>
   );
@@ -110,5 +131,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#d32f2f',
     marginBottom: 12,
+  },
+  toggleText: {
+    color: '#2196F3',
+    fontSize: 14,
+    marginTop: 16,
   },
 });

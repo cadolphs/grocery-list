@@ -86,7 +86,7 @@ describe('WS-2: New user signs up and reaches the grocery list', () => {
   // AC: Successful sign-up creates a new account and navigates to the grocery list screen
   // Trace: US-02
 
-  it.skip('signs up Ana with email and password, resulting in account creation', async () => {
+  it('signs up Ana with email and password, resulting in account creation', async () => {
     // Given no account exists for "ana.kowalski@email.com"
     const authService = createTestAuthService();
 
