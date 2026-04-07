@@ -92,7 +92,7 @@ describe('MS1-2: User switches from Sign In to Sign Up mode', () => {
   // AC: Switching mode changes button label
   // Trace: US-03
 
-  it.skip('changes submit button to "Sign Up" after tapping toggle', () => {
+  it('changes submit button to "Sign Up" after tapping toggle', () => {
     // Given the user is on the login screen in "Sign In" mode
     renderLoginScreen();
     expect(screen.getByText('Sign In')).toBeTruthy();
