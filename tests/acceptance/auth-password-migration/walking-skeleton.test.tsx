@@ -126,7 +126,7 @@ describe('WS-3: Login screen displays email and password fields', () => {
   // AC: LoginScreen contains no "Send Sign-In Link" button
   // Trace: US-01 + US-04
 
-  it.skip('shows email field, password field, and Sign In button', () => {
+  it('shows email field, password field, and Sign In button', () => {
     // Given a user opens the app without being signed in
     const authService = createTestAuthService();
 
