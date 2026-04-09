@@ -221,7 +221,7 @@ describe('MS2-6: Empty email shows validation error on sign-up', () => {
   // AC: Empty email field shows "Please enter your email address" on submit
   // Trace: US-04
 
-  it.skip('shows empty email error in sign-up mode', async () => {
+  it('shows empty email error in sign-up mode', async () => {
     // Given the user is on the login screen in "Sign Up" mode
     const signUp = jest.fn();
     renderLoginScreen({ signUp });
