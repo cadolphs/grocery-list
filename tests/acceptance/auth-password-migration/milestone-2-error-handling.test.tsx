@@ -249,7 +249,7 @@ describe('MS2-7: Invalid email format shows validation error', () => {
   // AC: Invalid email format shows "Please enter a valid email address."
   // Trace: US-04
 
-  it.skip('shows email format error for invalid email', async () => {
+  it('shows email format error for invalid email', async () => {
     // Given the user is on the login screen
     const signIn = jest.fn();
     renderLoginScreen({ signIn });

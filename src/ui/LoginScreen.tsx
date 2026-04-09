@@ -36,6 +36,12 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
       return;
     }
 
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    if (!isValidEmail) {
+      setScreenState({ kind: 'error', message: 'Please enter a valid email address.' });
+      return;
+    }
+
     if (mode === 'signUp' && password.length < 8) {
       setScreenState({ kind: 'error', message: 'Password must be at least 8 characters.' });
       return;
