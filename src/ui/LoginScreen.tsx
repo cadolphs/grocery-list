@@ -24,6 +24,18 @@ const toggleLabel = (mode: AuthMode): string =>
     ? "Don't have an account? Sign Up"
     : 'Already have an account? Sign In';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateFormInput = (email: string, password: string, mode: AuthMode): string | null => {
+  if (!email.trim()) return 'Please enter your email address';
+  if (!EMAIL_PATTERN.test(email.trim())) return 'Please enter a valid email address.';
+  if (mode === 'signUp' && password.length < 8) return 'Password must be at least 8 characters.';
+  return null;
+};
+
+const fallbackErrorMessage = (mode: AuthMode): string =>
+  mode === 'signUp' ? 'Failed to sign up' : 'Failed to sign in';
+
 export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Element => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,19 +43,9 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
   const [mode, setMode] = useState<AuthMode>('signIn');
 
   const handleSubmit = async () => {
-    if (!email.trim()) {
-      setScreenState({ kind: 'error', message: 'Please enter your email address' });
-      return;
-    }
-
-    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!isValidEmail) {
-      setScreenState({ kind: 'error', message: 'Please enter a valid email address.' });
-      return;
-    }
-
-    if (mode === 'signUp' && password.length < 8) {
-      setScreenState({ kind: 'error', message: 'Password must be at least 8 characters.' });
+    const validationError = validateFormInput(email, password, mode);
+    if (validationError) {
+      setScreenState({ kind: 'error', message: validationError });
       return;
     }
 
@@ -54,8 +56,7 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
     if (result.success) {
       setScreenState({ kind: 'initial' });
     } else {
-      const fallback = mode === 'signUp' ? 'Failed to sign up' : 'Failed to sign in';
-      setScreenState({ kind: 'error', message: result.error || fallback });
+      setScreenState({ kind: 'error', message: result.error || fallbackErrorMessage(mode) });
     }
   };
 
