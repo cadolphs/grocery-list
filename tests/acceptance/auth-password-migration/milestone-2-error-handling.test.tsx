@@ -166,7 +166,7 @@ describe('MS2-4: Existing email address is rejected on sign-up', () => {
   // AC: Email already in use displays "An account with this email already exists. Try signing in instead."
   // Trace: US-02
 
-  it.skip('displays existing account error with sign-in suggestion', async () => {
+  it('displays existing account error with sign-in suggestion', async () => {
     // Given Maria Santos already has an account
     // And a user is on the login screen in "Sign Up" mode
     renderLoginScreen({
