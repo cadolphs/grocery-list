@@ -36,6 +36,11 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
       return;
     }
 
+    if (mode === 'signUp' && password.length < 8) {
+      setScreenState({ kind: 'error', message: 'Password must be at least 8 characters.' });
+      return;
+    }
+
     setScreenState({ kind: 'submitting' });
     const action = mode === 'signUp' ? signUp : signIn;
     const result = await action(email, password);

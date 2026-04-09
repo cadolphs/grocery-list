@@ -136,7 +136,7 @@ describe('MS2-3: Password shorter than 8 characters is rejected', () => {
   // AC: Password shorter than 8 characters displays "Password must be at least 8 characters."
   // Trace: US-02
 
-  it.skip('displays minimum password length error', async () => {
+  it('displays minimum password length error', async () => {
     // Given Tomoko is on the login screen in "Sign Up" mode
     renderLoginScreen();
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
