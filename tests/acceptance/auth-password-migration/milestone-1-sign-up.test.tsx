@@ -113,7 +113,7 @@ describe('MS1-3: User switches from Sign Up to Sign In mode', () => {
   // AC: Toggle link visible in Sign Up mode
   // Trace: US-03
 
-  it.skip('changes submit button to "Sign In" after tapping toggle', () => {
+  it('changes submit button to "Sign In" after tapping toggle', () => {
     // Given the user is on the login screen in "Sign Up" mode
     renderLoginScreen();
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
@@ -135,7 +135,7 @@ describe('MS1-4: Email field value persists when switching modes', () => {
   // AC: Email field value persists across mode switches
   // Trace: US-03
 
-  it.skip('retains email value after switching from Sign In to Sign Up', () => {
+  it('retains email value after switching from Sign In to Sign Up', () => {
     // Given the user is on the login screen in "Sign In" mode
     renderLoginScreen();
 

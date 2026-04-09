@@ -183,6 +183,69 @@
       "s": "EXECUTED",
       "d": "PASS",
       "t": "2026-04-08T17:22:16Z"
+    },
+    {
+      "sid": "02-03",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-08T17:25:17Z"
+    },
+    {
+      "sid": "02-03",
+      "p": "RED_ACCEPTANCE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-08T17:25:18Z"
+    },
+    {
+      "sid": "02-03",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: thin UI toggle already covered by acceptance test",
+      "t": "2026-04-08T17:25:19Z"
+    },
+    {
+      "sid": "02-03",
+      "p": "GREEN",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: production code already implemented in step 02-02, toggle is bidirectional",
+      "t": "2026-04-08T17:25:20Z"
+    },
+    {
+      "sid": "02-03",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-09T19:46:28Z"
+    },
+    {
+      "sid": "02-04",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-09T20:55:33Z"
+    },
+    {
+      "sid": "02-04",
+      "p": "RED_ACCEPTANCE",
+      "s": "EXECUTED",
+      "d": "PASS - test already enabled and passes from prior implementation",
+      "t": "2026-04-09T20:55:37Z"
+    },
+    {
+      "sid": "02-04",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: acceptance test passes from prior implementation, no additional unit decomposition needed",
+      "t": "2026-04-09T20:55:43Z"
+    },
+    {
+      "sid": "02-04",
+      "p": "GREEN",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: acceptance test already green from prior implementation, no code changes required",
+      "t": "2026-04-09T20:55:47Z"
     }
   ]
 }
