@@ -33,26 +33,31 @@ function toAuthUser(user: User): AuthUser {
   };
 }
 
+const successResult = (user: AuthUser): AuthResult => ({ success: true, user });
+
+const failureResult = (error: string): AuthResult => ({ success: false, error });
+
+const attemptAuth = async (
+  action: () => Promise<{ user: User }>
+): Promise<AuthResult> => {
+  try {
+    const credential = await action();
+    return successResult(toAuthUser(credential.user));
+  } catch (error: any) {
+    return failureResult(error.message);
+  }
+};
+
 export function createAuthService(): AuthService {
   const auth = getFirebaseAuth();
 
   return {
     async signUp(email: string, password: string): Promise<AuthResult> {
-      try {
-        const credential = await createUserWithEmailAndPassword(auth, email, password);
-        return { success: true, user: toAuthUser(credential.user) };
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
+      return attemptAuth(() => createUserWithEmailAndPassword(auth, email, password));
     },
 
     async signIn(email: string, password: string): Promise<AuthResult> {
-      try {
-        const credential = await signInWithEmailAndPassword(auth, email, password);
-        return { success: true, user: toAuthUser(credential.user) };
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
+      return attemptAuth(() => signInWithEmailAndPassword(auth, email, password));
     },
 
     async signOut(): Promise<void> {
@@ -73,6 +78,12 @@ export function createAuthService(): AuthService {
 }
 
 // Null implementation for testing
+const validateEmail = (email: string): string | null =>
+  !email.includes('@') ? 'Invalid email format' : null;
+
+const validatePasswordLength = (password: string): string | null =>
+  password.length < 8 ? 'Password must be at least 8 characters' : null;
+
 export function createNullAuthService(initialUser: AuthUser | null = null): AuthService {
   let currentUser: AuthUser | null = initialUser;
   const listeners: Set<(user: AuthUser | null) => void> = new Set();
@@ -81,30 +92,31 @@ export function createNullAuthService(initialUser: AuthUser | null = null): Auth
     listeners.forEach((callback) => callback(currentUser));
   };
 
+  const authenticateAs = (email: string): AuthResult => {
+    currentUser = { uid: `user-${Date.now()}`, email };
+    notifyListeners();
+    return successResult(currentUser);
+  };
+
   return {
     async signUp(email: string, password: string): Promise<AuthResult> {
-      if (password.length < 8) {
-        return { success: false, error: 'Password must be at least 8 characters' };
-      }
-      if (!email.includes('@')) {
-        return { success: false, error: 'Invalid email format' };
-      }
-      currentUser = { uid: `user-${Date.now()}`, email };
-      notifyListeners();
-      return { success: true, user: currentUser };
+      const passwordError = validatePasswordLength(password);
+      if (passwordError) return failureResult(passwordError);
+
+      const emailError = validateEmail(email);
+      if (emailError) return failureResult(emailError);
+
+      return authenticateAs(email);
     },
 
     async signIn(email: string, password: string): Promise<AuthResult> {
-      // In null implementation, any valid-looking credentials work
-      if (!email.includes('@')) {
-        return { success: false, error: 'Invalid email format' };
-      }
-      if (password.length < 8) {
-        return { success: false, error: 'Invalid password' };
-      }
-      currentUser = { uid: `user-${Date.now()}`, email };
-      notifyListeners();
-      return { success: true, user: currentUser };
+      const emailError = validateEmail(email);
+      if (emailError) return failureResult(emailError);
+
+      const passwordError = validatePasswordLength(password);
+      if (passwordError) return failureResult('Invalid password');
+
+      return authenticateAs(email);
     },
 
     async signOut(): Promise<void> {
