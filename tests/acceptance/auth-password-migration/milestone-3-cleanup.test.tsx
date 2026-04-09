@@ -18,6 +18,8 @@
  * - MS3-3: App does not handle auth deep links (US-04)
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import { render, screen } from '@testing-library/react-native';
 import { renderHook } from '@testing-library/react-native';
 import { createNullAuthService } from '../../../src/auth/AuthService';
@@ -87,27 +89,46 @@ describe('MS3-2: useAuth hook exposes password auth methods', () => {
 
 describe('MS3-3: App does not handle auth deep links', () => {
   // AC: App.tsx contains no useDeepLinkHandler hook for auth deep links
-  // Note: This is a structural test. It verifies by importing App and checking
-  // that Linking.addEventListener is not called for auth purposes.
-  // The implementation will be verified during code review and by the absence
-  // of deep link handling code.
+  // AC: Legacy src/components/LoginScreen.tsx is removed
   // Trace: US-04
 
-  it.skip('app does not register deep link handlers for auth', async () => {
-    // This test verifies the structural cleanup of App.tsx.
-    // After cleanup, App should not import Linking for auth purposes
-    // and should not call useDeepLinkHandler.
-    //
-    // Implementation approach during DELIVER:
-    // - Mock Linking and verify addEventListener is NOT called
-    // - Or verify the App renders without deep link handling code
-    //
-    // Given the app is running with no authenticated user
-    // When the app receives a deep link URL
-    // Then no email-link authentication is attempted
+  const projectRoot = path.resolve(__dirname, '..', '..', '..');
 
-    // Placeholder: the software-crafter will implement this as part of
-    // the App.tsx cleanup, verifying Linking is not used for auth.
-    expect(true).toBe(true);
+  it('app does not register deep link handlers for auth', () => {
+    // Given the App.tsx source code
+    const appSource = fs.readFileSync(
+      path.join(projectRoot, 'App.tsx'),
+      'utf-8',
+    );
+
+    // Then it does not contain useDeepLinkHandler
+    expect(appSource).not.toMatch(/useDeepLinkHandler/);
+
+    // And it does not import Linking from react-native for auth deep links
+    expect(appSource).not.toMatch(/Linking/);
+
+    // And it does not contain sendSignInLink or handleSignInLink references
+    expect(appSource).not.toMatch(/sendSignInLink/);
+    expect(appSource).not.toMatch(/handleSignInLink/);
+  });
+
+  it('legacy LoginScreen component files are removed', () => {
+    // Given the legacy component paths
+    const legacyLoginScreen = path.join(
+      projectRoot,
+      'src',
+      'components',
+      'LoginScreen.tsx',
+    );
+    const legacyLoginScreenTest = path.join(
+      projectRoot,
+      'src',
+      'components',
+      'LoginScreen.test.tsx',
+    );
+
+    // Then neither file exists
+    expect(fs.existsSync(legacyLoginScreen)).toBe(false);
+    expect(fs.existsSync(legacyLoginScreenTest)).toBe(false);
   });
 });
