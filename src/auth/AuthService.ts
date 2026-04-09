@@ -78,8 +78,10 @@ export function createAuthService(): AuthService {
 }
 
 // Null implementation for testing
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const validateEmail = (email: string): string | null =>
-  !email.includes('@') ? 'Invalid email format' : null;
+  !EMAIL_PATTERN.test(email) ? 'Invalid email format' : null;
 
 const validatePasswordLength = (password: string): string | null =>
   password.length < 8 ? 'Password must be at least 8 characters' : null;
