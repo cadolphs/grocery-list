@@ -277,7 +277,7 @@ describe('MS2-8: Sign In button disabled while authentication is in progress', (
   // AC: Sign In button disabled while authentication is in progress
   // Trace: US-01
 
-  it.skip('disables Sign In button during auth request', async () => {
+  it('disables Sign In button during auth request', async () => {
     // Given the user is on the login screen in "Sign In" mode
     let resolveSignIn: (value: AuthResult) => void;
     const pendingSignIn = jest.fn().mockImplementation(
