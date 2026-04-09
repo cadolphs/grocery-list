@@ -194,7 +194,7 @@ describe('MS2-5: Empty email shows validation error on sign-in', () => {
   // AC: Empty email field shows "Please enter your email address" on submit
   // Trace: US-04
 
-  it.skip('shows empty email error without calling auth service', async () => {
+  it('shows empty email error without calling auth service', async () => {
     // Given the user is on the login screen in "Sign In" mode
     const signIn = jest.fn();
     renderLoginScreen({ signIn });
