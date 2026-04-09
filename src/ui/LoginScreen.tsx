@@ -48,8 +48,10 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
     }
   };
 
-  const toggleMode = () =>
+  const toggleMode = () => {
     setMode(current => (current === 'signIn' ? 'signUp' : 'signIn'));
+    setScreenState({ kind: 'initial' });
+  };
 
   const isSubmitting = screenState.kind === 'submitting';
 

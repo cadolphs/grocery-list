@@ -158,7 +158,7 @@ describe('MS1-5: Error message clears when switching modes', () => {
   // AC: Switching mode clears any displayed error
   // Trace: US-03
 
-  it.skip('clears error message after mode toggle', async () => {
+  it('clears error message after mode toggle', async () => {
     // Given the user sees an error on the login screen
     const authService = createNullAuthService();
     const failingSignIn = jest.fn().mockResolvedValue({
