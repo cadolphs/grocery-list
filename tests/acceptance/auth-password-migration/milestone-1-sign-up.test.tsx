@@ -198,7 +198,7 @@ describe('MS1-6: Loading indicator shown during sign-up', () => {
   // AC: Sign Up button disabled while authentication is in progress
   // Trace: US-02
 
-  it.skip('shows loading state and disables button during sign-up', async () => {
+  it('shows loading state and disables button during sign-up', async () => {
     // Given Ana is on the login screen in "Sign Up" mode
     let resolveSignUp: (value: AuthResult) => void;
     const pendingSignUp = jest.fn().mockImplementation(
