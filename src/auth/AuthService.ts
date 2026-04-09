@@ -3,20 +3,9 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  sendSignInLinkToEmail,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
   User,
 } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirebaseAuth } from '../adapters/firestore/firebase-config';
-
-const EMAIL_LINK_STORAGE_KEY = 'emailForSignIn';
-
-const ACTION_CODE_SETTINGS = {
-  url: 'https://grocery-list-cad.firebaseapp.com',
-  handleCodeInApp: true,
-};
 
 export interface AuthUser {
   uid: string;
@@ -35,8 +24,6 @@ export interface AuthService {
   signOut(): Promise<void>;
   getCurrentUser(): AuthUser | null;
   onAuthStateChanged(callback: (user: AuthUser | null) => void): () => void;
-  sendSignInLink(email: string): Promise<AuthResult>;
-  handleSignInLink(url: string): Promise<AuthResult>;
 }
 
 function toAuthUser(user: User): AuthUser {
@@ -82,33 +69,6 @@ export function createAuthService(): AuthService {
         callback(user ? toAuthUser(user) : null);
       });
     },
-
-    async sendSignInLink(email: string): Promise<AuthResult> {
-      try {
-        await sendSignInLinkToEmail(auth, email, ACTION_CODE_SETTINGS);
-        await AsyncStorage.setItem(EMAIL_LINK_STORAGE_KEY, email);
-        return { success: true };
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
-    },
-
-    async handleSignInLink(url: string): Promise<AuthResult> {
-      try {
-        if (!isSignInWithEmailLink(auth, url)) {
-          return { success: false, error: 'Invalid sign-in link' };
-        }
-        const email = await AsyncStorage.getItem(EMAIL_LINK_STORAGE_KEY);
-        if (!email) {
-          return { success: false, error: 'Email not found. Please enter your email to complete sign-in.' };
-        }
-        const credential = await signInWithEmailLink(auth, email, url);
-        await AsyncStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
-        return { success: true, user: toAuthUser(credential.user) };
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
-    },
   };
 }
 
@@ -116,7 +76,6 @@ export function createAuthService(): AuthService {
 export function createNullAuthService(initialUser: AuthUser | null = null): AuthService {
   let currentUser: AuthUser | null = initialUser;
   const listeners: Set<(user: AuthUser | null) => void> = new Set();
-  let pendingEmail: string | null = null;
 
   const notifyListeners = () => {
     listeners.forEach((callback) => callback(currentUser));
@@ -164,25 +123,6 @@ export function createNullAuthService(initialUser: AuthUser | null = null): Auth
       return () => {
         listeners.delete(callback);
       };
-    },
-
-    async sendSignInLink(email: string): Promise<AuthResult> {
-      if (!email.includes('@')) {
-        return { success: false, error: 'Invalid email format' };
-      }
-      pendingEmail = email;
-      return { success: true };
-    },
-
-    async handleSignInLink(url: string): Promise<AuthResult> {
-      if (!pendingEmail || !url.includes('grocery-list-cad.firebaseapp.com')) {
-        return { success: false, error: 'Invalid sign-in link' };
-      }
-      const email = pendingEmail;
-      pendingEmail = null;
-      currentUser = { uid: `user-${Date.now()}`, email };
-      notifyListeners();
-      return { success: true, user: currentUser };
     },
   };
 }

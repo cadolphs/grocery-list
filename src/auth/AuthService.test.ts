@@ -1,59 +1,56 @@
 import { createNullAuthService, AuthService, AuthUser } from './AuthService';
 
-describe('AuthService - email link authentication', () => {
+describe('AuthService - password authentication', () => {
   let authService: AuthService;
 
   beforeEach(() => {
     authService = createNullAuthService();
   });
 
-  test('sendSignInLink followed by handleSignInLink authenticates the user', async () => {
-    const email = 'user@example.com';
-
-    const sendResult = await authService.sendSignInLink(email);
-    expect(sendResult.success).toBe(true);
-
-    // Simulate clicking the magic link URL
-    const magicLinkUrl = `https://grocery-list-cad.firebaseapp.com?email=${email}`;
-    const handleResult = await authService.handleSignInLink(magicLinkUrl);
-    expect(handleResult.success).toBe(true);
-    expect(handleResult.user).toBeDefined();
-    expect(handleResult.user!.email).toBe(email);
-
-    // After handling the link, getCurrentUser should return the authenticated user
-    const currentUser = authService.getCurrentUser();
-    expect(currentUser).not.toBeNull();
-    expect(currentUser!.email).toBe(email);
+  test('signUp creates a new user and returns success', async () => {
+    const result = await authService.signUp('user@example.com', 'password123');
+    expect(result.success).toBe(true);
+    expect(result.user).toBeDefined();
+    expect(result.user!.email).toBe('user@example.com');
   });
 
-  test('onAuthStateChanged is notified when user signs in via email link', async () => {
-    const email = 'listener@example.com';
+  test('signIn authenticates an existing user', async () => {
+    const result = await authService.signIn('user@example.com', 'password123');
+    expect(result.success).toBe(true);
+    expect(result.user).toBeDefined();
+    expect(result.user!.email).toBe('user@example.com');
+  });
+
+  test('signOut clears the current user', async () => {
+    await authService.signIn('user@example.com', 'password123');
+    await authService.signOut();
+    expect(authService.getCurrentUser()).toBeNull();
+  });
+
+  test('onAuthStateChanged is notified when user signs in', async () => {
     const stateChanges: (AuthUser | null)[] = [];
 
     authService.onAuthStateChanged((user) => {
       stateChanges.push(user);
     });
 
-    await authService.sendSignInLink(email);
-    const magicLinkUrl = `https://grocery-list-cad.firebaseapp.com?email=${email}`;
-    await authService.handleSignInLink(magicLinkUrl);
+    await authService.signIn('listener@example.com', 'password123');
 
-    // First call is the initial state (null), then after handleSignInLink the user is set
     expect(stateChanges.length).toBeGreaterThanOrEqual(2);
-    expect(stateChanges[0]).toBeNull(); // initial state
+    expect(stateChanges[0]).toBeNull();
     const lastChange = stateChanges[stateChanges.length - 1];
     expect(lastChange).not.toBeNull();
-    expect(lastChange!.email).toBe(email);
+    expect(lastChange!.email).toBe('listener@example.com');
   });
 
-  test('sendSignInLink rejects invalid email', async () => {
-    const result = await authService.sendSignInLink('not-an-email');
+  test('signUp rejects invalid email', async () => {
+    const result = await authService.signUp('not-an-email', 'password123');
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
   });
 
-  test('handleSignInLink rejects invalid URL', async () => {
-    const result = await authService.handleSignInLink('not-a-valid-link');
+  test('signIn rejects invalid email', async () => {
+    const result = await authService.signIn('not-an-email', 'password123');
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
   });

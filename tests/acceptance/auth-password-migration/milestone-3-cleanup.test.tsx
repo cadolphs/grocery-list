@@ -63,7 +63,7 @@ describe('MS3-2: useAuth hook exposes password auth methods', () => {
   // AC: useAuth hook does not expose sendSignInLink or handleSignInLink
   // Trace: US-04
 
-  it.skip('exposes signIn, signUp, signOut but not email-link methods', () => {
+  it('exposes signIn, signUp, signOut but not email-link methods', () => {
     // Given the useAuth hook is initialized with an auth service
     const authService = createNullAuthService();
     const { result } = renderHook(() => useAuth(authService));
