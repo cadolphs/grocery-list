@@ -110,7 +110,7 @@ describe('MS2-2: Non-existent account suggests signing up', () => {
   // AC: Non-existent account displays "No account found with this email. Try signing up instead."
   // Trace: US-01
 
-  it.skip('displays non-existent account error with sign-up suggestion', async () => {
+  it('displays non-existent account error with sign-up suggestion', async () => {
     // Given no account exists for "new.person@email.com"
     renderLoginScreen({
       signIn: createFailingSignIn('No account found with this email. Try signing up instead.'),
