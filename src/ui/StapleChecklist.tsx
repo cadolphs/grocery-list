@@ -2,7 +2,7 @@
 // Pure presentational component - no hooks, no domain logic
 
 import React from 'react';
-import { Pressable, Text, View, StyleSheet, FlatList } from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { StapleItem } from '../domain/types';
 
 type StapleChecklistProps = {
@@ -56,17 +56,16 @@ export const StapleChecklist = ({
   };
 
   return (
-    <FlatList
-      data={sortedStaples}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
+    <View>
+      {sortedStaples.map((item) => (
         <StapleRow
+          key={item.id}
           staple={item}
           isChecked={tripItemNames.has(item.name)}
           onToggle={() => handleToggle(item)}
         />
-      )}
-    />
+      ))}
+    </View>
   );
 };
 

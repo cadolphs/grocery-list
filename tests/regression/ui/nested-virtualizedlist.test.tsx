@@ -14,7 +14,7 @@ const STAPLE_CHECKLIST_PATH = path.resolve(
 );
 
 describe('nested VirtualizedList regression', () => {
-  it.skip('StapleChecklist must not use FlatList or VirtualizedList', () => {
+  it('StapleChecklist must not use FlatList or VirtualizedList', () => {
     const source = fs.readFileSync(STAPLE_CHECKLIST_PATH, 'utf-8');
 
     // StapleChecklist renders inside HomeView's ScrollView.
