@@ -78,7 +78,7 @@ describe('WS-1: Staple sync across devices via real-time listener', () => {
 // =============================================================================
 
 describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
-  it.skip('trip checkoff persists to cloud storage and syncs to other device', () => {
+  it('trip checkoff persists to cloud storage and syncs to other device', () => {
     // Given Clemens has an active trip with "Milk", "Eggs", and "Bread"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);

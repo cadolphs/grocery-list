@@ -3,12 +3,24 @@
 import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
 
-export const createNullTripStorage = (): TripStorage => {
+type NullTripStorageOptions = {
+  readonly onChange?: () => void;
+};
+
+export type NullTripStorageWithSync = TripStorage & {
+  readonly simulateRemoteChange: (updater: (storage: TripStorage) => void) => void;
+  readonly unsubscribe: () => void;
+};
+
+export const createNullTripStorage = (
+  options: NullTripStorageOptions = {}
+): NullTripStorageWithSync => {
   let storedTrip: Trip | null = null;
   let storedCheckoffs: Map<string, string> = new Map();
   let storedCarryover: readonly TripItem[] = [];
+  const { onChange } = options;
 
-  return {
+  const storage: NullTripStorageWithSync = {
     loadTrip: () => storedTrip,
     saveTrip: (trip: Trip) => {
       storedTrip = trip;
@@ -36,5 +48,12 @@ export const createNullTripStorage = (): TripStorage => {
     clearCarryover: () => {
       storedCarryover = [];
     },
+    simulateRemoteChange: (updater: (storage: TripStorage) => void) => {
+      updater(storage);
+      onChange?.();
+    },
+    unsubscribe: () => {},
   };
+
+  return storage;
 };
