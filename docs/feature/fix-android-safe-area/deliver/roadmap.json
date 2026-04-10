@@ -1,0 +1,45 @@
+{
+  "feature_id": "fix-android-safe-area",
+  "description": "Fix Android safe area: content overlaps status bar at top and gesture nav bar at bottom because SafeAreaView from react-native is iOS-only",
+  "steps": [
+    {
+      "step_id": "01-01",
+      "name": "Regression test for cross-platform SafeAreaView",
+      "description": "Write a regression test that verifies AppShell uses SafeAreaView from react-native-safe-area-context (not from react-native) and that App.tsx wraps content in SafeAreaProvider.",
+      "acceptance_criteria": [
+        "Test asserts AppShell.tsx imports SafeAreaView from react-native-safe-area-context",
+        "Test asserts App.tsx uses SafeAreaProvider wrapper",
+        "Test currently FAILS because the app uses the wrong SafeAreaView"
+      ],
+      "files_to_modify": [
+        "tests/regression/ui/safe-area-android.test.tsx"
+      ],
+      "implementation_notes": "Source-level assertion: read the source files and check import paths. Also render-level: render AppShell wrapped in SafeAreaProvider and verify safe-area testID still works.",
+      "dependencies": [],
+      "deliverables": ["tests/regression/ui/safe-area-android.test.tsx"]
+    },
+    {
+      "step_id": "01-02",
+      "name": "Replace SafeAreaView with cross-platform version",
+      "description": "Replace SafeAreaView import in AppShell.tsx from react-native to react-native-safe-area-context. Wrap App.tsx root in SafeAreaProvider. Update all test renders that use AppShell to include SafeAreaProvider.",
+      "acceptance_criteria": [
+        "AppShell.tsx imports SafeAreaView from react-native-safe-area-context",
+        "App.tsx wraps all screen returns in SafeAreaProvider",
+        "All existing tests pass",
+        "Regression test from 01-01 passes"
+      ],
+      "files_to_modify": [
+        "src/ui/AppShell.tsx",
+        "App.tsx",
+        "tests/regression/ui/safe-area-android.test.tsx"
+      ],
+      "implementation_notes": "Drop-in replacement: same API, just different import source. SafeAreaProvider must wrap any component tree using SafeAreaView. All test renders using AppShell need SafeAreaProvider wrapper. Also wrap LoadingScreen and LoginScreen returns in SafeAreaProvider for consistency.",
+      "dependencies": ["01-01"],
+      "deliverables": ["src/ui/AppShell.tsx", "App.tsx"]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "approved_by": "user-confirmed"
+  }
+}

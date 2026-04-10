@@ -22,7 +22,7 @@ function readSource(relativePath: string): string {
 describe('Safe area - cross-platform (Android regression)', () => {
   // Remove .skip to verify the bug exists; kept skipped so CI stays green
   // until the fix lands in step 01-02.
-  it.skip('AppShell imports SafeAreaView from react-native-safe-area-context', () => {
+  it('AppShell imports SafeAreaView from react-native-safe-area-context', () => {
     const source = readSource('src/ui/AppShell.tsx');
 
     expect(source).toMatch(
@@ -30,7 +30,7 @@ describe('Safe area - cross-platform (Android regression)', () => {
     );
   });
 
-  it.skip('App.tsx wraps content in SafeAreaProvider from react-native-safe-area-context', () => {
+  it('App.tsx wraps content in SafeAreaProvider from react-native-safe-area-context', () => {
     const source = readSource('App.tsx');
 
     expect(source).toMatch(

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAppInitialization } from './src/hooks/useAppInitialization';
 import { useAuth } from './src/hooks/useAuth';
 import { createAuthService, AuthService } from './src/auth/AuthService';
@@ -20,29 +21,43 @@ export default function App() {
   );
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <SafeAreaProvider>
+        <LoadingScreen />
+      </SafeAreaProvider>
+    );
   }
 
   if (!user) {
-    return <LoginScreen signIn={signIn} signUp={signUp} />;
+    return (
+      <SafeAreaProvider>
+        <LoginScreen signIn={signIn} signUp={signUp} />
+      </SafeAreaProvider>
+    );
   }
 
   if (!isReady || services === null) {
-    return <LoadingScreen />;
+    return (
+      <SafeAreaProvider>
+        <LoadingScreen />
+      </SafeAreaProvider>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <ServiceProvider
-        stapleLibrary={services.stapleLibrary}
-        tripService={services.tripService}
-        areaManagement={services.areaManagement}
-        sectionOrderStorage={services.sectionOrderStorage}
-      >
-        <AppShell />
-      </ServiceProvider>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        <ServiceProvider
+          stapleLibrary={services.stapleLibrary}
+          tripService={services.tripService}
+          areaManagement={services.areaManagement}
+          sectionOrderStorage={services.sectionOrderStorage}
+        >
+          <AppShell />
+        </ServiceProvider>
+        <StatusBar style="auto" />
+      </View>
+    </SafeAreaProvider>
   );
 }
 
