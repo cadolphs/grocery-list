@@ -22,10 +22,37 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
+type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+let capturedSnapshotCallback: SnapshotCallback | null = null;
+const mockUnsubscribe = jest.fn();
+
+const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
+  // Immediately fire with current data (simulates initial snapshot)
+  const data = mockStore[docRef.path];
+  callback({
+    exists: () => data !== undefined,
+    data: () => data,
+  });
+  capturedSnapshotCallback = callback;
+  return mockUnsubscribe;
+});
+
+// Helper to simulate a remote snapshot arriving
+const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
+  mockStore[path] = data;
+  if (capturedSnapshotCallback) {
+    capturedSnapshotCallback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+  }
+};
+
 jest.mock('firebase/firestore', () => ({
   doc: (...args: unknown[]) => mockDoc(...args),
   getDoc: (...args: unknown[]) => mockGetDoc(...(args as [{ path: string }])),
   setDoc: (...args: unknown[]) => mockSetDoc(...(args as [{ path: string }, unknown])),
+  onSnapshot: (...args: unknown[]) => mockOnSnapshot(...(args as [{ path: string }, SnapshotCallback])),
 }));
 
 // --- Test helpers ---
@@ -54,6 +81,7 @@ const createFreshStorage = async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
+  capturedSnapshotCallback = null;
 });
 
 // --- Acceptance test ---
@@ -169,5 +197,97 @@ describe('firestore staple storage implements staple storage port', () => {
     expect(result[0].houseArea).toBe('Cocina');
     expect(result[1].houseArea).toBe('Bathroom');
     expect(result[2].houseArea).toBe('Cocina');
+  });
+});
+
+// --- onChange callback and echo detection tests ---
+
+const createFreshStorageWithOnChange = async (onChange?: () => void) => {
+  const { createFirestoreStapleStorage } = require('./firestore-staple-storage');
+  const mockDb = { type: 'firestore' };
+  const result = createFirestoreStapleStorage(mockDb, TEST_UID, { onChange });
+  await result.initialize();
+  return result as StapleStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+};
+
+describe('firestore staple storage onChange callback', () => {
+  test('calls onChange when remote snapshot contains different data', async () => {
+    const milk = makeStapleItem({ id: '1', name: 'Milk' });
+    mockStore[STAPLES_DOC_PATH] = { items: [milk] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+    expect(storage.loadAll()).toEqual([milk]);
+
+    // Simulate remote addition of "Eggs"
+    const eggs = makeStapleItem({ id: '2', name: 'Eggs' });
+    simulateRemoteSnapshot(STAPLES_DOC_PATH, { items: [milk, eggs] });
+
+    expect(onChangeCallCount).toBe(1);
+    expect(storage.loadAll()).toHaveLength(2);
+  });
+
+  test('does NOT call onChange when snapshot echoes current cache (own-write detection)', async () => {
+    const milk = makeStapleItem({ id: '1', name: 'Milk' });
+    mockStore[STAPLES_DOC_PATH] = { items: [milk] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+
+    // Add item locally (updates cache)
+    const eggs = makeStapleItem({ id: '2', name: 'Eggs' });
+    storage.save(eggs);
+
+    // Simulate snapshot echo with identical data
+    simulateRemoteSnapshot(STAPLES_DOC_PATH, { items: [milk, eggs] });
+
+    // onChange should NOT fire for echo
+    expect(onChangeCallCount).toBe(0);
+  });
+
+  test('calls onChange when remote snapshot removes an item', async () => {
+    const milk = makeStapleItem({ id: '1', name: 'Milk' });
+    const eggs = makeStapleItem({ id: '2', name: 'Eggs' });
+    mockStore[STAPLES_DOC_PATH] = { items: [milk, eggs] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+    expect(storage.loadAll()).toHaveLength(2);
+
+    // Simulate remote removal of "Eggs"
+    simulateRemoteSnapshot(STAPLES_DOC_PATH, { items: [milk] });
+
+    expect(onChangeCallCount).toBe(1);
+    expect(storage.loadAll()).toHaveLength(1);
+    expect(storage.loadAll()[0].name).toBe('Milk');
+  });
+
+  test('returns unsubscribe function that stops the listener', async () => {
+    mockStore[STAPLES_DOC_PATH] = { items: [] };
+
+    const storage = await createFreshStorageWithOnChange(() => {});
+    storage.unsubscribe();
+
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  test('works without onChange callback (backward compatible)', async () => {
+    const milk = makeStapleItem({ id: '1', name: 'Milk' });
+    mockStore[STAPLES_DOC_PATH] = { items: [milk] };
+
+    const storage = await createFreshStorageWithOnChange();
+    expect(storage.loadAll()).toEqual([milk]);
+
+    // Simulate remote change -- should not throw even without onChange
+    const eggs = makeStapleItem({ id: '2', name: 'Eggs' });
+    simulateRemoteSnapshot(STAPLES_DOC_PATH, { items: [milk, eggs] });
+
+    expect(storage.loadAll()).toHaveLength(2);
   });
 });

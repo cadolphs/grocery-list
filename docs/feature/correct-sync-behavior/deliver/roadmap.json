@@ -1,0 +1,171 @@
+{
+  "roadmap": {
+    "project_id": "correct-sync-behavior",
+    "created_at": "2026-04-10T12:00:00Z",
+    "total_steps": 9,
+    "phases": 3
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Walking Skeleton: Real-Time Adapter Layer",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Firestore staple adapter onChange and onSnapshot",
+          "criteria": "Given a Firestore staple storage is created with an onChange callback, when a remote device adds a staple, then the onChange callback fires and the new staple is visible via loadAll; Given a staple is removed on a remote device, when the onSnapshot listener fires, then onChange is called and the removed staple is no longer in loadAll; Given a local write echoes back via onSnapshot with identical data, when the adapter compares serialized state, then onChange is NOT called for the echo",
+          "test_file": "tests/acceptance/correct-sync-behavior/walking-skeleton.test.ts",
+          "scenario_name": "WS-1: staple added on one device appears on the other without restart",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-staple-storage.ts",
+            "src/adapters/firestore/firestore-staple-storage.test.ts",
+            "src/adapters/null/null-staple-storage.ts",
+            "tests/acceptance/correct-sync-behavior/walking-skeleton.test.ts",
+            "tests/acceptance/correct-sync-behavior/us01-realtime-listeners.test.ts"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Area and section order adapter onChange",
+          "criteria": "Given a Firestore area storage is created with an onChange callback, when areas are modified on a remote device, then onChange fires and loadAll returns the updated area list; Given a Firestore section order storage is created with an onChange callback, when the section order changes on a remote device, then onChange fires and loadOrder returns the new order",
+          "test_file": "tests/acceptance/correct-sync-behavior/us01-realtime-listeners.test.ts",
+          "scenario_name": "S-01: area rename on one device reflected on the other",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-area-storage.ts",
+            "src/adapters/firestore/firestore-area-storage.test.ts",
+            "src/adapters/firestore/firestore-section-order-storage.ts",
+            "src/adapters/firestore/firestore-section-order-storage.test.ts",
+            "src/adapters/null/null-area-storage.ts",
+            "src/adapters/null/null-section-order-storage.ts",
+            "tests/acceptance/correct-sync-behavior/us01-realtime-listeners.test.ts"
+          ]
+        },
+        {
+          "id": "01-03",
+          "name": "Firestore trip storage adapter",
+          "criteria": "Given a Firestore trip storage adapter is created, when a trip is started and an item is checked off, then the checked state and timestamp persist to cloud storage; Given a trip exists in cloud storage with unbought items, when the trip is completed, then carryover items are saved to cloud storage and trip status is completed; Given cloud storage contains a trip with 8 items and 3 checked, when a new trip service loads from storage, then all items and their checked states are restored; Given cloud storage writes are failing silently, when an item is checked off locally, then the local state updates immediately without blocking",
+          "test_file": "tests/acceptance/correct-sync-behavior/walking-skeleton.test.ts",
+          "scenario_name": "WS-2: trip checkoff persists to cloud storage and syncs to other device",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-trip-storage.ts",
+            "src/adapters/null/null-trip-storage.ts",
+            "src/ports/trip-storage.ts",
+            "tests/acceptance/correct-sync-behavior/walking-skeleton.test.ts",
+            "tests/acceptance/correct-sync-behavior/us02-trip-cloud-storage.test.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Real-Time Sync and Lifecycle",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Real-time trip sync via onChange",
+          "criteria": "Given an active trip has a real-time listener via onChange, when a skipped item change arrives from a remote device, then the local trip reflects the skipped state and onChange fires; Given an active trip has a real-time listener, when a quick-added item arrives from a remote device, then the new item appears in the local trip and onChange fires",
+          "test_file": "tests/acceptance/correct-sync-behavior/us03-realtime-trip-sync.test.ts",
+          "scenario_name": "S-09: skipped item on one device reflected on the other",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-trip-storage.ts",
+            "src/adapters/null/null-trip-storage.ts",
+            "tests/acceptance/correct-sync-behavior/us03-realtime-trip-sync.test.ts"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Listener cleanup on unmount and logout",
+          "criteria": "Given real-time listeners are active on staples, areas, section order, and trip, when Clemens logs out, then all 4 listeners are unsubscribed; Given the app component has active listeners, when the component unmounts, then all unsubscribe functions are called; Given the app component unmounted and re-mounts, when new listeners are created, then only one set of listeners is active with no duplicates; Given a stale listener callback arrives after logout cleanup, when the callback fires, then the app state is not modified",
+          "test_file": "tests/acceptance/correct-sync-behavior/us04-listener-cleanup.test.ts",
+          "scenario_name": "S-11: all listeners are cleaned up when Clemens logs out",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts",
+            "src/hooks/useAppInitialization.test.ts",
+            "tests/acceptance/correct-sync-behavior/us04-listener-cleanup.test.ts"
+          ]
+        },
+        {
+          "id": "02-03",
+          "name": "Auto-add new staples to active trip",
+          "criteria": "Given an active trip and a real-time listener on staples, when a new staple is added from a remote device, then the orchestration layer detects the new staple and adds it to the trip; Given an active trip contains a staple item, when that staple is removed from the library, then the orchestration layer removes the corresponding trip item by stapleId; Given cloud storage is failing for trip writes, when a new staple is auto-added to the trip, then the staple is saved to the library and the local trip view is updated even if trip persist fails",
+          "test_file": "tests/acceptance/correct-sync-behavior/walking-skeleton.test.ts",
+          "scenario_name": "WS-3: new staple appears in active trip without resetting sweep",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts",
+            "src/hooks/useAppInitialization.test.ts",
+            "tests/acceptance/correct-sync-behavior/walking-skeleton.test.ts",
+            "tests/acceptance/correct-sync-behavior/us05-auto-add-staple.test.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Migration, Deduplication, and Re-Login",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Trip migration from AsyncStorage to Firestore",
+          "criteria": "Given a user has a local trip with 15 items and 7 checked off and cloud storage has no trip, when the app initializes with sync enabled, then all items with their checkoff states are written to cloud storage; Given cloud storage already has a trip with 12 items, when the app initializes with a stale local trip, then the cloud trip takes precedence; Given neither cloud nor local storage has a trip, when the app initializes, then a new trip is created from the staple library; Given local storage has carryover items, when the app initializes with sync enabled, then carryover items are migrated to cloud storage",
+          "test_file": "tests/acceptance/correct-sync-behavior/us06-migration.test.ts",
+          "scenario_name": "S-18: existing local trip migrates to cloud storage on first sync launch",
+          "files_to_modify": [
+            "src/adapters/firestore/migration.ts",
+            "src/adapters/firestore/migration.test.ts",
+            "src/hooks/useAppInitialization.ts",
+            "src/hooks/useAppInitialization.test.ts",
+            "tests/acceptance/correct-sync-behavior/us06-migration.test.ts"
+          ]
+        },
+        {
+          "id": "03-02",
+          "name": "Duplicate prevention for trip items",
+          "criteria": "Given a trip contains a staple item with a specific stapleId, when a remote trip update arrives also containing that stapleId, then the trip contains exactly one instance of that item; Given a trip contains a staple named Milk, when a one-off item also named Milk is quick-added, then both items coexist because staple and one-off are different types; Given a staple was removed from the trip, when the same staple is re-added with a new stapleId, then a fresh trip item is created",
+          "test_file": "tests/acceptance/correct-sync-behavior/us07-prevent-duplicates.test.ts",
+          "scenario_name": "S-22: no duplicate when remote trip update contains locally added item",
+          "files_to_modify": [
+            "src/domain/trip.ts",
+            "src/hooks/useAppInitialization.ts",
+            "tests/acceptance/correct-sync-behavior/us07-prevent-duplicates.test.ts"
+          ]
+        },
+        {
+          "id": "03-03",
+          "name": "Listener re-establishment after re-login",
+          "criteria": "Given Clemens logged out and all listeners were cleaned up, when Clemens logs back in, then new real-time listeners are established and initializeApp returns ready with services; Given Clemens logged out on his phone, when his partner logs in on the same phone, then the partner sees their own staple library and trip data with no data from Clemens visible",
+          "test_file": "tests/acceptance/correct-sync-behavior/us08-listener-reestablishment.test.ts",
+          "scenario_name": "S-25: sync resumes after logging out and back in",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts",
+            "src/hooks/useAppInitialization.test.ts",
+            "tests/acceptance/correct-sync-behavior/us08-listener-reestablishment.test.ts"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/adapters/firestore/",
+      "src/adapters/null/",
+      "src/ports/",
+      "src/domain/",
+      "src/hooks/"
+    ],
+    "test_directories": [
+      "src/adapters/firestore/",
+      "src/hooks/",
+      "tests/acceptance/correct-sync-behavior/"
+    ],
+    "excluded_patterns": [
+      "node_modules/**",
+      "dist/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "nw-solution-architect",
+    "approved_at": "2026-04-10T12:00:00Z"
+  }
+}

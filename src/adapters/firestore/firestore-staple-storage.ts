@@ -1,14 +1,20 @@
 // Firestore adapter for StapleStorage port
-// Cached reads/writes: initialize() hydrates from Firestore, then all ops use in-memory cache.
+// Cached reads/writes: initialize() hydrates from Firestore via onSnapshot, then all ops use in-memory cache.
 // Writes update cache synchronously and persist to Firestore in background.
+// Optional onChange callback fires when remote data differs from cache (own-write echo detection).
 
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 import { StapleItem } from '../../domain/types';
 import { StapleStorage } from '../../ports/staple-storage';
 
+export type FirestoreStapleStorageOptions = {
+  readonly onChange?: () => void;
+};
+
 export type FirestoreStapleStorage = StapleStorage & {
   readonly initialize: () => Promise<void>;
+  readonly unsubscribe: () => void;
 };
 
 const buildDocRef = (db: Firestore, uid: string) =>
@@ -22,21 +28,57 @@ const persistInBackground = (
   setDoc(buildDocRef(db, uid), { items });
 };
 
+const serializeItems = (items: StapleItem[]): string =>
+  JSON.stringify(items);
+
 export const createFirestoreStapleStorage = (
   db: Firestore,
-  uid: string
+  uid: string,
+  options: FirestoreStapleStorageOptions = {}
 ): FirestoreStapleStorage => {
   let cache: StapleItem[] = [];
+  let unsubscribeFn: () => void = () => {};
+  let isInitialized = false;
+  const { onChange } = options;
+
+  const handleSnapshot = (snapshot: { exists: () => boolean; data: () => { items: StapleItem[] } | undefined }): void => {
+    const incomingItems: StapleItem[] = snapshot.exists()
+      ? (snapshot.data() as { items: StapleItem[] })?.items ?? []
+      : [];
+
+    if (!isInitialized) {
+      // First snapshot: hydrate cache
+      cache = incomingItems;
+      isInitialized = true;
+      return;
+    }
+
+    // Subsequent snapshots: compare serialized state for echo detection
+    const incomingSerialized = serializeItems(incomingItems);
+    const currentSerialized = serializeItems(cache);
+
+    if (incomingSerialized !== currentSerialized) {
+      cache = incomingItems;
+      onChange?.();
+    }
+  };
 
   return {
     initialize: async (): Promise<void> => {
-      const snapshot = await getDoc(buildDocRef(db, uid));
-      if (snapshot.exists()) {
-        const data = snapshot.data() as { items: StapleItem[] };
-        cache = data.items ?? [];
-      } else {
-        cache = [];
-      }
+      return new Promise<void>((resolve) => {
+        let resolved = false;
+        unsubscribeFn = onSnapshot(buildDocRef(db, uid), (snapshot) => {
+          handleSnapshot(snapshot as { exists: () => boolean; data: () => { items: StapleItem[] } | undefined });
+          if (!resolved) {
+            resolved = true;
+            resolve();
+          }
+        });
+      });
+    },
+
+    unsubscribe: (): void => {
+      unsubscribeFn();
     },
 
     loadAll: (): StapleItem[] => [...cache],

@@ -5,9 +5,14 @@ import { StapleStorage } from '../../ports/staple-storage';
 
 type NullStapleInput = AddStapleRequest;
 
+type NullStapleStorageOptions = {
+  readonly onChange?: () => void;
+};
+
 export const createNullStapleStorage = (
-  initialItems: NullStapleInput[] = []
-): StapleStorage => {
+  initialItems: NullStapleInput[] = [],
+  options: NullStapleStorageOptions = {}
+): StapleStorage & { readonly unsubscribe: () => void } => {
   const items: StapleItem[] = initialItems.map((input, index) => ({
     id: `staple-init-${index}`,
     name: input.name,
@@ -45,5 +50,6 @@ export const createNullStapleStorage = (
         }
       }
     },
+    unsubscribe: () => {},
   };
 };

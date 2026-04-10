@@ -1,0 +1,264 @@
+schema_version: 1
+
+journey:
+  name: "Multi-Device Sync During Trip Planning"
+  goal: "Changes to staples, trip items, areas, and section order propagate between devices in real-time without app restart"
+  persona: "Clemens -- solo household grocery shopper using Android phone and web browser simultaneously during planning"
+
+  emotional_arc:
+    start: "Frustrated -- changes on one device do not appear on the other"
+    middle: "Confident -- sees changes propagate within seconds"
+    end: "Trusting -- stops thinking about sync; it just works"
+
+steps:
+  - id: 1
+    name: "Real-Time Listeners on All Firestore Documents"
+    action: "Replace getDoc (one-time read) with onSnapshot (real-time listener) on all Firestore storage adapters"
+
+    shared_artifacts:
+      - name: "staples_document"
+        source: "Firestore: users/{uid}/data/staples"
+        displayed_as: "${staples}"
+        consumers:
+          - "firestore-staple-storage cache"
+          - "StapleLibrary.listAll()"
+          - "QuickAdd search"
+          - "Sweep view (staple-derived items)"
+
+      - name: "areas_document"
+        source: "Firestore: users/{uid}/data/areas"
+        displayed_as: "${areas}"
+        consumers:
+          - "firestore-area-storage cache"
+          - "AreaManagement"
+          - "Sweep area completion"
+          - "Trip initialization (area list)"
+
+      - name: "section_order_document"
+        source: "Firestore: users/{uid}/data/sectionOrder"
+        displayed_as: "${sectionOrder}"
+        consumers:
+          - "firestore-section-order-storage cache"
+          - "Shopping list sort order"
+
+    emotional_state:
+      entry: "Frustrated -- staples added on other device invisible until restart"
+      exit: "Relieved -- staples/areas update live across devices"
+
+    integration_checkpoint: |
+      All three existing Firestore adapters (staples, areas, sectionOrder) switch
+      from getDoc to onSnapshot. Cache updates trigger React state changes so
+      UI re-renders. Listener lifecycle tied to auth session (setup on login,
+      teardown on logout/unmount).
+
+    failure_modes:
+      - "Listener fails to establish on poor network -- Firestore SDK handles reconnection"
+      - "Rapid updates cause excessive re-renders -- debounce or batch state updates"
+      - "Listener teardown missed on logout -- memory leak and stale listener"
+      - "onSnapshot callback fires before app is fully initialized -- guard against partial state"
+
+    gherkin: |
+      Scenario: Staple added on web appears on phone without restart
+        Given Clemens has the app open on both his laptop browser and Android phone
+        And both devices are logged in as Clemens
+        When Clemens adds "Olive Oil" to the staple library on the web app
+        Then within 5 seconds "Olive Oil" appears in the staple library on the phone
+        And no app restart or navigation is required
+
+      Scenario: Area renamed on phone updates on web
+        Given Clemens has the app open on both devices
+        When Clemens renames the area "Pantry" to "Garage Pantry" on the phone
+        Then within 5 seconds the web app shows "Garage Pantry" instead of "Pantry"
+        And all staples previously in "Pantry" show under "Garage Pantry"
+
+  - id: 2
+    name: "Trip Data Syncs to Firestore"
+    action: "Create firestore-trip-storage adapter; trip, checkoffs, and carryover persist to Firestore"
+
+    shared_artifacts:
+      - name: "trip_document"
+        source: "Firestore: users/{uid}/data/trip"
+        displayed_as: "${trip}"
+        consumers:
+          - "firestore-trip-storage cache"
+          - "TripService.persistTrip()"
+          - "TripService.loadFromStorage()"
+          - "TripService.initializeFromStorage()"
+          - "TripService.complete()"
+
+      - name: "carryover_document"
+        source: "Firestore: users/{uid}/data/carryover"
+        displayed_as: "${carryover}"
+        consumers:
+          - "firestore-trip-storage cache"
+          - "TripService.startWithCarryover()"
+          - "TripService.complete()"
+
+    emotional_state:
+      entry: "Frustrated -- trip only exists on one device"
+      exit: "Confident -- trip data available on any device"
+
+    integration_checkpoint: |
+      New firestore-trip-storage.ts adapter implements TripStorage port.
+      Same cached-read/background-write pattern as firestore-staple-storage.
+      useAppInitialization wires firestore-trip-storage instead of async-trip-storage
+      when authenticated. Trip document includes items array, status, completedAreas.
+
+    failure_modes:
+      - "Trip document exceeds Firestore 1MB limit (extremely unlikely for grocery data)"
+      - "Concurrent writes from two devices overwrite each other (last-write-wins, acceptable for single user)"
+      - "Firestore write fails silently -- trip data not synced until next successful write"
+
+    gherkin: |
+      Scenario: Trip checkoff on phone visible on web
+        Given Clemens has an active trip with "Milk", "Eggs", and "Bread"
+        And both devices show the same trip
+        When Clemens checks off "Milk" on his Android phone
+        Then within 5 seconds the web app shows "Milk" as checked
+        And the checkoff timestamp is preserved
+
+      Scenario: Trip loads on new device after login
+        Given Clemens started a trip on Android with 12 items and checked off 4
+        When Clemens logs into the web app for the first time
+        Then the web app loads his active trip from Firestore
+        And all 12 items are present with 4 checked off
+
+      Scenario: Skipped item syncs between devices
+        Given Clemens has an active trip on both devices
+        When Clemens skips "Butter" on the phone
+        Then within 5 seconds "Butter" shows as skipped on the web app
+
+  - id: 3
+    name: "New Staple Auto-Adds to Active Trip"
+    action: "When a staple is added while a trip is active, a TripItem is created automatically"
+
+    shared_artifacts:
+      - name: "staple_to_trip_link"
+        source: "StapleItem.id -> TripItem.stapleId"
+        displayed_as: "${stapleId}"
+        consumers:
+          - "TripService.syncStapleUpdate()"
+          - "TripService.removeItemByStapleId()"
+          - "stapleInputToTripItem()"
+
+    emotional_state:
+      entry: "Annoyed -- adding a staple requires Reset Sweep to see it in trip"
+      exit: "Delighted -- new staple instantly appears in trip on all devices"
+
+    integration_checkpoint: |
+      The domain layer must react to staple additions. When a staple is added
+      to the library AND a trip is active, the trip must gain a corresponding
+      TripItem. This happens on the originating device immediately. On the
+      receiving device, the trip document update (via onSnapshot) delivers the
+      new item. The staple-to-trip link is maintained via stapleId.
+
+    failure_modes:
+      - "Staple added but trip persist fails -- staple syncs, trip item does not"
+      - "Staple removed on one device but trip item remains on other until next sync"
+      - "Duplicate trip items if both local add and onSnapshot fire for same staple"
+
+    gherkin: |
+      Scenario: New staple auto-appears in active trip
+        Given Clemens has an active trip that was started with "Milk" and "Eggs"
+        When Clemens adds "Paper Towels" (area: "Bathroom") as a new staple
+        Then "Paper Towels" appears in the active trip without Reset Sweep
+        And "Paper Towels" has itemType "staple" and source "preloaded"
+
+      Scenario: New staple added on web appears in trip on phone
+        Given Clemens has an active trip open on both devices
+        When Clemens adds "Tahini" as a new staple on the web app
+        Then within 5 seconds "Tahini" appears in the trip on the phone
+        And the trip item is linked to the staple via stapleId
+
+      Scenario: Removed staple disappears from trip on other device
+        Given Clemens has an active trip with "Soda" (a staple)
+        When Clemens removes "Soda" from the staple library on the web
+        Then "Soda" is removed from the active trip on the web
+        And within 5 seconds "Soda" disappears from the trip on the phone
+
+  - id: 4
+    name: "Local Trip Data Migration"
+    action: "Migrate existing AsyncStorage trip data to Firestore on first launch after upgrade"
+
+    emotional_state:
+      entry: "Uncertain -- will my existing trip survive the update?"
+      exit: "Relieved -- existing trip preserved and now syncs"
+
+    integration_checkpoint: |
+      On first launch after upgrade, check if Firestore trip doc exists.
+      If not, read AsyncStorage trip and write it to Firestore.
+      If Firestore trip already exists, use it (discard local).
+      After migration, set up onSnapshot listener.
+
+    failure_modes:
+      - "AsyncStorage trip exists AND Firestore trip exists (conflict) -- Firestore wins"
+      - "AsyncStorage is empty (new install) -- no migration needed, start fresh"
+      - "Migration write to Firestore fails -- retry on next app launch"
+
+    gherkin: |
+      Scenario: Existing local trip migrates to Firestore
+        Given Clemens has a local-only trip with 8 items in AsyncStorage
+        And no trip document exists in Firestore for Clemens
+        When Clemens opens the app after the sync update
+        Then the local trip is written to Firestore
+        And the app uses the Firestore trip going forward
+        And subsequent changes sync across devices
+
+      Scenario: Firestore trip takes precedence over local
+        Given Clemens has a local trip with 5 items in AsyncStorage
+        And a Firestore trip with 8 items already exists (from another device)
+        When Clemens opens the app
+        Then the Firestore trip (8 items) is used
+        And the local AsyncStorage trip is ignored
+
+  - id: 5
+    name: "Listener Lifecycle and Cleanup"
+    action: "onSnapshot listeners are tied to auth session lifecycle"
+
+    emotional_state:
+      entry: "N/A -- invisible to user"
+      exit: "N/A -- invisible to user, but prevents memory leaks and stale data"
+
+    integration_checkpoint: |
+      Listeners must be created after authentication succeeds and
+      torn down when the user logs out or the app component unmounts.
+      The unsubscribe functions returned by onSnapshot must be called
+      during cleanup. This prevents memory leaks and stale listener
+      callbacks from firing after logout.
+
+    failure_modes:
+      - "Listener not torn down on logout -- stale callbacks update UI for wrong user"
+      - "Listener not torn down on unmount -- memory leak"
+      - "Re-login creates duplicate listeners -- double state updates"
+
+    gherkin: |
+      Scenario: Listeners torn down on logout
+        Given Clemens is logged in and real-time listeners are active
+        When Clemens logs out
+        Then all Firestore listeners are unsubscribed
+        And no further data updates are received
+
+      Scenario: Listeners re-established on re-login
+        Given Clemens logged out and then logs back in
+        When the app initializes for the new session
+        Then fresh onSnapshot listeners are created
+        And data reflects the latest Firestore state
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "trip_document"
+      must_match_across: [2, 3, 4]
+      failure_message: "Trip state must be consistent across persist, auto-add, and migration flows"
+
+    - artifact: "staple_to_trip_link"
+      must_match_across: [2, 3]
+      failure_message: "StapleId linking must be preserved when staple added/removed and trip synced"
+
+    - artifact: "staples_document"
+      must_match_across: [1, 3]
+      failure_message: "Staple list must be consistent between real-time listener and auto-add-to-trip logic"
+
+changelog:
+  - date: "2026-04-10"
+    feature: "correct-sync-behavior"
+    change: "Complete rewrite of journey design based on user interview data. Added real-time listeners, auto-add staple to trip, migration, listener lifecycle."
