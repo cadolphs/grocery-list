@@ -36,10 +36,14 @@ export type AppInitializationResult = {
   readonly services: AppServices | null;
   readonly error: string | null;
   readonly needsAuth: boolean;
+  readonly unsubscribeAll?: () => void;
 };
 
-// Initializable storage = port + initialize()
-type InitializableStorage<T> = T & { initialize: () => Promise<void> };
+// Initializable storage = port + initialize() + optional unsubscribe()
+type InitializableStorage<T> = T & {
+  initialize: () => Promise<void>;
+  unsubscribe?: () => void;
+};
 
 export type AdapterFactories = {
   readonly createStapleStorage: (uid: string) => InitializableStorage<StapleStorage>;
@@ -124,11 +128,19 @@ export const initializeApp = async (
 
     tripService.initializeFromStorage(stapleLibrary.listAll());
 
+    const unsubscribeAll = () => {
+      stapleStorage.unsubscribe?.();
+      areaStorage.unsubscribe?.();
+      sectionOrderStorage.unsubscribe?.();
+      tripStorage.unsubscribe?.();
+    };
+
     return {
       isReady: true,
       services: { stapleLibrary, tripService, areaManagement, sectionOrderStorage },
       error: null,
       needsAuth: false,
+      unsubscribeAll,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -184,10 +196,16 @@ export const useAppInitialization = (
     const resolvedUser = isLegacyMode ? { uid: 'local', email: null } : authUser;
     const resolvedFactories = factories ?? (isLegacyMode ? createLegacyFactories() : createProductionFactories());
 
+    let unsubscribeAll: (() => void) | undefined;
+
     initializeApp(resolvedUser, resolvedFactories)
       .then((initResult) => {
         if (!cancelled) {
+          unsubscribeAll = initResult.unsubscribeAll;
           setResult(initResult);
+        } else {
+          // Component unmounted before initialization completed; clean up immediately
+          initResult.unsubscribeAll?.();
         }
       })
       .catch((err: Error) => {
@@ -198,6 +216,7 @@ export const useAppInitialization = (
 
     return () => {
       cancelled = true;
+      unsubscribeAll?.();
     };
   }, [authUser, factories]);
 
