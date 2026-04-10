@@ -23,6 +23,7 @@ import { AreaStorage } from '../ports/area-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { TripStorage } from '../ports/trip-storage';
 import { AuthUser } from '../auth/AuthService';
+import { StapleItem } from '../domain/types';
 
 export type AppServices = {
   readonly stapleLibrary: StapleLibrary;
@@ -46,7 +47,7 @@ type InitializableStorage<T> = T & {
 };
 
 export type AdapterFactories = {
-  readonly createStapleStorage: (uid: string) => InitializableStorage<StapleStorage>;
+  readonly createStapleStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<StapleStorage>;
   readonly createAreaStorage: (uid: string) => InitializableStorage<AreaStorage>;
   readonly createSectionOrderStorage: (uid: string) => InitializableStorage<SectionOrderStorage>;
   readonly createTripStorage: () => InitializableStorage<TripStorage>;
@@ -98,6 +99,25 @@ const runMigrationIfNeeded = async (
   );
 };
 
+// Pure function: compute added and removed staples by comparing old vs new lists
+export type StapleDiff = {
+  readonly added: readonly StapleItem[];
+  readonly removed: readonly StapleItem[];
+};
+
+export const diffStaples = (
+  previousStaples: readonly StapleItem[],
+  currentStaples: readonly StapleItem[],
+): StapleDiff => {
+  const previousIds = new Set(previousStaples.map(s => s.id));
+  const currentIds = new Set(currentStaples.map(s => s.id));
+
+  const added = currentStaples.filter(s => !previousIds.has(s.id));
+  const removed = previousStaples.filter(s => !currentIds.has(s.id));
+
+  return { added, removed };
+};
+
 export const initializeApp = async (
   authUser: AuthUser | null,
   factories: AdapterFactories,
@@ -107,7 +127,11 @@ export const initializeApp = async (
   try {
     const { uid } = authUser;
 
-    const stapleStorage = factories.createStapleStorage(uid);
+    // Late-binding callback: set after trip service is created
+    let handleStapleChange: (() => void) | undefined;
+    const onStapleChange = () => handleStapleChange?.();
+
+    const stapleStorage = factories.createStapleStorage(uid, { onChange: onStapleChange });
     const areaStorage = factories.createAreaStorage(uid);
     const sectionOrderStorage = factories.createSectionOrderStorage(uid);
     const tripStorage = factories.createTripStorage();
@@ -127,6 +151,29 @@ export const initializeApp = async (
     const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     tripService.initializeFromStorage(stapleLibrary.listAll());
+
+    // Wire auto-add/remove: track previous staples, diff on change
+    let previousStaples = stapleLibrary.listAll();
+    handleStapleChange = () => {
+      const currentStaples = stapleLibrary.listAll();
+      const { added, removed } = diffStaples(previousStaples, currentStaples);
+
+      for (const staple of added) {
+        tripService.addItem({
+          name: staple.name,
+          houseArea: staple.houseArea,
+          storeLocation: staple.storeLocation,
+          itemType: 'staple',
+          source: 'preloaded',
+        });
+      }
+
+      for (const staple of removed) {
+        tripService.removeItemByStapleId(staple.id);
+      }
+
+      previousStaples = currentStaples;
+    };
 
     const unsubscribeAll = () => {
       stapleStorage.unsubscribe?.();
@@ -152,7 +199,7 @@ export const initializeApp = async (
 const createProductionFactories = (): AdapterFactories => {
   const db = getFirebaseDb();
   return {
-    createStapleStorage: (uid) => createFirestoreStapleStorage(db, uid),
+    createStapleStorage: (uid, options) => createFirestoreStapleStorage(db, uid, options),
     createAreaStorage: (uid) => createFirestoreAreaStorage(db, uid),
     createSectionOrderStorage: (uid) => createFirestoreSectionOrderStorage(db, uid),
     createTripStorage: () => createAsyncTripStorage(),

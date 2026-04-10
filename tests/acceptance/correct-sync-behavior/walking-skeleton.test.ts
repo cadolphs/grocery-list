@@ -119,7 +119,7 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
 // =============================================================================
 
 describe('WS-3: New staple auto-adds to active trip', () => {
-  it.skip('new staple appears in active trip without resetting sweep', () => {
+  it('new staple appears in active trip without resetting sweep', () => {
     // Given Clemens has an active trip started with "Milk" and "Eggs"
     const stapleStorage = createNullStapleStorage([
       { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
