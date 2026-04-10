@@ -1,0 +1,43 @@
+{
+  "feature_id": "fix-nested-virtualizedlist-warning",
+  "description": "Fix VirtualizedLists should never be nested warning when switching to Checklist view",
+  "steps": [
+    {
+      "step_id": "01-01",
+      "name": "Regression test for nested VirtualizedList",
+      "description": "Write a regression test that verifies StapleChecklist does not use FlatList (VirtualizedList) since it renders inside HomeView's ScrollView. The test should assert that the component renders items using plain View+map rather than FlatList.",
+      "acceptance_criteria": [
+        "Test renders StapleChecklist inside a ScrollView (mirroring HomeView)",
+        "Test asserts no FlatList/VirtualizedList is present in the component tree",
+        "Test verifies staple items are still rendered correctly"
+      ],
+      "files_to_modify": [
+        "tests/regression/ui/nested-virtualizedlist.test.tsx"
+      ],
+      "implementation_notes": "Follow existing test patterns in tests/regression/checklist-toggle.test.tsx. Use renderApp() helper with ServiceProvider+AppShell. Switch to checklist mode and verify items render without FlatList.",
+      "dependencies": [],
+      "deliverables": ["tests/regression/ui/nested-virtualizedlist.test.tsx"]
+    },
+    {
+      "step_id": "01-02",
+      "name": "Replace FlatList with View+map in StapleChecklist",
+      "description": "Replace FlatList with a plain View that maps over sorted staples, eliminating the nested VirtualizedList warning. The staple list is small (~20-80 items) so virtualization is unnecessary.",
+      "acceptance_criteria": [
+        "StapleChecklist renders using View+map instead of FlatList",
+        "All existing checklist tests pass",
+        "Regression test from 01-01 passes",
+        "No FlatList import remains in StapleChecklist.tsx"
+      ],
+      "files_to_modify": [
+        "src/ui/StapleChecklist.tsx"
+      ],
+      "implementation_notes": "Replace FlatList with View, use .map() over sortedStaples array. Remove FlatList import. Keep StapleRow component unchanged.",
+      "dependencies": ["01-01"],
+      "deliverables": ["src/ui/StapleChecklist.tsx"]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "approved_by": "user-confirmed-option-a"
+  }
+}
