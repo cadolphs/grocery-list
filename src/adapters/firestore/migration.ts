@@ -3,6 +3,7 @@
 import { StapleStorage } from '../../ports/staple-storage';
 import { AreaStorage } from '../../ports/area-storage';
 import { SectionOrderStorage } from '../../ports/section-order-storage';
+import { TripStorage } from '../../ports/trip-storage';
 
 type StorageAdapters = {
   readonly staples: StapleStorage;
@@ -35,4 +36,19 @@ export const migrateToFirestore = (from: StorageAdapters, to: StorageAdapters): 
   migrateStaples(from.staples, to.staples);
   migrateAreas(from.areas, to.areas);
   migrateSectionOrder(from.sectionOrder, to.sectionOrder);
+};
+
+export const migrateTripIfNeeded = (localTrip: TripStorage, cloudTrip: TripStorage): void => {
+  const cloudData = cloudTrip.loadTrip();
+  if (cloudData !== null) return;
+
+  const localData = localTrip.loadTrip();
+  if (localData !== null) {
+    cloudTrip.saveTrip(localData);
+  }
+
+  const localCarryover = localTrip.loadCarryover();
+  if (localCarryover.length > 0) {
+    cloudTrip.saveCarryover(localCarryover);
+  }
 };

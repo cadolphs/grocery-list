@@ -30,6 +30,8 @@ type AdapterFactories = {
   readonly createAsyncStapleStorage: () => InitializableStapleStorage;
   readonly createAsyncAreaStorage: () => InitializableAreaStorage;
   readonly createAsyncSectionOrderStorage: () => InitializableSectionOrderStorage;
+  readonly createAsyncTripStorage: () => InitializableTripStorage;
+  readonly migrateTripIfNeeded: (localTrip: TripStorage, cloudTrip: TripStorage) => void;
 };
 
 import { StapleItem, AddStapleRequest } from '../domain/types';
@@ -68,6 +70,8 @@ const defaultFactories: AdapterFactories = {
   createAsyncStapleStorage: () => createInitializableStapleStorage(),
   createAsyncAreaStorage: () => createInitializableAreaStorage(),
   createAsyncSectionOrderStorage: () => createInitializableSectionOrderStorage(),
+  createAsyncTripStorage: () => createInitializableTripStorage(),
+  migrateTripIfNeeded: () => {},
 };
 
 // Import the function under test

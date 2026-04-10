@@ -14,7 +14,7 @@ import { createFirestoreStapleStorage } from '../adapters/firestore/firestore-st
 import { createFirestoreAreaStorage } from '../adapters/firestore/firestore-area-storage';
 import { createFirestoreSectionOrderStorage } from '../adapters/firestore/firestore-section-order-storage';
 import { getFirebaseDb } from '../adapters/firestore/firebase-config';
-import { migrationNeeded, migrateToFirestore } from '../adapters/firestore/migration';
+import { migrationNeeded, migrateToFirestore, migrateTripIfNeeded } from '../adapters/firestore/migration';
 import { createStapleLibrary, StapleLibrary } from '../domain/staple-library';
 import { createTrip, TripService } from '../domain/trip';
 import { createAreaManagement, AreaManagement } from '../domain/area-management';
@@ -59,6 +59,8 @@ export type AdapterFactories = {
   readonly createAsyncStapleStorage: () => InitializableStorage<StapleStorage>;
   readonly createAsyncAreaStorage: () => InitializableStorage<AreaStorage>;
   readonly createAsyncSectionOrderStorage: () => InitializableStorage<SectionOrderStorage>;
+  readonly createAsyncTripStorage: () => InitializableStorage<TripStorage>;
+  readonly migrateTripIfNeeded: (localTrip: TripStorage, cloudTrip: TripStorage) => void;
 };
 
 const notAuthenticated: AppInitializationResult = {
@@ -80,23 +82,28 @@ const runMigrationIfNeeded = async (
   firestoreStaples: StapleStorage,
   firestoreAreas: AreaStorage,
   firestoreSectionOrder: SectionOrderStorage,
+  firestoreTripStorage: TripStorage,
 ): Promise<void> => {
   if (!factories.checkMigrationNeeded(firestoreStaples)) return;
 
   const asyncStaples = factories.createAsyncStapleStorage();
   const asyncAreas = factories.createAsyncAreaStorage();
   const asyncSectionOrder = factories.createAsyncSectionOrderStorage();
+  const asyncTripStorage = factories.createAsyncTripStorage();
 
   await Promise.all([
     asyncStaples.initialize(),
     asyncAreas.initialize(),
     asyncSectionOrder.initialize(),
+    asyncTripStorage.initialize(),
   ]);
 
   factories.migrateToFirestore(
     { staples: asyncStaples, areas: asyncAreas, sectionOrder: asyncSectionOrder },
     { staples: firestoreStaples, areas: firestoreAreas, sectionOrder: firestoreSectionOrder },
   );
+
+  factories.migrateTripIfNeeded(asyncTripStorage, firestoreTripStorage);
 };
 
 // Pure function: compute added and removed staples by comparing old vs new lists
@@ -143,7 +150,7 @@ export const initializeApp = async (
       tripStorage.initialize(),
     ]);
 
-    await runMigrationIfNeeded(factories, stapleStorage, areaStorage, sectionOrderStorage);
+    await runMigrationIfNeeded(factories, stapleStorage, areaStorage, sectionOrderStorage, tripStorage);
 
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const areas = areaStorage.loadAll();
@@ -208,6 +215,8 @@ const createProductionFactories = (): AdapterFactories => {
     createAsyncStapleStorage: () => createAsyncStapleStorage(),
     createAsyncAreaStorage: () => createAsyncAreaStorage(),
     createAsyncSectionOrderStorage: () => createAsyncSectionOrderStorage(),
+    createAsyncTripStorage: () => createAsyncTripStorage(),
+    migrateTripIfNeeded,
   };
 };
 
@@ -222,6 +231,8 @@ const createLegacyFactories = (): AdapterFactories => ({
   createAsyncStapleStorage: () => createAsyncStapleStorage(),
   createAsyncAreaStorage: () => createAsyncAreaStorage(),
   createAsyncSectionOrderStorage: () => createAsyncSectionOrderStorage(),
+  createAsyncTripStorage: () => createAsyncTripStorage(),
+  migrateTripIfNeeded: () => {},
 });
 
 export const useAppInitialization = (
