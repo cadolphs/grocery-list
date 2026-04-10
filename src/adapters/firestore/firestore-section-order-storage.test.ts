@@ -21,10 +21,35 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
+type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+let capturedSnapshotCallback: SnapshotCallback | null = null;
+const mockUnsubscribe = jest.fn();
+
+const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
+  const data = mockStore[docRef.path];
+  callback({
+    exists: () => data !== undefined,
+    data: () => data,
+  });
+  capturedSnapshotCallback = callback;
+  return mockUnsubscribe;
+});
+
+const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
+  mockStore[path] = data;
+  if (capturedSnapshotCallback) {
+    capturedSnapshotCallback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+  }
+};
+
 jest.mock('firebase/firestore', () => ({
   doc: (...args: unknown[]) => mockDoc(...args),
   getDoc: (...args: unknown[]) => mockGetDoc(...(args as [{ path: string }])),
   setDoc: (...args: unknown[]) => mockSetDoc(...(args as [{ path: string }, unknown])),
+  onSnapshot: (...args: unknown[]) => mockOnSnapshot(...(args as [{ path: string }, SnapshotCallback])),
 }));
 
 // --- Test helpers ---
@@ -43,6 +68,7 @@ const createFreshStorage = async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
+  capturedSnapshotCallback = null;
 });
 
 // --- Tests ---
@@ -115,5 +141,70 @@ describe('firestore section order storage implements section order storage port'
 
     expect(result1).toEqual(result2);
     expect(result1).not.toBe(result2);
+  });
+});
+
+// --- onChange callback and echo detection tests ---
+
+const createFreshStorageWithOnChange = async (onChange?: () => void) => {
+  const { createFirestoreSectionOrderStorage } = require('./firestore-section-order-storage');
+  const mockDb = { type: 'firestore' };
+  const storage = createFirestoreSectionOrderStorage(mockDb, TEST_UID, { onChange });
+  await storage.initialize();
+  return storage as SectionOrderStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+};
+
+describe('firestore section order storage onChange callback', () => {
+  test('calls onChange when remote snapshot contains different order', async () => {
+    mockStore[SECTION_ORDER_DOC_PATH] = { order: ['Dairy', 'Produce', 'Bakery'] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+    expect(storage.loadOrder()).toEqual(['Dairy', 'Produce', 'Bakery']);
+
+    // Simulate remote reorder
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Produce', 'Dairy', 'Bakery'] });
+
+    expect(onChangeCallCount).toBe(1);
+    expect(storage.loadOrder()).toEqual(['Produce', 'Dairy', 'Bakery']);
+  });
+
+  test('does NOT call onChange when snapshot echoes current cache (own-write detection)', async () => {
+    mockStore[SECTION_ORDER_DOC_PATH] = { order: ['Dairy', 'Produce'] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+
+    // Save locally (updates cache)
+    storage.saveOrder(['Dairy', 'Produce', 'Bakery']);
+
+    // Simulate snapshot echo with identical data
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Dairy', 'Produce', 'Bakery'] });
+
+    expect(onChangeCallCount).toBe(0);
+  });
+
+  test('returns unsubscribe function that stops the listener', async () => {
+    mockStore[SECTION_ORDER_DOC_PATH] = { order: null };
+
+    const storage = await createFreshStorageWithOnChange(() => {});
+    storage.unsubscribe();
+
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  test('works without onChange callback (backward compatible)', async () => {
+    mockStore[SECTION_ORDER_DOC_PATH] = { order: ['Dairy'] };
+
+    const storage = await createFreshStorageWithOnChange();
+    expect(storage.loadOrder()).toEqual(['Dairy']);
+
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Dairy', 'Produce'] });
+
+    expect(storage.loadOrder()).toEqual(['Dairy', 'Produce']);
   });
 });

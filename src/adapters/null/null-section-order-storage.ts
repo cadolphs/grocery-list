@@ -2,10 +2,16 @@
 
 import { SectionOrderStorage } from '../../ports/section-order-storage';
 
+type NullSectionOrderStorageOptions = {
+  readonly onChange?: () => void;
+};
+
 export const createNullSectionOrderStorage = (
   initialOrder: string[] | null = null,
-): SectionOrderStorage => {
+  options: NullSectionOrderStorageOptions = {}
+): SectionOrderStorage & { readonly simulateRemoteChange: (order: string[] | null) => void } => {
   let cachedOrder: string[] | null = initialOrder;
+  const { onChange } = options;
 
   return {
     loadOrder: () => cachedOrder,
@@ -14,6 +20,10 @@ export const createNullSectionOrderStorage = (
     },
     clearOrder: () => {
       cachedOrder = null;
+    },
+    simulateRemoteChange: (order: string[] | null) => {
+      cachedOrder = order === null ? null : [...order];
+      onChange?.();
     },
   };
 };

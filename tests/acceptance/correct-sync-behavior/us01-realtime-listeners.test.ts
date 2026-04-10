@@ -18,22 +18,19 @@ import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-s
 // =============================================================================
 
 describe('US-01: Real-time listeners on staples, areas, and section order', () => {
-  it.skip('S-01: area rename on one device reflected on the other', () => {
+  it('S-01: area rename on one device reflected on the other', () => {
     // Given Clemens has areas including "Pantry"
-    const areaStorage = createNullAreaStorage();
-    areaStorage.saveAll(['Bathroom', 'Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']);
-    expect(areaStorage.loadAll()).toContain('Pantry');
-
-    // And a real-time listener is active on the area list
     let onChangeCallCount = 0;
     const onChange = () => { onChangeCallCount++; };
+    const areaStorage = createNullAreaStorage(
+      ['Bathroom', 'Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'],
+      { onChange }
+    );
+    expect(areaStorage.loadAll()).toContain('Pantry');
 
     // When "Pantry" is renamed to "Garage Pantry" from a remote device
-    // (Simulated: adapter receives remote update, updates cache)
-    const areas = areaStorage.loadAll();
-    const updated = areas.map(a => a === 'Pantry' ? 'Garage Pantry' : a);
-    areaStorage.saveAll(updated);
-    onChange();
+    // (Simulated: adapter receives remote update via simulateRemoteChange)
+    areaStorage.simulateRemoteChange(['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']);
 
     // Then the area list contains "Garage Pantry" instead of "Pantry"
     const currentAreas = areaStorage.loadAll();
@@ -48,18 +45,17 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
   // S-02: Section order change syncs via listener
   // =============================================================================
 
-  it.skip('S-02: section order change propagates to the other device', () => {
+  it('S-02: section order change propagates to the other device', () => {
     // Given Clemens has section order ["Dairy", "Produce", "Bakery"]
-    const sectionStorage = createNullSectionOrderStorage();
-    sectionStorage.saveOrder(['Dairy', 'Produce', 'Bakery']);
-
-    // And a real-time listener is active on section order
     let onChangeCallCount = 0;
     const onChange = () => { onChangeCallCount++; };
+    const sectionStorage = createNullSectionOrderStorage(
+      ['Dairy', 'Produce', 'Bakery'],
+      { onChange }
+    );
 
     // When the section order changes to ["Produce", "Dairy", "Bakery"] from a remote device
-    sectionStorage.saveOrder(['Produce', 'Dairy', 'Bakery']);
-    onChange();
+    sectionStorage.simulateRemoteChange(['Produce', 'Dairy', 'Bakery']);
 
     // Then the local section order is ["Produce", "Dairy", "Bakery"]
     expect(sectionStorage.loadOrder()).toEqual(['Produce', 'Dairy', 'Bakery']);

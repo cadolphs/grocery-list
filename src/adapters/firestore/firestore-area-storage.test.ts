@@ -21,10 +21,35 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
+type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+let capturedSnapshotCallback: SnapshotCallback | null = null;
+const mockUnsubscribe = jest.fn();
+
+const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
+  const data = mockStore[docRef.path];
+  callback({
+    exists: () => data !== undefined,
+    data: () => data,
+  });
+  capturedSnapshotCallback = callback;
+  return mockUnsubscribe;
+});
+
+const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
+  mockStore[path] = data;
+  if (capturedSnapshotCallback) {
+    capturedSnapshotCallback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+  }
+};
+
 jest.mock('firebase/firestore', () => ({
   doc: (...args: unknown[]) => mockDoc(...args),
   getDoc: (...args: unknown[]) => mockGetDoc(...(args as [{ path: string }])),
   setDoc: (...args: unknown[]) => mockSetDoc(...(args as [{ path: string }, unknown])),
+  onSnapshot: (...args: unknown[]) => mockOnSnapshot(...(args as [{ path: string }, SnapshotCallback])),
 }));
 
 // --- Test helpers ---
@@ -43,6 +68,7 @@ const createFreshStorage = async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
+  capturedSnapshotCallback = null;
 });
 
 // --- Tests ---
@@ -91,5 +117,70 @@ describe('firestore area storage implements area storage port', () => {
     storage.saveAll(['New Area 1', 'New Area 2']);
 
     expect(storage.loadAll()).toEqual(['New Area 1', 'New Area 2']);
+  });
+});
+
+// --- onChange callback and echo detection tests ---
+
+const createFreshStorageWithOnChange = async (onChange?: () => void) => {
+  const { createFirestoreAreaStorage } = require('./firestore-area-storage');
+  const mockDb = { type: 'firestore' };
+  const storage = createFirestoreAreaStorage(mockDb, TEST_UID, { onChange });
+  await storage.initialize();
+  return storage as AreaStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+};
+
+describe('firestore area storage onChange callback', () => {
+  test('calls onChange when remote snapshot contains different areas', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: ['Kitchen', 'Bathroom'] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+    expect(storage.loadAll()).toEqual(['Kitchen', 'Bathroom']);
+
+    // Simulate remote rename of "Bathroom" to "Garage"
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
+
+    expect(onChangeCallCount).toBe(1);
+    expect(storage.loadAll()).toEqual(['Kitchen', 'Garage']);
+  });
+
+  test('does NOT call onChange when snapshot echoes current cache (own-write detection)', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: ['Kitchen', 'Bathroom'] };
+
+    let onChangeCallCount = 0;
+    const onChange = () => { onChangeCallCount++; };
+
+    const storage = await createFreshStorageWithOnChange(onChange);
+
+    // Save locally (updates cache)
+    storage.saveAll(['Kitchen', 'Bathroom', 'Garage']);
+
+    // Simulate snapshot echo with identical data
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Bathroom', 'Garage'] });
+
+    expect(onChangeCallCount).toBe(0);
+  });
+
+  test('returns unsubscribe function that stops the listener', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: [] };
+
+    const storage = await createFreshStorageWithOnChange(() => {});
+    storage.unsubscribe();
+
+    expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  test('works without onChange callback (backward compatible)', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: ['Kitchen'] };
+
+    const storage = await createFreshStorageWithOnChange();
+    expect(storage.loadAll()).toEqual(['Kitchen']);
+
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
+
+    expect(storage.loadAll()).toEqual(['Kitchen', 'Garage']);
   });
 });
