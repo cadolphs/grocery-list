@@ -166,12 +166,17 @@ export const initializeApp = async (
       const { added, removed } = diffStaples(previousStaples, currentStaples);
 
       for (const staple of added) {
+        // Duplicate guard: skip if trip already has an item with this stapleId
+        const alreadyInTrip = tripService.getItems().some(item => item.stapleId === staple.id);
+        if (alreadyInTrip) continue;
+
         tripService.addItem({
           name: staple.name,
           houseArea: staple.houseArea,
           storeLocation: staple.storeLocation,
           itemType: 'staple',
           source: 'preloaded',
+          stapleId: staple.id,
         });
       }
 

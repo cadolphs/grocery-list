@@ -16,6 +16,9 @@ import { UpdateStapleChanges } from './staple-library';
 
 export type StapleInput = AddStapleRequest & { readonly id?: string };
 
+// Extended request for auto-add: includes stapleId for duplicate prevention
+export type AddTripItemWithStapleId = AddTripItemRequest & { readonly stapleId?: string };
+
 export type TripSummary = {
   readonly totalItems: number;
   readonly stapleCount: number;
@@ -43,7 +46,7 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 export type TripService = {
   readonly start: (staples: ReadonlyArray<StapleInput>, carryover?: readonly TripItem[]) => void;
   readonly startWithCarryover: (staples: ReadonlyArray<StapleInput>) => void;
-  readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
+  readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
   readonly uncheckItem: (name: string) => void;
@@ -113,7 +116,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
       storage.clearCarryover();
     },
 
-    addItem: (request: AddTripItemRequest): AddTripItemResult => {
+    addItem: (request: AddTripItemWithStapleId): AddTripItemResult => {
       if (!request.houseArea || request.houseArea.trim() === '') {
         return { success: false, error: 'area is required' };
       }
@@ -124,7 +127,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         houseArea: request.houseArea,
         storeLocation: request.storeLocation,
         itemType: request.itemType,
-        stapleId: null,
+        stapleId: request.stapleId ?? null,
         source: request.source,
         needed: true,
         checked: false,

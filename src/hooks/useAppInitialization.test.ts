@@ -352,6 +352,96 @@ describe('initializeApp', () => {
       expect(tripAfter.map(i => i.name)).not.toContain('Soda');
     });
 
+    test('auto-added staple items carry their stapleId on the trip item', async () => {
+      const authUser: AuthUser = { uid: 'user-sid', email: 'sid@d.com' };
+
+      let capturedOnChange: (() => void) | undefined;
+      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          sharedStorage = createNullStapleStorage([
+            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+          ], { onChange: options?.onChange });
+          capturedOnChange = options?.onChange;
+          return {
+            ...sharedStorage,
+            initialize: async () => {},
+          };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+
+      // Add Bread via staple sync
+      const breadStapleId = 'staple-bread-1';
+      sharedStorage!.save({
+        id: breadStapleId,
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+        type: 'staple',
+        createdAt: '2026-04-10T10:00:00.000Z',
+      });
+      capturedOnChange!();
+
+      // The auto-added trip item should carry the stapleId
+      const breadItem = result.services!.tripService.getItems().find(i => i.name === 'Bread');
+      expect(breadItem).toBeDefined();
+      expect(breadItem!.stapleId).toBe(breadStapleId);
+    });
+
+    test('duplicate guard: skips adding staple when trip already has item with that stapleId', async () => {
+      const authUser: AuthUser = { uid: 'user-guard', email: 'g@g.com' };
+
+      let capturedOnChange: (() => void) | undefined;
+      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          sharedStorage = createNullStapleStorage([
+            { name: 'Tahini', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'International', aisleNumber: 4 } },
+          ], { onChange: options?.onChange });
+          capturedOnChange = options?.onChange;
+          return {
+            ...sharedStorage,
+            initialize: async () => {},
+          };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      const tripService = result.services!.tripService;
+
+      // Trip starts with 1 Tahini (from initializeFromStorage, has stapleId)
+      expect(tripService.getItems()).toHaveLength(1);
+      const tahiniStapleId = tripService.getItems()[0].stapleId!;
+
+      // Simulate: remove from storage, fire onChange (removes from trip)
+      sharedStorage!.remove(tahiniStapleId);
+      capturedOnChange!();
+      expect(tripService.getItems()).toHaveLength(0);
+
+      // Re-add same staple ID, fire onChange (should add back)
+      sharedStorage!.save({
+        id: tahiniStapleId,
+        name: 'Tahini',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'International', aisleNumber: 4 },
+        type: 'staple',
+        createdAt: '2026-04-10T10:00:00.000Z',
+      });
+      capturedOnChange!();
+      expect(tripService.getItems()).toHaveLength(1);
+
+      // Fire onChange AGAIN with same storage state -- should NOT create duplicate
+      // This simulates a Firestore snapshot replay
+      capturedOnChange!();
+      expect(tripService.getItems().filter(i => i.name === 'Tahini')).toHaveLength(1);
+    });
+
     test('auto-add preserves sweep progress', async () => {
       const authUser: AuthUser = { uid: 'user-sweep', email: 's@s.com' };
 
