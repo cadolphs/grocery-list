@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PreCommit": [
+      {
+        "command": "npx tsc --noEmit && npx eslint . --ext .ts,.tsx --max-warnings 0 && npx jest --ci --bail",
+        "description": "Run CI checks (typecheck, lint, tests) before commit"
+      }
+    ]
+  }
+}

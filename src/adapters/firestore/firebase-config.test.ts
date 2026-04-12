@@ -10,12 +10,12 @@ const mockInitializeFirestore = jest.fn(() => mockDbInstance);
 const mockPersistentLocalCache = jest.fn(() => mockCache);
 
 jest.mock('firebase/app', () => ({
-  initializeApp: (...args: any[]) => mockInitializeApp(...args),
-  getApps: () => mockGetApps(),
+  initializeApp: mockInitializeApp,
+  getApps: mockGetApps,
 }));
 
 jest.mock('firebase/auth', () => ({
-  getAuth: (...args: any[]) => mockGetAuth(...args),
+  getAuth: mockGetAuth,
   createUserWithEmailAndPassword: jest.fn(),
   signInWithEmailAndPassword: jest.fn(),
   signOut: jest.fn(),
@@ -23,8 +23,8 @@ jest.mock('firebase/auth', () => ({
 }));
 
 jest.mock('firebase/firestore', () => ({
-  initializeFirestore: (...args: any[]) => mockInitializeFirestore(...args),
-  persistentLocalCache: (...args: any[]) => mockPersistentLocalCache(...args),
+  initializeFirestore: mockInitializeFirestore,
+  persistentLocalCache: mockPersistentLocalCache,
 }));
 
 const requireFreshConfig = () => {

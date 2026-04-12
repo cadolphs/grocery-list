@@ -68,6 +68,11 @@ const createTrackingFactories = () => {
       ...createNullSectionOrderStorage(),
       initialize: () => Promise.resolve(),
     }),
+    createAsyncTripStorage: () => ({
+      ...createNullTripStorage(),
+      initialize: () => Promise.resolve(),
+    }),
+    migrateTripIfNeeded: () => {},
   };
 
   return { factories, unsubscribeCalls, onChangeCallbacks };
@@ -144,7 +149,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
 
   it('S-14: delayed listener callback after logout does not update state', async () => {
     // Given Clemens has logged out and listeners were cleaned up
-    let onChangeCallCount = 0;
+    const onChangeCallCount = 0;
     let capturedOnChange: (() => void) | undefined;
 
     const factories: AdapterFactories = {
@@ -187,6 +192,11 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
         ...createNullSectionOrderStorage(),
         initialize: () => Promise.resolve(),
       }),
+      createAsyncTripStorage: () => ({
+        ...createNullTripStorage(),
+        initialize: () => Promise.resolve(),
+      }),
+      migrateTripIfNeeded: () => {},
     };
 
     const result = await initializeApp(testUser, factories);

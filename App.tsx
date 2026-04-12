@@ -1,19 +1,19 @@
-import { useRef } from 'react';
+import { useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAppInitialization } from './src/hooks/useAppInitialization';
 import { useAuth } from './src/hooks/useAuth';
-import { createAuthService, AuthService } from './src/auth/AuthService';
+import { createAuthService } from './src/auth/AuthService';
 import { ServiceProvider } from './src/ui/ServiceProvider';
 import { AppShell } from './src/ui/AppShell';
 import { LoadingScreen } from './src/ui/LoadingScreen';
 import { LoginScreen } from './src/ui/LoginScreen';
 
 export default function App() {
-  const authServiceRef = useRef<AuthService>(createAuthService());
+  const authService = useMemo(() => createAuthService(), []);
   const { user, loading, signIn, signUp } = useAuth(
-    authServiceRef.current,
+    authService,
   );
 
   const { isReady, services } = useAppInitialization(

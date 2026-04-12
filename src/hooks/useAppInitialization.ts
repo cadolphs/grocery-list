@@ -135,6 +135,7 @@ export const initializeApp = async (
     const { uid } = authUser;
 
     // Late-binding callback: set after trip service is created
+    // eslint-disable-next-line prefer-const
     let handleStapleChange: (() => void) | undefined;
     const onStapleChange = () => handleStapleChange?.();
 

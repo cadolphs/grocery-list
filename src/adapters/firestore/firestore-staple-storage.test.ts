@@ -49,10 +49,10 @@ const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
 };
 
 jest.mock('firebase/firestore', () => ({
-  doc: (...args: unknown[]) => mockDoc(...args),
-  getDoc: (...args: unknown[]) => mockGetDoc(...(args as [{ path: string }])),
-  setDoc: (...args: unknown[]) => mockSetDoc(...(args as [{ path: string }, unknown])),
-  onSnapshot: (...args: unknown[]) => mockOnSnapshot(...(args as [{ path: string }, SnapshotCallback])),
+  doc: mockDoc,
+  getDoc: mockGetDoc,
+  setDoc: mockSetDoc,
+  onSnapshot: mockOnSnapshot,
 }));
 
 // --- Test helpers ---
