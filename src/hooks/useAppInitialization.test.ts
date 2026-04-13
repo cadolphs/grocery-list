@@ -195,6 +195,23 @@ describe('initializeApp', () => {
       expect(result.isReady).toBe(true);
     });
 
+    test('trip migration runs even when staple migration is not needed', async () => {
+      const authUser: AuthUser = { uid: 'user-trip-mig', email: 'tm@m.com' };
+      let tripMigrateCalled = false;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        checkMigrationNeeded: () => false, // staple migration NOT needed
+        migrateTripIfNeeded: () => {
+          tripMigrateCalled = true;
+        },
+      };
+
+      await initializeApp(authUser, factories);
+
+      expect(tripMigrateCalled).toBe(true);
+    });
+
     test('given no migration needed, does not call migrate', async () => {
       const authUser: AuthUser = { uid: 'user-nomigrate', email: 'n@n.com' };
       let migrateCalled = false;

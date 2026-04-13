@@ -153,6 +153,55 @@ describe('TripService.subscribe', () => {
     expect(notifications).toHaveLength(0);
   });
 
+  test('initializeFromStorage persists trip to storage when no saved trip exists', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+
+    tripService.initializeFromStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 }, id: 'staple-milk' },
+      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 }, id: 'staple-bread' },
+    ]);
+
+    // Storage should contain the persisted trip with both items
+    const savedTrip = storage.loadTrip();
+    expect(savedTrip).not.toBeNull();
+    expect(savedTrip!.items).toHaveLength(2);
+    expect(savedTrip!.items.map(i => i.name)).toEqual(['Milk', 'Bread']);
+    expect(savedTrip!.status).toBe('active');
+  });
+
+  test('initializeFromStorage persists trip to storage when creating from carryover', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+
+    // Set up a completed trip in storage
+    storage.saveTrip({
+      id: 'old-trip',
+      items: [
+        { id: 'item-1', name: 'OldItem', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 1 }, itemType: 'staple', stapleId: null, source: 'preloaded', needed: true, checked: true, checkedAt: '2026-04-12T10:00:00Z' },
+      ],
+      status: 'completed',
+      createdAt: '2026-04-12T09:00:00Z',
+      completedAreas: [],
+    });
+
+    // Set up carryover items
+    storage.saveCarryover([
+      { id: 'carry-1', name: 'Leftover', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 1 }, itemType: 'one-off', stapleId: null, source: 'carryover', needed: true, checked: false, checkedAt: null },
+    ]);
+
+    tripService.initializeFromStorage([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 }, id: 'staple-milk' },
+    ]);
+
+    // Storage should contain the new trip (not the completed one)
+    const savedTrip = storage.loadTrip();
+    expect(savedTrip).not.toBeNull();
+    expect(savedTrip!.status).toBe('active');
+    // Should have staple + carryover items
+    expect(savedTrip!.items).toHaveLength(2);
+    expect(savedTrip!.items.map(i => i.name)).toContain('Milk');
+    expect(savedTrip!.items.map(i => i.name)).toContain('Leftover');
+  });
+
   test('unsubscribe stops notifications', () => {
     const tripService = createTestTripService();
     const notifications: number[] = [];

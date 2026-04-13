@@ -269,6 +269,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         // No stored trip: start fresh with staples
         const stapleItems = staples.map(stapleInputToTripItem);
         items = [...stapleItems];
+        persistTrip();
         return;
       }
       if (savedTrip.status === 'completed') {
@@ -280,6 +281,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         tripId = generateTripId();
         createdAt = new Date().toISOString();
         completedAreas.clear();
+        persistTrip();
         return;
       }
       // Active trip: load existing items

@@ -85,26 +85,28 @@ const runMigrationIfNeeded = async (
   firestoreSectionOrder: SectionOrderStorage,
   firestoreTripStorage: TripStorage,
 ): Promise<void> => {
+  // Trip migration runs independently (has its own idempotency guard)
+  const asyncTripStorage = factories.createAsyncTripStorage();
+  await asyncTripStorage.initialize();
+  factories.migrateTripIfNeeded(asyncTripStorage, firestoreTripStorage);
+
+  // Staple/area/sectionOrder migration only if needed
   if (!factories.checkMigrationNeeded(firestoreStaples)) return;
 
   const asyncStaples = factories.createAsyncStapleStorage();
   const asyncAreas = factories.createAsyncAreaStorage();
   const asyncSectionOrder = factories.createAsyncSectionOrderStorage();
-  const asyncTripStorage = factories.createAsyncTripStorage();
 
   await Promise.all([
     asyncStaples.initialize(),
     asyncAreas.initialize(),
     asyncSectionOrder.initialize(),
-    asyncTripStorage.initialize(),
   ]);
 
   factories.migrateToFirestore(
     { staples: asyncStaples, areas: asyncAreas, sectionOrder: asyncSectionOrder },
     { staples: firestoreStaples, areas: firestoreAreas, sectionOrder: firestoreSectionOrder },
   );
-
-  factories.migrateTripIfNeeded(asyncTripStorage, firestoreTripStorage);
 };
 
 // Pure function: compute added and removed staples by comparing old vs new lists
