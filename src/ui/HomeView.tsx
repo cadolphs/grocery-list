@@ -109,6 +109,10 @@ export const HomeView = (): React.JSX.Element => {
     removeItemByStapleId(stapleId);
   }, [stapleLibrary, removeItemByStapleId]);
 
+  const handleQuickAddSearch = useCallback((query: string): StapleItem[] => {
+    return stapleLibrary.search(query).filter((s) => s.type === 'one-off');
+  }, [stapleLibrary]);
+
   const handleFindDuplicate = useCallback((name: string, area: HouseArea) => {
     return stapleLibrary.listAll().find(
       (s) => s.name === name && s.houseArea === area,
@@ -209,7 +213,7 @@ export const HomeView = (): React.JSX.Element => {
           <Text style={[styles.modeToggleText, homeMode === 'checklist' && styles.modeToggleTextActive]}>Checklist</Text>
         </Pressable>
       </View>
-      <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
+      <QuickAdd onAddItem={addItem} onSearch={handleQuickAddSearch} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
       {homeMode === 'checklist' && (
         <StapleChecklist
           staples={checklistStaples}

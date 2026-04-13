@@ -74,11 +74,12 @@ describe('M2-1: One-off suggestion shows type label', () => {
 // M2-2: Staple suggestion does not show type label
 // =============================================================================
 
-describe('M2-2: Staple suggestion does not show type label', () => {
-  // AC: Staple suggestions do not display a type label
-  // Driving port: QuickAdd formatSuggestion
+describe('M2-2: Staple suggestions are not shown in QuickAdd', () => {
+  // AC: Staples don't appear in QuickAdd suggestions — they're part of the sweep,
+  // not the quick-add flow. Only one-offs (and the "Add as new item..." option) show.
+  // Driving port: QuickAdd onSearch (filtered to one-offs only)
 
-  it('does not show type label for staple suggestions', () => {
+  it('does not show staple suggestions when typing a staple name', () => {
     // Given Elena has "Milk" as a staple in the library
     const services = createServicesWithOneOff();
     render(
@@ -90,10 +91,8 @@ describe('M2-2: Staple suggestion does not show type label', () => {
     // When Elena types "Mil" in QuickAdd
     fireEvent.changeText(screen.getByPlaceholderText('Add an item...'), 'Mil');
 
-    // Then the suggestion for "Milk" does not include "(one-off)" or "(staple)"
-    const milkSuggestion = screen.getByText(/Milk.*Dairy/);
-    expect(milkSuggestion.props.children).not.toMatch(/\(one-off\)/);
-    expect(milkSuggestion.props.children).not.toMatch(/\(staple\)/);
+    // Then no "Milk - Dairy" staple suggestion appears
+    expect(screen.queryByText(/Milk - Dairy/)).toBeNull();
   });
 });
 
@@ -101,11 +100,12 @@ describe('M2-2: Staple suggestion does not show type label', () => {
 // M2-3: Same-name items distinguished by type label
 // =============================================================================
 
-describe('M2-3: Same-name items distinguished by type label', () => {
-  // AC: Both types are visually scannable and distinguishable
-  // Driving port: QuickAdd formatSuggestion with mixed results
+describe('M2-3: Same-name items: only one-off suggestion appears', () => {
+  // AC: Staples are not suggested in QuickAdd. When a name matches both a staple
+  // and a one-off, only the one-off suggestion appears (staple is already in the sweep).
+  // Driving port: QuickAdd onSearch (filtered to one-offs only)
 
-  it('distinguishes staple and one-off with same name', () => {
+  it('shows only the one-off suggestion when a staple and one-off share a name', () => {
     // Given Elena has "Butter" as a staple and "Butter" as a one-off
     const stapleStorage = createNullStapleStorage([
       { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
@@ -130,8 +130,8 @@ describe('M2-3: Same-name items distinguished by type label', () => {
     // When Elena types "Butter" in QuickAdd
     fireEvent.changeText(screen.getByPlaceholderText('Add an item...'), 'Butter');
 
-    // Then two suggestions appear: one staple (no label), one one-off (with label)
-    expect(screen.getByText(/Butter.*Dairy/)).toBeTruthy();
+    // Then only the one-off suggestion appears
+    expect(screen.queryByText(/Butter - Dairy/)).toBeNull();
     expect(screen.getByText(/Butter.*International.*\(one-off\)/)).toBeTruthy();
   });
 });

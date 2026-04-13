@@ -190,12 +190,62 @@ describe('US-08: Area completion and sweep progress in UI', () => {
 // =============================================================================
 
 describe('US-09: Type-ahead suggestions in quick-add UI', () => {
-  // AC: Typing a prefix shows matching suggestions from staple library
-  // AC: Tapping a suggestion adds it with all metadata
-  // AC: No suggestions for unknown items
+  // AC: Typing a prefix shows matching one-off suggestions from library
+  // AC: Tapping a suggestion adds the item with saved store location
+  // AC: Staples are not suggested — they're part of the sweep, not quick-add
+  // Note: The prior "staples shown in quick-add" behavior was superseded by
+  // persist-one-offs — quick-add now only surfaces persisted one-offs.
 
-  it('shows matching suggestions when typing a prefix', async () => {
-    // Given the quick-add field is active
+  it('shows matching one-off suggestions when typing a prefix', async () => {
+    // Given a one-off "Tahini" was persisted from a previous trip
+    const { library, tripService } = createTestServices();
+    library.addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+
+    // When Carlos types "tah" in the quick-add field
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'tah');
+
+    // Then "Tahini" appears as a one-off suggestion below the field
+    await waitFor(() => {
+      expect(screen.getByText(/Tahini - International \/ Aisle 7.*\(one-off\)/)).toBeTruthy();
+    });
+  });
+
+  it('tapping a one-off suggestion adds it to the trip with saved location', async () => {
+    // Given a one-off "Tahini" appears as a suggestion
+    const { library, tripService } = createTestServices();
+    library.addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    render(
+      <ServiceProvider stapleLibrary={library} tripService={tripService}>
+        <AppShell />
+      </ServiceProvider>
+    );
+    const quickAddInput = screen.getByPlaceholderText('Add an item...');
+    fireEvent.changeText(quickAddInput, 'tah');
+
+    // When Carlos taps the "Tahini" suggestion
+    await waitFor(() => {
+      fireEvent.press(screen.getByText(/Tahini - International \/ Aisle 7.*\(one-off\)/));
+    });
+
+    // Then "Tahini" is added to the trip as a one-off
+    const tripItems = tripService.getItems();
+    expect(tripItems).toContainEqual(
+      expect.objectContaining({
+        name: 'Tahini',
+        itemType: 'one-off',
+        storeLocation: expect.objectContaining({ section: 'International', aisleNumber: 7 }),
+      })
+    );
+  });
+
+  it('does not show staple suggestions — staples are managed via the sweep, not quick-add', () => {
+    // Given "Whole milk" is a staple in the library
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
@@ -207,30 +257,8 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(quickAddInput, 'who');
 
-    // Then "Whole milk" appears as a suggestion below the field
-    await waitFor(() => {
-      expect(screen.getByText('Whole milk - Dairy / Aisle 3')).toBeTruthy();
-    });
-  });
-
-  it('tapping a suggestion adds it with metadata', async () => {
-    // Given "Whole milk" appears as a suggestion
-    const { library, tripService } = createTestServices();
-    render(
-      <ServiceProvider stapleLibrary={library} tripService={tripService}>
-        <AppShell />
-      </ServiceProvider>
-    );
-    const quickAddInput = screen.getByPlaceholderText('Add an item...');
-    fireEvent.changeText(quickAddInput, 'who');
-
-    // When Carlos taps the "Whole milk" suggestion
-    await waitFor(() => {
-      fireEvent.press(screen.getByText('Whole milk - Dairy / Aisle 3'));
-    });
-
-    // Then "Whole milk" is added to the trip with section "Dairy" and aisle 3
-    expect(screen.getByText('Whole milk')).toBeTruthy();
+    // Then no staple suggestion appears
+    expect(screen.queryByText(/Whole milk - Dairy/)).toBeNull();
   });
 
   it('shows no staple suggestions for unknown items but shows add-new-item prompt', async () => {
