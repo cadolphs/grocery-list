@@ -20,7 +20,7 @@
  * - MS1-6: Loading indicator during sign-up (US-02)
  */
 
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen, act } from '@testing-library/react-native';
 import { createNullAuthService, AuthService, AuthResult } from '../../../src/auth/AuthService';
 import { LoginScreen } from '../../../src/ui/LoginScreen';
 
@@ -224,10 +224,10 @@ describe('MS1-6: Loading indicator shown during sign-up', () => {
     });
 
     // Complete the sign-up
-    resolveSignUp!({ success: true, user: { uid: 'user-1', email: 'ana@email.com' } });
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Signing/i)).toBeNull();
+    await act(async () => {
+      resolveSignUp!({ success: true, user: { uid: 'user-1', email: 'ana@email.com' } });
     });
+
+    expect(screen.queryByText(/Signing/i)).toBeNull();
   });
 });
