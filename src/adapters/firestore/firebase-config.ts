@@ -51,10 +51,9 @@ export const getFirebaseAuth = (): Auth => {
 
 export const getFirebaseDb = (): Firestore => {
   if (db) return db;
-  const firestoreConfig: Record<string, unknown> = {
-    experimentalForceLongPolling: true,
-  };
+  const firestoreConfig: Record<string, unknown> = {};
   if (Platform.OS === 'web') {
+    firestoreConfig.experimentalForceLongPolling = true;
     firestoreConfig.localCache = persistentLocalCache();
   }
   db = initializeFirestore(getOrInitializeApp(), firestoreConfig);

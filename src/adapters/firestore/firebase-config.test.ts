@@ -93,17 +93,13 @@ describe("firebase config", () => {
     expect(mockInitializeApp).not.toHaveBeenCalled();
   });
 
-  test("initializes firestore with long polling", () => {
+  test("initializes firestore without long polling on native", () => {
     const { getFirebaseDb } = requireFreshConfig();
 
     getFirebaseDb();
 
-    expect(mockInitializeFirestore).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        experimentalForceLongPolling: true,
-      }),
-    );
+    const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
+    expect(firestoreConfig).not.toHaveProperty("experimentalForceLongPolling");
   });
 });
 
@@ -127,13 +123,6 @@ describe("platform-specific initialization", () => {
       const { getFirebaseDb } = requireFreshConfigWithPlatform("android");
 
       getFirebaseDb();
-
-      expect(mockInitializeFirestore).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          experimentalForceLongPolling: true,
-        }),
-      );
 
       const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
       expect(firestoreConfig).not.toHaveProperty("localCache");

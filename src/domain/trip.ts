@@ -138,6 +138,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
       };
       items = [...items, tripItem];
       notify();
+      persistTrip();
       return { success: true };
     },
 
