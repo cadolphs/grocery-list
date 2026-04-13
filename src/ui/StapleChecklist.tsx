@@ -87,6 +87,9 @@ export const StapleChecklist = ({
           </Pressable>
         )}
       </View>
+      {visibleStaples.length === 0 && searchQuery.length > 0 && (
+        <Text style={styles.emptyStateMessage}>No staples match &apos;{searchQuery}&apos;</Text>
+      )}
       {visibleStaples.map((item) => (
         <StapleRow
           key={item.id}
@@ -123,6 +126,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
     fontWeight: '600',
+  },
+  emptyStateMessage: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
   },
   row: {
     flexDirection: 'row',

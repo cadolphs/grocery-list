@@ -53,7 +53,7 @@ function renderInChecklistMode() {
 // M1-1: No matches message shown
 // =============================================================================
 
-describe.skip('M1-1: Empty state message when no staples match', () => {
+describe('M1-1: Empty state message when no staples match', () => {
   // AC: When the search filter produces zero results, the message
   //     "No staples match '{query}'" is displayed
   // AC: The message uses the actual query text typed by the user
@@ -79,7 +79,7 @@ describe.skip('M1-1: Empty state message when no staples match', () => {
 // M1-2: Message disappears when query is corrected
 // =============================================================================
 
-describe.skip('M1-2: Empty state disappears when query matches', () => {
+describe('M1-2: Empty state disappears when query matches', () => {
   // AC: The message disappears when the query is modified to produce results
   // Driving port: TextInput changeText on search bar
 
@@ -104,7 +104,7 @@ describe.skip('M1-2: Empty state disappears when query matches', () => {
 // M1-3: Message disappears when search is cleared
 // =============================================================================
 
-describe.skip('M1-3: Empty state disappears when search is cleared', () => {
+describe('M1-3: Empty state disappears when search is cleared', () => {
   // AC: The message disappears when the search is cleared
   // Driving port: Press event on clear button
 
