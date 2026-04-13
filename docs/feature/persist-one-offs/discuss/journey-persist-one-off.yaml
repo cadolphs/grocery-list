@@ -1,0 +1,186 @@
+schema_version: 1
+
+journey:
+  name: "Persist One-Off Items"
+  goal: "Re-add previously purchased one-off items without re-entering store location details"
+  persona: "Elena Ruiz, weekly shopper who buys specialty items every few weeks"
+
+  emotional_arc:
+    start: "Mildly frustrated -- re-entering known information feels wasteful"
+    middle: "Relieved -- the app remembered the item and its location"
+    end: "Confident -- the app learns from my shopping habits"
+
+steps:
+  - id: 1
+    name: "First-time one-off add"
+    action: "User adds a new one-off item via MetadataBottomSheet"
+
+    mockup: |
+      +-- MetadataBottomSheet --------------------------------+
+      |  Add '${itemName}'                                    |
+      |  [ Staple ] [*One-off*]                               |
+      |  Store section: [${section}              ]            |
+      |  Aisle number:  [${aisleNumber}          ]            |
+      |  [        Add Item         ]                          |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "itemName"
+        source: "QuickAdd text input"
+        displayed_as: "${itemName}"
+        consumers: ["MetadataBottomSheet title", "library entry name", "trip item name"]
+      - name: "storeLocation"
+        source: "MetadataBottomSheet form inputs"
+        displayed_as: "${section} / Aisle ${aisleNumber}"
+        consumers: ["library entry", "trip item", "QuickAdd suggestion"]
+
+    emotional_state:
+      entry: "Focused -- filling out item details"
+      exit: "Satisfied -- item added to trip"
+
+    integration_checkpoint: |
+      One-off saved to staple library with type: 'one-off'.
+      One-off added to current trip with itemType: 'one-off'.
+      Both share same name and storeLocation.
+
+    failure_modes:
+      - "Storage write fails silently -- item in trip but not persisted to library"
+      - "User skips metadata (uses 'Skip, add with defaults') -- should still persist with defaults"
+
+    gherkin: |
+      Scenario: One-off item is persisted for future trips
+        Given Elena is on a new trip and types "Tahini" in QuickAdd
+        And no suggestion appears (first time adding this item)
+        When Elena adds "Tahini" as a one-off with section "International" and aisle 7
+        Then "Tahini" appears in the current trip's one-offs section
+        And "Tahini" is saved to the item library for future suggestions
+
+  - id: 2
+    name: "Re-add via QuickAdd suggestion"
+    action: "User types partial name, sees persisted one-off in suggestions, taps it"
+
+    mockup: |
+      +-- QuickAdd -------------------------------------------+
+      |  [${query}                         ] [Add]            |
+      |                                                       |
+      |  ${itemName} - ${section} / Aisle ${aisleNumber}      |
+      |    (one-off)                                          |
+      |  Add '${query}' as new item...                        |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "libraryEntry"
+        source: "StapleLibrary.search(query)"
+        displayed_as: "${itemName} - ${section} / Aisle ${aisleNumber} (one-off)"
+        consumers: ["QuickAdd suggestion list"]
+
+    emotional_state:
+      entry: "Hopeful -- typing a name they've used before"
+      exit: "Delighted -- the app remembered everything"
+
+    integration_checkpoint: |
+      StapleLibrary.search() returns items with type 'one-off'.
+      QuickAdd displays one-off suggestions with (one-off) label.
+      Tapping suggestion adds to trip with itemType: 'one-off' and pre-filled storeLocation.
+
+    failure_modes:
+      - "Search does not return one-off items (filter bug)"
+      - "One-off suggestion adds item as staple instead of one-off"
+      - "Store location not carried from library entry to trip item"
+
+    gherkin: |
+      Scenario: Previously added one-off appears in suggestions
+        Given Elena previously added "Tahini" as a one-off in the International section, aisle 7
+        And Elena is on a new trip
+        When Elena types "Tah" in QuickAdd
+        Then a suggestion shows "Tahini - International / Aisle 7 (one-off)"
+
+      Scenario: Selecting one-off suggestion adds item with saved location
+        Given Elena sees "Tahini" as a one-off suggestion
+        When Elena taps the suggestion
+        Then "Tahini" is added to the trip as a one-off
+        And the store location is International, aisle 7
+        And no MetadataBottomSheet is shown
+
+  - id: 3
+    name: "One-off appears correctly in trip"
+    action: "Re-added one-off shows in one-offs section, not in sweep areas or checklist"
+
+    mockup: |
+      +-- Home (Sweep mode) ----------------------------------+
+      |  -- Kitchen Cabinets (3 items) --                     |
+      |  [x] Olive Oil                                        |
+      |  [ ] Rice                                             |
+      |                                                       |
+      |  -- One-offs (1) --                                   |
+      |  [ ] Tahini  (International / Aisle 7)                |
+      +-------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "tripItem"
+        source: "Trip.items filtered by itemType"
+        displayed_as: "item row in one-offs section"
+        consumers: ["HomeView one-offs section", "StoreView aisle grouping"]
+
+    emotional_state:
+      entry: "Expectant -- where did the item land?"
+      exit: "Confident -- it's in the right place"
+
+    integration_checkpoint: |
+      Re-added one-off has itemType 'one-off' (not 'staple').
+      One-off does NOT appear in sweep area groups.
+      One-off does NOT appear in StapleChecklist.
+
+    failure_modes:
+      - "One-off appears in sweep area groups instead of one-offs section"
+      - "One-off appears in staple checklist"
+
+    gherkin: |
+      Scenario: Re-added one-off stays in one-offs section
+        Given Elena re-added "Tahini" from suggestions
+        When Elena views the home screen in sweep mode
+        Then "Tahini" appears under "One-offs"
+        And "Tahini" does not appear under any house area section
+
+  - id: 4
+    name: "Name collision between staple and one-off"
+    action: "Search returns both staple and one-off with same name, differentiated"
+
+    mockup: |
+      +-- QuickAdd -------------------------------------------+
+      |  [Butter                       ] [Add]                |
+      |                                                       |
+      |  Butter - Dairy / Aisle 2                             |
+      |  Butter - International / Aisle 7 (one-off)           |
+      |  Add 'Butter' as new item...                          |
+      +-------------------------------------------------------+
+
+    emotional_state:
+      entry: "Searching -- which butter do I want?"
+      exit: "Clear -- I can tell them apart"
+
+    failure_modes:
+      - "Only one result shown when both exist"
+      - "No visual differentiation between staple and one-off suggestions"
+
+    gherkin: |
+      Scenario: Both staple and one-off with same name shown in suggestions
+        Given Elena has "Butter" as a staple in Dairy, aisle 2
+        And Elena has "Butter" as a one-off in International, aisle 7
+        When Elena types "Butter" in QuickAdd
+        Then both suggestions appear
+        And the one-off suggestion is labeled "(one-off)"
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "storeLocation"
+      must_match_across: [1, 2, 3]
+      failure_message: "Store location saved in library must match what appears in suggestions and what gets added to trip"
+    - artifact: "itemType"
+      must_match_across: [2, 3]
+      failure_message: "One-off selected from suggestion must remain one-off in trip (not become staple)"
+
+changelog:
+  - date: "2026-04-13"
+    feature: "persist-one-offs"
+    change: "Initial journey creation"

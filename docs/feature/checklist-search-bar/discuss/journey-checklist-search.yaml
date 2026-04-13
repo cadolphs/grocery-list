@@ -1,0 +1,181 @@
+schema_version: 1
+
+journey:
+  name: "Checklist Search"
+  goal: "Find and toggle a specific staple quickly when the checklist is long"
+  persona: "Clemens -- sole user, 30-80 staples in library"
+
+  emotional_arc:
+    start: "Mildly frustrated -- scrolling through a long list is tedious"
+    middle: "Focused -- typing narrows results, target item appears"
+    end: "Satisfied -- item found and toggled in seconds"
+
+steps:
+  - id: 1
+    name: "See Search Bar"
+    action: "Open checklist mode"
+
+    mockup: |
+      +-----------------------------------------------+
+      | [  Sweep  ] [ Checklist ]                      |
+      | [Quick Add input ...]                          |
+      | [ Search staples...             ]              |
+      | Avocados                          Produce      |
+      | Bananas                           Produce      |
+      | Butter                            Dairy        |
+      | ...                                            |
+      +-----------------------------------------------+
+
+    shared_artifacts:
+      - name: "staples"
+        source: "stapleLibrary.listAll()"
+        displayed_as: "alphabetically sorted staple rows"
+        consumers: ["StapleChecklist component"]
+      - name: "tripItemNames"
+        source: "useTrip().items filtered by needed"
+        displayed_as: "green/checked vs gray/strikethrough styling"
+        consumers: ["StapleChecklist component"]
+
+    emotional_state:
+      entry: "Task-oriented, knows what to find"
+      exit: "Oriented, sees where to type"
+
+    failure_modes:
+      - "Search bar not visible without scrolling (if placed below fold)"
+
+    gherkin: |
+      Scenario: Search bar visible on checklist open
+        Given Clemens has 60 staples in his library
+        When he switches to checklist mode
+        Then a search input is visible at the top of the checklist
+        And all 60 staples are displayed below it alphabetically
+
+  - id: 2
+    name: "Filter by Typing"
+    action: "Type search query into search bar"
+
+    mockup: |
+      +-----------------------------------------------+
+      | [ ch                          [X] ]            |
+      |                                                |
+      | Cheddar Cheese                    Dairy        |
+      | Chicken Breast                    Freezer      |
+      | Chocolate Chips                   Pantry       |
+      +-----------------------------------------------+
+
+    shared_artifacts:
+      - name: "searchQuery"
+        source: "Local component state (TextInput value)"
+        displayed_as: "Text in the search input field"
+        consumers: ["filter function", "clear button visibility"]
+
+    emotional_state:
+      entry: "Focused, beginning to type"
+      exit: "Relieved, target item is now visible"
+
+    integration_checkpoint: |
+      Filtered list preserves checked/unchecked state from tripItemNames.
+      Filtered list preserves long-press edit behavior.
+
+    failure_modes:
+      - "No staples match the query -- user sees empty list"
+      - "Filter is case-sensitive causing missed matches"
+      - "Filter has noticeable lag on large lists"
+
+    gherkin: |
+      Scenario: Staples filtered as user types
+        Given Clemens has staples "Cheddar Cheese", "Chicken Breast", "Chocolate Chips", and "Butter"
+        When he types "ch" in the search bar
+        Then the list shows "Cheddar Cheese", "Chicken Breast", and "Chocolate Chips"
+        And "Butter" is not shown
+
+      Scenario: Search is case-insensitive
+        Given Clemens has a staple named "Cheddar Cheese"
+        When he types "cheddar" in the search bar
+        Then "Cheddar Cheese" appears in the filtered list
+
+      Scenario: No matches found
+        Given Clemens has 60 staples in his library
+        When he types "zzz" in the search bar
+        Then the list is empty
+        And a message "No staples match 'zzz'" is displayed
+
+  - id: 3
+    name: "Toggle Item from Filtered List"
+    action: "Tap a staple in the filtered results to add/remove from trip"
+
+    mockup: |
+      +-----------------------------------------------+
+      | [ ch                          [X] ]            |
+      |                                                |
+      | Cheddar Cheese                    Dairy        |
+      |   (green, on trip)  <-- just toggled           |
+      | Chicken Breast                    Freezer      |
+      |   (green, on trip)                             |
+      | Chocolate Chips                   Pantry       |
+      |   (gray, strikethrough)                        |
+      +-----------------------------------------------+
+
+    emotional_state:
+      entry: "Decisive, ready to toggle"
+      exit: "Satisfied, item toggled"
+
+    failure_modes:
+      - "Toggle does not work while search is active"
+      - "Item disappears from filtered list after toggle (unexpected)"
+
+    gherkin: |
+      Scenario: Toggle staple onto trip from filtered list
+        Given Clemens has filtered the checklist to show "Cheddar Cheese"
+        And "Cheddar Cheese" is not on the current trip
+        When he taps "Cheddar Cheese"
+        Then "Cheddar Cheese" is added to the trip
+        And it appears with green text in the filtered list
+
+      Scenario: Toggle staple off trip from filtered list
+        Given Clemens has filtered the checklist to show "Cheddar Cheese"
+        And "Cheddar Cheese" is on the current trip
+        When he taps "Cheddar Cheese"
+        Then "Cheddar Cheese" is removed from the trip
+        And it appears with gray strikethrough in the filtered list
+
+  - id: 4
+    name: "Clear Search"
+    action: "Clear the search input to return to full list"
+
+    mockup: |
+      +-----------------------------------------------+
+      | [ Search staples...             ]              |
+      |                                                |
+      | Avocados                          Produce      |
+      | Bananas                           Produce      |
+      | Butter                            Dairy        |
+      | Cheddar Cheese                    Dairy        |
+      | ...                                            |
+      +-----------------------------------------------+
+
+    emotional_state:
+      entry: "Done with search, ready for next action"
+      exit: "Oriented, full list restored"
+
+    failure_modes:
+      - "Clear button hard to tap (too small)"
+      - "Full list does not restore after clearing"
+
+    gherkin: |
+      Scenario: Clear search restores full list
+        Given Clemens has typed "ch" and sees 3 filtered results
+        When he taps the clear button on the search bar
+        Then the search input is empty
+        And all staples are displayed again
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "tripItemNames"
+      must_match_across: [1, 2, 3, 4]
+      failure_message: "Checked/unchecked state must be consistent between full and filtered views"
+
+changelog:
+  - date: "2026-04-13"
+    feature: "checklist-search-bar"
+    change: "Initial journey definition"

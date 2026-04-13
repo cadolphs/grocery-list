@@ -1,0 +1,94 @@
+{
+  "roadmap": {
+    "project_id": "persist-one-offs",
+    "created_at": "2026-04-13T00:00:00Z",
+    "total_steps": 4,
+    "goal": "Persist one-off items to staple library so they appear in QuickAdd suggestions for re-use",
+    "paradigm": "functional"
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Core Persist and Re-Add",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Persist one-off to library on first add",
+          "description": "Extend StapleItem.type to 'staple' | 'one-off'. Add addOneOff method to StapleLibrary. Wire MetadataBottomSheet to call addOneOff when submitting or skipping a one-off item.",
+          "criteria": [
+            "Adding a one-off via MetadataBottomSheet saves it to the staple library with type 'one-off'",
+            "Skipping metadata (defaults) still persists the one-off to the library",
+            "Duplicate one-off names do not create duplicate library entries",
+            "Existing staple add flow is unaffected"
+          ],
+          "test_file": "tests/acceptance/persist-one-offs/walking-skeleton.test.tsx",
+          "scenario_name": "WS-1 through WS-3",
+          "files_to_modify": ["src/domain/types.ts", "src/domain/staple-library.ts", "src/ui/MetadataBottomSheet.tsx", "src/ui/HomeView.tsx"],
+          "dependencies": [],
+          "estimated_hours": 3,
+          "deliverables": ["AddOneOffRequest type", "StapleLibrary.addOneOff method", "MetadataBottomSheet onSubmitOneOff wiring"]
+        },
+        {
+          "id": "01-02",
+          "name": "Re-add persisted one-off from QuickAdd suggestions",
+          "description": "Make handleSelectSuggestion in HomeView respect StapleItem.type so one-off suggestions add to trip with itemType 'one-off' and saved store location.",
+          "criteria": [
+            "Persisted one-offs appear in QuickAdd search results",
+            "Tapping a one-off suggestion adds to trip with itemType 'one-off' and saved store location",
+            "MetadataBottomSheet does not open when selecting a one-off suggestion",
+            "Duplicate one-offs are not added to the same trip"
+          ],
+          "test_file": "tests/acceptance/persist-one-offs/walking-skeleton.test.tsx",
+          "scenario_name": "WS-4 through WS-6",
+          "files_to_modify": ["src/ui/HomeView.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 1.5,
+          "deliverables": ["handleSelectSuggestion respects item type"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Safety and Polish",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Exclude persisted one-offs from checklist and preloading",
+          "description": "Filter allStaples in HomeView to type === 'staple' before passing to StapleChecklist. Filter staple list when preloading trips to exclude one-offs.",
+          "criteria": [
+            "Staple checklist displays only items with type 'staple'",
+            "Trip preloading includes only items with type 'staple'",
+            "One-offs are not visible in checklist view",
+            "One-offs are not preloaded into new trips"
+          ],
+          "test_file": "tests/acceptance/persist-one-offs/milestone-1-safety-filters.test.tsx",
+          "scenario_name": "M1-1 through M1-3",
+          "files_to_modify": ["src/ui/HomeView.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 1,
+          "deliverables": ["Checklist filter", "Preloading filter"]
+        },
+        {
+          "id": "02-02",
+          "name": "Differentiate one-off suggestions from staple suggestions",
+          "description": "Extend formatSuggestion in QuickAdd to append '(one-off)' label when staple.type === 'one-off'.",
+          "criteria": [
+            "One-off suggestions display '(one-off)' label in QuickAdd suggestion list",
+            "Staple suggestions do not display a type label",
+            "Both types are visually scannable and distinguishable"
+          ],
+          "test_file": "tests/acceptance/persist-one-offs/milestone-2-suggestion-labels.test.tsx",
+          "scenario_name": "M2-1 through M2-3",
+          "files_to_modify": ["src/ui/QuickAdd.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 0.5,
+          "deliverables": ["formatSuggestion with type label"]
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "approved_at": "2026-04-13T00:00:00Z"
+  }
+}
