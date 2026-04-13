@@ -23,7 +23,7 @@
  * - MS2-8: Sign In button disabled during auth (US-01)
  */
 
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen, act } from '@testing-library/react-native';
 import { createNullAuthService, AuthService, AuthResult } from '../../../src/auth/AuthService';
 import { LoginScreen } from '../../../src/ui/LoginScreen';
 
@@ -297,10 +297,10 @@ describe('MS2-8: Sign In button disabled while authentication is in progress', (
     });
 
     // Complete the auth
-    resolveSignIn!({ success: true, user: { uid: 'user-1', email: 'maria@email.com' } });
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Signing/i)).toBeNull();
+    await act(async () => {
+      resolveSignIn!({ success: true, user: { uid: 'user-1', email: 'maria@email.com' } });
     });
+
+    expect(screen.queryByText(/Signing/i)).toBeNull();
   });
 });
