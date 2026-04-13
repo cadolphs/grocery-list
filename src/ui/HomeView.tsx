@@ -31,6 +31,10 @@ export const HomeView = (): React.JSX.Element => {
   const areaGroups = groupByArea(items, areas);
   const oneOffItems = getOneOffItems(items);
   const allStaples = useMemo(() => stapleLibrary.listAll(), [stapleLibrary]);
+  const checklistStaples = useMemo(
+    () => allStaples.filter((s) => s.type === 'staple'),
+    [allStaples],
+  );
   const existingSections = useMemo(
     () => [...new Set(allStaples.map((s) => s.storeLocation.section))],
     [allStaples],
@@ -208,7 +212,7 @@ export const HomeView = (): React.JSX.Element => {
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
       {homeMode === 'checklist' && (
         <StapleChecklist
-          staples={allStaples}
+          staples={checklistStaples}
           tripItemNames={tripItemNameSet}
           onAddStaple={handleAddFromChecklist}
           onRemoveStaple={handleRemoveFromChecklist}

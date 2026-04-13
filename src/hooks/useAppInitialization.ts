@@ -165,7 +165,7 @@ export const initializeApp = async (
     const tripService = createTrip(tripStorage, areas);
     const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
-    tripService.initializeFromStorage(stapleLibrary.listAll());
+    tripService.initializeFromStorage(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
 
     // Wire trip onChange: reload from storage when remote changes arrive
     handleTripChange = () => {
@@ -173,9 +173,9 @@ export const initializeApp = async (
     };
 
     // Wire auto-add/remove: track previous staples, diff on change
-    let previousStaples = stapleLibrary.listAll();
+    let previousStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
     handleStapleChange = () => {
-      const currentStaples = stapleLibrary.listAll();
+      const currentStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
       const { added, removed } = diffStaples(previousStaples, currentStaples);
 
       for (const staple of added) {

@@ -103,7 +103,7 @@ export const useTrip = (): UseTripResult => {
   );
 
   const resetSweep = useCallback((): void => {
-    const currentStaples = stapleLibrary.listAll();
+    const currentStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
     tripService.resetSweep(currentStaples);
     setItems(tripService.getItems());
     setSweepProgress(tripService.getSweepProgress());
