@@ -7,7 +7,7 @@ import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { groupByArea, getOneOffItems } from '../domain/item-grouping';
-import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
+import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
 import { AreaSection } from './AreaSection';
 import { TripItemRow } from './TripItemRow';
 import { QuickAdd } from './QuickAdd';
@@ -87,6 +87,10 @@ export const HomeView = (): React.JSX.Element => {
     stapleLibrary.addStaple(request);
   }, [stapleLibrary]);
 
+  const handleSubmitOneOff = useCallback((request: AddOneOffRequest): void => {
+    stapleLibrary.addOneOff(request);
+  }, [stapleLibrary]);
+
   const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
     addItem(request);
   }, [addItem]);
@@ -130,15 +134,17 @@ export const HomeView = (): React.JSX.Element => {
   }, [skipItem]);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
-    const alreadyInTrip = items.some(
-      (item) => item.name === staple.name && item.houseArea === staple.houseArea
-    );
+    const isOneOff = staple.type === 'one-off';
+    const alreadyInTrip = isOneOff
+      ? items.some((item) => item.name === staple.name && item.itemType === 'one-off')
+      : items.some((item) => item.name === staple.name && item.houseArea === staple.houseArea);
     if (!alreadyInTrip) {
+      const houseArea = isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
       addItem({
         name: staple.name,
-        houseArea: staple.houseArea,
+        houseArea,
         storeLocation: staple.storeLocation,
-        itemType: 'staple',
+        itemType: isOneOff ? 'one-off' : 'staple',
         source: 'quick-add',
         stapleId: staple.id,
       });
@@ -302,6 +308,7 @@ export const HomeView = (): React.JSX.Element => {
         onFindDuplicate={handleFindDuplicate}
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
+        onSubmitOneOff={handleSubmitOneOff}
         onSubmitTripItem={handleSubmitTripItem}
         onSaveEdit={handleSaveEdit}
         onDeleteStaple={handleDeleteStaple}
