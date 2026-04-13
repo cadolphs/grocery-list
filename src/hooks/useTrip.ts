@@ -27,8 +27,11 @@ export const useTrip = (): UseTripResult => {
   const [items, setItems] = useState<TripItem[]>(() => tripService.getItems());
   const [sweepProgress, setSweepProgress] = useState<SweepProgress>(() => tripService.getSweepProgress());
 
-  // Re-sync React state when tripService is mutated externally (e.g. Firestore sync handler)
+  // Re-sync React state when tripService changes (e.g. reload swaps legacy -> production)
+  // and when tripService is mutated externally (e.g. Firestore sync handler)
   useEffect(() => {
+    setItems(tripService.getItems());
+    setSweepProgress(tripService.getSweepProgress());
     return tripService.subscribe(() => {
       setItems(tripService.getItems());
       setSweepProgress(tripService.getSweepProgress());
