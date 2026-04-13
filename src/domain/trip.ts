@@ -63,6 +63,7 @@ export type TripService = {
   readonly initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => void;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
   readonly removeItemByStapleId: (stapleId: string) => void;
+  readonly subscribe: (listener: () => void) => () => void;
 };
 
 const generateTripItemId = (): string =>
@@ -98,6 +99,8 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
   let tripId: string = generateTripId();
   let createdAt: string = new Date().toISOString();
   const completedAreas = new Set<HouseArea>();
+  const listeners = new Set<() => void>();
+  const notify = (): void => listeners.forEach(l => l());
 
   const persistTrip = (): void => {
     storage.saveTrip(buildTrip(tripId, items, createdAt, completedAreas));
@@ -134,6 +137,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
         checkedAt: null,
       };
       items = [...items, tripItem];
+      notify();
       return { success: true };
     },
 
@@ -245,6 +249,7 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
 
     removeItemByStapleId: (stapleId: string) => {
       items = items.filter((item) => item.stapleId !== stapleId);
+      notify();
       persistTrip();
     },
 
@@ -273,6 +278,11 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
       items = [...savedTrip.items];
       completedAreas.clear();
       (savedTrip.completedAreas ?? []).forEach(a => completedAreas.add(a));
+    },
+
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
     },
 
     complete: (): CompleteTripResult => {

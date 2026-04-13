@@ -1,7 +1,7 @@
 // useTrip - hook bridging TripService to React state
 // Reads items from context and exposes them as reactive state
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { TripItem, AddTripItemRequest, AddTripItemResult, HouseArea, StoreLocation } from '../domain/types';
 import { SweepProgress } from '../domain/trip';
 import { UpdateStapleChanges } from '../domain/staple-library';
@@ -26,6 +26,14 @@ export const useTrip = (): UseTripResult => {
   const { tripService, stapleLibrary } = useServices();
   const [items, setItems] = useState<TripItem[]>(() => tripService.getItems());
   const [sweepProgress, setSweepProgress] = useState<SweepProgress>(() => tripService.getSweepProgress());
+
+  // Re-sync React state when tripService is mutated externally (e.g. Firestore sync handler)
+  useEffect(() => {
+    return tripService.subscribe(() => {
+      setItems(tripService.getItems());
+      setSweepProgress(tripService.getSweepProgress());
+    });
+  }, [tripService]);
 
   const addItem = useCallback(
     (request: AddTripItemRequest): AddTripItemResult => {

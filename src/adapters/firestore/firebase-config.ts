@@ -1,10 +1,14 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
+// @ts-expect-error: RN-specific exports not in default firebase/auth typings
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import {
   Firestore,
   initializeFirestore,
   persistentLocalCache,
 } from 'firebase/firestore';
+import { Platform } from 'react-native';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCyA1p0LoE-j9hK9_Lb5OkfZ62W5WK-xR0',
@@ -34,15 +38,25 @@ export const getFirebaseApp = (): FirebaseApp => getOrInitializeApp();
 
 export const getFirebaseAuth = (): Auth => {
   if (auth) return auth;
-  auth = getAuth(getOrInitializeApp());
+  const app = getOrInitializeApp();
+  if (Platform.OS === 'web') {
+    auth = getAuth(app);
+  } else {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+    });
+  }
   return auth;
 };
 
 export const getFirebaseDb = (): Firestore => {
   if (db) return db;
-  db = initializeFirestore(getOrInitializeApp(), {
+  const firestoreConfig: Record<string, unknown> = {
     experimentalForceLongPolling: true,
-    localCache: persistentLocalCache(),
-  });
+  };
+  if (Platform.OS === 'web') {
+    firestoreConfig.localCache = persistentLocalCache();
+  }
+  db = initializeFirestore(getOrInitializeApp(), firestoreConfig);
   return db;
 };
