@@ -138,6 +138,26 @@ describe("platform-specific initialization", () => {
       const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
       expect(firestoreConfig).not.toHaveProperty("localCache");
     });
+
+    test("omits experimentalForceLongPolling on native (android)", () => {
+      const { getFirebaseDb } = requireFreshConfigWithPlatform("android");
+
+      getFirebaseDb();
+
+      const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
+      expect(firestoreConfig).not.toHaveProperty("experimentalForceLongPolling");
+    });
+  });
+
+  describe("on native platform (ios)", () => {
+    test("omits experimentalForceLongPolling on native (ios)", () => {
+      const { getFirebaseDb } = requireFreshConfigWithPlatform("ios");
+
+      getFirebaseDb();
+
+      const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
+      expect(firestoreConfig).not.toHaveProperty("experimentalForceLongPolling");
+    });
   });
 
   describe("on web platform", () => {

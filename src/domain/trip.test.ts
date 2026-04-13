@@ -3,10 +3,16 @@
 // because tripService has no subscription mechanism for external consumers
 
 import { createTrip, TripService } from './trip';
-import { createNullTripStorage } from '../adapters/null/null-trip-storage';
+import { createNullTripStorage, NullTripStorageWithSync } from '../adapters/null/null-trip-storage';
 
 const createTestTripService = (): TripService =>
   createTrip(createNullTripStorage(), ['Fridge', 'Kitchen Cabinets']);
+
+const createTestTripServiceWithStorage = (): { tripService: TripService; storage: NullTripStorageWithSync } => {
+  const storage = createNullTripStorage();
+  const tripService = createTrip(storage, ['Fridge', 'Kitchen Cabinets']);
+  return { tripService, storage };
+};
 
 describe('TripService.subscribe', () => {
   test('subscriber is notified when addItem is called', () => {
@@ -81,6 +87,25 @@ describe('TripService.subscribe', () => {
     tripService.removeItemByStapleId('some-staple-id');
 
     expect(tripService.getItems()).toHaveLength(1);
+  });
+
+  test('addItem persists trip to storage', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+
+    tripService.addItem({
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-1',
+    });
+
+    expect(saveTripSpy).toHaveBeenCalledTimes(1);
+    const savedTrip = saveTripSpy.mock.calls[0][0] as { items: Array<{ name: string }> };
+    expect(savedTrip.items).toHaveLength(1);
+    expect(savedTrip.items[0].name).toBe('Bread');
   });
 
   test('unsubscribe stops notifications', () => {
