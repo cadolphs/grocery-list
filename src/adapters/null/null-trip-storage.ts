@@ -9,6 +9,7 @@ type NullTripStorageOptions = {
 
 export type NullTripStorageWithSync = TripStorage & {
   readonly simulateRemoteChange: (updater: (storage: TripStorage) => void) => void;
+  readonly setOnChange: (callback: () => void) => void;
   readonly unsubscribe: () => void;
 };
 
@@ -18,7 +19,7 @@ export const createNullTripStorage = (
   let storedTrip: Trip | null = null;
   let storedCheckoffs: Map<string, string> = new Map();
   let storedCarryover: readonly TripItem[] = [];
-  const { onChange } = options;
+  let onChange = options.onChange;
 
   const storage: NullTripStorageWithSync = {
     loadTrip: () => storedTrip,
@@ -51,6 +52,9 @@ export const createNullTripStorage = (
     simulateRemoteChange: (updater: (storage: TripStorage) => void) => {
       updater(storage);
       onChange?.();
+    },
+    setOnChange: (callback: () => void) => {
+      onChange = callback;
     },
     unsubscribe: () => {},
   };

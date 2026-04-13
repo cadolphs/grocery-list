@@ -22,9 +22,43 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage, NullTripStorageWithSync } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
-import { Trip } from '../../../src/domain/types';
+import { Trip, TripItem } from '../../../src/domain/types';
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
+
+// Pre-built trip with Milk and Eggs for remote-sync tests
+const createActiveTripWithItems = (): Trip => ({
+  id: 'trip-active-1',
+  createdAt: '2026-04-13T08:00:00Z',
+  status: 'active' as const,
+  completedAreas: [],
+  items: [
+    {
+      id: 'trip-item-1',
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      itemType: 'staple' as const,
+      stapleId: 'staple-1',
+      source: 'preloaded' as const,
+      needed: true,
+      checked: false,
+      checkedAt: null,
+    },
+    {
+      id: 'trip-item-2',
+      name: 'Eggs',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      itemType: 'staple' as const,
+      stapleId: 'staple-2',
+      source: 'preloaded' as const,
+      needed: true,
+      checked: false,
+      checkedAt: null,
+    },
+  ],
+});
 
 // Helper: create factories where createTripStorage accepts uid and onChange option
 const createTestFactories = (options?: {
@@ -53,6 +87,10 @@ const createTestFactories = (options?: {
     }),
     createTripStorage: (_uid: string, tripOptions?: { onChange?: () => void }) => {
       const storage = options?.tripStorage ?? createNullTripStorage(tripOptions);
+      // Wire onChange from tripOptions into pre-created storage
+      if (options?.tripStorage && tripOptions?.onChange) {
+        storage.setOnChange(tripOptions.onChange);
+      }
       capturedTripStorage = storage;
       return {
         ...storage,
@@ -112,9 +150,10 @@ describe('US-01: AdapterFactories.createTripStorage accepts uid', () => {
 // =============================================================================
 
 describe('US-02: Trip onChange handler wired in initializeApp', () => {
-  it.skip('remote trip checkoff arrives via onChange and updates trip service state', async () => {
+  it('remote trip checkoff arrives via onChange and updates trip service state', async () => {
     // Given Clemens is logged in and has an active trip with "Milk" and "Eggs"
     const tripStorage = createNullTripStorage();
+    tripStorage.saveTrip(createActiveTripWithItems());
     const { factories } = createTestFactories({ tripStorage });
 
     const result = await initializeApp(testUser, factories);
@@ -147,9 +186,10 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     expect(milkItem?.checkedAt).toBe('2026-04-13T10:00:00Z');
   });
 
-  it.skip('remote item addition via onChange appears in local trip', async () => {
+  it('remote item addition via onChange appears in local trip', async () => {
     // Given Clemens has an active trip open
     const tripStorage = createNullTripStorage();
+    tripStorage.saveTrip(createActiveTripWithItems());
     const { factories } = createTestFactories({ tripStorage });
 
     const result = await initializeApp(testUser, factories);
@@ -225,9 +265,10 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     expect(milk?.checked).toBe(true);
   });
 
-  it.skip('UI re-renders when remote trip change arrives through full pipeline', async () => {
+  it('UI re-renders when remote trip change arrives through full pipeline', async () => {
     // Given Clemens is logged in with an active trip and a UI subscriber
     const tripStorage = createNullTripStorage();
+    tripStorage.saveTrip(createActiveTripWithItems());
     const { factories } = createTestFactories({ tripStorage });
 
     const result = await initializeApp(testUser, factories);

@@ -135,15 +135,19 @@ export const initializeApp = async (
   try {
     const { uid } = authUser;
 
-    // Late-binding callback: set after trip service is created
+    // Late-binding callbacks: set after services are created
     // eslint-disable-next-line prefer-const
     let handleStapleChange: (() => void) | undefined;
     const onStapleChange = () => handleStapleChange?.();
 
+    // eslint-disable-next-line prefer-const
+    let handleTripChange: (() => void) | undefined;
+    const onTripChange = () => handleTripChange?.();
+
     const stapleStorage = factories.createStapleStorage(uid, { onChange: onStapleChange });
     const areaStorage = factories.createAreaStorage(uid);
     const sectionOrderStorage = factories.createSectionOrderStorage(uid);
-    const tripStorage = factories.createTripStorage(uid);
+    const tripStorage = factories.createTripStorage(uid, { onChange: onTripChange });
 
     await Promise.all([
       stapleStorage.initialize(),
@@ -160,6 +164,11 @@ export const initializeApp = async (
     const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     tripService.initializeFromStorage(stapleLibrary.listAll());
+
+    // Wire trip onChange: reload from storage when remote changes arrive
+    handleTripChange = () => {
+      tripService.loadFromStorage();
+    };
 
     // Wire auto-add/remove: track previous staples, diff on change
     let previousStaples = stapleLibrary.listAll();
