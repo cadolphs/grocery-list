@@ -123,6 +123,9 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
       if (!request.houseArea || request.houseArea.trim() === '') {
         return { success: false, error: 'area is required' };
       }
+      if (request.stapleId && items.some(i => i.stapleId === request.stapleId)) {
+        return { success: false, error: 'staple already in trip' };
+      }
 
       const tripItem: TripItem = {
         id: generateTripItemId(),

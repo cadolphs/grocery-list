@@ -202,6 +202,61 @@ describe('TripService.subscribe', () => {
     expect(savedTrip!.items.map(i => i.name)).toContain('Leftover');
   });
 
+  test('addItem rejects duplicate stapleId to prevent duplicate items', () => {
+    const tripService = createTestTripService();
+
+    const firstResult = tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'whiteboard',
+      stapleId: 'staple-milk',
+    });
+    expect(firstResult.success).toBe(true);
+
+    // Attempting to add the same stapleId again should be rejected
+    const duplicateResult = tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'whiteboard',
+      stapleId: 'staple-milk',
+    });
+    expect(duplicateResult.success).toBe(false);
+    expect(tripService.getItems()).toHaveLength(1);
+  });
+
+  test('addItem rejects duplicate stapleId even when existing item is skipped', () => {
+    const tripService = createTestTripService();
+
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'whiteboard',
+      stapleId: 'staple-milk',
+    });
+
+    // Skip the item (simulates unchecking in checklist)
+    tripService.skipItem('Milk');
+    expect(tripService.getItems()[0].needed).toBe(false);
+
+    // Attempting to add the same stapleId again should be rejected
+    const duplicateResult = tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'whiteboard',
+      stapleId: 'staple-milk',
+    });
+    expect(duplicateResult.success).toBe(false);
+    expect(tripService.getItems()).toHaveLength(1);
+  });
+
   test('unsubscribe stops notifications', () => {
     const tripService = createTestTripService();
     const notifications: number[] = [];

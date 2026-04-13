@@ -1,7 +1,7 @@
 // HomeView - displays trip items grouped by house area
 // Composes useTrip hook with groupByArea pure function
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
@@ -46,6 +46,7 @@ export const HomeView = (): React.JSX.Element => {
   const [editStapleName, setEditStapleName] = useState<string>('');
   const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
   const [settingsView, setSettingsView] = useState<SettingsView | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleToggleSettings = useCallback(() => {
     setSettingsView((prev) => (prev === null ? 'menu' : null));
@@ -107,15 +108,22 @@ export const HomeView = (): React.JSX.Element => {
   }, [stapleLibrary]);
 
   const handleAddFromChecklist = useCallback((staple: StapleItem): void => {
-    addItem({
-      name: staple.name,
-      houseArea: staple.houseArea,
-      storeLocation: staple.storeLocation,
-      itemType: 'staple',
-      source: 'whiteboard',
-      stapleId: staple.id,
-    });
-  }, [addItem]);
+    const existingItem = items.find(
+      (i) => i.stapleId === staple.id || (i.name === staple.name && i.houseArea === staple.houseArea)
+    );
+    if (existingItem && !existingItem.needed) {
+      unskipItem(existingItem.name);
+    } else if (!existingItem) {
+      addItem({
+        name: staple.name,
+        houseArea: staple.houseArea,
+        storeLocation: staple.storeLocation,
+        itemType: 'staple',
+        source: 'whiteboard',
+        stapleId: staple.id,
+      });
+    }
+  }, [items, addItem, unskipItem]);
 
   const handleRemoveFromChecklist = useCallback((name: string): void => {
     skipItem(name);
@@ -169,7 +177,7 @@ export const HomeView = (): React.JSX.Element => {
   }
 
   return (
-    <ScrollView testID="home-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+    <ScrollView ref={scrollViewRef} testID="home-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       <View style={styles.headerRow}>
         <Pressable testID="settings-button" onPress={handleToggleSettings} style={styles.settingsButton}>
           <Text style={styles.settingsButtonText}>Settings</Text>
@@ -244,7 +252,10 @@ export const HomeView = (): React.JSX.Element => {
           )}
           <Pressable
             testID="reset-sweep-button"
-            onPress={() => setShowResetConfirmation(true)}
+            onPress={() => {
+              setShowResetConfirmation(true);
+              setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+            }}
             style={styles.resetSweepButton}
           >
             <Text style={styles.resetSweepButtonText}>Reset Sweep</Text>
