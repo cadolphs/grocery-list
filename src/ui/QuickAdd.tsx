@@ -6,8 +6,16 @@ import React, { useState } from 'react';
 import { View, TextInput, Pressable, Text, FlatList, StyleSheet } from 'react-native';
 import { AddTripItemRequest, AddTripItemResult, StapleItem } from '../domain/types';
 
-const formatSuggestion = (staple: StapleItem): string =>
-  `${staple.name} - ${staple.storeLocation.section} / Aisle ${staple.storeLocation.aisleNumber}`;
+const formatLocation = (section: string, aisleNumber: number | null): string =>
+  aisleNumber === null ? section : `${section} / Aisle ${aisleNumber}`;
+
+const typeLabel = (type: StapleItem['type']): string =>
+  type === 'one-off' ? ' (one-off)' : '';
+
+export const formatSuggestion = (staple: StapleItem): string => {
+  const location = formatLocation(staple.storeLocation.section, staple.storeLocation.aisleNumber);
+  return `${staple.name} - ${location}${typeLabel(staple.type)}`;
+};
 
 type QuickAddProps = {
   readonly onAddItem: (request: AddTripItemRequest) => AddTripItemResult;
