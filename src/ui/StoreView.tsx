@@ -97,6 +97,7 @@ export const StoreView = (): React.JSX.Element => {
         storeLocation: staple.storeLocation,
         itemType: 'staple',
         source: 'quick-add',
+        stapleId: staple.id,
       });
     }
   }, [items, addItem]);

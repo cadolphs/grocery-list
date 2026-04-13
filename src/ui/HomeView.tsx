@@ -113,6 +113,7 @@ export const HomeView = (): React.JSX.Element => {
       storeLocation: staple.storeLocation,
       itemType: 'staple',
       source: 'whiteboard',
+      stapleId: staple.id,
     });
   }, [addItem]);
 
@@ -131,6 +132,7 @@ export const HomeView = (): React.JSX.Element => {
         storeLocation: staple.storeLocation,
         itemType: 'staple',
         source: 'quick-add',
+        stapleId: staple.id,
       });
     }
   }, [items, addItem]);

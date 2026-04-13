@@ -2,14 +2,14 @@
 // Reads items from context and exposes them as reactive state
 
 import { useState, useCallback, useEffect } from 'react';
-import { TripItem, AddTripItemRequest, AddTripItemResult, HouseArea, StoreLocation } from '../domain/types';
-import { SweepProgress } from '../domain/trip';
+import { TripItem, AddTripItemResult, HouseArea, StoreLocation } from '../domain/types';
+import { SweepProgress, AddTripItemWithStapleId } from '../domain/trip';
 import { UpdateStapleChanges } from '../domain/staple-library';
 import { useServices } from '../ui/ServiceProvider';
 
 export type UseTripResult = {
   readonly items: TripItem[];
-  readonly addItem: (request: AddTripItemRequest) => AddTripItemResult;
+  readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly checkOff: (name: string) => void;
   readonly toggleCheckOff: (name: string) => void;
   readonly skipItem: (name: string) => void;
@@ -36,7 +36,7 @@ export const useTrip = (): UseTripResult => {
   }, [tripService]);
 
   const addItem = useCallback(
-    (request: AddTripItemRequest): AddTripItemResult => {
+    (request: AddTripItemWithStapleId): AddTripItemResult => {
       const result = tripService.addItem(request);
       if (result.success) {
         setItems(tripService.getItems());
