@@ -51,7 +51,6 @@ const createTestFactories = (options?: {
       initialize: () => Promise.resolve(),
       unsubscribe: () => {},
     }),
-    // @ts-expect-error — future US-01 will add uid+onChange to AdapterFactories.createTripStorage
     createTripStorage: (_uid: string, tripOptions?: { onChange?: () => void }) => {
       const storage = options?.tripStorage ?? createNullTripStorage(tripOptions);
       capturedTripStorage = storage;
@@ -90,14 +89,13 @@ const createTestFactories = (options?: {
 // =============================================================================
 
 describe('US-01: AdapterFactories.createTripStorage accepts uid', () => {
-  it.skip('initializeApp passes uid to createTripStorage', async () => {
+  it('initializeApp passes uid to createTripStorage', async () => {
     // Given a factory where createTripStorage tracks the uid it receives
     let receivedUid: string | undefined;
     const { factories } = createTestFactories();
     const originalCreateTripStorage = factories.createTripStorage;
     (factories as any).createTripStorage = (uid: string, opts?: { onChange?: () => void }) => {
       receivedUid = uid;
-      // @ts-expect-error — future US-01 will add uid+onChange params
       return originalCreateTripStorage(uid, opts);
     };
 

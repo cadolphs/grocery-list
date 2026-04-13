@@ -1,0 +1,31 @@
+{
+  "roadmap": {
+    "project_id": "fix-staple-deletion-not-removing-trip-item",
+    "created_at": "2026-04-13T00:00:00Z",
+    "total_steps": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Regression test and fix",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Regression test: removeItemByStapleId fails for UI-added items",
+          "description": "Write a domain-level regression test proving that when a trip item is added via addItem without stapleId, removeItemByStapleId does not remove it. Then fix by propagating stapleId through the useTrip hook type and all UI call sites.",
+          "criteria": [
+            "A trip item added via addItem with a stapleId can be removed by removeItemByStapleId",
+            "useTrip.addItem accepts AddTripItemWithStapleId",
+            "All existing tests continue to pass"
+          ],
+          "files_to_modify": [
+            "src/domain/trip.test.ts",
+            "src/hooks/useTrip.ts",
+            "src/ui/HomeView.tsx",
+            "src/ui/StoreView.tsx"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": "3.0",
+  "feature_id": "fix-firebase-native-sync",
+  "events": [
+    {
+      "sid": "01-01",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-13T17:42:08Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "RED_ACCEPTANCE",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: this step IS the regression tests - no higher-level acceptance test",
+      "t": "2026-04-13T17:42:18Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "RED_UNIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-13T17:43:14Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "GREEN",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: RED-only step - tests must fail to prove bugs exist",
+      "t": "2026-04-13T17:43:18Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-13T17:43:57Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-13T17:46:03Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "RED_ACCEPTANCE",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: regression tests from step 01-01 serve as acceptance tests",
+      "t": "2026-04-13T17:46:05Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: regression tests already written in step 01-01",
+      "t": "2026-04-13T17:46:06Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-13T17:46:07Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-13T17:46:29Z"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import { createAsyncSectionOrderStorage } from '../adapters/async-storage/async-
 import { createFirestoreStapleStorage } from '../adapters/firestore/firestore-staple-storage';
 import { createFirestoreAreaStorage } from '../adapters/firestore/firestore-area-storage';
 import { createFirestoreSectionOrderStorage } from '../adapters/firestore/firestore-section-order-storage';
+import { createFirestoreTripStorage } from '../adapters/firestore/firestore-trip-storage';
 import { getFirebaseDb } from '../adapters/firestore/firebase-config';
 import { migrationNeeded, migrateToFirestore, migrateTripIfNeeded } from '../adapters/firestore/migration';
 import { createStapleLibrary, StapleLibrary } from '../domain/staple-library';
@@ -50,7 +51,7 @@ export type AdapterFactories = {
   readonly createStapleStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<StapleStorage>;
   readonly createAreaStorage: (uid: string) => InitializableStorage<AreaStorage>;
   readonly createSectionOrderStorage: (uid: string) => InitializableStorage<SectionOrderStorage>;
-  readonly createTripStorage: () => InitializableStorage<TripStorage>;
+  readonly createTripStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<TripStorage>;
   readonly checkMigrationNeeded: (firestoreStaples: StapleStorage) => boolean;
   readonly migrateToFirestore: (
     from: { staples: StapleStorage; areas: AreaStorage; sectionOrder: SectionOrderStorage },
@@ -142,7 +143,7 @@ export const initializeApp = async (
     const stapleStorage = factories.createStapleStorage(uid, { onChange: onStapleChange });
     const areaStorage = factories.createAreaStorage(uid);
     const sectionOrderStorage = factories.createSectionOrderStorage(uid);
-    const tripStorage = factories.createTripStorage();
+    const tripStorage = factories.createTripStorage(uid);
 
     await Promise.all([
       stapleStorage.initialize(),
@@ -215,7 +216,7 @@ const createProductionFactories = (): AdapterFactories => {
     createStapleStorage: (uid, options) => createFirestoreStapleStorage(db, uid, options),
     createAreaStorage: (uid) => createFirestoreAreaStorage(db, uid),
     createSectionOrderStorage: (uid) => createFirestoreSectionOrderStorage(db, uid),
-    createTripStorage: () => createAsyncTripStorage(),
+    createTripStorage: (uid: string) => createFirestoreTripStorage(db, uid),
     checkMigrationNeeded: migrationNeeded,
     migrateToFirestore,
     createAsyncStapleStorage: () => createAsyncStapleStorage(),
@@ -231,7 +232,7 @@ const createLegacyFactories = (): AdapterFactories => ({
   createStapleStorage: () => createAsyncStapleStorage(),
   createAreaStorage: () => createAsyncAreaStorage(),
   createSectionOrderStorage: () => createAsyncSectionOrderStorage(),
-  createTripStorage: () => createAsyncTripStorage(),
+  createTripStorage: (_uid: string) => createAsyncTripStorage(),
   checkMigrationNeeded: () => false,
   migrateToFirestore: () => {},
   createAsyncStapleStorage: () => createAsyncStapleStorage(),

@@ -1,0 +1,50 @@
+{
+  "feature_id": "fix-firebase-native-persistence",
+  "title": "Fix Firebase Auth and Firestore persistence on React Native",
+  "description": "Configure platform-conditional Firebase initialization: use initializeAuth with AsyncStorage persistence on native, keep getAuth on web. Remove persistentLocalCache on native (IndexedDB unavailable).",
+  "steps": [
+    {
+      "step_id": "01-01",
+      "name": "Regression test for platform-specific Firebase initialization",
+      "description": "Write tests that verify Firebase Auth uses initializeAuth with getReactNativePersistence(AsyncStorage) on native platforms, and that Firestore does not use persistentLocalCache on native. Tests should fail against current code.",
+      "acceptance_criteria": [
+        "Test verifies getFirebaseAuth() calls initializeAuth with ReactNativePersistence on native",
+        "Test verifies getFirebaseDb() does not pass persistentLocalCache on native",
+        "Test verifies web platform behavior is unchanged (getAuth, persistentLocalCache)"
+      ],
+      "files_to_modify": [
+        "src/adapters/firestore/firebase-config.test.ts"
+      ],
+      "quality_gates": ["All new tests fail against current code (RED)"],
+      "implementation_notes": "Mock Platform.OS to test both native and web paths. Use jest.isolateModules to get fresh config per test.",
+      "dependencies": [],
+      "estimated_hours": 0.5,
+      "deliverables": ["Failing regression tests"]
+    },
+    {
+      "step_id": "01-02",
+      "name": "Platform-conditional Firebase initialization",
+      "description": "Modify firebase-config.ts to use initializeAuth with getReactNativePersistence(AsyncStorage) on native platforms (Platform.OS !== 'web'). On native, omit persistentLocalCache from Firestore config. Preserve existing web behavior.",
+      "acceptance_criteria": [
+        "On native: Auth initialized with initializeAuth + getReactNativePersistence(AsyncStorage)",
+        "On native: Firestore initialized without persistentLocalCache",
+        "On web: Auth initialized with getAuth (unchanged)",
+        "On web: Firestore initialized with persistentLocalCache (unchanged)",
+        "All regression tests pass (GREEN)"
+      ],
+      "files_to_modify": [
+        "src/adapters/firestore/firebase-config.ts"
+      ],
+      "quality_gates": ["All tests pass including regression tests"],
+      "implementation_notes": "Use Platform.OS from react-native for detection. Import AsyncStorage and getReactNativePersistence conditionally.",
+      "dependencies": ["01-01"],
+      "estimated_hours": 0.5,
+      "deliverables": ["Platform-conditional firebase-config.ts"]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "reviewed_by": "orchestrator",
+    "reason": "Minimal bugfix scope - 2 steps following RED-GREEN pattern"
+  }
+}

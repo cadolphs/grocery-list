@@ -1,0 +1,77 @@
+{
+  "roadmap": {
+    "project_id": "wire-firestore-trip-sync",
+    "created_at": "2026-04-13T18:09:17Z",
+    "total_steps": 3,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Domain: TripService notifies on remote load",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "TripService.loadFromStorage notifies subscribers",
+          "criteria": "Given a TripService with a subscriber, when loadFromStorage is called after remote state is written to storage, then the subscriber is notified and trip state reflects the remote change; Given loadFromStorage loads state identical to current state, then no unnecessary notification fires",
+          "test_file": "tests/acceptance/wire-firestore-trip-sync/wire-firestore-trip-sync.test.ts",
+          "scenario_name": "Subscribers are notified when loadFromStorage updates state",
+          "files_to_modify": [
+            "src/domain/trip.ts",
+            "src/domain/trip.test.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Wiring: Firestore trip storage in production + onChange handler",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "AdapterFactories.createTripStorage accepts uid and options",
+          "criteria": "Given AdapterFactories type has createTripStorage accepting uid and optional onChange, when initializeApp is called with an authenticated user, then createTripStorage is called with the user's uid; Given legacy factories, when createTripStorage is called without uid, then AsyncStorage trip storage is returned",
+          "test_file": "tests/acceptance/wire-firestore-trip-sync/wire-firestore-trip-sync.test.ts",
+          "scenario_name": "initializeApp passes uid to createTripStorage",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts",
+            "tests/acceptance/correct-sync-behavior/us04-listener-cleanup.test.ts",
+            "tests/acceptance/correct-sync-behavior/us08-listener-reestablishment.test.ts"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Wire trip onChange handler for real-time sync",
+          "criteria": "Given initializeApp creates trip storage with an onChange callback, when a remote device checks off an item and the onChange fires, then TripService.loadFromStorage is called and the local trip reflects the checked state; Given a remote device adds an item and onChange fires, then the new item appears in the local trip; Given a UI subscriber is attached, when remote trip change arrives through onChange, then the subscriber is notified triggering a re-render",
+          "test_file": "tests/acceptance/wire-firestore-trip-sync/wire-firestore-trip-sync.test.ts",
+          "scenario_name": "Remote trip checkoff arrives via onChange and updates trip service state",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/hooks/",
+      "src/ports/",
+      "src/adapters/null/"
+    ],
+    "test_directories": [
+      "tests/acceptance/wire-firestore-trip-sync/",
+      "src/domain/"
+    ],
+    "excluded_patterns": [
+      "node_modules/**",
+      "dist/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "nw-solution-architect",
+    "approved_at": "2026-04-13T18:10:00Z"
+  }
+}

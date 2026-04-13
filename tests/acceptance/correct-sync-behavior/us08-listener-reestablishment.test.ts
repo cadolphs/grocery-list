@@ -26,7 +26,7 @@ const createTestFactories = (): AdapterFactories => ({
     ...createNullSectionOrderStorage(),
     initialize: () => Promise.resolve(),
   }),
-  createTripStorage: () => ({
+  createTripStorage: (_uid: string) => ({
     ...createNullTripStorage(),
     initialize: () => Promise.resolve(),
   }),
@@ -110,7 +110,7 @@ describe('US-08: Listener re-establishment after re-login', () => {
         ...createNullSectionOrderStorage(),
         initialize: () => Promise.resolve(),
       }),
-      createTripStorage: () => ({
+      createTripStorage: (_uid: string) => ({
         ...createNullTripStorage(),
         initialize: () => Promise.resolve(),
       }),

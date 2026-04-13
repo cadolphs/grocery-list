@@ -1,0 +1,53 @@
+{
+  "roadmap": {
+    "project_id": "fix-firebase-native-sync",
+    "created_at": "2026-04-13T00:00:00Z",
+    "total_steps": 2,
+    "title": "Fix Firebase real-time sync on native and persist remotely-added trip items"
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Fix Firebase native sync",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Regression tests for both bugs",
+          "criteria": [
+            "getFirebaseDb applies experimentalForceLongPolling only on web",
+            "getFirebaseDb omits experimentalForceLongPolling on native",
+            "tripService.addItem calls storage.saveTrip to persist",
+            "All new tests fail against current code"
+          ],
+          "files_to_modify": [
+            "src/adapters/firestore/firebase-config.test.ts",
+            "src/domain/trip.test.ts"
+          ],
+          "implementation_notes": "Mock Platform.OS and Firebase SDK. Use jest.isolateModules. For trip: verify storage.saveTrip called after addItem.",
+          "dependencies": []
+        },
+        {
+          "id": "01-02",
+          "name": "Fix long polling and addItem persistence",
+          "criteria": [
+            "experimentalForceLongPolling only in web config",
+            "Native Firestore config has no long polling flag",
+            "addItem calls persistTrip after notify",
+            "All regression and existing tests pass"
+          ],
+          "files_to_modify": [
+            "src/adapters/firestore/firebase-config.ts",
+            "src/domain/trip.ts"
+          ],
+          "implementation_notes": "Wrap experimentalForceLongPolling in Platform.OS === 'web' check. Add persistTrip() after notify() in addItem.",
+          "dependencies": ["01-01"]
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "reviewed_by": "orchestrator",
+    "reason": "Minimal bugfix scope - 2 steps following RED-GREEN pattern"
+  }
+}

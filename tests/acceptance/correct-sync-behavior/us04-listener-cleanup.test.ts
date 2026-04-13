@@ -46,7 +46,7 @@ const createTrackingFactories = () => {
         unsubscribe: () => { unsubscribeCalls.push('sectionOrder'); },
       };
     },
-    createTripStorage: () => {
+    createTripStorage: (_uid: string) => {
       const storage = createNullTripStorage();
       return {
         ...storage,
@@ -173,7 +173,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
         initialize: () => Promise.resolve(),
         unsubscribe: () => {},
       }),
-      createTripStorage: () => ({
+      createTripStorage: (_uid: string) => ({
         ...createNullTripStorage(),
         initialize: () => Promise.resolve(),
         unsubscribe: () => {},
