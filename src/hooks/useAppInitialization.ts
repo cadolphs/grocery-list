@@ -225,7 +225,7 @@ const createProductionFactories = (): AdapterFactories => {
     createStapleStorage: (uid, options) => createFirestoreStapleStorage(db, uid, options),
     createAreaStorage: (uid) => createFirestoreAreaStorage(db, uid),
     createSectionOrderStorage: (uid) => createFirestoreSectionOrderStorage(db, uid),
-    createTripStorage: (uid: string) => createFirestoreTripStorage(db, uid),
+    createTripStorage: (uid, options) => createFirestoreTripStorage(db, uid, options),
     checkMigrationNeeded: migrationNeeded,
     migrateToFirestore,
     createAsyncStapleStorage: () => createAsyncStapleStorage(),
