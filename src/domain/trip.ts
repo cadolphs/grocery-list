@@ -221,11 +221,20 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
     loadFromStorage: () => {
       const savedTrip = storage.loadTrip();
       if (savedTrip) {
+        const previousItems = items;
+        const previousCompleted = [...completedAreas];
         tripId = savedTrip.id;
         createdAt = savedTrip.createdAt;
         items = [...savedTrip.items];
         completedAreas.clear();
         (savedTrip.completedAreas ?? []).forEach(a => completedAreas.add(a));
+
+        const stateChanged =
+          JSON.stringify(previousItems) !== JSON.stringify(items) ||
+          JSON.stringify(previousCompleted) !== JSON.stringify([...completedAreas]);
+        if (stateChanged) {
+          notify();
+        }
       }
     },
 

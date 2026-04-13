@@ -108,6 +108,51 @@ describe('TripService.subscribe', () => {
     expect(savedTrip.items[0].name).toBe('Bread');
   });
 
+  test('subscriber is notified when loadFromStorage updates state', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+    ]);
+    // Persist initial state
+    tripService.checkOff('Milk');
+    tripService.uncheckItem('Milk');
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    // Simulate remote change: check off Milk in storage
+    const savedTrip = storage.loadTrip()!;
+    storage.saveTrip({
+      ...savedTrip,
+      items: savedTrip.items.map(i =>
+        i.name === 'Milk' ? { ...i, checked: true, checkedAt: '2026-04-13T10:00:00Z' } : i
+      ),
+    });
+
+    tripService.loadFromStorage();
+
+    expect(notifications).toHaveLength(1);
+    expect(tripService.getItems().find(i => i.name === 'Milk')?.checked).toBe(true);
+  });
+
+  test('loadFromStorage does not notify when state is identical', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.start([
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+    ]);
+    // Persist current state
+    tripService.checkOff('Milk');
+    tripService.uncheckItem('Milk');
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    // Load same state — no change
+    tripService.loadFromStorage();
+
+    expect(notifications).toHaveLength(0);
+  });
+
   test('unsubscribe stops notifications', () => {
     const tripService = createTestTripService();
     const notifications: number[] = [];
