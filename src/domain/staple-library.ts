@@ -1,7 +1,7 @@
 // Staple Library - driving port implementation
 // Pure domain logic, no IO imports
 
-import { StapleItem, AddStapleRequest, AddStapleResult, HouseArea, StoreLocation } from './types';
+import { StapleItem, AddStapleRequest, AddOneOffRequest, AddStapleResult, HouseArea, StoreLocation } from './types';
 import { StapleStorage } from '../ports/staple-storage';
 
 export type UpdateStapleChanges = {
@@ -11,6 +11,7 @@ export type UpdateStapleChanges = {
 
 export type StapleLibrary = {
   readonly addStaple: (request: AddStapleRequest) => AddStapleResult;
+  readonly addOneOff: (request: AddOneOffRequest) => AddStapleResult;
   readonly updateStaple: (id: string, changes: UpdateStapleChanges) => AddStapleResult;
   readonly listAll: () => StapleItem[];
   readonly listByArea: (area: HouseArea) => StapleItem[];
@@ -28,6 +29,14 @@ const isDuplicate = (
 ): boolean =>
   existing.some(
     (item) => item.name === name && item.houseArea === houseArea
+  );
+
+const isDuplicateOneOff = (
+  existing: StapleItem[],
+  name: string,
+): boolean =>
+  existing.some(
+    (item) => item.name === name && item.type === 'one-off'
   );
 
 const isDuplicateExcludingSelf = (
@@ -62,6 +71,26 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       };
 
       storage.save(staple);
+      return { success: true };
+    },
+
+    addOneOff: (request: AddOneOffRequest): AddStapleResult => {
+      const existing = storage.loadAll();
+
+      if (isDuplicateOneOff(existing, request.name)) {
+        return { success: true };
+      }
+
+      const oneOff: StapleItem = {
+        id: generateId(),
+        name: request.name,
+        houseArea: '',
+        storeLocation: request.storeLocation,
+        type: 'one-off',
+        createdAt: new Date().toISOString(),
+      };
+
+      storage.save(oneOff);
       return { success: true };
     },
 

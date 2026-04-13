@@ -14,13 +14,18 @@ export type StapleItem = {
   readonly name: string;
   readonly houseArea: HouseArea;
   readonly storeLocation: StoreLocation;
-  readonly type: 'staple';
+  readonly type: 'staple' | 'one-off';
   readonly createdAt: string;
 };
 
 export type AddStapleRequest = {
   readonly name: string;
   readonly houseArea: HouseArea;
+  readonly storeLocation: StoreLocation;
+};
+
+export type AddOneOffRequest = {
+  readonly name: string;
   readonly storeLocation: StoreLocation;
 };
 

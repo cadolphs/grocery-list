@@ -215,7 +215,7 @@ describe('WS-AIF-4: Submitting as one-off adds to trip without saving to library
     fireEvent.changeText(quickAddInput, 'Birthday candles');
     fireEvent.press(screen.getByText(/Add 'Birthday candles' as new item/));
 
-    // And Carlos selects type "One-off", area "Kitchen Cabinets" (default), section "Baking", aisle 12
+    // And Carlos selects type "One-off" and fills in store location (no house area for one-offs)
     fireEvent.press(screen.getByText('One-off'));
     fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Baking');
     fireEvent.changeText(screen.getByPlaceholderText('Aisle number'), '12');
@@ -229,9 +229,11 @@ describe('WS-AIF-4: Submitting as one-off adds to trip without saving to library
       expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
     );
 
-    // And "Birthday candles" is NOT in the staple library
-    expect(library.listAll()).not.toContainEqual(
-      expect.objectContaining({ name: 'Birthday candles' })
+    // And "Birthday candles" IS persisted in the staple library as a one-off
+    // (superseded by persist-one-offs/US-01 — one-offs are now saved to the library
+    // so they can be re-added from QuickAdd suggestions on future trips)
+    expect(library.listAll()).toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles', type: 'one-off' })
     );
 
     // And the sheet is dismissed

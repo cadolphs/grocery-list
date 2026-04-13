@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
-import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
+import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
 
 type ItemTypeSelection = 'Staple' | 'One-off';
 type SheetMode = 'form' | 'duplicate-warning';
@@ -28,6 +28,7 @@ type MetadataBottomSheetProps = {
   readonly onFindDuplicate?: (name: string, area: HouseArea) => StapleItem | undefined;
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
+  readonly onSubmitOneOff?: (request: AddOneOffRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
   readonly onSaveEdit?: (stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => void;
   readonly onDeleteStaple?: (stapleId: string) => void;
@@ -56,6 +57,7 @@ export const MetadataBottomSheet = ({
   onFindDuplicate,
   onDismiss,
   onSubmitStaple,
+  onSubmitOneOff,
   onSubmitTripItem,
   onSaveEdit,
   onDeleteStaple,
@@ -126,10 +128,32 @@ export const MetadataBottomSheet = ({
   };
 
   const handleSubmit = (): void => {
+    if (selectedType === 'One-off') {
+      const oneOffStoreLocation = {
+        section: section || 'Uncategorized',
+        aisleNumber: aisleText ? parseInt(aisleText, 10) : null,
+      };
+      if (onSubmitOneOff) {
+        onSubmitOneOff({
+          name: itemName,
+          storeLocation: oneOffStoreLocation,
+        });
+      }
+      onSubmitTripItem({
+        name: itemName,
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: oneOffStoreLocation,
+        itemType: 'one-off',
+        source: 'quick-add',
+      });
+      onDismiss();
+      return;
+    }
+
     if (selectedArea === null) return;
 
     // Check for duplicate staple before submitting
-    if (selectedType === 'Staple' && onFindDuplicate) {
+    if (onFindDuplicate) {
       const existing = onFindDuplicate(itemName, selectedArea);
       if (existing) {
         setDuplicateStaple(existing);
@@ -143,19 +167,17 @@ export const MetadataBottomSheet = ({
       aisleNumber: aisleText ? parseInt(aisleText, 10) : null,
     };
 
-    if (selectedType === 'Staple') {
-      onSubmitStaple({
-        name: itemName,
-        houseArea: selectedArea,
-        storeLocation,
-      });
-    }
+    onSubmitStaple({
+      name: itemName,
+      houseArea: selectedArea,
+      storeLocation,
+    });
 
     onSubmitTripItem({
       name: itemName,
       houseArea: selectedArea,
       storeLocation,
-      itemType: selectedType === 'Staple' ? 'staple' : 'one-off',
+      itemType: 'staple',
       source: 'quick-add',
     });
 
@@ -183,11 +205,19 @@ export const MetadataBottomSheet = ({
 
   const handleSkip = (): void => {
     const skipArea: HouseArea = selectedArea ?? 'Kitchen Cabinets';
+    const skipStoreLocation = { section: 'Uncategorized', aisleNumber: null };
+
+    if (onSubmitOneOff) {
+      onSubmitOneOff({
+        name: itemName,
+        storeLocation: skipStoreLocation,
+      });
+    }
 
     onSubmitTripItem({
       name: itemName,
       houseArea: skipArea,
-      storeLocation: { section: 'Uncategorized', aisleNumber: null },
+      storeLocation: skipStoreLocation,
       itemType: 'one-off',
       source: 'quick-add',
     });
@@ -202,8 +232,8 @@ export const MetadataBottomSheet = ({
       transparent={true}
       onRequestClose={onDismiss}
     >
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
+      <Pressable style={styles.overlay} onPress={onDismiss}>
+        <Pressable style={styles.sheet}>
           {sheetMode === 'duplicate-warning' && duplicateStaple ? (
             <>
               <Text style={styles.title}>Duplicate Found</Text>
@@ -267,7 +297,8 @@ export const MetadataBottomSheet = ({
           </View>
           )}
 
-          {/* Area picker */}
+          {/* Area picker - only shown for staples (or edit mode) */}
+          {(selectedType === 'Staple' || isEditMode) && (
           <View style={styles.areaContainer}>
             {areas.map((area) => (
               <Pressable
@@ -290,8 +321,9 @@ export const MetadataBottomSheet = ({
               </Pressable>
             ))}
           </View>
+          )}
 
-          {/* Section input */}
+          {/* Store section and aisle - shown for all item types */}
           <TextInput
             style={styles.input}
             placeholder="Store section..."
@@ -299,7 +331,6 @@ export const MetadataBottomSheet = ({
             onChangeText={handleSectionChange}
           />
 
-          {/* Section suggestions */}
           {sectionSuggestions.length > 0 && (
             <View style={styles.sectionSuggestions}>
               {sectionSuggestions.map((sectionName) => (
@@ -314,7 +345,6 @@ export const MetadataBottomSheet = ({
             </View>
           )}
 
-          {/* Aisle input */}
           <TextInput
             style={styles.input}
             placeholder="Aisle number"
@@ -348,8 +378,8 @@ export const MetadataBottomSheet = ({
           )}
             </>
           )}
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 };

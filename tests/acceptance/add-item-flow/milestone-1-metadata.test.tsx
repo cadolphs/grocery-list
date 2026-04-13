@@ -143,21 +143,20 @@ describe('US-AIF-02: Context-Aware Smart Defaults', () => {
     expect(screen.getByTestId('type-toggle-Staple-active')).toBeTruthy();
     expect(screen.getByTestId('area-button-Fridge-active')).toBeTruthy();
 
-    // When Carlos changes type to "One-off" and area to "Freezer"
+    // When Carlos changes type to "One-off" (house area hidden, but section/aisle still available)
     fireEvent.press(screen.getByText('One-off'));
-    fireEvent.press(screen.getByText('Freezer'));
 
-    // And Carlos fills section "Frozen Treats" and taps "Add Item"
+    // And fills in store location and taps "Add Item"
     fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Frozen Treats');
     fireEvent.press(screen.getByText('Add Item'));
 
-    // Then the item is saved as one-off in the Freezer area
+    // Then the item is saved as one-off with the store location
     const tripItems = tripService.getItems();
     expect(tripItems).toContainEqual(
       expect.objectContaining({
         name: 'Dog treats',
-        houseArea: 'Freezer',
         itemType: 'one-off',
+        storeLocation: expect.objectContaining({ section: 'Frozen Treats' }),
       })
     );
   });
@@ -221,7 +220,7 @@ describe('US-AIF-03: Skip Metadata Shortcut', () => {
     expect(mustard?.storeLocation.section).toBe('Uncategorized');
   });
 
-  it('skipped items are not saved to staple library', () => {
+  it('skipped items are saved to staple library as one-off', () => {
     // Given Carlos is viewing the Fridge area during a sweep
     const { library, tripService } = createTestServices();
     renderApp(library, tripService);
@@ -234,9 +233,11 @@ describe('US-AIF-03: Skip Metadata Shortcut', () => {
     // When Carlos taps "Skip, add with defaults"
     fireEvent.press(screen.getByText('Skip, add with defaults'));
 
-    // Then "Sriracha" is NOT saved to the staple library
-    expect(library.listAll()).not.toContainEqual(
-      expect.objectContaining({ name: 'Sriracha' })
+    // Then "Sriracha" IS saved to the staple library as a one-off
+    // (superseded by persist-one-offs/US-01 — skipped one-offs are now persisted
+    // to the library so they can be re-added from QuickAdd suggestions)
+    expect(library.listAll()).toContainEqual(
+      expect.objectContaining({ name: 'Sriracha', type: 'one-off' })
     );
   });
 });
