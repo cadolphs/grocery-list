@@ -1,15 +1,25 @@
 // StapleChecklist - renders alphabetically sorted list of staples with toggle
-// Pure presentational component - no hooks, no domain logic
+// Search bar filters staples by case-insensitive substring match
 
-import React from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { StapleItem } from '../domain/types';
+
+export const filterStaples = (
+  staples: readonly StapleItem[],
+  query: string,
+): readonly StapleItem[] => {
+  if (query === '') return staples;
+  const lowerQuery = query.toLowerCase();
+  return staples.filter((staple) => staple.name.toLowerCase().includes(lowerQuery));
+};
 
 type StapleChecklistProps = {
   readonly staples: readonly StapleItem[];
   readonly tripItemNames: ReadonlySet<string>;
   readonly onAddStaple: (staple: StapleItem) => void;
   readonly onRemoveStaple: (name: string) => void;
+  readonly onLongPress?: (name: string, area: string) => void;
 };
 
 const sortAlphabetically = (staples: readonly StapleItem[]): readonly StapleItem[] =>
@@ -19,23 +29,22 @@ type StapleRowProps = {
   readonly staple: StapleItem;
   readonly isChecked: boolean;
   readonly onToggle: () => void;
+  readonly onLongPress?: () => void;
 };
 
-const StapleRow = ({ staple, isChecked, onToggle }: StapleRowProps): React.JSX.Element => (
+const StapleRow = ({ staple, isChecked, onToggle, onLongPress }: StapleRowProps): React.JSX.Element => (
   <Pressable
     style={styles.row}
     testID={`staple-row-${staple.name}`}
     onPress={onToggle}
+    onLongPress={onLongPress}
   >
     <View style={styles.textContainer}>
-      <Text style={[styles.stapleName, isChecked && styles.checkedName]}>
+      <Text style={[styles.stapleName, isChecked ? styles.checkedName : styles.uncheckedName]}>
         {staple.name}
       </Text>
       <Text style={styles.areaLabel}>{staple.houseArea}</Text>
     </View>
-    <Text testID={`toggle-${staple.name}`} style={styles.toggleIndicator}>
-      {isChecked ? 'checked' : 'unchecked'}
-    </Text>
   </Pressable>
 );
 
@@ -44,8 +53,12 @@ export const StapleChecklist = ({
   tripItemNames,
   onAddStaple,
   onRemoveStaple,
+  onLongPress,
 }: StapleChecklistProps): React.JSX.Element => {
+  const [searchQuery, setSearchQuery] = useState('');
+
   const sortedStaples = sortAlphabetically(staples);
+  const visibleStaples = filterStaples(sortedStaples, searchQuery);
 
   const handleToggle = (staple: StapleItem): void => {
     if (tripItemNames.has(staple.name)) {
@@ -55,14 +68,32 @@ export const StapleChecklist = ({
     }
   };
 
+  const handleClear = (): void => {
+    setSearchQuery('');
+  };
+
   return (
     <View>
-      {sortedStaples.map((item) => (
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search staples..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <Pressable testID="search-clear-button" onPress={handleClear} style={styles.clearButton}>
+            <Text style={styles.clearButtonText}>X</Text>
+          </Pressable>
+        )}
+      </View>
+      {visibleStaples.map((item) => (
         <StapleRow
           key={item.id}
           staple={item}
           isChecked={tripItemNames.has(item.name)}
           onToggle={() => handleToggle(item)}
+          onLongPress={onLongPress ? () => onLongPress(item.name, item.houseArea) : undefined}
         />
       ))}
     </View>
@@ -70,6 +101,29 @@ export const StapleChecklist = ({
 };
 
 const styles = StyleSheet.create({
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  clearButton: {
+    marginLeft: 8,
+    padding: 8,
+  },
+  clearButtonText: {
+    fontSize: 16,
+    color: '#666666',
+    fontWeight: '600',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -87,14 +141,13 @@ const styles = StyleSheet.create({
   checkedName: {
     color: '#4CAF50',
   },
+  uncheckedName: {
+    color: '#999999',
+    textDecorationLine: 'line-through',
+  },
   areaLabel: {
     fontSize: 12,
     color: '#888888',
     marginTop: 2,
-  },
-  toggleIndicator: {
-    fontSize: 14,
-    color: '#666666',
-    paddingHorizontal: 8,
   },
 });

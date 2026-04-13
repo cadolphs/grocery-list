@@ -1,0 +1,55 @@
+{
+  "feature_id": "checklist-search-bar",
+  "goal": "Add search/filter bar to StapleChecklist component for quickly finding staples",
+  "paradigm": "functional",
+  "phases": [
+    {
+      "phase_id": "01",
+      "name": "Search and Filter",
+      "steps": [
+        {
+          "step_id": "01-01",
+          "name": "Filter checklist staples by name with search bar",
+          "description": "Add TextInput search bar to StapleChecklist. Implement filterStaples pure function for case-insensitive substring matching. Add clear button. Wire filtering into render pipeline.",
+          "acceptance_criteria": [
+            "Search input visible at top of checklist in checklist mode",
+            "Typing filters staple list in real-time by name (case-insensitive substring)",
+            "Filtered results preserve checked/unchecked visual state",
+            "Tapping a staple in filtered results toggles it on/off trip",
+            "Clear button (X) appears when search has text and clears filter on tap",
+            "Clear button hidden when search input is empty"
+          ],
+          "test_file": "tests/acceptance/checklist-search-bar/walking-skeleton.test.tsx",
+          "scenario_name": "WS-1 through WS-4",
+          "files_to_modify": ["src/ui/StapleChecklist.tsx"],
+          "dependencies": [],
+          "estimated_hours": 1,
+          "deliverables": ["filterStaples pure function", "Search TextInput with clear button", "Filtered rendering pipeline"],
+          "quality_gates": ["All 8 walking skeleton acceptance tests pass", "Existing whiteboard-checklist regression tests pass"]
+        },
+        {
+          "step_id": "01-02",
+          "name": "Empty state message when no staples match search",
+          "description": "When the search filter produces zero results, display 'No staples match {query}' message. Message disappears when query is corrected or cleared.",
+          "acceptance_criteria": [
+            "When filter produces zero results, message \"No staples match '{query}'\" is displayed",
+            "Message uses actual query text",
+            "Message disappears when query is modified to produce results",
+            "Message disappears when search is cleared"
+          ],
+          "test_file": "tests/acceptance/checklist-search-bar/milestone-1-empty-state.test.tsx",
+          "scenario_name": "M1-1 through M1-3",
+          "files_to_modify": ["src/ui/StapleChecklist.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 0.5,
+          "deliverables": ["Empty state conditional render"],
+          "quality_gates": ["All 3 milestone-1 acceptance tests pass", "Walking skeleton tests still pass"]
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "approved_at": "2026-04-13T00:00:00Z"
+  }
+}

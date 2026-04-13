@@ -206,6 +206,7 @@ export const HomeView = (): React.JSX.Element => {
           tripItemNames={tripItemNameSet}
           onAddStaple={handleAddFromChecklist}
           onRemoveStaple={handleRemoveFromChecklist}
+          onLongPress={handleEditStaple}
         />
       )}
       {homeMode === 'sweep' && (
