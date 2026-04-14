@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Pressable, Text, FlatList, StyleSheet } from 'react-native';
 import { AddTripItemRequest, AddTripItemResult, StapleItem } from '../domain/types';
+import { useIsWeb } from '../hooks/useIsWeb';
 
 const formatLocation = (section: string, aisleNumber: number | null): string =>
   aisleNumber === null ? section : `${section} / Aisle ${aisleNumber}`;
@@ -28,6 +29,7 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
   const [inputText, setInputText] = useState('');
   const [suggestions, setSuggestions] = useState<StapleItem[]>([]);
   const trimmedInput = inputText.trim();
+  const isWeb = useIsWeb();
 
   const handleChangeText = (text: string): void => {
     setInputText(text);
@@ -72,6 +74,7 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
           placeholder="Add an item..."
           value={inputText}
           onChangeText={handleChangeText}
+          autoFocus={isWeb}
         />
         <Pressable style={styles.addButton} onPress={handleAdd} disabled={!onOpenMetadataSheet}>
           <Text style={styles.addButtonText}>Add</Text>
