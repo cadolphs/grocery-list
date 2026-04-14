@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { StapleItem } from '../domain/types';
+import { useIsWeb } from '../hooks/useIsWeb';
 
 export const filterStaples = (
   staples: readonly StapleItem[],
@@ -32,21 +33,37 @@ type StapleRowProps = {
   readonly onLongPress?: () => void;
 };
 
-const StapleRow = ({ staple, isChecked, onToggle, onLongPress }: StapleRowProps): React.JSX.Element => (
-  <Pressable
-    style={styles.row}
-    testID={`staple-row-${staple.name}`}
-    onPress={onToggle}
-    onLongPress={onLongPress}
-  >
-    <View style={styles.textContainer}>
-      <Text style={[styles.stapleName, isChecked ? styles.checkedName : styles.uncheckedName]}>
-        {staple.name}
-      </Text>
-      <Text style={styles.areaLabel}>{staple.houseArea}</Text>
+const StapleRow = ({ staple, isChecked, onToggle, onLongPress }: StapleRowProps): React.JSX.Element => {
+  const isWeb = useIsWeb();
+  const showEditButton = isWeb && !!onLongPress;
+  return (
+    <View style={styles.row}>
+      <Pressable
+        style={styles.rowPressable}
+        testID={`staple-row-${staple.name}`}
+        onPress={onToggle}
+        onLongPress={onLongPress}
+      >
+        <View style={styles.textContainer}>
+          <Text style={[styles.stapleName, isChecked ? styles.checkedName : styles.uncheckedName]}>
+            {staple.name}
+          </Text>
+          <Text style={styles.areaLabel}>{staple.houseArea}</Text>
+        </View>
+      </Pressable>
+      {showEditButton && (
+        <Pressable
+          style={styles.editButton}
+          onPress={onLongPress}
+          testID={`edit-button-${staple.name}`}
+          accessibilityLabel={`Edit ${staple.name}`}
+        >
+          <Text style={styles.editIcon}>{'\u270E'}</Text>
+        </Pressable>
+      )}
     </View>
-  </Pressable>
-);
+  );
+};
 
 export const StapleChecklist = ({
   staples,
@@ -141,8 +158,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  rowPressable: {
+    flex: 1,
+  },
   textContainer: {
     flex: 1,
+  },
+  editButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  editIcon: {
+    fontSize: 18,
+    color: '#666666',
   },
   stapleName: {
     fontSize: 16,

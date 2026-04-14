@@ -50,7 +50,7 @@ beforeEach(() => {
 // M2-1: Pencil icon visible on web next to editable rows
 // =============================================================================
 
-describe.skip('M2-1: Edit icon visible on web', () => {
+describe('M2-1: Edit icon visible on web', () => {
   // AC: On web, each row with an edit affordance shows a visible pencil icon
   // AC: On mobile, the pencil icon is NOT rendered
   // Driving port: TripItemRow / StapleRow conditional render
@@ -75,7 +75,7 @@ describe.skip('M2-1: Edit icon visible on web', () => {
 // M2-2: Tapping pencil icon opens the edit metadata sheet
 // =============================================================================
 
-describe.skip('M2-2: Tapping edit icon opens the edit sheet', () => {
+describe('M2-2: Tapping edit icon opens the edit sheet', () => {
   // AC: Pressing the pencil icon on a row opens the edit metadata sheet
   //     for that staple (same behavior as long-press on mobile)
   // Driving port: Pressable onPress -> handleEditStaple
@@ -95,7 +95,7 @@ describe.skip('M2-2: Tapping edit icon opens the edit sheet', () => {
 // M2-3: Checklist rows also show pencil icon on web
 // =============================================================================
 
-describe.skip('M2-3: Checklist rows show pencil icon on web', () => {
+describe('M2-3: Checklist rows show pencil icon on web', () => {
   // AC: Staple checklist rows also show the pencil icon on web
 
   it('shows pencil icon on staple checklist rows on web', () => {

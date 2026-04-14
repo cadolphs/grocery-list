@@ -5,6 +5,7 @@ import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { TripItem } from '../domain/types';
 import { ViewMode } from '../hooks/useViewMode';
+import { useIsWeb } from '../hooks/useIsWeb';
 
 type TripItemRowProps = {
   readonly item: TripItem;
@@ -16,8 +17,18 @@ type TripItemRowProps = {
 };
 
 export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongPress }: TripItemRowProps): React.JSX.Element => {
+  const isWeb = useIsWeb();
+
+  const canEdit = (mode === 'store' || mode === 'home') && item.itemType === 'staple' && !!onLongPress;
+
   const handleLongPress = (): void => {
-    if ((mode === 'store' || mode === 'home') && item.itemType === 'staple' && onLongPress) {
+    if (canEdit && onLongPress) {
+      onLongPress(item.name, item.houseArea);
+    }
+  };
+
+  const handleEditPress = (): void => {
+    if (onLongPress) {
       onLongPress(item.name, item.houseArea);
     }
   };
@@ -46,6 +57,16 @@ export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongP
     {mode === 'store' && onSkip && (
       <Pressable style={styles.skipButton} onPress={onSkip} testID={`skip-${item.name}`}>
         <Text style={styles.skipText}>Skip</Text>
+      </Pressable>
+    )}
+    {isWeb && canEdit && (
+      <Pressable
+        style={styles.editButton}
+        onPress={handleEditPress}
+        testID={`edit-button-${item.name}`}
+        accessibilityLabel={`Edit ${item.name}`}
+      >
+        <Text style={styles.editIcon}>{'\u270E'}</Text>
       </Pressable>
     )}
   </View>
@@ -86,5 +107,13 @@ const styles = StyleSheet.create({
   skipText: {
     color: '#FF9800',
     fontWeight: '600',
+  },
+  editButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  editIcon: {
+    fontSize: 18,
+    color: '#666666',
   },
 });
