@@ -1,6 +1,6 @@
 /**
- * LoginScreen component — US-02 minimal sign-in form.
- * Subsequent US-03..US-06 add mode toggle, validation, error mapping, and loading state.
+ * LoginScreen component — US-02 sign-in form + US-03 mode toggle.
+ * Subsequent US-04..US-06 add validation, error mapping, and loading state.
  */
 
 import { useState, type FormEvent } from 'react';
@@ -11,15 +11,33 @@ export type LoginScreenProps = {
   signUp: (email: string, password: string) => Promise<AuthResult>;
 };
 
+type AuthMode = 'signIn' | 'signUp';
+
 export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
-  void signUp;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<AuthMode>('signIn');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await signIn(email, password);
+    const action = mode === 'signUp' ? signUp : signIn;
+    const result = await action(email, password);
+    if (!result.success) {
+      setErrorMessage(result.error ?? 'Invalid credentials');
+    }
   };
+
+  const toggleMode = () => {
+    setMode((prev) => (prev === 'signIn' ? 'signUp' : 'signIn'));
+    setErrorMessage(null);
+  };
+
+  const submitLabel = mode === 'signUp' ? 'Sign Up' : 'Sign In';
+  const toggleLabel =
+    mode === 'signIn'
+      ? "Don't have an account? Sign Up"
+      : 'Already have an account? Sign In';
 
   return (
     <form onSubmit={handleSubmit}>
@@ -37,7 +55,11 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button type="submit">Sign In</button>
+      {errorMessage !== null && <p role="alert">{errorMessage}</p>}
+      <button type="submit">{submitLabel}</button>
+      <button type="button" onClick={toggleMode}>
+        {toggleLabel}
+      </button>
     </form>
   );
 };
