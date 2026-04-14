@@ -84,10 +84,10 @@ type GhWorkflow = {
 
 describe('web-prod-deploy walking skeleton', () => {
   describe('US-01: hosting config', () => {
-    test('firebase.json declares public dir = "web/dist"', () => {
+    test('firebase.json declares public dir = "dist"', () => {
       expect(fileExists('firebase.json')).toBe(true);
       const cfg = readJson<FirebaseHostingConfig>('firebase.json');
-      expect(cfg.hosting?.public).toBe('web/dist');
+      expect(cfg.hosting?.public).toBe('dist');
     });
 
     test('firebase.json declares SPA rewrite ** -> /index.html', () => {
@@ -153,7 +153,7 @@ describe('web-prod-deploy walking skeleton', () => {
       expect(withBlock.channelId).toBe('live');
     });
 
-    test('builds the web bundle (npm ci + npm run build in /web) before deploying', () => {
+    test('exports the web bundle via `expo export -p web` at repo root before deploying', () => {
       const wf = readYaml<GhWorkflow>(workflowPath);
       const job = Object.values(wf.jobs ?? {})[0];
       const steps = job?.steps ?? [];
@@ -161,29 +161,25 @@ describe('web-prod-deploy walking skeleton', () => {
       const findIdx = (predicate: (s: Record<string, unknown>) => boolean) =>
         steps.findIndex((s) => predicate(s));
 
-      const ciIdx = findIdx(
-        (s) =>
-          typeof s.run === 'string' &&
-          (s.run as string).includes('npm ci') &&
-          (s as { 'working-directory'?: string })['working-directory'] === 'web'
-      );
-      const buildIdx = findIdx(
-        (s) =>
-          typeof s.run === 'string' &&
-          (s.run as string).includes('npm run build') &&
-          (s as { 'working-directory'?: string })['working-directory'] === 'web'
-      );
+      const exportIdx = findIdx((s) => {
+        const runCmd = typeof s.run === 'string' ? (s.run as string) : '';
+        return /expo\s+export/.test(runCmd) && /-p\s+web|--platform\s+web/.test(runCmd);
+      });
       const deployIdx = findIdx(
         (s) =>
           typeof s.uses === 'string' &&
           (s.uses as string).includes('FirebaseExtended/action-hosting-deploy')
       );
 
-      expect(ciIdx).toBeGreaterThanOrEqual(0);
-      expect(buildIdx).toBeGreaterThanOrEqual(0);
+      expect(exportIdx).toBeGreaterThanOrEqual(0);
       expect(deployIdx).toBeGreaterThanOrEqual(0);
-      expect(ciIdx).toBeLessThan(deployIdx);
-      expect(buildIdx).toBeLessThan(deployIdx);
+      expect(exportIdx).toBeLessThan(deployIdx);
+
+      // No step runs inside the (legacy) /web directory anymore.
+      for (const s of steps) {
+        const wd = (s as { 'working-directory'?: string })['working-directory'];
+        expect(wd).not.toBe('web');
+      }
     });
 
     test('concurrency group "deploy-web" with cancel-in-progress = false', () => {
