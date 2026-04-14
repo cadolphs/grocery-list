@@ -10,14 +10,14 @@ import { useServices } from './ServiceProvider';
 import { groupByAisle } from '../domain/item-grouping';
 import { sortByCustomOrder } from '../domain/section-ordering';
 import { CompleteTripResult } from '../domain/trip';
-import { HouseArea, StapleItem, AddStapleRequest, AddTripItemRequest } from '../domain/types';
+import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
 import { AisleSection } from './AisleSection';
 import { TripSummaryView } from './TripSummaryView';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 
 export const StoreView = (): React.JSX.Element => {
-  const { items, addItem, toggleCheckOff, syncStapleUpdate } = useTrip();
+  const { items, addItem, toggleCheckOff, unskipItem, syncStapleUpdate } = useTrip();
   const { tripService, stapleLibrary } = useServices();
   const { areas } = useAreas();
   const { order: sectionOrder } = useSectionOrder();
@@ -77,6 +77,10 @@ export const StoreView = (): React.JSX.Element => {
     stapleLibrary.addStaple(request);
   }, [stapleLibrary]);
 
+  const handleSubmitOneOff = useCallback((request: AddOneOffRequest): void => {
+    stapleLibrary.addOneOff(request);
+  }, [stapleLibrary]);
+
   const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
     addItem(request);
   }, [addItem]);
@@ -87,20 +91,24 @@ export const StoreView = (): React.JSX.Element => {
   }, [stapleLibrary, syncStapleUpdate]);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
-    const alreadyInTrip = items.some(
-      (item) => item.name === staple.name && item.houseArea === staple.houseArea
-    );
-    if (!alreadyInTrip) {
+    const isOneOff = staple.type === 'one-off';
+    const existing = isOneOff
+      ? items.find((item) => item.name === staple.name && item.itemType === 'one-off')
+      : items.find((item) => item.name === staple.name && item.houseArea === staple.houseArea);
+    if (existing && !existing.needed) {
+      unskipItem(existing.name);
+    } else if (!existing) {
+      const houseArea = isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
       addItem({
         name: staple.name,
-        houseArea: staple.houseArea,
+        houseArea,
         storeLocation: staple.storeLocation,
-        itemType: 'staple',
+        itemType: isOneOff ? 'one-off' : 'staple',
         source: 'quick-add',
         stapleId: staple.id,
       });
     }
-  }, [items, addItem]);
+  }, [items, addItem, unskipItem]);
 
   if (tripResult !== null && showSummary) {
     return (
@@ -141,6 +149,7 @@ export const StoreView = (): React.JSX.Element => {
         existingSections={existingSections}
         onDismiss={handleDismissMetadataSheet}
         onSubmitStaple={handleSubmitStaple}
+        onSubmitOneOff={handleSubmitOneOff}
         onSubmitTripItem={handleSubmitTripItem}
         onSaveEdit={handleSaveEdit}
       />
