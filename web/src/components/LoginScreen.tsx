@@ -6,6 +6,7 @@
 import { useState, type FormEvent } from 'react';
 import type { AuthResult } from '../auth/AuthService';
 import { validateFormInput, type AuthMode } from '../auth/validation';
+import { mapAuthError } from '../auth/error-mapping';
 
 export type LoginScreenProps = {
   signIn: (email: string, password: string) => Promise<AuthResult>;
@@ -28,7 +29,7 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
     const action = mode === 'signUp' ? signUp : signIn;
     const result = await action(email, password);
     if (!result.success) {
-      setErrorMessage(result.error ?? 'Invalid credentials');
+      setErrorMessage(mapAuthError(result.error, mode));
     }
   };
 
