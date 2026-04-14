@@ -5,13 +5,12 @@
 
 import { useState, type FormEvent } from 'react';
 import type { AuthResult } from '../auth/AuthService';
+import { validateFormInput, type AuthMode } from '../auth/validation';
 
 export type LoginScreenProps = {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
 };
-
-type AuthMode = 'signIn' | 'signUp';
 
 export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
   const [email, setEmail] = useState('');
@@ -21,6 +20,11 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const validationError = validateFormInput(email, password, mode);
+    if (validationError !== null) {
+      setErrorMessage(validationError);
+      return;
+    }
     const action = mode === 'signUp' ? signUp : signIn;
     const result = await action(email, password);
     if (!result.success) {
@@ -40,7 +44,7 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
       : 'Already have an account? Sign In';
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <label htmlFor="login-email">Email</label>
       <input
         id="login-email"

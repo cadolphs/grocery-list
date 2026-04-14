@@ -1,18 +1,22 @@
 /**
- * Client-side form validation — RED scaffold (created by DISTILL).
- * DELIVER US-04 replaces with real validation rules copied from mobile.
+ * Client-side form validation — pure module (US-04).
+ * Rules mirrored from mobile src/ui/LoginScreen.tsx.
  */
-
-export const __SCAFFOLD__ = true;
 
 export type AuthMode = 'signIn' | 'signUp';
 
-export const EMAIL_PATTERN: RegExp = /__SCAFFOLD__/;
+export const EMAIL_PATTERN: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const validateFormInput = (
-  _email: string,
-  _password: string,
-  _mode: AuthMode
+  email: string,
+  password: string,
+  mode: AuthMode
 ): string | null => {
-  throw new Error('validateFormInput not yet implemented — RED scaffold');
+  const trimmed = email.trim();
+  if (!trimmed) return 'Please enter your email address';
+  if (!EMAIL_PATTERN.test(trimmed)) return 'Please enter a valid email address.';
+  if (mode === 'signUp' && password.length < 8) {
+    return 'Password must be at least 8 characters.';
+  }
+  return null;
 };
