@@ -18,6 +18,7 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<AuthMode>('signIn');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,9 +28,14 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
       return;
     }
     const action = mode === 'signUp' ? signUp : signIn;
-    const result = await action(email, password);
-    if (!result.success) {
-      setErrorMessage(mapAuthError(result.error, mode));
+    setIsSubmitting(true);
+    try {
+      const result = await action(email, password);
+      if (!result.success) {
+        setErrorMessage(mapAuthError(result.error, mode));
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -38,7 +44,9 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
     setErrorMessage(null);
   };
 
-  const submitLabel = mode === 'signUp' ? 'Sign Up' : 'Sign In';
+  const idleLabel = mode === 'signUp' ? 'Sign Up' : 'Sign In';
+  const pendingLabel = mode === 'signUp' ? 'Signing Up...' : 'Signing In...';
+  const submitLabel = isSubmitting ? pendingLabel : idleLabel;
   const toggleLabel =
     mode === 'signIn'
       ? "Don't have an account? Sign Up"
@@ -61,7 +69,9 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps) => {
         onChange={(e) => setPassword(e.target.value)}
       />
       {errorMessage !== null && <p role="alert">{errorMessage}</p>}
-      <button type="submit">{submitLabel}</button>
+      <button type="submit" disabled={isSubmitting}>
+        {submitLabel}
+      </button>
       <button type="button" onClick={toggleMode}>
         {toggleLabel}
       </button>
