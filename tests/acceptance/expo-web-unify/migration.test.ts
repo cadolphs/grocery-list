@@ -150,8 +150,7 @@ describe('expo-web-unify migration', () => {
     });
   });
 
-  // Gated until step 01-02 deletes the /web directory.
-  describe.skip('US-02: /web directory is retired', () => {
+  describe('US-02: /web directory is retired', () => {
     test('/web directory does not exist', () => {
       expect(fileExists('web')).toBe(false);
     });
