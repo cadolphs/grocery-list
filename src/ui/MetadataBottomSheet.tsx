@@ -350,6 +350,7 @@ export const MetadataBottomSheet = ({
             placeholder="Aisle number"
             value={aisleText}
             onChangeText={setAisleText}
+            onSubmitEditing={isEditMode ? handleSaveEdit : handleSubmit}
             keyboardType="numeric"
           />
 

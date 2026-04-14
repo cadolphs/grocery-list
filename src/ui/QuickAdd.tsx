@@ -74,6 +74,8 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
           placeholder="Add an item..."
           value={inputText}
           onChangeText={handleChangeText}
+          onSubmitEditing={handleAdd}
+          blurOnSubmit={false}
           autoFocus={isWeb}
         />
         <Pressable style={styles.addButton} onPress={handleAdd} disabled={!onOpenMetadataSheet}>
