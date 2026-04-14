@@ -53,6 +53,13 @@ export const getFirebaseDb = (): Firestore => {
   if (db) return db;
   const firestoreConfig: Record<string, unknown> = {};
   if (Platform.OS === 'web') {
+    // Web-only: experimentalForceLongPolling works around WebChannel
+    // proxy/firewall issues; persistentLocalCache() uses IndexedDB which
+    // exists only on web. On React Native, persistentLocalCache() throws
+    // `FirestoreError(UNIMPLEMENTED)` because IndexedDB is unavailable (see
+    // firebase-js-sdk#7947). Durability on native is therefore implemented
+    // as an AsyncStorage write-through mirror inside each Firestore adapter
+    // (see firestore-trip-storage.ts).
     firestoreConfig.experimentalForceLongPolling = true;
     firestoreConfig.localCache = persistentLocalCache();
   }

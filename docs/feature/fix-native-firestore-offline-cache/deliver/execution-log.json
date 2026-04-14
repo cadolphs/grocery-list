@@ -29,6 +29,41 @@
       "s": "SKIPPED",
       "d": "NOT_APPLICABLE: fix is in step 01-02",
       "t": "2026-04-14T14:11:23Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-14T14:18:13Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-14T14:20:03Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "RED_ACCEPTANCE",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: regression test from 01-01 is the acceptance",
+      "t": "2026-04-14T14:20:03Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: regression test covers the scenario sufficiently; empty-snapshot-preservation logic exercised via the regression test (adapter B mock fires exists=false which is exactly the preservation path)",
+      "t": "2026-04-14T14:20:03Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-14T14:22:20Z"
     }
   ]
 }

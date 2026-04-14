@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
 
@@ -85,11 +86,14 @@ const createFreshStorage = async (onChange?: () => void) => {
   };
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
   Object.keys(capturedCallbacks).forEach((key) => delete capturedCallbacks[key]);
   Object.keys(mockUnsubscribes).forEach((key) => delete mockUnsubscribes[key]);
+  // Clear AsyncStorage mirror between tests — the adapter now writes through
+  // to AsyncStorage, and the global mock persists across tests by default.
+  await AsyncStorage.clear();
 });
 
 // --- Port compliance tests ---

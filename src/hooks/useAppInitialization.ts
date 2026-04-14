@@ -1,9 +1,12 @@
 // useAppInitialization - creates adapters, initializes caches, wires services
 // Returns { isReady, services, error, needsAuth } for App.tsx to gate rendering
 //
-// When authenticated: creates Firestore adapters for staples, areas, section order.
-// TripStorage always uses AsyncStorage (not synced to cloud).
-// When not authenticated: signals needsAuth without creating adapters.
+// When authenticated: creates Firestore adapters for staples, areas, section
+//   order, AND trip. The Firestore trip adapter mirrors its cache to
+//   AsyncStorage for offline durability (Firebase JS SDK has no persistent
+//   cache on React Native — see firebase-js-sdk#7947).
+// When not authenticated: signals needsAuth without creating adapters; the
+//   legacy factories fall back to pure AsyncStorage adapters.
 
 import { useState, useEffect } from 'react';
 import { createAsyncStapleStorage } from '../adapters/async-storage/async-staple-storage';
@@ -220,7 +223,9 @@ export const initializeApp = async (
   }
 };
 
-// Production factories: Firestore for staples/areas/sectionOrder, AsyncStorage for trips
+// Production factories: Firestore for staples/areas/sectionOrder/trip.
+// The Firestore trip adapter mirrors writes to AsyncStorage for offline
+// durability (compensating for the lack of persistentLocalCache on RN).
 const createProductionFactories = (): AdapterFactories => {
   const db = getFirebaseDb();
   return {
