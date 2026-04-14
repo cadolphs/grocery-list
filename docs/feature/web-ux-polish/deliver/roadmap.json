@@ -1,0 +1,97 @@
+{
+  "roadmap": {
+    "project_id": "web-ux-polish",
+    "created_at": "2026-04-13T00:00:00Z",
+    "total_steps": 4,
+    "goal": "Desktop-web-specific UX improvements: keyboard flow (autofocus, Enter key) and pencil edit icon replacing long-press",
+    "paradigm": "functional"
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Keyboard Flow",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "useIsWeb hook and QuickAdd autofocus on web",
+          "description": "Replace useIsWeb RED scaffold with Platform.OS === 'web' implementation. Wire autoFocus={isWeb} on QuickAdd's TextInput.",
+          "criteria": [
+            "useIsWeb() returns true on web, false on iOS/Android",
+            "QuickAdd TextInput has autoFocus=true on web",
+            "QuickAdd TextInput does not autofocus on mobile"
+          ],
+          "test_file": "tests/acceptance/web-ux-polish/walking-skeleton.test.tsx",
+          "scenario_name": "WS-1",
+          "files_to_modify": ["src/hooks/useIsWeb.ts", "src/ui/QuickAdd.tsx"],
+          "dependencies": [],
+          "estimated_hours": 0.5,
+          "deliverables": ["useIsWeb hook (real implementation)", "QuickAdd autoFocus prop"]
+        },
+        {
+          "id": "01-02",
+          "name": "Enter key submits QuickAdd input and metadata sheet",
+          "description": "Add onSubmitEditing to QuickAdd TextInput so Enter opens the metadata sheet with the typed name. Add onSubmitEditing to the last input in MetadataBottomSheet (Aisle number) so Enter submits the form.",
+          "criteria": [
+            "Enter key in QuickAdd with non-empty text opens metadata sheet",
+            "Enter key in QuickAdd with empty text is a no-op",
+            "Enter key on Aisle number input in MetadataBottomSheet submits the form"
+          ],
+          "test_file": "tests/acceptance/web-ux-polish/walking-skeleton.test.tsx",
+          "scenario_name": "WS-2 and WS-3",
+          "files_to_modify": ["src/ui/QuickAdd.tsx", "src/ui/MetadataBottomSheet.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 0.5,
+          "deliverables": ["onSubmitEditing handlers on QuickAdd and metadata sheet"]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Focus Management",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Autofocus Store section input when metadata sheet opens on web",
+          "description": "When MetadataBottomSheet becomes visible AND running on web, the Store section TextInput gets autoFocus so the user can type immediately after Enter opens the sheet.",
+          "criteria": [
+            "Store section input has autoFocus=true when sheet opens on web",
+            "Store section input does NOT autofocus on mobile"
+          ],
+          "test_file": "tests/acceptance/web-ux-polish/milestone-1-focus-management.test.tsx",
+          "scenario_name": "M1-1",
+          "files_to_modify": ["src/ui/MetadataBottomSheet.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 0.5,
+          "deliverables": ["Conditional autoFocus on Store section TextInput"]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Edit Icon",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "Pencil edit icon on web rows replaces long-press",
+          "description": "In TripItemRow and StapleChecklist's StapleRow, render a Pressable pencil icon (testID edit-button-{name}) when useIsWeb() is true and an edit callback is provided. Icon press invokes the existing onLongPress callback. Mobile rows retain long-press with no pencil icon.",
+          "criteria": [
+            "Pencil edit button visible on TripItemRow when on web and onLongPress is provided",
+            "Pencil edit button NOT rendered on mobile",
+            "Tapping pencil icon triggers the edit sheet",
+            "Pencil edit button visible on StapleChecklist rows on web"
+          ],
+          "test_file": "tests/acceptance/web-ux-polish/milestone-2-edit-icon.test.tsx",
+          "scenario_name": "M2-1, M2-2, M2-3",
+          "files_to_modify": ["src/ui/TripItemRow.tsx", "src/ui/StapleChecklist.tsx"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 1,
+          "deliverables": ["Conditional pencil edit button on rows"]
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "approved_at": "2026-04-13T00:00:00Z"
+  }
+}

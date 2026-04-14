@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
 import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
+import { useIsWeb } from '../hooks/useIsWeb';
 
 type ItemTypeSelection = 'Staple' | 'One-off';
 type SheetMode = 'form' | 'duplicate-warning';
@@ -63,6 +64,7 @@ export const MetadataBottomSheet = ({
   onDeleteStaple,
 }: MetadataBottomSheetProps): React.JSX.Element => {
   const isEditMode = mode === 'edit';
+  const isWeb = useIsWeb();
 
   const resolveDefaultArea = (): HouseArea | null =>
     defaultArea === undefined ? 'Kitchen Cabinets' : defaultArea;
@@ -329,6 +331,7 @@ export const MetadataBottomSheet = ({
             placeholder="Store section..."
             value={section}
             onChangeText={handleSectionChange}
+            autoFocus={isWeb}
           />
 
           {sectionSuggestions.length > 0 && (

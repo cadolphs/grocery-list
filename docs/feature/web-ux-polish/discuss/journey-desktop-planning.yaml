@@ -1,0 +1,260 @@
+schema_version: 1
+
+journey:
+  name: "Desktop Planning Session"
+  goal: "Add and edit staples efficiently on desktop web using keyboard-first workflow"
+  persona: "Priya — weekly meal-planner on MacBook; keyboard-dominant; 10-20 staples per session"
+
+  emotional_arc:
+    start: "Impatient — has many items to add, expects web-native shortcuts"
+    middle: "Engaged, then in flow once keyboard rhythm clicks"
+    end: "Satisfied — trusts the tool for desktop planning"
+
+steps:
+  - id: 1
+    name: "Focus QuickAdd on web"
+    command: "Open app in browser"
+
+    tui_mockup: |
+      +-- QuickAdd -----------------------------------+
+      |   [ |                          ]  [ Add ]     |
+      |     ^cursor (autofocused on web)              |
+      +-----------------------------------------------+
+
+    shared_artifacts:
+      - name: "platform_is_web"
+        source: "Platform.OS === 'web'"
+        displayed_as: "${platform_is_web}"
+        consumers: ["QuickAdd autofocus", "Enter key handler", "pencil icon rendering"]
+
+    emotional_state:
+      entry: "Impatient"
+      exit: "Ready to type"
+
+    integration_checkpoint: |
+      On mount, if ${platform_is_web} is true, QuickAdd input requests focus.
+      On iOS/Android (${platform_is_web} === false), no autofocus (avoids keyboard pop).
+
+    failure_modes:
+      - "Autofocus steals focus from accessibility readers — mitigate by using autoFocus only on web and respecting a11y"
+      - "Mobile browsers trigger on-screen keyboard unexpectedly — only gate by Platform.OS === 'web', not by viewport"
+
+    gherkin: |
+      Scenario: Desktop planner lands on a ready-to-type input
+        Given Priya opens the grocery-list app in her desktop browser
+        When the QuickAdd view mounts
+        Then the QuickAdd text input is focused
+        And the cursor is ready to receive keyboard input
+
+      Scenario: Mobile app does not steal focus on mount
+        Given a user opens the app on iOS
+        When the QuickAdd view mounts
+        Then the QuickAdd input is not autofocused
+        And the on-screen keyboard does not appear automatically
+
+  - id: 2
+    name: "Submit QuickAdd with Enter"
+    command: "Type name, press Enter"
+
+    tui_mockup: |
+      +-- QuickAdd -----------------------------------+
+      |   [ bananas|                    ]  [ Add ]    |
+      |   Suggestions:                                |
+      |     + Add "bananas" as new item  <-- default  |
+      |   Tip: Press Enter to add new item            |
+      +-----------------------------------------------+
+
+    shared_artifacts:
+      - name: "staple_name"
+        source: "QuickAdd input text"
+        displayed_as: "${staple_name}"
+        consumers: ["MetadataBottomSheet name field prefill"]
+      - name: "primary_action_on_enter"
+        source: "Derived from input and suggestion state"
+        displayed_as: "${primary_action}"
+        consumers: ["QuickAdd Enter key handler"]
+
+    emotional_state:
+      entry: "Ready to type"
+      exit: "Engaged — flow starting"
+
+    integration_checkpoint: |
+      Enter key dispatches the same action as the default suggestion button.
+      If the top suggestion is "Add new item", Enter opens MetadataBottomSheet with
+      ${staple_name} prefilled. If top suggestion is an existing staple, Enter opens
+      the edit sheet for that staple.
+
+    failure_modes:
+      - "Enter pressed while input is empty — no-op, no sheet opens"
+      - "Enter pressed during IME composition (e.g., accented characters) — must ignore until composition ends"
+      - "Enter pressed while a suggestion is selected via arrow keys — submits the selected suggestion, not the default"
+
+    gherkin: |
+      Scenario: Pressing Enter in QuickAdd opens the add sheet with the typed name
+        Given Priya has typed "bananas" in the QuickAdd input on desktop web
+        And "bananas" is not yet in her library
+        When Priya presses Enter
+        Then the metadata sheet opens
+        And the name field is prefilled with "bananas"
+
+      Scenario: Pressing Enter on empty input does nothing
+        Given the QuickAdd input is empty
+        When Priya presses Enter
+        Then no sheet opens
+        And focus remains on the QuickAdd input
+
+  - id: 3
+    name: "Fill and submit MetadataBottomSheet"
+    command: "Tab between fields, press Enter"
+
+    tui_mockup: |
+      +-- Add: "bananas" ------------------------+
+      |   Name:   [ bananas            ]         |
+      |   Area:   [ Kitchen        v ] <- focus  |
+      |   Aisle:  [ Produce        v ]           |
+      |                    [ Cancel ] [ Add Item ]|
+      +------------------------------------------+
+
+    shared_artifacts:
+      - name: "sheet_first_field_ref"
+        source: "MetadataBottomSheet first editable field"
+        displayed_as: "${first_field}"
+        consumers: ["autofocus on sheet open when name is prefilled"]
+
+    emotional_state:
+      entry: "Engaged"
+      exit: "Confident — item submitted"
+
+    integration_checkpoint: |
+      On sheet open with prefilled name, focus lands on the first editable-by-user field
+      (Area), not the Name field. Enter submits the form from any single-line input.
+
+    failure_modes:
+      - "Enter inside a multi-line Notes field submits the form prematurely — Enter-submit limited to single-line fields"
+      - "Enter submits with invalid data — validation blocks; focus moves to first invalid field with inline error"
+      - "Cmd/Ctrl+Enter from any field submits (accessibility fallback for users in multi-line fields)"
+
+    gherkin: |
+      Scenario: Enter submits the metadata sheet
+        Given the metadata sheet is open on desktop web with "bananas" prefilled
+        And Priya has selected Area "Kitchen" and Aisle "Produce"
+        When Priya presses Enter from the Aisle field
+        Then the sheet submits
+        And the staple "bananas" is saved to the library with Area "Kitchen" and Aisle "Produce"
+
+      Scenario: Invalid submission keeps sheet open with inline error
+        Given the metadata sheet is open with an empty Name
+        When Priya presses Enter
+        Then the sheet stays open
+        And an inline error appears on the Name field
+        And focus moves to the Name field
+
+  - id: 4
+    name: "Focus returns to QuickAdd"
+    command: "Sheet dismisses, continue typing"
+
+    tui_mockup: |
+      +-- QuickAdd -----------------------------------+
+      |   [ |                          ]  [ Add ]     |
+      |     ^cursor (focus restored)                  |
+      |   "bananas" saved                             |
+      +-----------------------------------------------+
+
+    shared_artifacts:
+      - name: "focus_target_after_close"
+        source: "QuickAdd input ref stored before sheet opens"
+        displayed_as: "${focus_return}"
+        consumers: ["Focus restoration on sheet dismiss"]
+
+    emotional_state:
+      entry: "Confident"
+      exit: "In flow — ready for next item"
+
+    integration_checkpoint: |
+      On sheet close (submit OR cancel), focus returns to the QuickAdd input.
+      The input is cleared so typing begins fresh.
+
+    failure_modes:
+      - "Input ref unmounted during sheet open — focus restoration no-ops; document active element falls back sanely"
+      - "User cancelled: input should still clear (current typed name persisted nowhere) OR retain (debated — Story US-05 picks 'clear')"
+
+    gherkin: |
+      Scenario: Focus returns to QuickAdd after successful add
+        Given Priya submitted a new staple "bananas" from the metadata sheet
+        When the sheet closes
+        Then focus is on the QuickAdd input
+        And the QuickAdd input is empty
+        And Priya can type the next item immediately
+
+      Scenario: Focus returns to QuickAdd after cancel
+        Given the metadata sheet is open
+        When Priya presses Esc
+        Then the sheet closes
+        And focus is on the QuickAdd input
+
+  - id: 5
+    name: "Edit a staple on desktop"
+    command: "Click pencil icon on row"
+
+    tui_mockup: |
+      +-- Staples: Kitchen ---------------------------+
+      |  [x] olive oil    Oils & Vinegars    (edit) |
+      |                                      ^pencil  |
+      +-----------------------------------------------+
+
+    shared_artifacts:
+      - name: "platform_is_web"
+        source: "Platform.OS === 'web'"
+        displayed_as: "${platform_is_web}"
+        consumers: ["pencil icon render gate"]
+      - name: "staple_record"
+        source: "Library store entry for this staple"
+        displayed_as: "${staple}"
+        consumers: ["MetadataBottomSheet prefill on edit"]
+
+    emotional_state:
+      entry: "Searching for edit affordance"
+      exit: "Relieved — correction made"
+
+    integration_checkpoint: |
+      Pencil icon renders on web only. Clicking it dispatches the SAME edit handler
+      as iOS/Android long-press. Both paths open MetadataBottomSheet in edit mode
+      with ${staple} prefilled.
+
+    failure_modes:
+      - "Pencil icon renders on mobile native — regression; detect via Platform.OS gate"
+      - "Long-press still fires on mobile web while pencil also present — acceptable, both dispatch same handler"
+      - "Pencil icon not keyboard-focusable — must be a real button with role='button' and visible focus ring"
+
+    gherkin: |
+      Scenario: Desktop user edits a staple via pencil icon
+        Given Priya is viewing the staple checklist on desktop web
+        And "olive oil" is listed under Aisle "Oils & Vinegars"
+        When Priya clicks the edit icon on the "olive oil" row
+        Then the metadata sheet opens prefilled with the "olive oil" record
+
+      Scenario: iOS user still edits via long-press
+        Given a user is viewing the staple checklist on iOS
+        When the user long-presses the "olive oil" row
+        Then the metadata sheet opens prefilled with the "olive oil" record
+        And no pencil icon is visible on the row
+
+      Scenario: Edit icon is keyboard accessible on web
+        Given Priya navigates the staple checklist with Tab
+        When focus reaches the edit icon on a row
+        Then the focus indicator is visible
+        And pressing Enter or Space opens the edit sheet for that staple
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "platform_is_web"
+      must_match_across: [1, 2, 5]
+      failure_message: "Platform detection inconsistent — scattered Platform.OS checks risk divergent behavior per component"
+    - artifact: "focus_target_after_close"
+      must_match_across: [2, 3, 4]
+      failure_message: "Focus restoration will fail if the ref is captured inconsistently across sheet open sites"
+
+changelog:
+  - date: "2026-04-13"
+    feature: "web-ux-polish"
+    change: "Initial DISCUSS-wave journey for desktop-web UX polish (keyboard flow + pencil edit affordance)"
