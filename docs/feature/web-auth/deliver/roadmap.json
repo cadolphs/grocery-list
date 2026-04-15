@@ -1,0 +1,155 @@
+{
+  "roadmap": {
+    "project_id": "web-auth",
+    "created_at": "2026-04-14T00:00:00Z",
+    "total_steps": 7,
+    "phases": 1
+  },
+  "implementation_scope": {
+    "source_directories": [
+      "web/src/"
+    ],
+    "test_directories": [
+      "web/src/"
+    ],
+    "excluded_patterns": []
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-04-14T00:00:00Z",
+    "notes": "Reviewer dispatch skipped per user autonomy preference for this small in-scope feature (7 stories ~3h). Quality gate is the vitest suite (38 scenarios, 18 RED -> 38 GREEN; 17 existing pass throughout until US-01 cleanup)."
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Ship email/password sign-in",
+      "steps": [
+        {
+          "id": "01-01",
+          "user_story": "US-01",
+          "scenario_name": "Walking skeleton + AuthService + useAuthState",
+          "description": "Replace RED scaffolds for AuthService + useAuthState with real Firebase-backed implementations. Rewrite App.tsx to use createAuthService() + useAuthState(authService) and render <LoginScreen> (still scaffold at this step - acceptable; App.acceptance scenario 1 expects the form and will fail until US-02 lands a real form). DELETE web/src/hooks/useAuth.ts and web/src/hooks/useAuth.test.ts. DELETE the old web/src/App.test.tsx (it mocks the deleted ./hooks/useAuth); App.acceptance.test.tsx supersedes it.",
+          "files_to_modify": [
+            "web/src/auth/AuthService.ts",
+            "web/src/auth/useAuthState.ts",
+            "web/src/App.tsx",
+            "web/src/App.test.tsx",
+            "web/src/hooks/useAuth.ts",
+            "web/src/hooks/useAuth.test.ts"
+          ],
+          "test_file": "web/src/App.acceptance.test.tsx",
+          "acceptance_criteria": "AuthService + useAuthState + AuthService.test.ts + useAuthState.test.ts all GREEN. Stale web/src/hooks/useAuth* files gone. App.test.tsx removed. App.acceptance.test.tsx scenario 1 (signed-out -> LoginScreen) may still be RED due to LoginScreen scaffold - that's OK, US-02 greens it.",
+          "estimate_hours": 0.5,
+          "dependencies": [],
+          "name": "US-01: Walking skeleton + AuthService + useAuthState",
+          "criteria": "AuthService + useAuthState + AuthService.test.ts + useAuthState.test.ts all GREEN. Stale web/src/hooks/useAuth* files gone. App.test.tsx removed. App.acceptance.test.tsx scenario 1 (signed-out -> LoginScreen) may still be RED due to LoginScreen scaffold - that's OK, US-02 greens it."
+        },
+        {
+          "id": "01-02",
+          "user_story": "US-02",
+          "scenario_name": "LoginScreen render + signIn wire",
+          "description": "Implement minimal LoginScreen sign-in form (email + password + submit) wired to authService.signIn.",
+          "files_to_modify": [
+            "web/src/components/LoginScreen.tsx"
+          ],
+          "test_file": "web/src/components/LoginScreen.test.tsx",
+          "acceptance_criteria": "LoginScreen tests 15, 16 GREEN; App.acceptance scenarios 1 and 2 GREEN. Other LoginScreen tests may still be RED (mode toggle, validation, etc. - future steps).",
+          "estimate_hours": 0.5,
+          "dependencies": [
+            "01-01"
+          ],
+          "name": "US-02: LoginScreen render + signIn wire",
+          "criteria": "LoginScreen tests 15, 16 GREEN; App.acceptance scenarios 1 and 2 GREEN. Other LoginScreen tests may still be RED (mode toggle, validation, etc. - future steps)."
+        },
+        {
+          "id": "01-03",
+          "user_story": "US-03",
+          "scenario_name": "Mode toggle",
+          "description": "Add Sign In <-> Sign Up mode toggle to LoginScreen; submit routes to signIn or signUp per mode.",
+          "files_to_modify": [
+            "web/src/components/LoginScreen.tsx"
+          ],
+          "test_file": "web/src/components/LoginScreen.test.tsx",
+          "acceptance_criteria": "LoginScreen tests 17-20 GREEN.",
+          "estimate_hours": 0.25,
+          "dependencies": [
+            "01-02"
+          ],
+          "name": "US-03: Mode toggle",
+          "criteria": "LoginScreen tests 17-20 GREEN."
+        },
+        {
+          "id": "01-04",
+          "user_story": "US-04",
+          "scenario_name": "Client-side validation",
+          "description": "Implement validation.ts (email format, password length) and wire into LoginScreen submit flow to block invalid input with inline errors.",
+          "files_to_modify": [
+            "web/src/auth/validation.ts",
+            "web/src/components/LoginScreen.tsx"
+          ],
+          "test_file": "web/src/auth/validation.test.ts",
+          "acceptance_criteria": "validation tests V1-V6 GREEN; LoginScreen tests 21-24 GREEN.",
+          "estimate_hours": 0.5,
+          "dependencies": [
+            "01-03"
+          ],
+          "name": "US-04: Client-side validation",
+          "criteria": "validation tests V1-V6 GREEN; LoginScreen tests 21-24 GREEN."
+        },
+        {
+          "id": "01-05",
+          "user_story": "US-05",
+          "scenario_name": "Firebase error mapping",
+          "description": "Implement error-mapping.ts translating Firebase auth error codes to user-facing messages; wire into LoginScreen to surface auth failures.",
+          "files_to_modify": [
+            "web/src/auth/error-mapping.ts",
+            "web/src/components/LoginScreen.tsx"
+          ],
+          "test_file": "web/src/auth/error-mapping.test.ts",
+          "acceptance_criteria": "error-mapping tests E1-E5 GREEN; LoginScreen test 25 GREEN.",
+          "estimate_hours": 0.5,
+          "dependencies": [
+            "01-04"
+          ],
+          "name": "US-05: Firebase error mapping",
+          "criteria": "error-mapping tests E1-E5 GREEN; LoginScreen test 25 GREEN."
+        },
+        {
+          "id": "01-06",
+          "user_story": "US-06",
+          "scenario_name": "Loading state",
+          "description": "Add loading state to LoginScreen: disable submit button while auth call in flight; re-enable on resolve/reject.",
+          "files_to_modify": [
+            "web/src/components/LoginScreen.tsx"
+          ],
+          "test_file": "web/src/components/LoginScreen.test.tsx",
+          "acceptance_criteria": "LoginScreen tests 26, 27 GREEN.",
+          "estimate_hours": 0.25,
+          "dependencies": [
+            "01-05"
+          ],
+          "name": "US-06: Loading state",
+          "criteria": "LoginScreen tests 26, 27 GREEN."
+        },
+        {
+          "id": "01-07",
+          "user_story": "US-07",
+          "scenario_name": "Sign Out",
+          "description": "Add Sign Out button to AuthenticatedApp section of App.tsx; invokes authService.signOut and returns user to LoginScreen via useAuthState.",
+          "files_to_modify": [
+            "web/src/App.tsx"
+          ],
+          "test_file": "web/src/App.acceptance.test.tsx",
+          "acceptance_criteria": "App.acceptance scenario 4 GREEN; useAuthState scenario 14 stays GREEN. Full cd web && npm test: 0 failures.",
+          "estimate_hours": 0.25,
+          "dependencies": [
+            "01-06"
+          ],
+          "name": "US-07: Sign Out",
+          "criteria": "App.acceptance scenario 4 GREEN; useAuthState scenario 14 stays GREEN. Full cd web && npm test: 0 failures."
+        }
+      ]
+    }
+  ]
+}

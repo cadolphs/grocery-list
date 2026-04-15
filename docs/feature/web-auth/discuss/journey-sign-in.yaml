@@ -1,0 +1,85 @@
+journey:
+  id: web-sign-in
+  feature: web-auth
+  actor: clemens
+  goal: Sign in to the web app with email + password and reach the staples dashboard.
+  trigger: Open https://grocery-list-cad.web.app (no active session)
+  preconditions:
+    - Web app is deployed (see journey publish-web).
+    - Firebase Auth has email/password provider enabled for project grocery-list-cad.
+    - grocery-list-cad.web.app is in Firebase Auth authorized domains.
+    - Clemens already has a Firebase Auth account (created via mobile or via Sign Up mode on this same screen).
+  steps:
+    - id: s1
+      name: show-form
+      actor: web-app
+      action: Render LoginScreen with email + password fields and Sign In button
+      output: Form visible; focus on email field
+    - id: s2
+      name: submit
+      actor: clemens
+      action: Type email + password, click Sign In
+      output: Button label becomes "Signing In..."; disabled during request
+    - id: s3
+      name: auth
+      actor: firebase-auth
+      action: signInWithEmailAndPassword(email, password)
+      output: Auth user returned OR error
+      on_failure: Show error message; re-enable form
+    - id: s4
+      name: show-dashboard
+      actor: web-app
+      action: onAuthStateChanged fires; App renders AuthenticatedApp
+      output: Staples dashboard visible
+    - id: s5
+      name: reload-persistence
+      actor: clemens
+      action: Reload tab
+      output: Bypass form; go straight to dashboard (session persisted)
+    - id: s6
+      name: sign-out
+      actor: clemens
+      action: Click Sign Out button in header
+      output: Back to sign-in form
+      optional: true
+  modes:
+    - id: sign-in
+      default: true
+    - id: sign-up
+      trigger: Click "Don't have an account? Sign Up"
+      additional_validation: Password >= 8 chars
+      firebase_call: createUserWithEmailAndPassword
+  error_paths:
+    - when: Wrong password
+      effect: Show Firebase error text; form re-enabled; Clemens retries
+    - when: Account does not exist (sign-in mode)
+      effect: Show error; copy hints at Sign Up toggle
+    - when: Email already in use (sign-up mode)
+      effect: Show error; copy hints at switching to Sign In
+    - when: Empty email or invalid format (any mode)
+      effect: Client-side validation; no network call
+    - when: Password < 8 chars (sign-up mode)
+      effect: Client-side validation; no network call
+    - when: Network or Firebase outage
+      effect: Show error message; retry available
+  shared_artifacts:
+    - name: firebase_auth_session
+      storage: browser localStorage (Firebase SDK default, 'local' persistence)
+      producer: successful sign-in / sign-up
+      consumers: App.tsx, useStaples(db, uid)
+    - name: auth_user
+      type: "{ uid: string, email: string | null }"
+      producer: onAuthStateChanged
+      consumers: AuthenticatedApp, useStaples
+    - name: authorized_domains
+      storage: Firebase Auth settings (console)
+      producer: Firebase console (manual, one-time)
+      consumers: Firebase Auth SDK (rejects sign-in from unlisted domains)
+  kpis:
+    - time_to_first_signed_in_view_seconds: 10
+    - first_reload_redirects_to_dashboard: true
+    - sign_up_flow_completes_in_under_seconds: 30
+    - error_messages_are_actionable: true
+  features:
+    - web-auth
+  status: designed
