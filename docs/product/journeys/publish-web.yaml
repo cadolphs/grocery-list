@@ -1,0 +1,42 @@
+journey:
+  id: publish-web
+  title: Publish web build to production
+  actor: clemens
+  scope: devops
+  goal: A commit on main becomes a live web build at a stable public URL within 5 minutes without manual intervention.
+  trigger: git push origin main
+  steps:
+    - id: push
+      action: git push origin main
+      output: commit on origin/main
+    - id: ci
+      action: GitHub Actions ci.yml (tsc, eslint, jest, audit)
+      output: green status on commit
+    - id: build
+      action: GitHub Actions deploy-web.yml -> npm ci && npm run build in /web
+      output: web/dist/ populated
+    - id: deploy
+      action: firebase-hosting-deploy action with FIREBASE_SERVICE_ACCOUNT secret
+      output: new Firebase Hosting release
+    - id: verify
+      action: open https://grocery-list-cad.web.app
+      output: latest build served
+  error_paths:
+    - when: ci.yml red
+      effect: deploy skipped, prior build stays live
+    - when: build step red
+      effect: deploy skipped, prior build stays live
+    - when: firebase auth/deploy failure
+      effect: manual fallback `cd web && npm run build && firebase deploy --only hosting`
+    - when: bad code reached prod
+      effect: `firebase hosting:rollback` within 2 minutes
+  shared_artifacts:
+    - firebase.json
+    - .firebaserc
+    - github-secret://FIREBASE_SERVICE_ACCOUNT
+    - web/dist/
+    - https://grocery-list-cad.web.app
+  features:
+    - web-prod-deploy
+  owner: clemens
+  status: designed

@@ -1,0 +1,23 @@
+journey:
+  id: web-parity
+  title: Web companion app is feature-parity with mobile via Expo web
+  actor: clemens
+  scope: web
+  goal: The real Expo RN app renders at https://grocery-list-cad.web.app. No parallel /web codebase.
+  trigger: Push the migration commit(s) to main.
+  steps:
+    - swap firebase.json hosting.public -> "dist"
+    - swap deploy-web.yml build step -> `npx expo export -p web`
+    - delete /web directory
+    - push; CI green; deploy-web publishes Expo bundle
+    - open live URL; verify full RN UI + sign-in
+  shared_artifacts:
+    - dist/ (root output from expo export)
+    - firebase.json hosting config
+    - .github/workflows/deploy-web.yml
+    - Firebase Auth session (unchanged)
+  features:
+    - expo-web-unify
+  supersedes_feature_code:
+    - web-auth (the /web Vite implementation; the feature's design docs remain)
+  status: designed

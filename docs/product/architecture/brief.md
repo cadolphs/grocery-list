@@ -230,3 +230,135 @@ Contract tests recommended for Firestore document schemas -- the Trip, Staple, A
 - `completedAreas` array survives serialization (currently optional field on Trip)
 
 Development paradigm: **Functional** (factory functions, pure domain functions, React hooks; no classes).
+
+---
+
+## Web App (Vite) Application Architecture
+
+The web app in `/web/` is a **separate container** from the RN app documented above. It is a Vite + React 18 bundle deployed to Firebase Hosting at `https://grocery-list-cad.web.app`. It shares the Firebase project `grocery-list-cad` (same Firestore documents, same Auth user pool) but not the source code, `package.json`, or build tooling.
+
+### Relationship to the RN app
+
+| Dimension | RN app (`/src`) | Web app (`/web/src`) |
+|---|---|---|
+| Framework | React Native + Expo SDK 54, React 19 | React DOM 18 + Vite 6 |
+| Deployment | EAS Build → Android | Firebase Hosting → static bundle |
+| Auth pattern | Factory `createAuthService()` + `src/ui/LoginScreen.tsx` | Factory `createAuthService()` + `/web/src/components/LoginScreen.tsx` (mirrored, not shared — see ADR-003) |
+| Firestore access | Full hexagonal ports (4 adapters) | Direct hook (`useStaples`) — simpler; may evolve |
+| State of this section | Stable | Adds email/password auth via feature `web-auth` (2026-04-14) |
+
+No code is shared between the two apps. Shared is only the **Firebase project** and **document schemas** (Trip, Staple, Area, SectionOrder).
+
+### Web quality attributes
+
+1. **Functional suitability** — sign-in/sign-up work; session persists across reloads
+2. **Maintainability** — same factory + pure-module shape as mobile, so a developer familiar with one recognises the other
+3. **Testability** — AuthService stays React-free; validation + error-mapping are pure modules
+4. **Security** — Firebase SDK handles token storage; client validation is non-authoritative
+
+### Web architectural style
+
+Hexagonal-lite: Firebase Auth SDK sits behind a port (`AuthService`), UI code consumes the port via a thin hook (`useAuthState`) or props (`LoginScreen`). Component tree is 2 nodes deep so React Context is unjustified — props + a module-scoped factory are sufficient.
+
+### C4 Container (L2) — Web App
+
+```mermaid
+C4Container
+  title Container Diagram — /web (Vite + React 18 bundle)
+
+  Person(clemens, "Clemens")
+
+  Container_Boundary(web, "Web App — /web") {
+    Container(web_ui, "React DOM UI", "React 18", "App, LoginScreen, AuthenticatedApp, StapleTable")
+    Container(web_hooks, "Hooks", "React hooks", "useAuthState, useStaples")
+    Container(web_auth_port, "Auth Port", "Pure TS + Firebase SDK", "AuthService factory, validation, error-mapping")
+    Container(web_fb_config, "Firebase Config", "Module", "getFirebaseAuth(), getFirebaseDb()")
+  }
+
+  System_Ext(fb_auth, "Firebase Authentication", "Email/password provider")
+  System_Ext(fb_store, "Cloud Firestore", "Documents — shared with RN app")
+
+  Rel(clemens, web_ui, "Uses via browser")
+  Rel(web_ui, web_hooks, "Reads state from")
+  Rel(web_ui, web_auth_port, "Invokes signIn/signUp/signOut via props")
+  Rel(web_hooks, web_auth_port, "Subscribes to onAuthStateChanged via")
+  Rel(web_auth_port, web_fb_config, "Gets Auth instance from")
+  Rel(web_hooks, web_fb_config, "Gets Firestore instance from")
+  Rel(web_auth_port, fb_auth, "Signs in/up via")
+  Rel(web_hooks, fb_store, "Subscribes to documents via onSnapshot")
+```
+
+### C4 Component (L3) — Web App after web-auth
+
+```mermaid
+C4Component
+  title Component Diagram — /web/src/ after web-auth
+
+  Person(clemens, "Clemens")
+
+  Container_Boundary(web, "/web (Vite + React 18)") {
+    Component(app, "App", "React component", "Root; creates AuthService; routes on auth state")
+    Component(login, "LoginScreen", "React component", "Email+password form, mode toggle, errors, loading")
+    Component(authed, "AuthenticatedApp", "React component", "Dashboard shell with Sign Out")
+    Component(use_auth_state, "useAuthState", "React hook", "Subscribes to onAuthStateChanged -> { user, loading }")
+    Component(auth_service, "AuthService", "Factory", "signIn/signUp/signOut/getCurrentUser/onAuthStateChanged")
+    Component(validation, "validation", "Pure module", "validateFormInput, EMAIL_PATTERN")
+    Component(error_map, "error-mapping", "Pure module", "mapAuthError(error, mode) -> copy")
+    Component(use_staples, "useStaples", "React hook", "Existing; staples onSnapshot")
+    Component(fb_config, "firebase-config", "Module", "Existing; getFirebaseAuth/getFirebaseDb")
+  }
+
+  System_Ext(fb_auth, "Firebase Authentication")
+  System_Ext(fb_store, "Cloud Firestore")
+
+  Rel(clemens, login, "Types credentials into")
+  Rel(clemens, authed, "Interacts with after sign-in")
+  Rel(app, auth_service, "Creates via createAuthService()")
+  Rel(app, use_auth_state, "Reads { user, loading } from")
+  Rel(app, login, "Renders when no user; passes signIn/signUp to")
+  Rel(app, authed, "Renders when user present")
+  Rel(login, validation, "Calls validateFormInput before submit")
+  Rel(login, error_map, "Calls mapAuthError on failed AuthResult")
+  Rel(login, auth_service, "Invokes signIn/signUp via props")
+  Rel(authed, auth_service, "Calls signOut for Sign Out button")
+  Rel(authed, use_staples, "Subscribes to staples via")
+  Rel(use_auth_state, auth_service, "Subscribes via onAuthStateChanged")
+  Rel(auth_service, fb_config, "Obtains Auth instance from")
+  Rel(auth_service, fb_auth, "Authenticates via")
+  Rel(use_staples, fb_store, "Subscribes to staples doc via onSnapshot")
+```
+
+### Web technology stack
+
+| Technology | Version | License | Rationale |
+|---|---|---|---|
+| React | 18.x | MIT | Existing in `/web/package.json`; stable |
+| Vite | 6.x | MIT | Existing; fast dev server, static bundle |
+| TypeScript | 5.x | Apache 2.0 | Existing; strict mode |
+| Firebase JS SDK | 11.x | Apache 2.0 | Existing; `firebase/auth` already in deps |
+
+No new dependencies for this feature.
+
+### Web architecture enforcement
+
+Style: Hexagonal-lite.
+Language: TypeScript.
+Tool: **dependency-cruiser** (same tool family as RN side).
+
+Rules to enforce in `/web`:
+- `/web/src/components/**` must not import from `firebase/auth` directly (only via `/web/src/auth/`)
+- `/web/src/hooks/**` must not import from `firebase/auth` directly (only via `/web/src/auth/`)
+- `/web/src/auth/validation.ts` must not import from React or `firebase/**` (pure)
+- `/web/src/auth/error-mapping.ts` must not import from React or `firebase/**` (pure)
+
+### Web external integrations
+
+| Service | API Type | What We Consume | Contract Test Recommendation |
+|---|---|---|---|
+| Firebase Authentication | Firebase JS SDK | `signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `signOut`, `onAuthStateChanged` | Low risk — standard versioned SDK. No custom contract tests needed. Acceptance tests at the LoginScreen level cover the observable behavior. |
+| Google Cloud Firestore | Firebase JS SDK | Document reads via `onSnapshot` on `users/{uid}/data/staples` | Covered under the RN-side assessment (schema drift risk; same documents) |
+
+### Related ADRs
+
+- ADR-003: Web Email/Password Auth — Mirror Mobile, Not Monorepo
+

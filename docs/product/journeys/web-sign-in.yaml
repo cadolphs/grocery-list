@@ -1,0 +1,45 @@
+journey:
+  id: web-sign-in
+  title: Sign in to the web app with email and password
+  actor: clemens
+  scope: web
+  goal: Open the web app, authenticate with email + password, and reach the staples dashboard. Session persists across reloads.
+  trigger: Open https://grocery-list-cad.web.app with no active session
+  steps:
+    - id: show-form
+      action: Web app renders LoginScreen with email + password fields
+      output: Form visible
+    - id: submit
+      action: Clemens types credentials and clicks Sign In
+      output: Button disabled + "Signing In..." during request
+    - id: auth
+      action: AuthService.signIn calls signInWithEmailAndPassword
+      output: AuthUser returned OR error
+    - id: show-dashboard
+      action: onAuthStateChanged fires; AuthenticatedApp renders
+      output: Staples dashboard visible
+    - id: reload-persistence
+      action: Reload tab
+      output: Dashboard shown directly (session persisted in localStorage)
+    - id: sign-out
+      action: Clemens clicks Sign Out
+      output: Form reappears
+      optional: true
+  modes:
+    - sign-in (default)
+    - sign-up (toggle; adds 8-char password minimum; calls createUserWithEmailAndPassword)
+  error_paths:
+    - wrong-password -> actionable error copy, form re-enabled
+    - account-not-found (sign-in) -> error hints at Sign Up toggle
+    - email-in-use (sign-up) -> error hints at Sign In toggle
+    - client-side validation rejects empty / invalid email / short password before network call
+    - network / Firebase outage -> error displayed, retry possible
+  shared_artifacts:
+    - firebase-auth-session (browser localStorage, Firebase SDK default)
+    - AuthUser { uid, email }
+    - authorized-domains list (Firebase console)
+    - prod URL (established by journey publish-web)
+  features:
+    - web-auth
+  owner: clemens
+  status: designed
