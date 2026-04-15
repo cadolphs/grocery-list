@@ -1,0 +1,88 @@
+{
+  "roadmap": {
+    "project_id": "web-prod-deploy",
+    "created_at": "2026-04-14T00:00:00Z",
+    "total_steps": 3,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Ship publish path",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Hosting config",
+          "description": "Create firebase.json and .firebaserc at repo root. firebase.json declares hosting.public = 'web/dist' and a SPA rewrite mapping '**' to '/index.html'. .firebaserc sets projects.default = 'grocery-list-cad'. Satisfies US-01.",
+          "criteria": "All tests in describe 'US-01: hosting config' go GREEN (3 tests).",
+          "acceptance_criteria": [
+            "firebase.json has hosting.public = 'web/dist'",
+            "firebase.json has a rewrite rule with source '**' and destination '/index.html'",
+            ".firebaserc has projects.default = 'grocery-list-cad'",
+            "All 3 tests in describe 'US-01: hosting config' in walking-skeleton.test.ts pass"
+          ],
+          "test_file": "tests/acceptance/web-prod-deploy/walking-skeleton.test.ts",
+          "scenario_name": "US-01: hosting config",
+          "files_to_modify": ["firebase.json", ".firebaserc"],
+          "dependencies": [],
+          "estimated_hours": 0.25,
+          "deliverables": ["firebase.json", ".firebaserc"]
+        },
+        {
+          "id": "01-02",
+          "name": "Deploy workflow",
+          "description": "Create .github/workflows/deploy-web.yml per the verbatim spec in docs/feature/web-prod-deploy/devops/ci-cd-pipeline.md. Workflow chains off ci.yml via workflow_run on conclusion=success, branches=[main], pins checkout to head_sha, runs npm ci + npm run build in /web, deploys via FirebaseExtended/action-hosting-deploy@v0 to project grocery-list-cad channel live with FIREBASE_SERVICE_ACCOUNT secret. Concurrency group deploy-web with cancel-in-progress=false. Satisfies US-02 + secret reference portion of US-03.",
+          "criteria": "All tests in describe 'US-02: deploy-web.yml workflow' go GREEN (6 tests); ci.yml invariant stays GREEN.",
+          "acceptance_criteria": [
+            "deploy-web.yml has on.workflow_run.workflows containing 'CI'",
+            "deploy-web.yml has on.workflow_run.branches containing 'main'",
+            "Deploy job if clause contains conclusion == 'success'",
+            "Checkout step with.ref references workflow_run.head_sha",
+            "Deploy step uses FirebaseExtended/action-hosting-deploy action with projectId='grocery-list-cad', channelId='live', firebaseServiceAccount referencing FIREBASE_SERVICE_ACCOUNT secret",
+            "npm ci and npm run build steps run in working-directory 'web', both before the deploy step",
+            "Concurrency group = 'deploy-web' with cancel-in-progress: false",
+            "ci.yml remains untouched (invariant test stays GREEN)"
+          ],
+          "test_file": "tests/acceptance/web-prod-deploy/walking-skeleton.test.ts",
+          "scenario_name": "US-02: deploy-web.yml workflow",
+          "files_to_modify": [".github/workflows/deploy-web.yml"],
+          "dependencies": ["01-01"],
+          "estimated_hours": 0.25,
+          "deliverables": [".github/workflows/deploy-web.yml"]
+        },
+        {
+          "id": "01-03",
+          "name": "Deploy docs and README",
+          "description": "Create docs/deploy.md (prod URL, deploy trigger, rollback command, manual fallback, service-account rotation) and add a Deployment section to README.md linking to docs/deploy.md. Satisfies US-04 and docs portion of US-03.",
+          "criteria": "All 7 tests in milestone-1-docs.test.ts go GREEN.",
+          "acceptance_criteria": [
+            "docs/deploy.md mentions https://grocery-list-cad.web.app",
+            "docs/deploy.md mentions 'push to main' and 'deploy-web.yml'",
+            "docs/deploy.md mentions 'firebase hosting:rollback'",
+            "docs/deploy.md mentions 'firebase deploy --only hosting' and 'npm run build'",
+            "docs/deploy.md mentions FIREBASE_SERVICE_ACCOUNT and describes key rotation/revocation procedure",
+            "README.md has a top-level Deployment section heading and a markdown link to docs/deploy.md",
+            "All 7 tests in milestone-1-docs.test.ts pass"
+          ],
+          "test_file": "tests/acceptance/web-prod-deploy/milestone-1-docs.test.ts",
+          "scenario_name": "Docs runbook (US-04 + US-03 docs)",
+          "files_to_modify": ["docs/deploy.md", "README.md"],
+          "dependencies": ["01-02"],
+          "estimated_hours": 0.25,
+          "deliverables": ["docs/deploy.md", "README.md (Deployment section)"]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [],
+    "test_directories": ["tests/acceptance/web-prod-deploy/"],
+    "excluded_patterns": []
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-04-14T00:00:00Z",
+    "notes": "Reviewer dispatch skipped per user autonomy preference for this tight, infra-only feature (5 files, all specs pre-existing in DISTILL + DEVOPS). Quality gate is the acceptance test suite (17 tests, 16 RED -> GREEN, 1 invariant GREEN -> GREEN)."
+  }
+}
