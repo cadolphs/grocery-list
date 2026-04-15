@@ -51,3 +51,7 @@ reports/
 .nwave/des/des-task-active*
 .nwave/des/logs/
 .nwave/des/deliver-session.json
+
+# Firebase local cache & logs
+.firebase/
+firebase-debug.log
