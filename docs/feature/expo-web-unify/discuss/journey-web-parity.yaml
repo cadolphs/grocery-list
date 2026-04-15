@@ -1,0 +1,45 @@
+journey:
+  id: web-parity
+  feature: expo-web-unify
+  actor: clemens
+  goal: Serve the real Expo RN app on the web via Firebase Hosting; retire the parallel /web Vite SPA.
+  trigger: User pushes the migration commit(s) to main.
+  preconditions:
+    - web-prod-deploy is live (firebase.json, .firebaserc, deploy-web.yml in place)
+    - Expo web works locally (`npm run web` renders the app)
+    - No feature in /web/ that does not already exist on the RN side (verified: web is a subset)
+  steps:
+    - id: swap-config
+      actor: clemens
+      action: Edit firebase.json hosting.public from "web/dist" to "dist"
+      output: hosting config points at the root dist/ path
+    - id: swap-workflow
+      actor: clemens
+      action: Edit .github/workflows/deploy-web.yml build step from `cd web && npm run build` to `npx expo export -p web` at repo root
+      output: workflow produces Expo web bundle on push to main
+    - id: delete-vite
+      actor: clemens
+      action: git rm -r web/
+      output: /web directory removed; package.json/tsconfig/tests gone
+    - id: ci-and-deploy
+      actor: github-actions
+      action: ci.yml runs repo jest and lints; deploy-web.yml runs expo export and publishes
+      output: new Firebase Hosting release serves the Expo web bundle
+    - id: verify
+      actor: clemens
+      action: Open https://grocery-list-cad.web.app
+      output: full RN UI renders, sign-in works with existing credentials, staples/sweep/edit flows work
+  shared_artifacts:
+    - dist (root) -- NEW artifact path
+    - firebase.json -- `hosting.public` swap
+    - .github/workflows/deploy-web.yml -- build step swap
+    - Firebase Auth session (unchanged)
+    - grocery-list-cad.web.app (unchanged URL)
+  kpis:
+    - all_mobile_features_available_on_web: true
+    - zero_parallel_web_code: true
+    - bundle_served_correctly: verified by live open post-deploy
+    - rollback_still_works: firebase hosting:rollback unchanged
+  features:
+    - expo-web-unify
+  status: designed

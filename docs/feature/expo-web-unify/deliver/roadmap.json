@@ -1,0 +1,76 @@
+{
+  "roadmap": {
+    "project_id": "expo-web-unify",
+    "created_at": "2026-04-14T00:00:00Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Migrate web hosting from Vite /web to Expo web export",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "US-01: Swap deploy target (firebase.json + deploy-web.yml + lockstep web-prod-deploy tests)",
+          "criteria": "firebase.json hosting.public = 'dist'; deploy-web.yml builds via `npx expo export -p web` at repo root with no /web working-directory steps; web-prod-deploy walking-skeleton.test.ts assertions updated in lockstep to the new pipeline shape.",
+          "description": "Edit firebase.json to point hosting.public at the repo-root `dist/` path. Edit .github/workflows/deploy-web.yml: replace the two /web build steps (`npm ci`, `npm run build` with working-directory web) with a single step that runs `npx expo export -p web` at repo root. In lockstep, update tests/acceptance/web-prod-deploy/walking-skeleton.test.ts assertions that encode the OLD pipeline shape so they match the NEW shape (public='dist', expo export step instead of /web npm steps). Do NOT delete /web yet — that is 01-02.",
+          "test_file": "tests/acceptance/expo-web-unify/migration.test.ts",
+          "scenario_name": "US-01: Firebase Hosting serves the Expo web export",
+          "files_to_modify": [
+            "firebase.json",
+            ".github/workflows/deploy-web.yml",
+            "tests/acceptance/web-prod-deploy/walking-skeleton.test.ts"
+          ],
+          "acceptance_criteria": [
+            "expo-web-unify migration.test.ts scenarios 1, 4, 5, 6, 7 (and the invariants 2, 3, 8) GREEN",
+            "web-prod-deploy walking-skeleton.test.ts — ALL tests GREEN (updated in-place to reflect new pipeline shape)",
+            "Main-repo jest suite still 567+ passing",
+            "expo-web-unify scenarios 9, 10 still RED (pending 01-02)"
+          ],
+          "dependencies": [],
+          "estimated_hours": 0.5,
+          "deliverables": [
+            "Updated firebase.json (public='dist')",
+            "Updated deploy-web.yml (expo export -p web at repo root)",
+            "Updated web-prod-deploy walking-skeleton.test.ts (pipeline shape assertions flipped)"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "US-02: Delete /web directory",
+          "criteria": "/web directory removed; no production-code references to /web/* remain.",
+          "description": "Execute `git rm -r web/`. Verify repository-wide there are no residual references to /web paths in production code (`.github/`, `src/`, top-level config files). The main-repo jest config's testPathIgnorePatterns already excludes /web/ so no jest config changes needed; but double-check if the exclusion can be tightened or is still relevant. The `web` npm script in root package.json (`expo start --web`) is DIFFERENT from the /web directory and should NOT be removed.",
+          "test_file": "tests/acceptance/expo-web-unify/migration.test.ts",
+          "scenario_name": "US-02: /web directory is retired",
+          "files_to_modify": [
+            "web/"
+          ],
+          "acceptance_criteria": [
+            "expo-web-unify migration.test.ts scenarios 9, 10 GREEN",
+            "All expo-web-unify tests (10/10) GREEN",
+            "web-prod-deploy walking-skeleton.test.ts still 10/10 GREEN",
+            "Main-repo jest suite still 567+ passing",
+            "Root package.json `web` script (`expo start --web`) is PRESERVED"
+          ],
+          "dependencies": ["01-01"],
+          "estimated_hours": 0.25,
+          "deliverables": [
+            "/web directory removed from repo"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [],
+    "test_directories": ["tests/acceptance/expo-web-unify/", "tests/acceptance/web-prod-deploy/"],
+    "excluded_patterns": []
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator",
+    "approved_at": "2026-04-14T00:00:00Z",
+    "notes": "Reviewer dispatch skipped per user autonomy preference. Tight scope (2 steps, ~45 min), derivative of the proven web-prod-deploy pattern. Quality gate is the acceptance test suite."
+  }
+}
