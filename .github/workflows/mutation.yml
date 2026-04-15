@@ -7,6 +7,9 @@ on:
       - 'src/domain/**'
       - 'src/ports/**'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   mutation:
     name: Mutation Testing (Per-Feature)
