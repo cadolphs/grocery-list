@@ -73,22 +73,28 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
     return knownSectionKeys.map(parseSectionKey);
   }, [order, knownSectionKeys]);
 
+  const moveSection = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      const currentKeys = orderedEntries.map((entry) => entry.key);
+      reorder(moveItem(currentKeys, fromIndex, toIndex));
+    },
+    [orderedEntries, reorder],
+  );
+
   const handleMoveUp = useCallback(
     (index: number) => {
       if (index <= 0) return;
-      const currentKeys = orderedEntries.map((e) => e.key);
-      reorder(moveItem(currentKeys, index, index - 1));
+      moveSection(index, index - 1);
     },
-    [orderedEntries, reorder],
+    [moveSection],
   );
 
   const handleMoveDown = useCallback(
     (index: number) => {
       if (index >= orderedEntries.length - 1) return;
-      const currentKeys = orderedEntries.map((e) => e.key);
-      reorder(moveItem(currentKeys, index, index + 1));
+      moveSection(index, index + 1);
     },
-    [orderedEntries, reorder],
+    [orderedEntries.length, moveSection],
   );
 
   const handleReset = useCallback(() => {
