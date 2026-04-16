@@ -55,7 +55,7 @@ const isDuplicateExcludingSelf = (
 
 export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
   const listeners = new Set<() => void>();
-  const notify = (): void => listeners.forEach((l) => l());
+  const notify = (): void => listeners.forEach((listener) => listener());
 
   return {
     addStaple: (request: AddStapleRequest): AddStapleResult => {

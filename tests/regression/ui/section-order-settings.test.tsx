@@ -159,7 +159,7 @@ describe('SectionOrderSettingsScreen', () => {
     // Sanity: initial render shows the three saved-order sections and nothing else.
     const initialRows = screen.getAllByTestId(/^section-row-/);
     expect(initialRows).toHaveLength(3);
-    expect(initialRows.map((r) => r.props.testID)).toEqual([
+    expect(initialRows.map((row) => row.props.testID)).toEqual([
       'section-row-Deli',
       'section-row-Dairy',
       'section-row-Bakery',
@@ -179,7 +179,7 @@ describe('SectionOrderSettingsScreen', () => {
     // include the new section appended after the existing custom-ordered ones.
     const updatedRows = screen.getAllByTestId(/^section-row-/);
     expect(updatedRows).toHaveLength(4);
-    expect(updatedRows.map((r) => r.props.testID)).toEqual([
+    expect(updatedRows.map((row) => row.props.testID)).toEqual([
       'section-row-Deli',
       'section-row-Dairy',
       'section-row-Bakery',
