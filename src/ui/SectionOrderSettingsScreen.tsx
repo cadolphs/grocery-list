@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { StoreLocation } from '../domain/types';
+import { appendNewSections } from '../domain/section-ordering';
 
 type SectionEntry = {
   readonly key: string;
@@ -55,7 +56,7 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
 
   const orderedEntries: SectionEntry[] = useMemo(() => {
     if (order !== null) {
-      return order.map(parseSectionKey);
+      return appendNewSections(order, knownSectionKeys).map(parseSectionKey);
     }
     return knownSectionKeys.map(parseSectionKey);
   }, [order, knownSectionKeys]);

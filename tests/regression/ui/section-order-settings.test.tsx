@@ -17,14 +17,23 @@ import { createTrip } from '../../../src/domain/trip';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { SectionOrderStorage } from '../../../src/ports/section-order-storage';
 
+type StapleSeed = {
+  readonly name: string;
+  readonly houseArea: string;
+  readonly storeLocation: { section: string; aisleNumber: number | null };
+};
+
+const defaultStapleSeeds: readonly StapleSeed[] = [
+  { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
+  { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+  { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+];
+
 function renderAppWithSections(
   customOrder: string[] | null,
+  stapleSeeds: readonly StapleSeed[] = defaultStapleSeeds,
 ): { storage: SectionOrderStorage } {
-  const stapleStorage = createNullStapleStorage([
-    { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
-  ]);
+  const stapleStorage = createNullStapleStorage([...stapleSeeds]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
@@ -115,5 +124,30 @@ describe('SectionOrderSettingsScreen', () => {
 
     // Storage should be cleared
     expect(storage.loadOrder()).toBeNull();
+  });
+
+  it('appends newly-introduced sections to the end when a custom order is saved', () => {
+    // Custom order saved for three known sections
+    const savedOrder = ['Deli::null', 'Dairy::3', 'Bakery::1'];
+    // Staple library includes a staple whose storeLocation introduces a brand-new section key
+    const stapleSeeds: readonly StapleSeed[] = [
+      { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
+      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+      { name: 'California Roll', houseArea: 'Fridge', storeLocation: { section: 'Sushi Bar', aisleNumber: null } },
+    ];
+
+    const { storage } = renderAppWithSections(savedOrder, stapleSeeds);
+    navigateToSectionOrderSettings();
+
+    const sectionRows = screen.getAllByTestId(/^section-row-/);
+    expect(sectionRows).toHaveLength(4);
+    expect(sectionRows[0].props.testID).toBe('section-row-Deli');
+    expect(sectionRows[1].props.testID).toBe('section-row-Dairy');
+    expect(sectionRows[2].props.testID).toBe('section-row-Bakery');
+    expect(sectionRows[3].props.testID).toBe('section-row-Sushi Bar');
+
+    // Read-time merge only: opening the screen must NOT have written to storage.
+    expect(storage.loadOrder()).toEqual(savedOrder);
   });
 });
