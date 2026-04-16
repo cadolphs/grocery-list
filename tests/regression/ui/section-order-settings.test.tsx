@@ -7,10 +7,10 @@
  */
 
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react-native';
+import { act, render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
-import { createStapleLibrary } from '../../../src/domain/staple-library';
+import { createStapleLibrary, StapleLibrary } from '../../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
@@ -32,7 +32,7 @@ const defaultStapleSeeds: readonly StapleSeed[] = [
 function renderAppWithSections(
   customOrder: string[] | null,
   stapleSeeds: readonly StapleSeed[] = defaultStapleSeeds,
-): { storage: SectionOrderStorage } {
+): { storage: SectionOrderStorage; stapleLibrary: StapleLibrary } {
   const stapleStorage = createNullStapleStorage([...stapleSeeds]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -51,7 +51,7 @@ function renderAppWithSections(
     </ServiceProvider>
   );
 
-  return { storage };
+  return { storage, stapleLibrary };
 }
 
 function navigateToSectionOrderSettings() {
@@ -148,6 +148,45 @@ describe('SectionOrderSettingsScreen', () => {
     expect(sectionRows[3].props.testID).toBe('section-row-Sushi Bar');
 
     // Read-time merge only: opening the screen must NOT have written to storage.
+    expect(storage.loadOrder()).toEqual(savedOrder);
+  });
+
+  it('reactively adds a newly-introduced section while the settings screen is mounted', () => {
+    const savedOrder = ['Deli::null', 'Dairy::3', 'Bakery::1'];
+    const { storage, stapleLibrary } = renderAppWithSections(savedOrder);
+    navigateToSectionOrderSettings();
+
+    // Sanity: initial render shows the three saved-order sections and nothing else.
+    const initialRows = screen.getAllByTestId(/^section-row-/);
+    expect(initialRows).toHaveLength(3);
+    expect(initialRows.map((r) => r.props.testID)).toEqual([
+      'section-row-Deli',
+      'section-row-Dairy',
+      'section-row-Bakery',
+    ]);
+
+    // Mutate the very same stapleLibrary instance the screen observes, while
+    // the screen remains mounted (no unmount, no navigation, no prop change).
+    act(() => {
+      stapleLibrary.addStaple({
+        name: 'California Roll',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Sushi Bar', aisleNumber: null },
+      });
+    });
+
+    // The rendered row list must update within the next render cycle to
+    // include the new section appended after the existing custom-ordered ones.
+    const updatedRows = screen.getAllByTestId(/^section-row-/);
+    expect(updatedRows).toHaveLength(4);
+    expect(updatedRows.map((r) => r.props.testID)).toEqual([
+      'section-row-Deli',
+      'section-row-Dairy',
+      'section-row-Bakery',
+      'section-row-Sushi Bar',
+    ]);
+
+    // Read-time merge only: the live mutation must not have written back to storage.
     expect(storage.loadOrder()).toEqual(savedOrder);
   });
 });

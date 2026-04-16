@@ -1,7 +1,7 @@
 // SectionOrderSettingsScreen - manage store section ordering
 // Shows known sections with up/down reorder buttons and reset-to-default
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
@@ -40,6 +40,17 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
   const { order, reorder, reset } = useSectionOrder();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
+  // Subscribe to staple-library mutations so knownSectionKeys re-derives when
+  // a staple introducing a new section is added while this screen is mounted.
+  // Version counter drives re-render without caching the (mutable) listAll array.
+  const [stapleRevision, setStapleRevision] = useState(0);
+  useEffect(() => {
+    const unsubscribe = stapleLibrary.subscribe(() => {
+      setStapleRevision((previous) => previous + 1);
+    });
+    return unsubscribe;
+  }, [stapleLibrary]);
+
   const knownSectionKeys = useMemo(() => {
     const staples = stapleLibrary.listAll();
     const seen = new Set<string>();
@@ -52,7 +63,8 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
       }
     }
     return keys;
-  }, [stapleLibrary]);
+    // stapleRevision participates in the dep list so mutations invalidate this memo.
+  }, [stapleLibrary, stapleRevision]);
 
   const orderedEntries: SectionEntry[] = useMemo(() => {
     if (order !== null) {

@@ -17,6 +17,10 @@ export type StapleLibrary = {
   readonly listByArea: (area: HouseArea) => StapleItem[];
   readonly search: (query: string) => StapleItem[];
   readonly remove: (id: string) => void;
+  // Functional in-memory subscription: listener invoked after any mutation
+  // (add/update/remove). Returns an unsubscribe function. Mirrors the
+  // pattern used by createTrip.subscribe in src/domain/trip.ts.
+  readonly subscribe: (listener: () => void) => () => void;
 };
 
 const generateId = (): string =>
@@ -50,6 +54,9 @@ const isDuplicateExcludingSelf = (
   );
 
 export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
+  const listeners = new Set<() => void>();
+  const notify = (): void => listeners.forEach((l) => l());
+
   return {
     addStaple: (request: AddStapleRequest): AddStapleResult => {
       const existing = storage.loadAll();
@@ -71,6 +78,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       };
 
       storage.save(staple);
+      notify();
       return { success: true };
     },
 
@@ -91,6 +99,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       };
 
       storage.save(oneOff);
+      notify();
       return { success: true };
     },
 
@@ -127,6 +136,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       };
 
       storage.update(updatedStaple);
+      notify();
       return { success: true };
     },
 
@@ -138,6 +148,16 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
     search: (query: string): StapleItem[] =>
       query.trim() === '' ? [] : storage.search(query),
 
-    remove: (id: string): void => storage.remove(id),
+    remove: (id: string): void => {
+      storage.remove(id);
+      notify();
+    },
+
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
   };
 };
