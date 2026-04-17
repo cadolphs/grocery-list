@@ -249,15 +249,22 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
     },
 
     syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => {
-      items = items.map((item) =>
-        item.stapleId === stapleId
-          ? {
-              ...item,
-              houseArea: changes.houseArea ?? item.houseArea,
-              storeLocation: changes.storeLocation ?? item.storeLocation,
-            }
-          : item
-      );
+      let changed = false;
+      const nextItems = items.map((item) => {
+        if (item.stapleId !== stapleId) return item;
+        const nextHouseArea = changes.houseArea ?? item.houseArea;
+        const nextStoreLocation = changes.storeLocation ?? item.storeLocation;
+        const storeLocationEqual =
+          item.storeLocation.section === nextStoreLocation.section &&
+          item.storeLocation.aisleNumber === nextStoreLocation.aisleNumber;
+        if (item.houseArea === nextHouseArea && storeLocationEqual) return item;
+        changed = true;
+        return { ...item, houseArea: nextHouseArea, storeLocation: nextStoreLocation };
+      });
+      if (!changed) return;
+      items = nextItems;
+      notify();
+      persistTrip();
     },
 
     removeItemByStapleId: (stapleId: string) => {

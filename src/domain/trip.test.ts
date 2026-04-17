@@ -276,3 +276,123 @@ describe('TripService.subscribe', () => {
     expect(notifications).toHaveLength(0);
   });
 });
+
+describe('TripService.syncStapleUpdate persists and notifies', () => {
+  test('syncStapleUpdate notifies subscribers and persists to storage when item changes', () => {
+    // Arrange — trip with a staple item in storage
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-milk',
+    });
+
+    // Reset notification counter + saveTrip spy AFTER addItem's own calls
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    // Act — sync staple update with new house area + store location
+    tripService.syncStapleUpdate('staple-milk', {
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Dry Goods', aisleNumber: 5 },
+    });
+
+    // Assert — subscriber notified exactly once
+    expect(notifications).toHaveLength(1);
+
+    // Assert — storage received the updated trip
+    expect(saveTripSpy).toHaveBeenCalledTimes(1);
+    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+      items: ReadonlyArray<{ stapleId: string | null; houseArea: string; storeLocation: { section: string; aisleNumber: number } }>;
+    };
+    const milk = savedTrip.items.find((i) => i.stapleId === 'staple-milk');
+    expect(milk).toBeDefined();
+    expect(milk!.houseArea).toBe('Garage Pantry');
+    expect(milk!.storeLocation).toEqual({ section: 'Dry Goods', aisleNumber: 5 });
+  });
+
+  test('syncStapleUpdate is idempotent: no notify/persist when changes match current item', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-milk',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    // Act — sync with values equal to current state (no-op)
+    tripService.syncStapleUpdate('staple-milk', {
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    });
+
+    // Assert — no notification, no persistence
+    expect(notifications).toHaveLength(0);
+    expect(saveTripSpy).not.toHaveBeenCalled();
+  });
+
+  test('syncStapleUpdate with unknown stapleId does not notify or persist', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-milk',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    // Act — sync a stapleId that is not present in the trip
+    tripService.syncStapleUpdate('unknown-staple-id', {
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Dry Goods', aisleNumber: 5 },
+    });
+
+    // Assert — nothing happened
+    expect(notifications).toHaveLength(0);
+    expect(saveTripSpy).not.toHaveBeenCalled();
+  });
+
+  test('syncStapleUpdate changes survive loadFromStorage round-trip', () => {
+    // Arrange — trip with staple item
+    const { tripService } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-milk',
+    });
+
+    // Act — sync staple update to new area, then reload from storage
+    tripService.syncStapleUpdate('staple-milk', {
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Dry Goods', aisleNumber: 5 },
+    });
+    tripService.loadFromStorage();
+
+    // Assert — the updated values survive the round-trip (were persisted)
+    const milk = tripService.getItems().find((i) => i.stapleId === 'staple-milk');
+    expect(milk).toBeDefined();
+    expect(milk!.houseArea).toBe('Garage Pantry');
+    expect(milk!.storeLocation).toEqual({ section: 'Dry Goods', aisleNumber: 5 });
+  });
+});
