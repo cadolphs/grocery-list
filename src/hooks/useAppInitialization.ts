@@ -112,23 +112,37 @@ const runMigrationIfNeeded = async (
   );
 };
 
-// Pure function: compute added and removed staples by comparing old vs new lists
+// Pure function: compute added, removed, and updated staples by comparing old vs new lists.
+// An "updated" staple is a same-id staple whose houseArea or storeLocation (section/aisleNumber)
+// differs between previous and current. The CURRENT (new) staple is returned in `updated`
+// so consumers get the post-edit values.
 export type StapleDiff = {
   readonly added: readonly StapleItem[];
   readonly removed: readonly StapleItem[];
+  readonly updated: readonly StapleItem[];
 };
+
+const hasRelevantChange = (previous: StapleItem, current: StapleItem): boolean =>
+  previous.houseArea !== current.houseArea ||
+  previous.storeLocation.section !== current.storeLocation.section ||
+  previous.storeLocation.aisleNumber !== current.storeLocation.aisleNumber;
 
 export const diffStaples = (
   previousStaples: readonly StapleItem[],
   currentStaples: readonly StapleItem[],
 ): StapleDiff => {
-  const previousIds = new Set(previousStaples.map(s => s.id));
+  const previousById = new Map(previousStaples.map(s => [s.id, s]));
   const currentIds = new Set(currentStaples.map(s => s.id));
 
-  const added = currentStaples.filter(s => !previousIds.has(s.id));
+  const added = currentStaples.filter(s => !previousById.has(s.id));
   const removed = previousStaples.filter(s => !currentIds.has(s.id));
+  const updated = currentStaples.filter(s => {
+    const previous = previousById.get(s.id);
+    if (previous === undefined) return false;
+    return hasRelevantChange(previous, s);
+  });
 
-  return { added, removed };
+  return { added, removed, updated };
 };
 
 export const initializeApp = async (
@@ -179,7 +193,7 @@ export const initializeApp = async (
     let previousStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
     handleStapleChange = () => {
       const currentStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
-      const { added, removed } = diffStaples(previousStaples, currentStaples);
+      const { added, removed, updated } = diffStaples(previousStaples, currentStaples);
 
       for (const staple of added) {
         // Duplicate guard: skip if trip already has an item with this stapleId
@@ -198,6 +212,17 @@ export const initializeApp = async (
 
       for (const staple of removed) {
         tripService.removeItemByStapleId(staple.id);
+      }
+
+      // Propagate field updates (houseArea / storeLocation) from staple edits
+      // to the trip item carrying the same stapleId. syncStapleUpdate is
+      // idempotent (skips notify+persist when content equal), which guards
+      // against the onSnapshot echo loop after a UI-driven edit.
+      for (const staple of updated) {
+        tripService.syncStapleUpdate(staple.id, {
+          houseArea: staple.houseArea,
+          storeLocation: staple.storeLocation,
+        });
       }
 
       previousStaples = currentStaples;

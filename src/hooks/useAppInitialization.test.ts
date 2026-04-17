@@ -75,7 +75,7 @@ const defaultFactories: AdapterFactories = {
 };
 
 // Import the function under test
-import { initializeApp } from './useAppInitialization';
+import { initializeApp, diffStaples } from './useAppInitialization';
 
 describe('initializeApp', () => {
   describe('acceptance: initialization creates firestore adapters when authenticated', () => {
@@ -459,6 +459,56 @@ describe('initializeApp', () => {
       expect(tripService.getItems().filter(i => i.name === 'Tahini')).toHaveLength(1);
     });
 
+    test('handleStapleChange syncs trip when staple area or location changes', async () => {
+      const authUser: AuthUser = { uid: 'user-sync-update', email: 'su@u.com' };
+
+      let capturedOnChange: (() => void) | undefined;
+      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          sharedStorage = createNullStapleStorage([
+            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+          ], { onChange: options?.onChange });
+          capturedOnChange = options?.onChange;
+          return {
+            ...sharedStorage,
+            initialize: async () => {},
+          };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      const tripService = result.services!.tripService;
+
+      // Trip starts with Milk at Fridge / Dairy aisle 3 (via initializeFromStorage)
+      const tripBefore = tripService.getItems();
+      expect(tripBefore).toHaveLength(1);
+      const milkBefore = tripBefore[0];
+      expect(milkBefore.houseArea).toBe('Fridge');
+      expect(milkBefore.storeLocation).toEqual({ section: 'Dairy', aisleNumber: 3 });
+
+      // Simulate remote staple edit: change area and storeLocation in the storage,
+      // then fire onChange as Firestore onSnapshot would.
+      const milkStaple = sharedStorage!.loadAll().find(s => s.name === 'Milk')!;
+      sharedStorage!.update({
+        ...milkStaple,
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      });
+      capturedOnChange!();
+
+      // The trip item carrying this stapleId must now reflect the updated
+      // area and location -- observable through the tripService driving port.
+      const tripAfter = tripService.getItems();
+      expect(tripAfter).toHaveLength(1);
+      const milkAfter = tripAfter[0];
+      expect(milkAfter.stapleId).toBe(milkStaple.id);
+      expect(milkAfter.houseArea).toBe('Kitchen Cabinets');
+      expect(milkAfter.storeLocation).toEqual({ section: 'Bakery', aisleNumber: 1 });
+    });
+
     test('auto-add preserves sweep progress', async () => {
       const authUser: AuthUser = { uid: 'user-sweep', email: 's@s.com' };
 
@@ -502,5 +552,97 @@ describe('initializeApp', () => {
       // New item added
       expect(tripService.getItems().map(i => i.name)).toContain('Soap');
     });
+  });
+});
+
+// Helper: build a StapleItem for diff tests
+const makeStaple = (overrides: Partial<StapleItem> & { id: string }): StapleItem => ({
+  name: 'Milk',
+  houseArea: 'Fridge',
+  storeLocation: { section: 'Dairy', aisleNumber: 3 },
+  type: 'staple',
+  createdAt: '2026-04-10T10:00:00.000Z',
+  ...overrides,
+});
+
+describe('diffStaples', () => {
+  test('returns updated with staples whose houseArea changed', () => {
+    const previous = [makeStaple({ id: 's1', houseArea: 'Fridge' })];
+    const current = [makeStaple({ id: 's1', houseArea: 'Kitchen Cabinets' })];
+
+    const diff = diffStaples(previous, current);
+
+    expect(diff.updated).toHaveLength(1);
+    expect(diff.updated[0].id).toBe('s1');
+    expect(diff.updated[0].houseArea).toBe('Kitchen Cabinets');
+  });
+
+  test('returns updated with staples whose storeLocation.section changed', () => {
+    const previous = [
+      makeStaple({ id: 's1', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+    ];
+    const current = [
+      makeStaple({ id: 's1', storeLocation: { section: 'Bakery', aisleNumber: 3 } }),
+    ];
+
+    const diff = diffStaples(previous, current);
+
+    expect(diff.updated).toHaveLength(1);
+    expect(diff.updated[0].storeLocation.section).toBe('Bakery');
+  });
+
+  test('returns updated with staples whose storeLocation.aisleNumber changed', () => {
+    const previous = [
+      makeStaple({ id: 's1', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+    ];
+    const current = [
+      makeStaple({ id: 's1', storeLocation: { section: 'Dairy', aisleNumber: 7 } }),
+    ];
+
+    const diff = diffStaples(previous, current);
+
+    expect(diff.updated).toHaveLength(1);
+    expect(diff.updated[0].storeLocation.aisleNumber).toBe(7);
+  });
+
+  test('does NOT include unchanged staples in updated', () => {
+    const staple = makeStaple({ id: 's1' });
+    const previous = [staple];
+    const current = [staple];
+
+    const diff = diffStaples(previous, current);
+
+    expect(diff.updated).toHaveLength(0);
+  });
+
+  test('does NOT include added staples in updated', () => {
+    const previous: StapleItem[] = [];
+    const current = [makeStaple({ id: 's-new' })];
+
+    const diff = diffStaples(previous, current);
+
+    expect(diff.added).toHaveLength(1);
+    expect(diff.updated).toHaveLength(0);
+  });
+
+  test('does NOT include removed staples in updated', () => {
+    const previous = [makeStaple({ id: 's-gone' })];
+    const current: StapleItem[] = [];
+
+    const diff = diffStaples(previous, current);
+
+    expect(diff.removed).toHaveLength(1);
+    expect(diff.updated).toHaveLength(0);
+  });
+
+  test('returns empty updated when previous and current are identical', () => {
+    const a = makeStaple({ id: 's1' });
+    const b = makeStaple({ id: 's2', name: 'Bread', houseArea: 'Kitchen Cabinets' });
+
+    const diff = diffStaples([a, b], [a, b]);
+
+    expect(diff.updated).toHaveLength(0);
+    expect(diff.added).toHaveLength(0);
+    expect(diff.removed).toHaveLength(0);
   });
 });
