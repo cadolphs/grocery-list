@@ -343,6 +343,70 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     expect(saveTripSpy).not.toHaveBeenCalled();
   });
 
+  test('syncStapleUpdate persists when only section changes (aisleNumber unchanged)', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-milk',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    // Act — section differs, aisleNumber identical
+    tripService.syncStapleUpdate('staple-milk', {
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Cold Storage', aisleNumber: 2 },
+    });
+
+    // Assert — must detect the section change and persist
+    expect(notifications).toHaveLength(1);
+    expect(saveTripSpy).toHaveBeenCalledTimes(1);
+    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+      items: ReadonlyArray<{ stapleId: string | null; storeLocation: { section: string; aisleNumber: number } }>;
+    };
+    const milk = savedTrip.items.find((i) => i.stapleId === 'staple-milk');
+    expect(milk!.storeLocation).toEqual({ section: 'Cold Storage', aisleNumber: 2 });
+  });
+
+  test('syncStapleUpdate persists when only aisleNumber changes (section unchanged)', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-milk',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    // Act — aisleNumber differs, section identical
+    tripService.syncStapleUpdate('staple-milk', {
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 7 },
+    });
+
+    // Assert — must detect the aisleNumber change and persist
+    expect(notifications).toHaveLength(1);
+    expect(saveTripSpy).toHaveBeenCalledTimes(1);
+    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+      items: ReadonlyArray<{ stapleId: string | null; storeLocation: { section: string; aisleNumber: number } }>;
+    };
+    const milk = savedTrip.items.find((i) => i.stapleId === 'staple-milk');
+    expect(milk!.storeLocation).toEqual({ section: 'Dairy', aisleNumber: 7 });
+  });
+
   test('syncStapleUpdate with unknown stapleId does not notify or persist', () => {
     const { tripService, storage } = createTestTripServiceWithStorage();
     tripService.addItem({
