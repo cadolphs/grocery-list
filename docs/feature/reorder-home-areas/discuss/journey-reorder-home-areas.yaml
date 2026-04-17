@@ -1,0 +1,179 @@
+schema_version: 1
+
+journey:
+  name: "Reorder Home Areas"
+  feature_id: "reorder-home-areas"
+  goal: "Change the order of house areas so the Home-view sweep matches Carlos's current walking path."
+  persona: "Carlos Rivera"
+  job_traceability:
+    - "JS1: Home Sweep Capture"
+  completes_prior_story: "US-CHA-06 (from custom-house-areas) -- domain delivered; this journey ships the UI half."
+
+  emotional_arc:
+    start: "Mild friction -- the app order doesn't match my walk anymore."
+    middle: "Brief worry -- will rearranging break my staples? -- resolved by auto-save and instant feedback."
+    end: "Relief and quiet pride -- the app matches my walk and my staples are intact."
+
+steps:
+  - id: 1
+    name: "Enter settings from HomeView"
+    action: "Tap the settings gear icon on HomeView."
+    tui_mockup: |
+      +---------------------------------------------------+
+      |  Home Sweep                                   [O] |
+      +---------------------------------------------------+
+      |  Bathroom                                  3 / 5  |
+      |  Kitchen Cabinets                          1 / 4  |
+      |  Fridge                                    0 / 6  |
+      |  Laundry Room                              0 / 2  |
+      |  Freezer                                   0 / 3  |
+      +---------------------------------------------------+
+    shared_artifacts:
+      - name: "area_order"
+        source: "AreaStorage (Firestore: areas/{userId})"
+        displayed_as: "${areas[]}"
+        consumers: ["HomeView", "AreaSettingsScreen", "StapleEditScreen area picker", "sweep progression"]
+    emotional_state:
+      entry: "Mildly frustrated: 'My walk changed, the app hasn't caught up.'"
+      exit: "Focused: 'Let me fix this in settings.'"
+    integration_checkpoint: |
+      The ${areas[]} shown on HomeView is read from AreaStorage via useAreas().areas.
+      No separate cached copy exists in the UI layer.
+    failure_modes:
+      - "Settings gear icon is hidden or unreachable (layout bug) -- blocks the entire journey."
+    gherkin: |
+      Scenario: Carlos opens area settings from HomeView
+        Given Carlos is viewing the HomeView with his 5 configured areas
+        When Carlos taps the settings gear icon
+        Then Carlos sees the Manage Areas screen
+        And the areas are listed in the same order they appeared on HomeView
+
+  - id: 2
+    name: "See areas with reorder controls"
+    action: "Observe the ordered list with up/down buttons per row."
+    tui_mockup: |
+      +---------------------------------------------------+
+      |  < Back           Manage Areas                    |
+      +---------------------------------------------------+
+      |  [^] [v]  Bathroom                   [edit] [x]  |
+      |  [^] [v]  Kitchen Cabinets           [edit] [x]  |
+      |  [^] [v]  Fridge                     [edit] [x]  |
+      |  [^] [v]  Laundry Room               [edit] [x]  |
+      |  [^] [v]  Freezer                    [edit] [x]  |
+      |                                                   |
+      |                            [ + Add Area ]         |
+      +---------------------------------------------------+
+    shared_artifacts:
+      - name: "area_order"
+        source: "AreaStorage"
+        displayed_as: "${areas[]}"
+        consumers: ["AreaSettingsScreen row rendering"]
+    emotional_state:
+      entry: "Focused."
+      exit: "Oriented: 'I can see my areas and how to move them.'"
+    integration_checkpoint: |
+      The list shown here uses the same ${areas[]} as HomeView rendered in step 1.
+      Up button on the first row and down button on the last row are disabled (visual grey + non-interactive).
+      Existing Edit and Delete controls from custom-house-areas remain on each row.
+    failure_modes:
+      - "Up/down buttons absent because control rendering is gated on an area count check that fails (e.g., the list has zero areas)."
+      - "Buttons present but not wired -- tapping does nothing (regression in useAreas.reorderAreas wiring)."
+    gherkin: |
+      Scenario: Carlos sees his areas with reorder controls
+        Given Carlos has 5 configured areas: Bathroom, Kitchen Cabinets, Fridge, Laundry Room, Freezer
+        When Carlos opens the Manage Areas screen
+        Then each area row displays an up-arrow button and a down-arrow button
+        And the up-arrow on the first row is visually disabled
+        And the down-arrow on the last row is visually disabled
+        And the existing Edit and Delete controls are still present on each row
+
+  - id: 3
+    name: "Reorder by tapping up/down"
+    action: "Tap up-arrow on Laundry Room to move it one position higher; repeat to promote further."
+    tui_mockup: |
+      After one tap (Laundry Room moved above Fridge):
+      +---------------------------------------------------+
+      |  [^] [v]  Bathroom                   [edit] [x]  |
+      |  [^] [v]  Kitchen Cabinets           [edit] [x]  |
+      |  [^] [v]  Laundry Room               [edit] [x]  |
+      |  [^] [v]  Fridge                     [edit] [x]  |
+      |  [^] [v]  Freezer                    [edit] [x]  |
+      |                                                   |
+      |  Saved                                           |
+      +---------------------------------------------------+
+    shared_artifacts:
+      - name: "area_order"
+        source: "AreaStorage"
+        displayed_as: "${areas[]}"
+        consumers: ["AreaSettingsScreen (read + write)", "Firestore onSnapshot subscribers"]
+    emotional_state:
+      entry: "Mild worry: 'Will this break my staples?'"
+      exit: "Reassured: 'The list just moved. Nothing else changed. And it saved itself.'"
+    integration_checkpoint: |
+      Each tap calls useAreas().reorderAreas(newOrder).
+      Domain AreaManagement.reorder validates the set of areas is unchanged (permutation only), then AreaStorage.saveAll persists.
+      A "Saved" toast appears for ~2s confirming auto-save.
+      Staple assignments (staple -> houseArea) remain untouched -- the domain reorder method never mutates staples.
+    failure_modes:
+      - "reorderAreas returns success: false because a concurrent delete removed an area between render and tap."
+      - "Toast never appears because success path doesn't surface success: true to the UI."
+      - "List re-renders in wrong order (off-by-one in the moveItem helper)."
+    gherkin: |
+      Scenario: Carlos reorders his house areas to match his new walking path
+        Given Carlos is on the Manage Areas screen
+        And the current order is Bathroom, Kitchen Cabinets, Fridge, Laundry Room, Freezer
+        When Carlos taps the up-arrow on Laundry Room three times
+        Then the order becomes Laundry Room, Bathroom, Kitchen Cabinets, Fridge, Freezer
+        And a "Saved" confirmation appears after each tap
+        And Carlos's staple assignments remain unchanged
+
+  - id: 4
+    name: "Return to HomeView and see new order"
+    action: "Tap Back; observe HomeView now renders areas in the chosen sweep order."
+    tui_mockup: |
+      +---------------------------------------------------+
+      |  Home Sweep                                   [O] |
+      +---------------------------------------------------+
+      |  Laundry Room                              0 / 2  |
+      |  Bathroom                                  3 / 5  |
+      |  Kitchen Cabinets                          1 / 4  |
+      |  Fridge                                    0 / 6  |
+      |  Freezer                                   0 / 3  |
+      +---------------------------------------------------+
+    shared_artifacts:
+      - name: "area_order"
+        source: "AreaStorage"
+        displayed_as: "${areas[]}"
+        consumers: ["HomeView", "sweep progression"]
+    emotional_state:
+      entry: "Reassured."
+      exit: "Relieved and quietly proud -- the app matches his walk now."
+    integration_checkpoint: |
+      HomeView reads ${areas[]} via useAreas().areas from the same AreaStorage written in step 3.
+      Firestore onSnapshot propagates the new order to other devices within 5 seconds.
+      No manual refresh required.
+    failure_modes:
+      - "HomeView displays cached (old) order because its subscription didn't invalidate."
+      - "Second device shows old order after 5+ seconds -- Firestore listener not attached or auth mismatch."
+    gherkin: |
+      Scenario: HomeView reflects the new order after reorder
+        Given Carlos has just reordered his areas in settings
+        When Carlos returns to HomeView
+        Then the areas appear in the new order: Laundry Room, Bathroom, Kitchen Cabinets, Fridge, Freezer
+        And staple check-off counts remain unchanged from before the reorder
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "area_order"
+      must_match_across: [1, 2, 3, 4]
+      failure_message: |
+        Area order diverged between HomeView, AreaSettingsScreen, and persistent storage.
+        All three must read from AreaStorage as the single source of truth.
+  cross_device_consistency:
+    - requirement: "Reorder on device A propagates to device B within 5 seconds via Firestore onSnapshot."
+      validation: "Open app on second device while first device performs reorder; second device's HomeView updates without manual action."
+
+changelog:
+  - date: "2026-04-17"
+    feature: "reorder-home-areas"
+    change: "Initial DISCUSS wave journey. Completes UI half of US-CHA-06 from custom-house-areas."
