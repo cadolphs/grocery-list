@@ -12,7 +12,7 @@ import { LoginScreen } from './src/ui/LoginScreen';
 
 export default function App() {
   const authService = useMemo(() => createAuthService(), []);
-  const { user, loading, signIn, signUp } = useAuth(
+  const { user, loading, signIn, signUp, signOut } = useAuth(
     authService,
   );
 
@@ -53,7 +53,7 @@ export default function App() {
           areaManagement={services.areaManagement}
           sectionOrderStorage={services.sectionOrderStorage}
         >
-          <AppShell />
+          <AppShell signOut={signOut} />
         </ServiceProvider>
         <StatusBar style="auto" />
       </View>
