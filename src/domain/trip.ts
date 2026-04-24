@@ -93,8 +93,25 @@ const buildTrip = (tripId: string, items: TripItem[], createdAt: string, complet
   completedAreas: [...completed],
 });
 
-export const createTrip = (storage: TripStorage, areas?: readonly string[]): TripService => {
-  const tripAreas = areas ?? DEFAULT_HOUSE_AREAS;
+// Accepts a getter so getSweepProgress().totalAreas reads the live area
+// list each call, avoiding a build-time-frozen snapshot. A plain array is
+// still accepted for backward compatibility with pre-existing callers;
+// it is wrapped into a constant getter internally.
+export type AreasGetter = () => readonly string[];
+
+const toAreasGetter = (
+  areas: readonly string[] | AreasGetter | undefined,
+): AreasGetter => {
+  if (areas === undefined) return () => DEFAULT_HOUSE_AREAS;
+  if (typeof areas === 'function') return areas;
+  return () => areas;
+};
+
+export const createTrip = (
+  storage: TripStorage,
+  areas?: readonly string[] | AreasGetter,
+): TripService => {
+  const getTripAreas = toAreasGetter(areas);
   let items: TripItem[] = [];
   let tripId: string = generateTripId();
   let createdAt: string = new Date().toISOString();
@@ -195,11 +212,12 @@ export const createTrip = (storage: TripStorage, areas?: readonly string[]): Tri
 
     getSweepProgress: (): SweepProgress => {
       const completed = [...completedAreas];
+      const totalAreas = getTripAreas().length;
       return {
         completedAreas: completed,
         completedCount: completed.length,
-        totalAreas: tripAreas.length,
-        allAreasComplete: completed.length === tripAreas.length,
+        totalAreas,
+        allAreasComplete: completed.length === totalAreas,
       };
     },
 

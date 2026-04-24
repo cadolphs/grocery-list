@@ -6,11 +6,11 @@ import { createTrip, TripService } from './trip';
 import { createNullTripStorage, NullTripStorageWithSync } from '../adapters/null/null-trip-storage';
 
 const createTestTripService = (): TripService =>
-  createTrip(createNullTripStorage(), ['Fridge', 'Kitchen Cabinets']);
+  createTrip(createNullTripStorage(), () => ['Fridge', 'Kitchen Cabinets']);
 
 const createTestTripServiceWithStorage = (): { tripService: TripService; storage: NullTripStorageWithSync } => {
   const storage = createNullTripStorage();
-  const tripService = createTrip(storage, ['Fridge', 'Kitchen Cabinets']);
+  const tripService = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
   return { tripService, storage };
 };
 
@@ -274,6 +274,53 @@ describe('TripService.subscribe', () => {
     });
 
     expect(notifications).toHaveLength(0);
+  });
+});
+
+describe('TripService.getSweepProgress reads areas live via getter', () => {
+  test('totalAreas reflects mutations to the underlying areas array via getter', () => {
+    // Arrange — mutable areas array; getter closes over it
+    const areas: string[] = ['Fridge', 'Kitchen Cabinets'];
+    const areasGetter = (): readonly string[] => areas;
+    const tripService = createTrip(createNullTripStorage(), areasGetter);
+
+    // Assert initial state
+    expect(tripService.getSweepProgress().totalAreas).toBe(2);
+
+    // Act — mutate the underlying array (simulating user adding a new area
+    // to their house areas list without recreating the trip service)
+    areas.push('Bathroom');
+    areas.push('Garage Pantry');
+
+    // Assert — getSweepProgress reads the live array via the getter
+    expect(tripService.getSweepProgress().totalAreas).toBe(4);
+
+    // Act — shrink
+    areas.length = 1;
+
+    // Assert — still live
+    expect(tripService.getSweepProgress().totalAreas).toBe(1);
+  });
+
+  test('empty-getter yields totalAreas 0; later pattern with getter returning 2 yields totalAreas 2', () => {
+    const emptyTrip = createTrip(createNullTripStorage(), () => []);
+    expect(emptyTrip.getSweepProgress().totalAreas).toBe(0);
+
+    const twoTrip = createTrip(createNullTripStorage(), () => ['A', 'B']);
+    expect(twoTrip.getSweepProgress().totalAreas).toBe(2);
+  });
+
+  test('allAreasComplete uses the live getter-reported total', () => {
+    const areas: string[] = ['Fridge'];
+    const tripService = createTrip(createNullTripStorage(), () => areas);
+
+    tripService.completeArea('Fridge');
+    expect(tripService.getSweepProgress().allAreasComplete).toBe(true);
+
+    // Add a new area to the source — completion should now be incomplete
+    areas.push('Kitchen Cabinets');
+    expect(tripService.getSweepProgress().allAreasComplete).toBe(false);
+    expect(tripService.getSweepProgress().totalAreas).toBe(2);
   });
 });
 

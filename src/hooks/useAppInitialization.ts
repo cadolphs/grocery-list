@@ -178,8 +178,10 @@ export const initializeApp = async (
     await runMigrationIfNeeded(factories, stapleStorage, areaStorage, sectionOrderStorage, tripStorage);
 
     const stapleLibrary = createStapleLibrary(stapleStorage);
-    const areas = areaStorage.loadAll();
-    const tripService = createTrip(tripStorage, areas);
+    // Pass a live-read getter so getSweepProgress().totalAreas reflects the
+    // current area list even when areas are added/removed without recreating
+    // the trip service (RCA: frozen tripAreas snapshot, trip.ts:96-97,201).
+    const tripService = createTrip(tripStorage, () => areaStorage.loadAll());
     const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
 
     tripService.initializeFromStorage(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
