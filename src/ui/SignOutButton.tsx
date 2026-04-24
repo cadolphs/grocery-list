@@ -25,8 +25,6 @@ export type SignOutButtonProps = {
   readonly testID?: string;
 };
 
-export const __SCAFFOLD__ = false;
-
 export const SignOutButton = ({ onPress, testID }: SignOutButtonProps): React.JSX.Element => {
   // Per-instance idempotence guard. Flipped true on first press; subsequent
   // presses during the same mount are ignored. Not module-level — each
