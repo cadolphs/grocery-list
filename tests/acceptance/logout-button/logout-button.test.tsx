@@ -29,7 +29,7 @@
  *   - WS-1      : ENABLED
  *   - UAT-1     : ENABLED
  *   - UAT-2     : ENABLED
- *   - UAT-3     : skipped
+ *   - UAT-3     : ENABLED
  *   - UAT-4     : skipped (@pending — no error UI in v1, see feature file)
  *   - UAT-5     : skipped
  */
@@ -78,10 +78,14 @@ type HarnessProps = {
  */
 const TestAppRoot: React.FC<HarnessProps> = ({ authService, factories }) => {
   const { user, loading, signIn, signUp, signOut } = useAuth(authService);
-  const { isReady, services } = useAppInitialization(
-    user ? user : undefined,
-    factories,
-  );
+  // NOTE: pass `user` directly (null | AuthUser), NOT `user ? user : undefined`.
+  // Mapping null -> undefined triggers legacy-mode initialization in
+  // useAppInitialization, which creates listener handles via the injected
+  // factories and then tears them down when auth settles — inflating
+  // unsubscribe counts for UAT-3. Passing `user` routes the null case to the
+  // `notAuthenticated` short-circuit (no listeners created), so the spy
+  // factory counts reflect only the authenticated lifecycle.
+  const { isReady, services } = useAppInitialization(user, factories);
 
   if (loading) return null;
 
@@ -302,7 +306,7 @@ describe('UAT-3: Signing out releases all per-user data subscriptions', () => {
   // Trace: US-01, AC-3 (listener cleanup), ADR-008 (lifecycle invariant)
   // Strategy A: InMemory — spy factories observe unsubscribe calls.
 
-  it.skip('releases each of the four data subscriptions exactly once when Maria signs out', async () => {
+  it('releases each of the four data subscriptions exactly once when Maria signs out', async () => {
     // Given the authenticated shell has opened data subscriptions for
     // staples, areas, section order, and trip
     const authService = createSignedInAuthService();
