@@ -1,7 +1,7 @@
 // useAreas - hook bridging AreaManagement to React state
 // Reads areas from context and exposes them as reactive state
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AreaResult, DeleteResult, DeleteOptions } from '../domain/area-management';
 import { useServices } from '../ui/ServiceProvider';
 
@@ -19,6 +19,16 @@ export const useAreas = (): UseAreasResult => {
 
   const refreshAreas = useCallback(() => {
     setAreas(areaManagement.getAreas());
+  }, [areaManagement]);
+
+  // Re-sync React state when the area storage emits change (e.g. Firestore
+  // onSnapshot after tab return) and when areaManagement is swapped.
+  // Mirrors the pattern in useTrip.
+  useEffect(() => {
+    setAreas(areaManagement.getAreas());
+    return areaManagement.subscribe(() => {
+      setAreas(areaManagement.getAreas());
+    });
   }, [areaManagement]);
 
   const addArea = useCallback(

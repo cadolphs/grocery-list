@@ -52,7 +52,7 @@ type InitializableStorage<T> = T & {
 
 export type AdapterFactories = {
   readonly createStapleStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<StapleStorage>;
-  readonly createAreaStorage: (uid: string) => InitializableStorage<AreaStorage>;
+  readonly createAreaStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<AreaStorage>;
   readonly createSectionOrderStorage: (uid: string) => InitializableStorage<SectionOrderStorage>;
   readonly createTripStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<TripStorage>;
   readonly checkMigrationNeeded: (firestoreStaples: StapleStorage) => boolean;
@@ -163,8 +163,12 @@ export const initializeApp = async (
     let handleTripChange: (() => void) | undefined;
     const onTripChange = () => handleTripChange?.();
 
+    // eslint-disable-next-line prefer-const
+    let handleAreaChange: (() => void) | undefined;
+    const onAreaChange = () => handleAreaChange?.();
+
     const stapleStorage = factories.createStapleStorage(uid, { onChange: onStapleChange });
-    const areaStorage = factories.createAreaStorage(uid);
+    const areaStorage = factories.createAreaStorage(uid, { onChange: onAreaChange });
     const sectionOrderStorage = factories.createSectionOrderStorage(uid);
     const tripStorage = factories.createTripStorage(uid, { onChange: onTripChange });
 
@@ -189,6 +193,18 @@ export const initializeApp = async (
     // Wire trip onChange: reload from storage when remote changes arrive
     handleTripChange = () => {
       tripService.loadFromStorage();
+    };
+
+    // Wire area onChange: notify the domain's subscribers so React hooks
+    // (useAreas, and transitively anything reading areaManagement.getAreas())
+    // re-render. The Firestore area adapter fires both `onChange` and its
+    // own listener fan-out, so this callback is the application-level seam
+    // for future side-effects (logging, analytics, invariant checks) while
+    // the direct reactivity path flows via `areaStorage.subscribe`.
+    handleAreaChange = () => {
+      // No domain-side reload needed: area-management reads through to the
+      // storage cache on each getAreas() call. Listener fan-out (via
+      // areaStorage.subscribe) drives React re-render directly.
     };
 
     // Wire auto-add/remove: track previous staples, diff on change
@@ -257,7 +273,7 @@ const createProductionFactories = (): AdapterFactories => {
   const db = getFirebaseDb();
   return {
     createStapleStorage: (uid, options) => createFirestoreStapleStorage(db, uid, options),
-    createAreaStorage: (uid) => createFirestoreAreaStorage(db, uid),
+    createAreaStorage: (uid, options) => createFirestoreAreaStorage(db, uid, options),
     createSectionOrderStorage: (uid) => createFirestoreSectionOrderStorage(db, uid),
     createTripStorage: (uid, options) => createFirestoreTripStorage(db, uid, options),
     checkMigrationNeeded: migrationNeeded,

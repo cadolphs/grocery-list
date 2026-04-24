@@ -23,6 +23,7 @@ export type AreaManagement = {
   readonly delete: (name: string, options?: DeleteOptions) => DeleteResult;
   readonly reorder: (newOrder: string[]) => AreaResult;
   readonly getAreas: () => string[];
+  readonly subscribe: (listener: () => void) => () => void;
 };
 
 const isDuplicate = (name: string, areas: string[]): boolean =>
@@ -132,5 +133,11 @@ export const createAreaManagement = (
     },
 
     getAreas: (): string[] => areaStorage.loadAll(),
+
+    // Pass-through to the underlying storage's change notification.
+    // Keeps the hook (useAreas) free of adapter/port imports while letting
+    // React subscribe to remote (Firestore) area-list changes.
+    subscribe: (listener: () => void): (() => void) =>
+      areaStorage.subscribe(listener),
   };
 };
