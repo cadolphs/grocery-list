@@ -7,6 +7,7 @@ import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { StoreLocation } from '../domain/types';
 import { appendNewSections } from '../domain/section-ordering';
+import { theme } from './theme';
 
 type SectionEntry = {
   readonly key: string;
@@ -152,59 +153,52 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 16,
   },
   sectionCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
     padding: 16,
     marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   sectionName: {
     fontSize: 16,
-    color: '#333333',
+    color: theme.color.text,
   },
   rowActions: {
     flexDirection: 'row',
     gap: 12,
   },
   actionText: {
-    color: '#2196F3',
+    color: theme.color.accent,
     fontSize: 14,
     fontWeight: '600',
   },
   resetButton: {
-    backgroundColor: '#FF5722',
-    borderRadius: 8,
+    backgroundColor: theme.color.accentDark,
+    borderRadius: theme.radius.md,
     padding: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   resetButtonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontSize: 16,
     fontWeight: '600',
   },
   confirmationDialog: {
-    backgroundColor: '#fff3e0',
-    borderRadius: 8,
+    backgroundColor: theme.color.tileAlt,
+    borderRadius: theme.radius.lg,
     padding: 16,
     marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#ff9800',
   },
   confirmationText: {
     fontSize: 16,
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 12,
   },
   confirmationButtons: {
@@ -212,24 +206,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   confirmButton: {
-    backgroundColor: '#FF5722',
-    borderRadius: 6,
+    backgroundColor: theme.color.accentDark,
+    borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   confirmButtonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontSize: 14,
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#9e9e9e',
-    borderRadius: 6,
+    backgroundColor: theme.color.tileAlt,
+    borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   cancelButtonText: {
-    color: '#ffffff',
+    color: theme.color.text,
     fontSize: 14,
     fontWeight: '600',
   },

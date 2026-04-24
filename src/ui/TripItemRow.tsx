@@ -6,6 +6,7 @@ import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { TripItem } from '../domain/types';
 import { ViewMode } from '../hooks/useViewMode';
 import { useIsWeb } from '../hooks/useIsWeb';
+import { theme } from './theme';
 
 type TripItemRowProps = {
   readonly item: TripItem;
@@ -87,17 +88,17 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 16,
-    color: '#333333',
+    color: theme.color.text,
   },
   checkedText: {
     textDecorationLine: 'line-through',
-    color: '#4CAF50',
+    color: theme.color.textMuted,
   },
   neededText: {
-    color: '#4CAF50',
+    color: theme.color.text,
   },
   skippedText: {
-    color: '#999999',
+    color: theme.color.textMuted,
     textDecorationLine: 'line-through',
   },
   skipButton: {
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   skipText: {
-    color: '#FF9800',
+    color: theme.color.textMuted,
     fontWeight: '600',
   },
   editButton: {
@@ -114,6 +115,6 @@ const styles = StyleSheet.create({
   },
   editIcon: {
     fontSize: 18,
-    color: '#666666',
+    color: theme.color.textMuted,
   },
 });

@@ -14,6 +14,7 @@ import { ViewToggle } from './ViewToggle';
 import { HomeView } from './HomeView';
 import { StoreView } from './StoreView';
 import { SignOutButton } from './SignOutButton';
+import { theme } from './theme';
 
 export type AppShellProps = {
   // Optional at the type boundary so pre-existing regression tests that render
@@ -54,6 +55,6 @@ export const AppShell = ({ signOut }: AppShellProps): React.JSX.Element => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.color.ground,
   },
 });

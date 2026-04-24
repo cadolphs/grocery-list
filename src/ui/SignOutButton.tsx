@@ -19,6 +19,7 @@
 
 import React, { useRef } from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
+import { theme } from './theme';
 
 export type SignOutButtonProps = {
   readonly onPress: () => void | Promise<void>;
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#2196F3',
+    color: theme.color.accent,
     fontWeight: '600',
   },
 });

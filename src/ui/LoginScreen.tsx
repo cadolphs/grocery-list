@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { AuthResult } from '../auth/AuthService';
+import { theme } from './theme';
 
 type ScreenState =
   | { kind: 'initial' }
@@ -110,23 +111,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.color.ground,
     padding: 24,
   },
   input: {
     width: '100%',
     maxWidth: 320,
-    borderWidth: 1,
-    borderColor: '#cccccc',
-    borderRadius: 8,
+    borderRadius: theme.radius.md,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#ffffff',
+    color: theme.color.text,
+    backgroundColor: theme.color.surface,
     marginBottom: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   button: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
+    backgroundColor: theme.color.accent,
+    borderRadius: theme.radius.md,
     paddingVertical: 12,
     paddingHorizontal: 24,
     width: '100%',
@@ -134,20 +139,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonDisabled: {
-    backgroundColor: '#90CAF9',
+    opacity: 0.5,
   },
   buttonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontSize: 16,
     fontWeight: '600',
   },
   errorText: {
     fontSize: 14,
-    color: '#d32f2f',
+    color: theme.color.accentDark,
     marginBottom: 12,
   },
   toggleText: {
-    color: '#2196F3',
+    color: theme.color.accent,
     fontSize: 14,
     marginTop: 16,
   },

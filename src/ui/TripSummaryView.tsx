@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { CompleteTripResult } from '../domain/trip';
+import { theme } from './theme';
 
 type TripSummaryViewProps = {
   readonly result: CompleteTripResult;
@@ -51,43 +52,42 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
     padding: 20,
   },
   heading: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 8,
   },
   breakdown: {
     fontSize: 16,
-    color: '#666666',
+    color: theme.color.textMuted,
     marginBottom: 4,
   },
   carryoverSection: {
     marginTop: 12,
   },
   separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
+    height: 0,
     marginBottom: 12,
   },
   carryoverHeading: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 8,
   },
   carryoverItem: {
     fontSize: 15,
-    color: '#333333',
+    color: theme.color.text,
     paddingVertical: 4,
   },
   switchButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
+    backgroundColor: theme.color.accent,
+    borderRadius: theme.radius.md,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   switchButtonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontSize: 16,
     fontWeight: '600',
   },

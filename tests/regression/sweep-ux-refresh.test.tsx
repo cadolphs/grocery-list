@@ -91,7 +91,7 @@ describe('home mode tap toggles needed state with green/grey', () => {
       ? Object.assign({}, ...text.props.style.filter(Boolean))
       : text.props.style;
 
-    expect(flatStyle.color).toBe('#4CAF50');
+    expect(flatStyle.color).toBe('#1A1A1A');
   });
 
   it('renders skipped item with grey strikethrough text', () => {
@@ -109,7 +109,7 @@ describe('home mode tap toggles needed state with green/grey', () => {
       ? Object.assign({}, ...text.props.style.filter(Boolean))
       : text.props.style;
 
-    expect(flatStyle.color).toBe('#999999');
+    expect(flatStyle.color).toBe('#6B6B6B');
     expect(flatStyle.textDecorationLine).toBe('line-through');
   });
 });
@@ -312,6 +312,6 @@ describe('sweep mode shows one-offs section separately', () => {
       ? Object.assign({}, ...item.props.style.filter(Boolean))
       : item.props.style;
 
-    expect(flatStyle.color).toBe('#999999');
+    expect(flatStyle.color).toBe('#6B6B6B');
   });
 });

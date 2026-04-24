@@ -156,13 +156,13 @@ describe('WS-3: Toggle staple from filtered results', () => {
     fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'ched');
 
     // And "Cheddar Cheese" is on the trip (green text)
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#4CAF50' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#1A1A1A' });
 
     // When he taps "Cheddar Cheese" to skip it
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
 
     // Then it shows strikethrough (removed from trip)
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#999999', textDecorationLine: 'line-through' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#6B6B6B', textDecorationLine: 'line-through' });
   });
 
   it('toggles a staple back onto the trip from filtered results', () => {
@@ -180,7 +180,7 @@ describe('WS-3: Toggle staple from filtered results', () => {
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
 
     // Then it shows green (back on trip)
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#4CAF50' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#1A1A1A' });
   });
 });
 

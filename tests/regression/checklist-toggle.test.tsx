@@ -40,8 +40,8 @@ describe('home view has sweep checklist toggle', () => {
     const sweepButton = screen.getByTestId('home-mode-sweep');
     const checklistButton = screen.getByTestId('home-mode-checklist');
 
-    expect(sweepButton).toHaveStyle({ backgroundColor: '#2196F3' });
-    expect(checklistButton).not.toHaveStyle({ backgroundColor: '#2196F3' });
+    expect(sweepButton).toHaveStyle({ backgroundColor: '#1A1A1A' });
+    expect(checklistButton).not.toHaveStyle({ backgroundColor: '#1A1A1A' });
   });
 
   it('switches to Checklist mode when Checklist is tapped', () => {
@@ -52,8 +52,8 @@ describe('home view has sweep checklist toggle', () => {
     const sweepButton = screen.getByTestId('home-mode-sweep');
     const checklistButton = screen.getByTestId('home-mode-checklist');
 
-    expect(checklistButton).toHaveStyle({ backgroundColor: '#2196F3' });
-    expect(sweepButton).not.toHaveStyle({ backgroundColor: '#2196F3' });
+    expect(checklistButton).toHaveStyle({ backgroundColor: '#1A1A1A' });
+    expect(sweepButton).not.toHaveStyle({ backgroundColor: '#1A1A1A' });
   });
 
   it('switches back to Sweep mode when Sweep is tapped', () => {
@@ -67,8 +67,8 @@ describe('home view has sweep checklist toggle', () => {
     const sweepButton = screen.getByTestId('home-mode-sweep');
     const checklistButton = screen.getByTestId('home-mode-checklist');
 
-    expect(sweepButton).toHaveStyle({ backgroundColor: '#2196F3' });
-    expect(checklistButton).not.toHaveStyle({ backgroundColor: '#2196F3' });
+    expect(sweepButton).toHaveStyle({ backgroundColor: '#1A1A1A' });
+    expect(checklistButton).not.toHaveStyle({ backgroundColor: '#1A1A1A' });
   });
 });
 

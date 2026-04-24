@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { theme } from './theme';
 
 type ErrorBoundaryProps = {
   readonly children: React.ReactNode;
@@ -53,16 +54,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: 'center',
-    backgroundColor: '#fff5f5',
+    backgroundColor: theme.color.ground,
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#c62828',
+    color: theme.color.accentDark,
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: '#333333',
+    color: theme.color.text,
   },
 });

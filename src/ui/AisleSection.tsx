@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { AisleGroup } from '../domain/item-grouping';
 import { TripItemRow } from './TripItemRow';
+import { theme } from './theme';
 
 type AisleSectionProps = {
   readonly aisleGroup: AisleGroup;
@@ -50,8 +51,8 @@ export const AisleSection = ({ aisleGroup, onItemPress, onItemLongPress }: Aisle
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
     marginBottom: 12,
     padding: 16,
   },
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333333',
+    color: theme.color.text,
   },
   headerRight: {
     flexDirection: 'row',
@@ -72,16 +73,15 @@ const styles = StyleSheet.create({
   },
   progress: {
     fontSize: 14,
-    color: '#666666',
+    color: theme.color.textMuted,
   },
   checkmark: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: theme.color.accent,
     marginLeft: 6,
     fontWeight: '600',
   },
   separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
+    height: 0,
   },
 });

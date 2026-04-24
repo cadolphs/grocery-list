@@ -15,6 +15,7 @@ import { AisleSection } from './AisleSection';
 import { TripSummaryView } from './TripSummaryView';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
+import { theme } from './theme';
 
 export const StoreView = (): React.JSX.Element => {
   const { items, addItem, toggleCheckOff, unskipItem, syncStapleUpdate } = useTrip();
@@ -165,16 +166,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   finishButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.color.inverse,
     paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
     marginTop: 16,
     minHeight: 44,
   },
   finishButtonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontSize: 16,
     fontWeight: '600',
   },

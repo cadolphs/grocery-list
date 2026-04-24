@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { AreaGroup } from '../domain/item-grouping';
 import { TripItemRow } from './TripItemRow';
+import { theme } from './theme';
 
 type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
@@ -69,8 +70,8 @@ export const AreaSection = ({ areaGroup, onCompleteArea, onUncompleteArea, onSel
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
     marginBottom: 12,
     padding: 16,
   },
@@ -83,22 +84,21 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333333',
+    color: theme.color.text,
   },
   badge: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
+    backgroundColor: theme.color.inverse,
+    borderRadius: theme.radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   badgeText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontSize: 12,
     fontWeight: '600',
   },
   separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
+    height: 0,
   },
   skippedRow: {
     flexDirection: 'row',
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   skippedName: {
-    color: '#999999',
+    color: theme.color.textMuted,
     textDecorationLine: 'line-through',
     fontSize: 14,
   },
@@ -116,19 +116,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   readdText: {
-    color: '#FF9800',
+    color: theme.color.accent,
     fontWeight: '600',
   },
   doneButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
+    backgroundColor: theme.color.inverse,
+    borderRadius: theme.radius.md,
     paddingVertical: 10,
     paddingHorizontal: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   doneText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontWeight: '600',
     fontSize: 14,
   },

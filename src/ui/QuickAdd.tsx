@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Pressable, Text, FlatList, StyleSheet } from 'react-native';
 import { AddTripItemRequest, AddTripItemResult, StapleItem } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
+import { theme } from './theme';
 
 const formatLocation = (section: string, aisleNumber: number | null): string =>
   aisleNumber === null ? section : `${section} / Aisle ${aisleNumber}`;
@@ -123,49 +124,46 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderRadius: theme.radius.md,
     padding: 12,
     fontSize: 16,
-    color: '#333333',
-    backgroundColor: '#ffffff',
+    color: theme.color.text,
+    backgroundColor: theme.color.surface,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   addButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
+    backgroundColor: theme.color.accent,
+    borderRadius: theme.radius.md,
     padding: 12,
     marginLeft: 8,
   },
   addButtonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontWeight: '600',
     fontSize: 16,
   },
   suggestionList: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
     marginTop: 4,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   suggestionItem: {
     padding: 12,
   },
   suggestionSeparator: {
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopWidth: 0,
   },
   suggestionText: {
     fontSize: 14,
-    color: '#333333',
+    color: theme.color.text,
   },
   addNewItemText: {
     fontSize: 14,
-    color: '#2196F3',
+    color: theme.color.accent,
     fontWeight: '500',
   },
 });

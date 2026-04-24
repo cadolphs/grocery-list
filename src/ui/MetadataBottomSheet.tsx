@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
 import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
+import { theme } from './theme';
 
 type ItemTypeSelection = 'Staple' | 'One-off';
 type SheetMode = 'form' | 'duplicate-warning';
@@ -395,43 +396,41 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    backgroundColor: theme.color.ground,
+    borderTopLeftRadius: theme.radius.lg,
+    borderTopRightRadius: theme.radius.lg,
     padding: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 16,
   },
   typeToggleContainer: {
     flexDirection: 'row',
     marginBottom: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
   typeToggleButton: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.color.tileAlt,
     minHeight: 44,
     justifyContent: 'center',
   },
   typeToggleActive: {
-    backgroundColor: '#2196F3',
+    backgroundColor: theme.color.inverse,
   },
   typeToggleText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#666666',
+    color: theme.color.text,
   },
   typeToggleTextActive: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
   },
   areaContainer: {
     flexDirection: 'row',
@@ -442,62 +441,55 @@ const styles = StyleSheet.create({
   areaButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    backgroundColor: '#f5f5f5',
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.color.tileAlt,
     minHeight: 44,
     justifyContent: 'center',
   },
   areaButtonActive: {
-    backgroundColor: '#2196F3',
-    borderColor: '#2196F3',
+    backgroundColor: theme.color.accent,
   },
   areaButtonText: {
     fontSize: 14,
-    color: '#666666',
+    color: theme.color.text,
   },
   areaButtonTextActive: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderRadius: theme.radius.md,
     padding: 12,
     fontSize: 16,
-    color: '#333333',
-    backgroundColor: '#ffffff',
+    color: theme.color.text,
+    backgroundColor: theme.color.surface,
     marginBottom: 12,
   },
   duplicateMessage: {
     fontSize: 16,
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 8,
   },
   duplicateMetadata: {
     fontSize: 14,
-    color: '#666666',
+    color: theme.color.textMuted,
     marginBottom: 16,
   },
   sectionSuggestions: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.md,
     marginBottom: 12,
     marginTop: -8,
   },
   sectionSuggestionItem: {
     padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   sectionSuggestionText: {
     fontSize: 14,
-    color: '#333333',
+    color: theme.color.text,
   },
   addButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
+    backgroundColor: theme.color.accent,
+    borderRadius: theme.radius.md,
     padding: 16,
     alignItems: 'center',
     marginBottom: 8,
@@ -505,14 +497,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButtonText: {
-    color: '#ffffff',
+    color: theme.color.inverseText,
     fontWeight: '600',
     fontSize: 16,
   },
   deleteButton: {
     borderWidth: 1,
-    borderColor: '#d32f2f',
-    borderRadius: 8,
+    borderColor: theme.color.accentDark,
+    borderRadius: theme.radius.md,
     padding: 16,
     alignItems: 'center',
     marginBottom: 8,
@@ -520,21 +512,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteButtonText: {
-    color: '#d32f2f',
+    color: theme.color.accentDark,
     fontWeight: '600',
     fontSize: 16,
   },
   skipButton: {
-    borderWidth: 1,
-    borderColor: '#9e9e9e',
-    borderRadius: 8,
+    backgroundColor: theme.color.tileAlt,
+    borderRadius: theme.radius.md,
     padding: 16,
     alignItems: 'center',
     minHeight: 44,
     justifyContent: 'center',
   },
   skipButtonText: {
-    color: '#666666',
+    color: theme.color.text,
     fontWeight: '500',
     fontSize: 16,
   },

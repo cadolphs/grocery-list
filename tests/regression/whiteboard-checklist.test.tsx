@@ -93,11 +93,11 @@ describe('staple checklist renders sorted list with toggle', () => {
     );
 
     // Checked staples: green text, no strikethrough
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#4CAF50' });
-    expect(screen.getByText('Bread')).toHaveStyle({ color: '#4CAF50' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Bread')).toHaveStyle({ color: '#1A1A1A' });
     // Unchecked staples: gray strikethrough
-    expect(screen.getByText('Apples')).toHaveStyle({ color: '#999999', textDecorationLine: 'line-through' });
-    expect(screen.getByText('Cheese')).toHaveStyle({ color: '#999999', textDecorationLine: 'line-through' });
+    expect(screen.getByText('Apples')).toHaveStyle({ color: '#6B6B6B', textDecorationLine: 'line-through' });
+    expect(screen.getByText('Cheese')).toHaveStyle({ color: '#6B6B6B', textDecorationLine: 'line-through' });
   });
 
   it('calls onAddStaple when tapping an unchecked staple', () => {
@@ -194,11 +194,11 @@ describe('preloaded staples show as already on trip', () => {
     fireEvent.press(screen.getByTestId('home-mode-checklist'));
 
     // Preloaded and still needed -> green text
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#4CAF50' });
-    expect(screen.getByText('Bread')).toHaveStyle({ color: '#4CAF50' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Bread')).toHaveStyle({ color: '#1A1A1A' });
 
     // Preloaded but skipped (needed=false) -> strikethrough
-    expect(screen.getByText('Eggs')).toHaveStyle({ color: '#999999', textDecorationLine: 'line-through' });
+    expect(screen.getByText('Eggs')).toHaveStyle({ color: '#6B6B6B', textDecorationLine: 'line-through' });
   });
 });
 
@@ -215,8 +215,8 @@ describe('checklist mode shows staple checklist', () => {
     renderAppInChecklistMode();
 
     // Both staples are already on the trip from preload, so they should be green
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#4CAF50' });
-    expect(screen.getByText('Bread')).toHaveStyle({ color: '#4CAF50' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Bread')).toHaveStyle({ color: '#1A1A1A' });
   });
 
   it('tapping a checked staple skips it and shows strikethrough', () => {
@@ -226,7 +226,7 @@ describe('checklist mode shows staple checklist', () => {
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
 
     // After skip, Milk should show strikethrough
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#999999', textDecorationLine: 'line-through' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: '#6B6B6B', textDecorationLine: 'line-through' });
   });
 
   it('tapping a skipped staple unskips it and shows green', () => {
@@ -238,6 +238,6 @@ describe('checklist mode shows staple checklist', () => {
 
     // Now tap Milk again to unskip it
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#4CAF50' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
   });
 });

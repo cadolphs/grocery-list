@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ViewMode } from '../hooks/useViewMode';
+import { theme } from './theme';
 
 type ViewToggleProps = {
   readonly viewMode: ViewMode;
@@ -30,9 +31,7 @@ export const ViewToggle = ({ viewMode, onToggle }: ViewToggleProps): React.JSX.E
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: theme.color.ground,
   },
   tab: {
     flex: 1,
@@ -42,14 +41,14 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: '#2196F3',
+    borderBottomColor: theme.color.accent,
   },
   tabText: {
     fontSize: 16,
-    color: '#666666',
+    color: theme.color.textMuted,
   },
   activeTabText: {
-    color: '#2196F3',
+    color: theme.color.accent,
     fontWeight: '600',
   },
 });

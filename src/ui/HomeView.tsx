@@ -15,6 +15,7 @@ import { MetadataBottomSheet } from './MetadataBottomSheet';
 import { StapleChecklist } from './StapleChecklist';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
 import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
+import { theme } from './theme';
 
 type SettingsView = 'menu' | 'areas' | 'section-order';
 type HomeMode = 'sweep' | 'checklist';
@@ -343,29 +344,29 @@ const styles = StyleSheet.create({
   modeToggleRow: {
     flexDirection: 'row',
     marginBottom: 8,
-    borderRadius: 8,
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
   modeToggleButton: {
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    backgroundColor: '#E0E0E0',
+    backgroundColor: theme.color.tileAlt,
   },
   modeToggleButtonActive: {
-    backgroundColor: '#2196F3',
+    backgroundColor: theme.color.inverse,
   },
   modeToggleText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333333',
+    color: theme.color.text,
   },
   modeToggleTextActive: {
-    color: '#FFFFFF',
+    color: theme.color.inverseText,
   },
   settingsButtonText: {
     fontSize: 16,
-    color: '#2196F3',
+    color: theme.color.accent,
   },
   settingsContainer: {
     flex: 1,
@@ -377,59 +378,54 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#2196F3',
+    color: theme.color.accent,
   },
   sweepProgress: {
     fontSize: 14,
-    color: '#666666',
+    color: theme.color.textMuted,
     textAlign: 'center',
     marginVertical: 8,
   },
   whiteboardPrompt: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FF9800',
+    color: theme.color.accent,
     textAlign: 'center',
     marginVertical: 8,
   },
   oneOffsSection: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
+    padding: 16,
     marginTop: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   oneOffsHeading: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 4,
   },
   resetSweepButton: {
-    backgroundColor: '#FF5722',
-    borderRadius: 8,
+    backgroundColor: theme.color.accentDark,
+    borderRadius: theme.radius.md,
     padding: 12,
     marginTop: 16,
     alignItems: 'center',
   },
   resetSweepButtonText: {
-    color: '#FFFFFF',
+    color: theme.color.inverseText,
     fontSize: 16,
     fontWeight: '600',
   },
   resetConfirmation: {
-    backgroundColor: '#FFF3E0',
-    borderRadius: 8,
+    backgroundColor: theme.color.tileAlt,
+    borderRadius: theme.radius.md,
     padding: 12,
     marginTop: 8,
   },
   resetConfirmationText: {
     fontSize: 14,
-    color: '#E65100',
+    color: theme.color.text,
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -439,23 +435,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   confirmButton: {
-    backgroundColor: '#FF5722',
-    borderRadius: 6,
+    backgroundColor: theme.color.accentDark,
+    borderRadius: theme.radius.sm,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   confirmButtonText: {
-    color: '#FFFFFF',
+    color: theme.color.inverseText,
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 6,
+    backgroundColor: theme.color.tileAlt,
+    borderRadius: theme.radius.sm,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   cancelButtonText: {
-    color: '#333333',
+    color: theme.color.text,
     fontWeight: '600',
   },
   settingsMenuContainer: {
@@ -464,23 +460,18 @@ const styles = StyleSheet.create({
   settingsMenuHeader: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333333',
+    color: theme.color.text,
     marginBottom: 16,
   },
   settingsMenuItem: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: theme.color.tile,
+    borderRadius: theme.radius.lg,
     padding: 16,
     marginBottom: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   settingsMenuItemText: {
     fontSize: 16,
-    color: '#2196F3',
+    color: theme.color.text,
     fontWeight: '600',
   },
 });

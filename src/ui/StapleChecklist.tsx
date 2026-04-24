@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { StapleItem } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
+import { theme } from './theme';
 
 export const filterStaples = (
   staples: readonly StapleItem[],
@@ -129,11 +130,16 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
+    borderRadius: theme.radius.md,
     padding: 12,
     fontSize: 16,
+    backgroundColor: theme.color.surface,
+    color: theme.color.text,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   clearButton: {
     marginLeft: 8,
@@ -141,12 +147,12 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     fontSize: 16,
-    color: '#666666',
+    color: theme.color.textMuted,
     fontWeight: '600',
   },
   emptyStateMessage: {
     fontSize: 16,
-    color: '#666666',
+    color: theme.color.textMuted,
     textAlign: 'center',
     paddingVertical: 24,
     paddingHorizontal: 16,
@@ -170,22 +176,22 @@ const styles = StyleSheet.create({
   },
   editIcon: {
     fontSize: 18,
-    color: '#666666',
+    color: theme.color.textMuted,
   },
   stapleName: {
     fontSize: 16,
-    color: '#333333',
+    color: theme.color.text,
   },
   checkedName: {
-    color: '#4CAF50',
+    color: theme.color.text,
   },
   uncheckedName: {
-    color: '#999999',
+    color: theme.color.textMuted,
     textDecorationLine: 'line-through',
   },
   areaLabel: {
     fontSize: 12,
-    color: '#888888',
+    color: theme.color.textMuted,
     marginTop: 2,
   },
 });
