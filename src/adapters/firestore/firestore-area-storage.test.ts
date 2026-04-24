@@ -83,10 +83,11 @@ describe('firestore area storage implements area storage port', () => {
     expect(storage.loadAll()).toEqual(areas);
   });
 
-  test('loadAll returns empty array when no areas exist', async () => {
+  test('loadAll returns DEFAULT_HOUSE_AREAS when no areas exist (fresh user seeding)', async () => {
+    const { DEFAULT_HOUSE_AREAS } = require('../async-storage/async-area-storage');
     const storage = await createFreshStorage();
 
-    expect(storage.loadAll()).toEqual([]);
+    expect(storage.loadAll()).toEqual([...DEFAULT_HOUSE_AREAS]);
   });
 
   test('initialize loads areas from Firestore document', async () => {
@@ -117,6 +118,37 @@ describe('firestore area storage implements area storage port', () => {
     storage.saveAll(['New Area 1', 'New Area 2']);
 
     expect(storage.loadAll()).toEqual(['New Area 1', 'New Area 2']);
+  });
+});
+
+// --- Default seeding tests (symmetric to AsyncStorage adapter) ---
+
+describe('firestore area storage seeds DEFAULT_HOUSE_AREAS on empty/missing doc', () => {
+  test('loadAll returns DEFAULT_HOUSE_AREAS when Firestore document exists but is empty ({})', async () => {
+    const { DEFAULT_HOUSE_AREAS } = require('../async-storage/async-area-storage');
+    mockStore[AREAS_DOC_PATH] = {};
+
+    const storage = await createFreshStorage();
+
+    expect(storage.loadAll()).toEqual([...DEFAULT_HOUSE_AREAS]);
+  });
+
+  test('loadAll returns DEFAULT_HOUSE_AREAS when Firestore document is missing (exists: false)', async () => {
+    const { DEFAULT_HOUSE_AREAS } = require('../async-storage/async-area-storage');
+    // No entry in mockStore -> exists() returns false
+
+    const storage = await createFreshStorage();
+
+    expect(storage.loadAll()).toEqual([...DEFAULT_HOUSE_AREAS]);
+  });
+
+  test('loadAll returns stored areas (not defaults) when Firestore document has non-empty items', async () => {
+    const realAreas = ['Pantry', 'Laundry Room'];
+    mockStore[AREAS_DOC_PATH] = { items: realAreas };
+
+    const storage = await createFreshStorage();
+
+    expect(storage.loadAll()).toEqual(realAreas);
   });
 });
 

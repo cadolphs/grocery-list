@@ -6,6 +6,7 @@
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 import { AreaStorage } from '../../ports/area-storage';
+import { DEFAULT_HOUSE_AREAS } from '../async-storage/async-area-storage';
 
 export type FirestoreAreaStorageOptions = {
   readonly onChange?: () => void;
@@ -45,10 +46,20 @@ export const createFirestoreAreaStorage = (
     listeners.forEach((listener) => listener());
   };
 
+  const extractIncomingAreas = (snapshot: {
+    exists: () => boolean;
+    data: () => { items: string[] } | undefined;
+  }): string[] => {
+    if (!snapshot.exists()) return [...DEFAULT_HOUSE_AREAS];
+    const parsed = (snapshot.data() as { items?: string[] } | undefined)?.items;
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return [...DEFAULT_HOUSE_AREAS];
+    }
+    return parsed;
+  };
+
   const handleSnapshot = (snapshot: { exists: () => boolean; data: () => { items: string[] } | undefined }): void => {
-    const incomingAreas: string[] = snapshot.exists()
-      ? (snapshot.data() as { items: string[] })?.items ?? []
-      : [];
+    const incomingAreas: string[] = extractIncomingAreas(snapshot);
 
     if (!isInitialized) {
       cache = incomingAreas;

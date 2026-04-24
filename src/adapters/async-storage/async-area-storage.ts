@@ -8,7 +8,7 @@ import { AreaStorage } from '../../ports/area-storage';
 
 const STORAGE_KEY = '@grocery/house_areas';
 
-const DEFAULT_AREAS: readonly string[] = [
+export const DEFAULT_HOUSE_AREAS: readonly string[] = [
   'Bathroom',
   'Garage Pantry',
   'Kitchen Cabinets',
@@ -47,7 +47,7 @@ export const createAsyncAreaStorage = (): AsyncAreaStorage => {
         cache = parsed;
       } else {
         // Fresh install or corrupt data: seed defaults
-        cache = [...DEFAULT_AREAS];
+        cache = [...DEFAULT_HOUSE_AREAS];
         persistInBackground(cache);
       }
     },
