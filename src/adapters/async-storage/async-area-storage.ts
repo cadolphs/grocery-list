@@ -58,5 +58,11 @@ export const createAsyncAreaStorage = (): AsyncAreaStorage => {
       cache = [...areas];
       persistInBackground(cache);
     },
+
+    // No remote change source on AsyncStorage. subscribe is a safe no-op;
+    // the returned unsubscribe is also a no-op.
+    subscribe: (_listener: () => void): (() => void) => {
+      return () => {};
+    },
   };
 };

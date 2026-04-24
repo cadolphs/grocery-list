@@ -39,6 +39,11 @@ export const createFirestoreAreaStorage = (
   let unsubscribeFn: () => void = () => {};
   let isInitialized = false;
   const { onChange } = options;
+  const listeners = new Set<() => void>();
+
+  const notifyListeners = (): void => {
+    listeners.forEach((listener) => listener());
+  };
 
   const handleSnapshot = (snapshot: { exists: () => boolean; data: () => { items: string[] } | undefined }): void => {
     const incomingAreas: string[] = snapshot.exists()
@@ -57,6 +62,7 @@ export const createFirestoreAreaStorage = (
     if (incomingSerialized !== currentSerialized) {
       cache = incomingAreas;
       onChange?.();
+      notifyListeners();
     }
   };
 
@@ -83,6 +89,13 @@ export const createFirestoreAreaStorage = (
     saveAll: (areas: string[]): void => {
       cache = [...areas];
       persistInBackground(db, uid, cache);
+    },
+
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 };

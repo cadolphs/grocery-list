@@ -184,3 +184,77 @@ describe('firestore area storage onChange callback', () => {
     expect(storage.loadAll()).toEqual(['Kitchen', 'Garage']);
   });
 });
+
+// --- subscribe fan-out tests (port contract) ---
+
+const createFreshStorageForSubscribe = async () => {
+  const { createFirestoreAreaStorage } = require('./firestore-area-storage');
+  const mockDb = { type: 'firestore' };
+  const storage = createFirestoreAreaStorage(mockDb, TEST_UID);
+  await storage.initialize();
+  return storage as AreaStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+};
+
+describe('firestore area storage subscribe contract', () => {
+  test('subscribed listener is invoked when remote snapshot fires with updated data', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: ['Kitchen'] };
+
+    const storage = await createFreshStorageForSubscribe();
+
+    let callCount = 0;
+    const unsubscribe = storage.subscribe(() => { callCount++; });
+
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
+
+    expect(callCount).toBeGreaterThanOrEqual(1);
+
+    // Cleanup
+    unsubscribe();
+  });
+
+  test('after unsubscribe, further snapshots do not invoke the listener', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: ['Kitchen'] };
+
+    const storage = await createFreshStorageForSubscribe();
+
+    let callCount = 0;
+    const unsubscribe = storage.subscribe(() => { callCount++; });
+
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
+    const countAfterFirst = callCount;
+
+    unsubscribe();
+
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage', 'Fridge'] });
+
+    expect(callCount).toBe(countAfterFirst);
+  });
+
+  test('subscribe returns an unsubscribe function (callable, does not throw)', async () => {
+    const storage = await createFreshStorageForSubscribe();
+
+    const unsubscribe = storage.subscribe(() => {});
+
+    expect(typeof unsubscribe).toBe('function');
+    expect(() => unsubscribe()).not.toThrow();
+  });
+
+  test('multiple subscribers all receive notifications', async () => {
+    mockStore[AREAS_DOC_PATH] = { items: ['Kitchen'] };
+
+    const storage = await createFreshStorageForSubscribe();
+
+    let a = 0;
+    let b = 0;
+    const unsubA = storage.subscribe(() => { a++; });
+    const unsubB = storage.subscribe(() => { b++; });
+
+    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
+
+    expect(a).toBeGreaterThanOrEqual(1);
+    expect(b).toBeGreaterThanOrEqual(1);
+
+    unsubA();
+    unsubB();
+  });
+});

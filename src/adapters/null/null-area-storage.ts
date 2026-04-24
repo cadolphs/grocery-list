@@ -20,15 +20,27 @@ export const createNullAreaStorage = (
 ): AreaStorage & { readonly simulateRemoteChange: (areas: string[]) => void } => {
   let areas: string[] = [...(initialAreas ?? DEFAULT_AREAS)];
   const { onChange } = options;
+  const listeners = new Set<() => void>();
+
+  const notifyListeners = (): void => {
+    listeners.forEach((listener) => listener());
+  };
 
   return {
     loadAll: () => [...areas],
     saveAll: (newAreas: string[]) => {
       areas = [...newAreas];
     },
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
     simulateRemoteChange: (newAreas: string[]) => {
       areas = [...newAreas];
       onChange?.();
+      notifyListeners();
     },
   };
 };

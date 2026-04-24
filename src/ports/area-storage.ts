@@ -4,4 +4,5 @@
 export type AreaStorage = {
   readonly loadAll: () => string[];
   readonly saveAll: (areas: string[]) => void;
+  readonly subscribe: (listener: () => void) => () => void;
 };
