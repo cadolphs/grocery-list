@@ -31,7 +31,7 @@
  *   - UAT-2     : ENABLED
  *   - UAT-3     : ENABLED
  *   - UAT-4     : skipped (@pending — no error UI in v1, see feature file)
- *   - UAT-5     : skipped
+ *   - UAT-5     : ENABLED
  */
 
 import React, { useMemo } from 'react';
@@ -364,7 +364,7 @@ describe('UAT-5: Rapid double-tap does not produce duplicate sign-out calls', ()
   // Trace: US-01, AC-7 (dedupe rapid double-press).
   // Strategy A: InMemory — wrap null auth service to count signOut invocations.
 
-  it.skip('invokes the auth service at most once when Maria taps Sign out twice in quick succession', async () => {
+  it('invokes the auth service at most once when Maria taps Sign out twice in quick succession', async () => {
     // Given Maria is signed in
     const baseAuth = createSignedInAuthService();
     const signOutCalls: number[] = [];
