@@ -26,9 +26,9 @@
  *   - US-01 is the sole story — see docs/feature/logout-button/discuss/user-stories.md
  *
  * Scenario status (one at a time per outside-in):
- *   - WS-1      : ENABLED (drives the first RED)
- *   - UAT-1     : skipped (enable after WS-1 GREEN)
- *   - UAT-2     : skipped
+ *   - WS-1      : ENABLED
+ *   - UAT-1     : ENABLED
+ *   - UAT-2     : ENABLED
  *   - UAT-3     : skipped
  *   - UAT-4     : skipped (@pending — no error UI in v1, see feature file)
  *   - UAT-5     : skipped
@@ -267,7 +267,7 @@ describe('UAT-2: Tapping Sign Out ends Maria’s session', () => {
   // Strategy A: InMemory — getCurrentUser() is the observable session state
   // on the null auth service.
 
-  it.skip('removes Maria from the signed-in user set and surfaces the login screen', async () => {
+  it('removes Maria from the signed-in user set and surfaces the login screen', async () => {
     // Given Maria is signed in
     const authService = createSignedInAuthService();
     const { factories } = createTrackingFactories();
