@@ -1,0 +1,144 @@
+{
+  "goal": "Fix Home view rendering blank after Home -> Store -> Home tab switch on web. Address five stacked root causes per user-approved RCA: non-reactive useAreas hook, frozen tripService.tripAreas, destructive tab switching, missing ErrorBoundary, and Firestore adapter missing default seeding.",
+  "paradigm": "functional",
+  "stack": "React Native + Expo SDK 54 + TypeScript (strict), ports-and-adapters",
+  "test_runner": "jest",
+  "rca_reference": "docs/feature/fix-home-blank-after-tab-return/deliver/RCA.md",
+  "phases": [
+    {
+      "name": "Bug Fixes (RCA-driven)",
+      "description": "Five minimal TDD fixes addressing each stacked root cause from the RCA. Each step is RED-first: regression/unit test asserting the bug, then GREEN fix, then optional in-scope tidy. No refactoring beyond fix scope.",
+      "steps": [
+        {
+          "name": "Domain fix: createTrip accepts areasGetter for live sweep progress",
+          "description": "Change createTrip signature from createTrip(storage, areas) to createTrip(storage, areasGetter: () => string[]) so that getSweepProgress().totalAreas reads the live area list via the getter instead of a build-time-frozen snapshot. Update the single call site in useAppInitialization to pass a getter that reads the current areas source. Pure domain change with no I/O.",
+          "files_to_modify": [
+            "src/domain/trip.ts",
+            "src/hooks/useAppInitialization.ts",
+            "src/domain/trip.test.ts"
+          ],
+          "implementation_notes": "RED: add failing test in src/domain/trip.test.ts that demonstrates totalAreas staleness under the current signature, then rewrite to the new getter signature so the assertion shape is 'getter reads live value'. GREEN: change tripAreas constant to a call site in getSweepProgress and anywhere else totalAreas/tripAreas length is computed (RCA cites trip.ts:96-97,201). REFACTOR (in scope only): rename internal parameter if clarity improves. Keep functional paradigm: factory function + closure over getter. Do not introduce classes. Do not subscribe or observe in domain; the getter is the live-read mechanism.",
+          "dependencies": [],
+          "estimated_hours": 1.0,
+          "deliverables": [
+            "Updated createTrip signature with areasGetter parameter.",
+            "Updated useAppInitialization.ts passing a getter to createTrip.",
+            "Passing regression tests in src/domain/trip.test.ts covering live-read semantics."
+          ],
+          "id": "01-01",
+          "criteria": "createTrip in src/domain/trip.ts accepts a getter function () => string[] as its second argument (typed, not any).; getSweepProgress().totalAreas returns the length produced by invoking the getter at call time, not a value captured at createTrip time.; Regression test in src/domain/trip.test.ts: given a mutable areas array and a getter closing over it, createTrip(storage, getter) initially reports totalAreas equal to the array length; after mutating the underlying array, getSweepProgress().totalAreas reflects the new length without recreating the trip service.; Regression test: createTrip(storage, () => []) yields getSweepProgress().totalAreas === 0; later the same service instance with a getter returning ['A','B'] yields totalAreas === 2 (verified by swapping getters through a wrapper or re-invoking with a closure that mutates).; useAppInitialization.ts call site updated to pass a getter; no TypeScript errors under strict mode.; All existing trip.test.ts tests continue to pass (migrated to the new signature where needed)."
+        },
+        {
+          "name": "Port + adapter subscribe contract on AreaStorage",
+          "description": "Add a subscribe(listener: () => void): () => void method to the AreaStorage port. Implement it in the Firestore adapter by wiring listeners to the existing handleSnapshot path so remote changes fan out. Implement it in the AsyncStorage adapter as a safe no-op returning an unsubscribe function. This is the reactive foundation that 01-03 will consume.",
+          "files_to_modify": [
+            "src/ports/area-storage.ts",
+            "src/adapters/firestore/firestore-area-storage.ts",
+            "src/adapters/async-storage/async-area-storage.ts",
+            "src/adapters/firestore/firestore-area-storage.test.ts",
+            "src/adapters/async-storage/async-area-storage.test.ts"
+          ],
+          "implementation_notes": "RED: write Firestore adapter test first that constructs the adapter, registers a listener via subscribe, fires a simulated snapshot event, and asserts the listener was called. GREEN: maintain a listener set inside the adapter factory closure; invoke all listeners from the existing handleSnapshot function. Unsubscribe removes the listener from the set. For AsyncStorage, subscribe(_) returns () => {} (a no-op unsub) because AsyncStorage has no remote change source. Functional paradigm: factory closure over a Set<() => void>. No classes.",
+          "dependencies": [],
+          "estimated_hours": 1.5,
+          "deliverables": [
+            "AreaStorage port updated with subscribe contract.",
+            "Firestore adapter implementation wired to existing snapshot handler with passing listener-fanout test.",
+            "AsyncStorage adapter no-op implementation with passing contract test."
+          ],
+          "id": "01-02",
+          "criteria": "src/ports/area-storage.ts exports an AreaStorage type whose contract includes subscribe(listener: () => void): () => void returning an unsubscribe function.; Firestore adapter test in src/adapters/firestore/firestore-area-storage.test.ts: given a subscribed listener, when the adapter's Firestore snapshot handler is triggered with updated data, the listener is invoked at least once; after unsubscribe, further snapshots do not invoke the listener.; Firestore adapter implementation hooks into the same handleSnapshot code path referenced by RCA (firestore-area-storage.ts:57-60) so listeners fire on remote cache mutation.; AsyncStorage adapter test in src/adapters/async-storage/async-area-storage.test.ts: subscribe(fn) returns a function; calling that function does not throw; the adapter never crashes whether or not a listener is present.; No domain file imports adapter modules (ports-and-adapters invariant preserved).; TypeScript strict mode passes; no any types introduced on the port surface."
+        },
+        {
+          "name": "Hook reactivity: useAreas subscribes; useAppInitialization wires onChange",
+          "description": "Make useAreas reactive by subscribing via useEffect to areaStorage changes through the area-management pass-through. Wire handleAreaChange in useAppInitialization (mirroring the existing staples pattern at line 166 and trip pattern at line 169 per RCA). Expose a subscribe pass-through in area-management so the hook does not import adapters.",
+          "files_to_modify": [
+            "src/hooks/useAreas.ts",
+            "src/hooks/useAppInitialization.ts",
+            "src/domain/area-management.ts",
+            "src/hooks/useAreas.test.ts"
+          ],
+          "implementation_notes": "RED: write the useAreas reactivity test using a fake AreaStorage that exposes a trigger for its subscribe listeners. Render the hook via @testing-library/react-native's renderHook, trigger the storage change, assert the returned list is updated. GREEN: inside useAreas add a useState seeded from areaManagement.getAreas(), a useEffect that subscribes via areaManagement.subscribe(listener) where listener re-reads getAreas() and setState; effect returns the unsubscribe function. In useAppInitialization add handleAreaChange (mirrors handleStapleChange) and pass it as onChange when constructing the area storage. Keep factories/closures throughout.",
+          "dependencies": [
+            "01-02"
+          ],
+          "estimated_hours": 2.0,
+          "deliverables": [
+            "Reactive useAreas hook with passing mount/update/unmount test.",
+            "useAppInitialization wired with handleAreaChange and onChange mirroring staples.",
+            "area-management subscribe pass-through preserving ports-and-adapters invariant."
+          ],
+          "id": "01-03",
+          "criteria": "useAreas re-renders and returns the updated list when the underlying areaStorage emits a change, without the hook unmounting or the consumer recreating the component.; Regression test in src/hooks/useAreas.test.ts (or equivalent test file colocated with the hook): mount the hook with a test storage, trigger storage change (via the test storage's listener fan-out), assert the hook's returned areas match the new value on next render.; Subscribe and unsubscribe are symmetric: a second test asserts the hook unmount cleans up the subscription (no listener remains on the storage).; useAppInitialization.ts constructs area storage with onChange passed through (mirroring stapleStorage and tripStorage) and supplies handleAreaChange that invokes the notification path.; src/domain/area-management.ts exposes a subscribe pass-through so consumers (the hook) can register listeners without importing adapters directly. Domain still does not import adapters.; All prior tests remain green; no regressions in useTrip or useStaples behaviour."
+        },
+        {
+          "name": "Firestore adapter empty-doc default seeding",
+          "description": "When the Firestore areas document is empty or missing, loadAll() must return DEFAULT_HOUSE_AREAS, symmetric to the AsyncStorage adapter behaviour at async-area-storage.ts:48-52. This protects fresh users and users whose Listen channel is blocked by a browser extension (the ERR_BLOCKED_BY_CLIENT case noted in the RCA as not-the-trigger but still a latent source of empty state).",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-area-storage.ts",
+            "src/adapters/firestore/firestore-area-storage.test.ts"
+          ],
+          "implementation_notes": "RED: add the three tests above first. GREEN: in loadAll() branch on snapshot.exists and on the parsed areas array length, returning DEFAULT_HOUSE_AREAS when empty/missing. Mirror the shape of async-area-storage.ts:48-52 so the two adapters remain behaviourally symmetric. Do not alter save/subscribe paths in this step.",
+          "dependencies": [
+            "01-03"
+          ],
+          "estimated_hours": 1.0,
+          "deliverables": [
+            "Firestore adapter loadAll() returning DEFAULT_HOUSE_AREAS on empty/missing doc.",
+            "Passing adapter tests for empty, missing, and populated document cases."
+          ],
+          "id": "01-04",
+          "criteria": "Regression test in src/adapters/firestore/firestore-area-storage.test.ts: given a Firestore mock that returns an empty document (exists true, data {}), loadAll() resolves to DEFAULT_HOUSE_AREAS.; Regression test: given a Firestore mock that returns a missing document (exists false), loadAll() resolves to DEFAULT_HOUSE_AREAS.; Regression test: given a Firestore mock that returns a document with a non-empty areas array, loadAll() resolves to that array (defaults do not override real data).; No change to the non-empty happy path of the adapter; existing tests continue to pass.; DEFAULT_HOUSE_AREAS is imported from the same source of truth used by the AsyncStorage adapter (single definition, no duplication)."
+        },
+        {
+          "name": "AppShell visibility toggle + ErrorBoundary",
+          "description": "Replace AppShell's conditional mount ({viewMode === 'home' ? <HomeView /> : <StoreView />}) with a visibility toggle: both views mounted simultaneously, controlled via the style.display prop ('flex' vs 'none'). Wrap AppShell in an ErrorBoundary in App.tsx so render errors surface a fallback UI instead of a silent empty screen.",
+          "files_to_modify": [
+            "src/ui/AppShell.tsx",
+            "App.tsx",
+            "tests/regression/ui/view-switch-preserves-home.test.tsx"
+          ],
+          "implementation_notes": "RED: write the view-switch-preserves-home regression test first. It should render AppShell with a store containing staples and areas, assert the Home-side area section is present (e.g. getByText('Fridge') or a testID on the section wrapper), fire the viewMode toggle to 'store', fire it back to 'home', and re-assert the area section is still present. Without fix 01-05 this test fails because HomeView remounts with a possibly-stale cache. GREEN: change AppShell's render to <View style={{display: viewMode === 'home' ? 'flex' : 'none'}}><HomeView /></View> and the symmetric StoreView wrapper. Both are mounted; neither unmounts on toggle. ErrorBoundary: React requires a class for componentDidCatch / getDerivedStateFromError; this is the documented exception to the functional-only rule. Alternatively use react-error-boundary if it is already a dependency. In App.tsx wrap <AppShell /> with <ErrorBoundary fallback={...}>.",
+          "dependencies": [],
+          "estimated_hours": 1.5,
+          "deliverables": [
+            "AppShell.tsx using display-based visibility toggle for both views.",
+            "ErrorBoundary component and App.tsx wrapping AppShell with it.",
+            "Passing regression test tests/regression/ui/view-switch-preserves-home.test.tsx.",
+            "Passing ErrorBoundary unit test."
+          ],
+          "id": "01-05",
+          "criteria": "Regression test in tests/regression/ui/view-switch-preserves-home.test.tsx: render AppShell with areas and items in test storage; assert area section visible on Home; toggle viewMode to Store; toggle back to Home; assert the area section is still visible and HomeView was not unmounted between toggles.; AppShell renders both HomeView and StoreView simultaneously, with only one visible at a time via display: 'flex' vs display: 'none' on wrapper Views.; ErrorBoundary component wraps AppShell at the App.tsx level; when its child throws during render, the fallback UI is shown instead of a blank screen.; ErrorBoundary unit test: render ErrorBoundary around a component that throws; assert the fallback UI is rendered and the thrown error is surfaced in the fallback message or a visible state.; Functional paradigm preserved: ErrorBoundary is the one permitted class (React API requires it) or implemented via react-error-boundary if available; document choice in implementation notes.; No regressions in existing AppShell tests; viewMode toggle continues to update which view is visible."
+        }
+      ],
+      "id": "01"
+    }
+  ],
+  "execution_order": [
+    "01-01",
+    "01-02",
+    "01-03",
+    "01-04",
+    "01-05"
+  ],
+  "validation": {
+    "status": "approved",
+    "note": "bug-fix scope, no DISTILL; RCA user-approved; automated gates pass"
+  },
+  "roadmap": {
+    "project_id": "fix-home-blank-after-tab-return",
+    "created_at": "2026-04-24T19:48:43.451210+00:00",
+    "total_steps": 5
+  },
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain",
+      "src/ports",
+      "src/adapters",
+      "src/hooks",
+      "src/ui",
+      "App.tsx",
+      "tests/regression"
+    ]
+  }
+}

@@ -7,6 +7,7 @@ import { useAuth } from './src/hooks/useAuth';
 import { createAuthService } from './src/auth/AuthService';
 import { ServiceProvider } from './src/ui/ServiceProvider';
 import { AppShell } from './src/ui/AppShell';
+import { ErrorBoundary } from './src/ui/ErrorBoundary';
 import { LoadingScreen } from './src/ui/LoadingScreen';
 import { LoginScreen } from './src/ui/LoginScreen';
 
@@ -53,7 +54,9 @@ export default function App() {
           areaManagement={services.areaManagement}
           sectionOrderStorage={services.sectionOrderStorage}
         >
-          <AppShell signOut={signOut} />
+          <ErrorBoundary>
+            <AppShell signOut={signOut} />
+          </ErrorBoundary>
         </ServiceProvider>
         <StatusBar style="auto" />
       </View>
