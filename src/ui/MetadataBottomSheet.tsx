@@ -159,7 +159,6 @@ export const MetadataBottomSheet = ({
 
     if (selectedArea === null) return;
 
-    // Check for duplicate staple before submitting
     if (onFindDuplicate) {
       const existing = onFindDuplicate(itemName, selectedArea);
       if (existing) {
