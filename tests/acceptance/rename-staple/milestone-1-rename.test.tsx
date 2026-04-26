@@ -175,7 +175,7 @@ describe('M1-RS-3: Duplicate name in same area is rejected with inline error', (
 // M1-RS-4: Same name in a different area is allowed
 // =============================================================================
 
-describe.skip('M1-RS-4: Same name in a different area is allowed', () => {
+describe('M1-RS-4: Same name in a different area is allowed', () => {
   // AC6: Renaming to a name that exists in a different area is allowed; both
   //      staples coexist. Duplicate check is name+area, not just name.
   // Trace: US-RS-01 AC6
