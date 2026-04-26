@@ -98,7 +98,7 @@ describe('M1-RS-1: Empty name is rejected with inline error', () => {
 // M1-RS-2: Whitespace-only name is rejected with inline error
 // =============================================================================
 
-describe.skip('M1-RS-2: Whitespace-only name is rejected with inline error', () => {
+describe('M1-RS-2: Whitespace-only name is rejected with inline error', () => {
   // AC4: Whitespace-only name (after trim) causes the sheet to stay open
   //      with inline error "Name is required". The staple is not modified.
   // Trace: US-RS-01 AC4 (whitespace branch — collapses into AC4 via trim())
