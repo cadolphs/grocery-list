@@ -46,6 +46,10 @@ const filterSectionSuggestions = (
   return sections.filter((s) => s.toLowerCase().startsWith(lowerQuery));
 };
 
+const sortSectionsAlphabetically = (
+  sections: readonly string[],
+): readonly string[] => [...sections].sort((a, b) => a.localeCompare(b));
+
 export const MetadataBottomSheet = ({
   visible,
   itemName,
@@ -335,19 +339,27 @@ export const MetadataBottomSheet = ({
             autoFocus={isWeb}
           />
 
-          {sectionSuggestions.length > 0 && (
-            <View style={styles.sectionSuggestions}>
-              {sectionSuggestions.map((sectionName) => (
-                <Pressable
-                  key={sectionName}
-                  style={styles.sectionSuggestionItem}
-                  onPress={() => handleSelectSectionSuggestion(sectionName)}
-                >
-                  <Text style={styles.sectionSuggestionText}>{sectionName}</Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
+          {(() => {
+            const sortedSections = sortSectionsAlphabetically(existingSections);
+            const showFullList = section === '' && sortedSections.length > 0;
+            const showFiltered = section !== '' && sectionSuggestions.length > 0;
+            const dropdownVisible = mode === 'add' && (showFullList || showFiltered);
+            if (!dropdownVisible) return null;
+            const rowsToRender = showFullList ? sortedSections : sectionSuggestions;
+            return (
+              <View style={styles.sectionSuggestions}>
+                {rowsToRender.map((sectionName) => (
+                  <Pressable
+                    key={sectionName}
+                    style={styles.sectionSuggestionItem}
+                    onPress={() => handleSelectSectionSuggestion(sectionName)}
+                  >
+                    <Text style={styles.sectionSuggestionText}>{sectionName}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            );
+          })()}
 
           <TextInput
             style={styles.input}
