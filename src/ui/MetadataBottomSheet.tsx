@@ -151,9 +151,18 @@ export const MetadataBottomSheet = ({
   const handleSaveEdit = (): void => {
     if (selectedArea === null || !editStapleId || !onSaveEdit) return;
 
-    if (editedName.trim() === '') {
+    const trimmedName = editedName.trim();
+    if (trimmedName === '') {
       setNameError('Name is required');
       return;
+    }
+
+    if (onFindDuplicate) {
+      const existing = onFindDuplicate(trimmedName, selectedArea);
+      if (existing && existing.id !== editStapleId) {
+        setNameError(`"${trimmedName}" already exists in ${selectedArea}`);
+        return;
+      }
     }
 
     const storeLocation = {

@@ -129,7 +129,7 @@ describe('M1-RS-2: Whitespace-only name is rejected with inline error', () => {
 // M1-RS-3: Duplicate name in same area is rejected with inline error
 // =============================================================================
 
-describe.skip('M1-RS-3: Duplicate name in same area is rejected with inline error', () => {
+describe('M1-RS-3: Duplicate name in same area is rejected with inline error', () => {
   // AC5: Renaming to a name that already exists for another staple in the
   //      same area causes the sheet to stay open with inline error
   //      `"<name>" already exists in <area>`. The staple is not modified.
