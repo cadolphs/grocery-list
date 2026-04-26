@@ -145,7 +145,7 @@ describe('M1-SC-4: Dropdown rows are alphabetical', () => {
 // M1-SC-5: Edit mode pre-fill behaviour is unchanged
 // =============================================================================
 
-describe.skip('M1-SC-5: Edit mode preserves current pre-fill behaviour', () => {
+describe('M1-SC-5: Edit mode preserves current pre-fill behaviour', () => {
   // AC6: Edit-mode pre-filled section behaviour is unchanged
   // Trace: US-SC-01 AC6
 
