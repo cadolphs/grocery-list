@@ -50,6 +50,36 @@ const sortSectionsAlphabetically = (
   sections: readonly string[],
 ): readonly string[] => [...sections].sort((a, b) => a.localeCompare(b));
 
+type SectionDropdownState =
+  | { readonly kind: 'hidden' }
+  | { readonly kind: 'empty-hint' }
+  | { readonly kind: 'list'; readonly rows: readonly string[] };
+
+const decideSectionDropdownState = (
+  mode: EditMode,
+  query: string,
+  existingSections: readonly string[],
+  filteredSuggestions: readonly string[],
+): SectionDropdownState => {
+  if (mode !== 'add') return { kind: 'hidden' };
+
+  const isQueryEmpty = query === '';
+
+  if (isQueryEmpty && existingSections.length === 0) {
+    return { kind: 'empty-hint' };
+  }
+
+  if (isQueryEmpty && existingSections.length > 0) {
+    return { kind: 'list', rows: sortSectionsAlphabetically(existingSections) };
+  }
+
+  if (!isQueryEmpty && filteredSuggestions.length > 0) {
+    return { kind: 'list', rows: sortSectionsAlphabetically(filteredSuggestions) };
+  }
+
+  return { kind: 'hidden' };
+};
+
 export const MetadataBottomSheet = ({
   visible,
   itemName,
@@ -339,12 +369,14 @@ export const MetadataBottomSheet = ({
           />
 
           {(() => {
-            const sortedSections = sortSectionsAlphabetically(existingSections);
-            const showFullList = section === '' && sortedSections.length > 0;
-            const showFiltered = section !== '' && sectionSuggestions.length > 0;
-            const showEmptyHint = mode === 'add' && section === '' && existingSections.length === 0;
-            const dropdownVisible = mode === 'add' && (showFullList || showFiltered);
-            if (showEmptyHint) {
+            const dropdownState = decideSectionDropdownState(
+              mode,
+              section,
+              existingSections,
+              sectionSuggestions,
+            );
+            if (dropdownState.kind === 'hidden') return null;
+            if (dropdownState.kind === 'empty-hint') {
               return (
                 <View style={styles.sectionSuggestions}>
                   <Text style={styles.sectionEmptyHint}>
@@ -353,13 +385,9 @@ export const MetadataBottomSheet = ({
                 </View>
               );
             }
-            if (!dropdownVisible) return null;
-            const rowsToRender = sortSectionsAlphabetically(
-              showFullList ? sortedSections : sectionSuggestions,
-            );
             return (
               <View style={styles.sectionSuggestions}>
-                {rowsToRender.map((sectionName) => (
+                {dropdownState.rows.map((sectionName) => (
                   <Pressable
                     key={sectionName}
                     testID={`section-suggestion-${sectionName}`}
