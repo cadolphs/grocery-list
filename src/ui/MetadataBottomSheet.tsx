@@ -343,7 +343,17 @@ export const MetadataBottomSheet = ({
             const sortedSections = sortSectionsAlphabetically(existingSections);
             const showFullList = section === '' && sortedSections.length > 0;
             const showFiltered = section !== '' && sectionSuggestions.length > 0;
+            const showEmptyHint = mode === 'add' && section === '' && existingSections.length === 0;
             const dropdownVisible = mode === 'add' && (showFullList || showFiltered);
+            if (showEmptyHint) {
+              return (
+                <View style={styles.sectionSuggestions}>
+                  <Text style={styles.sectionEmptyHint}>
+                    No saved sections yet — type a new one.
+                  </Text>
+                </View>
+              );
+            }
             if (!dropdownVisible) return null;
             const rowsToRender = sortSectionsAlphabetically(
               showFullList ? sortedSections : sectionSuggestions,
@@ -501,6 +511,12 @@ const styles = StyleSheet.create({
   sectionSuggestionText: {
     fontSize: 14,
     color: theme.color.text,
+  },
+  sectionEmptyHint: {
+    fontSize: 14,
+    color: theme.color.textMuted,
+    padding: 12,
+    fontStyle: 'italic',
   },
   addButton: {
     backgroundColor: theme.color.accent,

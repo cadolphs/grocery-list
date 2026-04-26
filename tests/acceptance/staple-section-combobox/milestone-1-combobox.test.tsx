@@ -92,7 +92,7 @@ describe('M1-SC-2: Free-text new section is persisted', () => {
 // M1-SC-3: Empty existingSections shows hint
 // =============================================================================
 
-describe.skip('M1-SC-3: Empty library shows hint, field stays editable', () => {
+describe('M1-SC-3: Empty library shows hint, field stays editable', () => {
   // AC5: Empty existingSections shows hint instead of empty list
   // Trace: US-SC-01 AC5
 
