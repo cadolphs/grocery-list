@@ -112,6 +112,10 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
         return { success: false, error: `Staple with id "${id}" not found` };
       }
 
+      if (changes.name !== undefined && changes.name.trim() === '') {
+        return { success: false, error: 'name is required' };
+      }
+
       const updatedHouseArea = changes.houseArea ?? staple.houseArea;
       const updatedStoreLocation = changes.storeLocation ?? staple.storeLocation;
 

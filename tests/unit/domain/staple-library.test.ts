@@ -70,6 +70,49 @@ describe('staple library', () => {
     });
   });
 
+  describe('updateStaple', () => {
+    it('rejects rename to empty name with an error result', () => {
+      const storage = createNullStapleStorage();
+      const library = createStapleLibrary(storage);
+
+      library.addStaple({
+        name: 'Milkk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      });
+      const stapleId = library.listAll()[0].id;
+
+      const result = library.updateStaple(stapleId, { name: '' });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('name is required');
+      }
+      // Staple is unchanged
+      expect(library.listAll()[0].name).toBe('Milkk');
+    });
+
+    it('rejects rename to whitespace-only name with an error result', () => {
+      const storage = createNullStapleStorage();
+      const library = createStapleLibrary(storage);
+
+      library.addStaple({
+        name: 'Milkk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      });
+      const stapleId = library.listAll()[0].id;
+
+      const result = library.updateStaple(stapleId, { name: '   ' });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('name is required');
+      }
+      expect(library.listAll()[0].name).toBe('Milkk');
+    });
+  });
+
   describe('addOneOff', () => {
     it('adds a one-off item with type one-off and empty houseArea', () => {
       const storage = createNullStapleStorage();

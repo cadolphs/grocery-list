@@ -113,6 +113,7 @@ export const MetadataBottomSheet = ({
   const [aisleText, setAisleText] = useState('');
   const [sheetMode, setSheetMode] = useState<SheetMode>('form');
   const [duplicateStaple, setDuplicateStaple] = useState<StapleItem | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Re-initialize defaults when sheet opens or defaults change
   useEffect(() => {
@@ -133,6 +134,7 @@ export const MetadataBottomSheet = ({
       setSectionSuggestions([]);
       setSheetMode('form');
       setDuplicateStaple(null);
+      setNameError(null);
     }
   }, [visible, defaultItemType, defaultArea, isEditMode, initialValues, itemName]);
 
@@ -148,6 +150,11 @@ export const MetadataBottomSheet = ({
 
   const handleSaveEdit = (): void => {
     if (selectedArea === null || !editStapleId || !onSaveEdit) return;
+
+    if (editedName.trim() === '') {
+      setNameError('Name is required');
+      return;
+    }
 
     const storeLocation = {
       section,
@@ -300,12 +307,20 @@ export const MetadataBottomSheet = ({
 
           {/* Name field - only shown in edit mode (rename) */}
           {isEditMode && (
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              value={editedName}
-              onChangeText={setEditedName}
-            />
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={editedName}
+                onChangeText={(text) => {
+                  setEditedName(text);
+                  if (nameError !== null) setNameError(null);
+                }}
+              />
+              {nameError !== null && (
+                <Text style={styles.inlineError}>{nameError}</Text>
+              )}
+            </>
           )}
 
           {/* Type toggle - hidden in edit mode */}
@@ -530,6 +545,13 @@ const styles = StyleSheet.create({
     color: theme.color.text,
     backgroundColor: theme.color.surface,
     marginBottom: 12,
+  },
+  inlineError: {
+    color: theme.color.accentDark,
+    fontSize: 13,
+    marginTop: -8,
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
   duplicateMessage: {
     fontSize: 16,
