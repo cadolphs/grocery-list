@@ -65,7 +65,7 @@ Gate verdict: PASS.
 
 ## Adversarial Review
 
-Not run. Scope was a single-field UX behaviour change with all six ACs pre-specified in `user-stories.md` and traced 1-to-1 to acceptance tests in `distill/wave-decisions.md` (DWD acceptance trace). No open design question for a reviewer to probe; the dropdown-visibility branching was the sole decision point and was captured by WS-SC-1 + M1-SC-3 + M1-SC-5 between them.
+Run via `@nw-software-crafter-reviewer`. Verdict: **APPROVED** with high confidence. All seven Testing Theater patterns (tautological tests, mock theater, coverage theater, implementation coupling, selective assertion, fixture theater, order-dependence) scanned **CLEAN**. AC-to-test mapping verified 7/7 with no orphans. Wiring smoke check PASS — every helper (`sortSectionsAlphabetically`, `decideSectionDropdownState`, `filterSectionSuggestions`, `handleSelectSectionSuggestion`) reachable from production render path, not test-only. L3 refactor (`af29cfb`) preserved all six acceptance scenarios; previous early-return on empty `sectionSuggestions` confirmed removed (not hidden). DWD-6 (free-text preserved) and `mode === 'add'` edit-mode gate independently verified at the call sites.
 
 ## Mutation Testing
 
