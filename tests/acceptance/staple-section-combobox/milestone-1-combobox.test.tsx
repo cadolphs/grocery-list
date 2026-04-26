@@ -63,7 +63,7 @@ describe('M1-SC-1: Typing filters the section dropdown', () => {
 // M1-SC-2: Free-text new section saves successfully
 // =============================================================================
 
-describe.skip('M1-SC-2: Free-text new section is persisted', () => {
+describe('M1-SC-2: Free-text new section is persisted', () => {
   // AC4: Saving with a new section persists the new value (no validation block)
   // Trace: US-SC-01 AC4
 
