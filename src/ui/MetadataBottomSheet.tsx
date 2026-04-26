@@ -12,6 +12,7 @@ type SheetMode = 'form' | 'duplicate-warning';
 type EditMode = 'add' | 'edit';
 
 type EditInitialValues = {
+  readonly name?: string;
   readonly houseArea: HouseArea;
   readonly section: string;
   readonly aisleNumber: number | null;
@@ -32,7 +33,7 @@ type MetadataBottomSheetProps = {
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitOneOff?: (request: AddOneOffRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
-  readonly onSaveEdit?: (stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => void;
+  readonly onSaveEdit?: (stapleId: string, changes: { name?: string; houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => void;
   readonly onDeleteStaple?: (stapleId: string) => void;
 };
 
@@ -106,6 +107,7 @@ export const MetadataBottomSheet = ({
 
   const [selectedType, setSelectedType] = useState<ItemTypeSelection>(defaultItemType ?? 'Staple');
   const [selectedArea, setSelectedArea] = useState<HouseArea | null>(resolveDefaultArea());
+  const [editedName, setEditedName] = useState('');
   const [section, setSection] = useState('');
   const [sectionSuggestions, setSectionSuggestions] = useState<readonly string[]>([]);
   const [aisleText, setAisleText] = useState('');
@@ -118,11 +120,13 @@ export const MetadataBottomSheet = ({
       if (isEditMode && initialValues) {
         setSelectedType('Staple');
         setSelectedArea(initialValues.houseArea);
+        setEditedName(initialValues.name ?? itemName);
         setSection(initialValues.section);
         setAisleText(initialValues.aisleNumber !== null ? String(initialValues.aisleNumber) : '');
       } else {
         setSelectedType(defaultItemType ?? 'Staple');
         setSelectedArea(resolveDefaultArea());
+        setEditedName('');
         setSection('');
         setAisleText('');
       }
@@ -130,7 +134,7 @@ export const MetadataBottomSheet = ({
       setSheetMode('form');
       setDuplicateStaple(null);
     }
-  }, [visible, defaultItemType, defaultArea, isEditMode, initialValues]);
+  }, [visible, defaultItemType, defaultArea, isEditMode, initialValues, itemName]);
 
   const handleSectionChange = (text: string): void => {
     setSection(text);
@@ -151,6 +155,7 @@ export const MetadataBottomSheet = ({
     };
 
     onSaveEdit(editStapleId, {
+      name: editedName,
       houseArea: selectedArea,
       storeLocation,
     });
@@ -292,6 +297,16 @@ export const MetadataBottomSheet = ({
           ) : (
             <>
           <Text style={styles.title}>{isEditMode ? `Edit '${itemName}'` : `Add '${itemName}'`}</Text>
+
+          {/* Name field - only shown in edit mode (rename) */}
+          {isEditMode && (
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={editedName}
+              onChangeText={setEditedName}
+            />
+          )}
 
           {/* Type toggle - hidden in edit mode */}
           {!isEditMode && (

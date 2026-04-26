@@ -5,6 +5,7 @@ import { StapleItem, AddStapleRequest, AddOneOffRequest, AddStapleResult, HouseA
 import { StapleStorage } from '../ports/staple-storage';
 
 export type UpdateStapleChanges = {
+  readonly name?: string;
   readonly houseArea?: HouseArea;
   readonly storeLocation?: StoreLocation;
 };
