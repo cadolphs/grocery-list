@@ -345,12 +345,15 @@ export const MetadataBottomSheet = ({
             const showFiltered = section !== '' && sectionSuggestions.length > 0;
             const dropdownVisible = mode === 'add' && (showFullList || showFiltered);
             if (!dropdownVisible) return null;
-            const rowsToRender = showFullList ? sortedSections : sectionSuggestions;
+            const rowsToRender = sortSectionsAlphabetically(
+              showFullList ? sortedSections : sectionSuggestions,
+            );
             return (
               <View style={styles.sectionSuggestions}>
                 {rowsToRender.map((sectionName) => (
                   <Pressable
                     key={sectionName}
+                    testID={`section-suggestion-${sectionName}`}
                     style={styles.sectionSuggestionItem}
                     onPress={() => handleSelectSectionSuggestion(sectionName)}
                   >
