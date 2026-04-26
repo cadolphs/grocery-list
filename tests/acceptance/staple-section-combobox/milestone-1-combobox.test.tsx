@@ -42,7 +42,7 @@ const renderSheet = (overrides: Partial<React.ComponentProps<typeof MetadataBott
 // M1-SC-1: Typing filters the dropdown (existing behaviour preserved)
 // =============================================================================
 
-describe.skip('M1-SC-1: Typing filters the section dropdown', () => {
+describe('M1-SC-1: Typing filters the section dropdown', () => {
   // AC3: Typing characters filters dropdown via case-insensitive prefix match
   // Trace: US-SC-01 AC3
 
