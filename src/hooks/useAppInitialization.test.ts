@@ -553,6 +553,179 @@ describe('initializeApp', () => {
       expect(tripService.getItems().map(i => i.name)).toContain('Soap');
     });
   });
+
+  // RCA root cause B: local stapleLibrary.remove must drive trip cleanup via the
+  // domain's own subscribe seam, independent of stapleStorage.onChange (which
+  // the Firestore adapter suppresses for own-write echoes). These tests use a
+  // real stapleLibrary and a real tripService -- only stapleStorage is faked,
+  // and its onChange is captured but never auto-invoked.
+  describe('local stapleLibrary.remove triggers trip cleanup via domain subscription', () => {
+    test('local stapleLibrary.remove removes a trip item linked by stapleId', async () => {
+      const authUser: AuthUser = { uid: 'user-local-remove', email: 'lr@l.com' };
+
+      let capturedOnChange: (() => void) | undefined;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          // Real seed: one staple, captured onChange that we WILL NOT auto-fire.
+          const storage = createNullStapleStorage(
+            [{ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }],
+            { onChange: options?.onChange },
+          );
+          capturedOnChange = options?.onChange;
+          return { ...storage, initialize: async () => {} };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      expect(result.isReady).toBe(true);
+      const { stapleLibrary, tripService } = result.services!;
+
+      // Trip starts with the seeded staple item linked by stapleId.
+      const before = tripService.getItems();
+      expect(before).toHaveLength(1);
+      const milkStaple = stapleLibrary.listAll().find(s => s.name === 'Milk')!;
+      expect(before[0].stapleId).toBe(milkStaple.id);
+
+      // Drive locally: stapleLibrary.remove (NO storage.onChange invocation).
+      stapleLibrary.remove(milkStaple.id);
+
+      // The trip item must be gone -- proves the domain subscription is wired.
+      expect(tripService.getItems()).toHaveLength(0);
+      // And we never relied on the storage echo path:
+      expect(capturedOnChange).toBeDefined();
+    });
+
+    test('local stapleLibrary.remove also removes trip items matched by name+houseArea fallback (proves removeItemsByStaple wiring)', async () => {
+      const authUser: AuthUser = { uid: 'user-fallback', email: 'fb@f.com' };
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          const storage = createNullStapleStorage(
+            [{ name: 'Cinnamon', houseArea: 'Pantry', storeLocation: { section: 'Spices', aisleNumber: 5 } }],
+            { onChange: options?.onChange },
+          );
+          return { ...storage, initialize: async () => {} };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      expect(result.isReady).toBe(true);
+      const { stapleLibrary, tripService } = result.services!;
+
+      // Seed an additional, legacy-style trip item with stapleId=null but
+      // matching name + houseArea + itemType='staple'. This is the fallback
+      // identity that ONLY removeItemsByStaple (not removeItemByStapleId)
+      // can clean up.
+      const addResult = tripService.addItem({
+        name: 'Cinnamon',
+        houseArea: 'Pantry',
+        storeLocation: { section: 'Spices', aisleNumber: 5 },
+        itemType: 'staple',
+        source: 'carryover',
+        // stapleId intentionally omitted -> stored as null
+      });
+      expect(addResult.success).toBe(true);
+
+      const before = tripService.getItems();
+      // 1 from initializeFromStorage (with stapleId) + 1 fallback (stapleId=null)
+      expect(before).toHaveLength(2);
+      const fallbackItem = before.find(i => i.stapleId === null);
+      expect(fallbackItem).toBeDefined();
+      expect(fallbackItem!.name).toBe('Cinnamon');
+
+      // Drive locally.
+      const cinnamonStaple = stapleLibrary.listAll().find(s => s.name === 'Cinnamon')!;
+      stapleLibrary.remove(cinnamonStaple.id);
+
+      // Both items must be gone: id-linked and fallback-matched.
+      const after = tripService.getItems();
+      expect(after).toHaveLength(0);
+    });
+
+    test('after unsubscribeAll, local stapleLibrary.remove does NOT mutate tripService', async () => {
+      const authUser: AuthUser = { uid: 'user-unsub', email: 'un@u.com' };
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          const storage = createNullStapleStorage(
+            [{ name: 'Soda', houseArea: 'Pantry', storeLocation: { section: 'Beverages', aisleNumber: 6 } }],
+            { onChange: options?.onChange },
+          );
+          return { ...storage, initialize: async () => {} };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      expect(result.isReady).toBe(true);
+      const { stapleLibrary, tripService } = result.services!;
+      expect(tripService.getItems()).toHaveLength(1);
+
+      // Tear down all subscriptions.
+      result.unsubscribeAll!();
+
+      // After teardown, removing a staple should NOT touch the trip.
+      const sodaStaple = stapleLibrary.listAll().find(s => s.name === 'Soda')!;
+      stapleLibrary.remove(sodaStaple.id);
+
+      // Trip is unchanged: subscription was unwired.
+      const after = tripService.getItems();
+      expect(after).toHaveLength(1);
+      expect(after[0].name).toBe('Soda');
+    });
+
+    test('double-fire (delayed Firestore echo) is idempotent: stapleLibrary.remove + manual onChange replay does not double-mutate', async () => {
+      const authUser: AuthUser = { uid: 'user-double', email: 'd@d.com' };
+
+      let capturedOnChange: (() => void) | undefined;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+          const storage = createNullStapleStorage(
+            [
+              { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+              { name: 'Bread', houseArea: 'Pantry', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+            ],
+            { onChange: options?.onChange },
+          );
+          capturedOnChange = options?.onChange;
+          return { ...storage, initialize: async () => {} };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      expect(result.isReady).toBe(true);
+      const { stapleLibrary, tripService } = result.services!;
+
+      expect(tripService.getItems()).toHaveLength(2);
+
+      // First fire: local stapleLibrary.remove drives the domain subscription
+      // and removes Milk from the trip.
+      const milkStaple = stapleLibrary.listAll().find(s => s.name === 'Milk')!;
+      stapleLibrary.remove(milkStaple.id);
+
+      const afterFirst = tripService.getItems();
+      expect(afterFirst).toHaveLength(1);
+      expect(afterFirst[0].name).toBe('Bread');
+
+      // Second fire (simulated delayed Firestore echo): manually invoke the
+      // captured stapleStorage.onChange. previousStaples has been advanced by
+      // the first fire, so diffStaples sees no removed/added/updated entries
+      // and removeItemsByStaple is never called again.
+      capturedOnChange!();
+
+      // Observable surface unchanged: still exactly the Bread item, no
+      // duplicate removal, no inadvertent re-add.
+      const afterSecond = tripService.getItems();
+      expect(afterSecond).toHaveLength(1);
+      expect(afterSecond[0].name).toBe('Bread');
+      expect(afterSecond[0].id).toBe(afterFirst[0].id);
+    });
+  });
 });
 
 // Helper: build a StapleItem for diff tests

@@ -229,7 +229,7 @@ export const initializeApp = async (
       }
 
       for (const staple of removed) {
-        tripService.removeItemByStapleId(staple.id);
+        tripService.removeItemsByStaple(staple);
       }
 
       // Propagate field updates (houseArea / storeLocation) from staple edits
@@ -246,11 +246,21 @@ export const initializeApp = async (
       previousStaples = currentStaples;
     };
 
+    // Reactivity wiring: subscribe to the stapleLibrary's own change seam so
+    // that LOCAL deletes (UI-driven `stapleLibrary.remove`) drive trip cleanup
+    // even when the Firestore adapter suppresses its own-write echo via
+    // `stapleStorage.onChange`. The two paths fan into the same handler, so
+    // remote/cross-device deletes (which DO surface through `onChange`) keep
+    // working unchanged. `diffStaples` makes the second fire a no-op against
+    // an already-advanced `previousStaples`, so double-firing is idempotent.
+    const unsubscribeStapleLibrary = stapleLibrary.subscribe(onStapleChange);
+
     const unsubscribeAll = () => {
       stapleStorage.unsubscribe?.();
       areaStorage.unsubscribe?.();
       sectionOrderStorage.unsubscribe?.();
       tripStorage.unsubscribe?.();
+      unsubscribeStapleLibrary();
     };
 
     return {
