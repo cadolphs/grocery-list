@@ -8,7 +8,7 @@ import { useAreas } from '../hooks/useAreas';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { useServices } from './ServiceProvider';
 import { groupByAisle } from '../domain/item-grouping';
-import { sortByCustomOrder } from '../domain/section-ordering';
+import { sortByCustomOrder, appendNewSections } from '../domain/section-ordering';
 import { CompleteTripResult } from '../domain/trip';
 import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
 import { AisleSection } from './AisleSection';
@@ -122,7 +122,10 @@ export const StoreView = (): React.JSX.Element => {
   }
 
   const neededItems = items.filter((item) => item.needed);
-  const aisleGroups = sortByCustomOrder(groupByAisle(neededItems), sectionOrder);
+  const groups = groupByAisle(neededItems);
+  const knownKeys = groups.map((group) => `${group.section}::${group.aisleNumber}`);
+  const effectiveOrder = sectionOrder !== null ? appendNewSections(sectionOrder, knownKeys) : null;
+  const aisleGroups = sortByCustomOrder(groups, effectiveOrder);
 
   return (
     <ScrollView testID="store-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
