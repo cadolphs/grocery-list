@@ -15,9 +15,6 @@ type AisleSectionProps = {
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
-const formatSectionHeading = (sectionGroup: SectionGroup): string =>
-  sectionGroup.section;
-
 const formatProgress = (sectionGroup: SectionGroup): string =>
   `${sectionGroup.checkedCount} of ${sectionGroup.totalCount}`;
 
@@ -27,7 +24,7 @@ const isSectionComplete = (sectionGroup: SectionGroup): boolean =>
 export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => (
   <View style={styles.card} testID={`aisle-section-${sectionGroup.section}`}>
     <View style={styles.header}>
-      <Text style={styles.heading}>{formatSectionHeading(sectionGroup)}</Text>
+      <Text style={styles.heading}>{sectionGroup.section}</Text>
       <View style={styles.headerRight}>
         <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
         {isSectionComplete(sectionGroup) && (

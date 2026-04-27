@@ -18,7 +18,7 @@ export type UseSectionOrderResult = {
 
 // Pure predicate: detects the legacy composite-key shape (ADR-004).
 // True when at least one entry contains '::'. Empty arrays and null pass through.
-export const isLegacyOrder = (order: string[] | null): boolean => {
+export const hasLegacyCompositeKeys = (order: string[] | null): boolean => {
   if (order === null) return false;
   return order.some((entry) => entry.includes('::'));
 };
@@ -27,7 +27,7 @@ const loadAndMigrate = (
   storage: { loadOrder: () => string[] | null; clearOrder: () => void }
 ): string[] | null => {
   const loaded = storage.loadOrder();
-  if (isLegacyOrder(loaded)) {
+  if (hasLegacyCompositeKeys(loaded)) {
     storage.clearOrder();
     return null;
   }
@@ -55,7 +55,7 @@ export const useSectionOrder = (): UseSectionOrderResult => {
   const reorder = useCallback(
     (newOrder: string[]): void => {
       sectionOrderStorage.saveOrder(newOrder);
-      setOrder(sectionOrderStorage.loadOrder());
+      setOrder(newOrder);
     },
     [sectionOrderStorage],
   );
