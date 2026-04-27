@@ -35,6 +35,12 @@ const formatProgress = (sectionGroup: SectionGroup): string =>
 const isSectionComplete = (sectionGroup: SectionGroup): boolean =>
   sectionGroup.checkedCount === sectionGroup.totalCount;
 
+const formatSubGroupProgress = (subGroup: AisleSubGroup): string =>
+  `${subGroup.checkedCount} of ${subGroup.totalCount}`;
+
+const isSubGroupComplete = (subGroup: AisleSubGroup): boolean =>
+  subGroup.checkedCount === subGroup.totalCount;
+
 const aisleKeySlug = (aisleKey: AisleKey): string =>
   aisleKey === null ? 'no-aisle' : String(aisleKey);
 
@@ -72,6 +78,17 @@ const AisleSubGroupBlock = ({
   <View testID={`aisle-subgroup-${aisleKeySlug(subGroup.aisleKey)}`}>
     <View style={styles.aisleDivider}>
       <Text style={styles.aisleBadge}>{aisleBadgeLabel(subGroup.aisleKey)}</Text>
+      <View style={styles.aisleDividerRight}>
+        <Text style={styles.aisleProgress}>{formatSubGroupProgress(subGroup)}</Text>
+        {isSubGroupComplete(subGroup) && (
+          <Text
+            style={styles.aisleCheckmark}
+            testID={`aisle-subgroup-complete-${aisleKeySlug(subGroup.aisleKey)}`}
+          >
+            ✓
+          </Text>
+        )}
+      </View>
     </View>
     {subGroup.items.map((item, index) => renderItemRow(item, index, handlers))}
   </View>
@@ -143,8 +160,13 @@ const styles = StyleSheet.create({
   aisleDivider: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 8,
     marginBottom: 4,
+  },
+  aisleDividerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   aisleBadge: {
     fontSize: 13,
@@ -154,5 +176,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: theme.radius.pill,
+  },
+  aisleProgress: {
+    fontSize: 13,
+    color: theme.color.textMuted,
+  },
+  aisleCheckmark: {
+    fontSize: 14,
+    color: theme.color.accent,
+    marginLeft: 6,
+    fontWeight: '600',
   },
 });
