@@ -1,14 +1,22 @@
 // Section Ordering - pure functions for custom section sort order
 // No IO imports
 
-import { AisleGroup } from './item-grouping';
+import { AisleGroup, SectionGroup } from './item-grouping';
 
-const groupKey = (group: AisleGroup): string =>
-  `${group.section}::${group.aisleNumber}`;
+// Transitional generic: during the section-order-by-section refactor, callers
+// may pass either AisleGroup[] (legacy composite-keyed) or SectionGroup[] (new
+// section-name-keyed). The grouping function determines the concrete shape.
+// DELIVER will collapse to SectionGroup once call sites migrate.
+type SectionLike = { readonly section: string; readonly aisleNumber?: number | null };
+
+const groupKey = (group: SectionLike): string =>
+  group.aisleNumber === undefined
+    ? group.section
+    : `${group.section}::${group.aisleNumber}`;
 
 const compareByCustomOrder = (
   sectionOrder: string[],
-) => (a: AisleGroup, b: AisleGroup): number => {
+) => (a: SectionLike, b: SectionLike): number => {
   const indexA = sectionOrder.indexOf(groupKey(a));
   const indexB = sectionOrder.indexOf(groupKey(b));
 
@@ -31,11 +39,19 @@ export const appendNewSections = (
   return newSections.length === 0 ? currentOrder : [...currentOrder, ...newSections];
 };
 
-export const sortByCustomOrder = (
+export function sortByCustomOrder(
   groups: AisleGroup[],
   sectionOrder: string[] | null,
-): AisleGroup[] => {
+): AisleGroup[];
+export function sortByCustomOrder(
+  groups: SectionGroup[],
+  sectionOrder: string[] | null,
+): SectionGroup[];
+export function sortByCustomOrder<T extends SectionLike>(
+  groups: T[],
+  sectionOrder: string[] | null,
+): T[] {
   if (sectionOrder === null || sectionOrder.length === 0) return groups;
 
   return [...groups].sort(compareByCustomOrder(sectionOrder));
-};
+}

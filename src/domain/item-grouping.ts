@@ -86,3 +86,70 @@ export const groupByArea = (items: TripItem[], areas: readonly string[]): AreaGr
 
 export const getOneOffItems = (items: TripItem[]): TripItem[] =>
   items.filter((item) => item.itemType === 'one-off');
+
+// ============================================================================
+// SCAFFOLD: section-order-by-section feature (refactor)
+// These exports are placeholders for the new section-keyed grouping contract.
+// DELIVER wave will implement them and remove the legacy AisleGroup/groupByAisle.
+// Existing exports above are retained so the broader codebase still compiles.
+// ============================================================================
+
+export const __SCAFFOLD_section_order_by_section__ = true;
+
+export type SectionGroup = {
+  readonly section: string;
+  readonly items: TripItem[];
+  readonly totalCount: number;
+  readonly checkedCount: number;
+};
+
+// Compare two items within the same section: aisleNumber ascending, nulls last,
+// with input position as a stable secondary key.
+const compareItemsInSection = (
+  indexOf: Map<TripItem, number>,
+) => (a: TripItem, b: TripItem): number => {
+  const aisleA = a.storeLocation.aisleNumber;
+  const aisleB = b.storeLocation.aisleNumber;
+
+  if (aisleA !== null && aisleB !== null && aisleA !== aisleB) {
+    return aisleA - aisleB;
+  }
+  if (aisleA === null && aisleB !== null) return 1;
+  if (aisleA !== null && aisleB === null) return -1;
+
+  // Equal aisle (both numeric-equal or both null): preserve input order.
+  return (indexOf.get(a) ?? 0) - (indexOf.get(b) ?? 0);
+};
+
+const createSectionGroup = (section: string, items: TripItem[]): SectionGroup => ({
+  section,
+  items,
+  totalCount: items.length,
+  checkedCount: items.filter((item) => item.checked).length,
+});
+
+export const groupBySection = (items: TripItem[]): SectionGroup[] => {
+  if (items.length === 0) return [];
+
+  const indexOf = new Map<TripItem, number>(items.map((item, i) => [item, i]));
+
+  // Bucket items by section, preserving first-seen section order.
+  const sectionOrder: string[] = [];
+  const itemsBySection = new Map<string, TripItem[]>();
+  for (const item of items) {
+    const section = item.storeLocation.section;
+    if (!itemsBySection.has(section)) {
+      sectionOrder.push(section);
+      itemsBySection.set(section, []);
+    }
+    itemsBySection.get(section)!.push(item);
+  }
+
+  const compare = compareItemsInSection(indexOf);
+
+  return sectionOrder.map((section) => {
+    const sectionItems = [...itemsBySection.get(section)!].sort(compare);
+    return createSectionGroup(section, sectionItems);
+  });
+};
+

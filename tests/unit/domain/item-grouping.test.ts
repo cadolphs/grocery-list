@@ -1,6 +1,6 @@
 // Unit tests for item grouping pure functions
 
-import { groupByArea, AreaGroup, groupByAisle, AisleGroup } from '../../../src/domain/item-grouping';
+import { groupByArea, AreaGroup, groupByAisle, AisleGroup, groupBySection, SectionGroup } from '../../../src/domain/item-grouping';
 import { TripItem, HouseArea } from '../../../src/domain/types';
 
 const makeTripItem = (overrides: Partial<TripItem> & { name: string; houseArea: HouseArea }): TripItem => ({
@@ -137,5 +137,152 @@ describe('groupByAisle', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].section).toBe('Dairy');
+  });
+});
+
+describe('groupBySection', () => {
+  it('returns empty array for empty items', () => {
+    const result = groupBySection([]);
+
+    expect(result).toEqual([]);
+  });
+
+  it('groups items by section name regardless of aisle number', () => {
+    const items = [
+      makeTripItem({
+        name: 'Bread',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 4 },
+      }),
+      makeTripItem({
+        name: 'Pasta',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+      makeTripItem({
+        name: 'Soap',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 7 },
+      }),
+      makeTripItem({
+        name: 'Apple',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Produce', aisleNumber: null },
+      }),
+    ];
+
+    const result: SectionGroup[] = groupBySection(items);
+
+    expect(result).toHaveLength(2);
+    const sections = result.map((g) => g.section);
+    expect(sections).toEqual(expect.arrayContaining(['Inner Aisles', 'Produce']));
+
+    const innerAisles = result.find((g) => g.section === 'Inner Aisles')!;
+    expect(innerAisles.items).toHaveLength(3);
+    expect(innerAisles.totalCount).toBe(3);
+
+    const produce = result.find((g) => g.section === 'Produce')!;
+    expect(produce.items).toHaveLength(1);
+  });
+
+  it('orders items within a section by aisleNumber ascending', () => {
+    const items = [
+      makeTripItem({
+        name: 'Soap',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 7 },
+      }),
+      makeTripItem({
+        name: 'Bread',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 4 },
+      }),
+      makeTripItem({
+        name: 'Pasta',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+    ];
+
+    const result = groupBySection(items);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].items.map((i) => i.name)).toEqual(['Bread', 'Pasta', 'Soap']);
+  });
+
+  it('orders items with null aisleNumber after numbered aisles within the same section', () => {
+    const items = [
+      makeTripItem({
+        name: 'Bulk Bin Oats',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: null },
+      }),
+      makeTripItem({
+        name: 'Pasta',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+      makeTripItem({
+        name: 'Bread',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 4 },
+      }),
+    ];
+
+    const result = groupBySection(items);
+
+    expect(result[0].items.map((i) => i.name)).toEqual(['Bread', 'Pasta', 'Bulk Bin Oats']);
+  });
+
+  it('preserves input order as a stable secondary order for items with the same aisleNumber', () => {
+    const items = [
+      makeTripItem({
+        name: 'Pasta',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+      makeTripItem({
+        name: 'Rice',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+      makeTripItem({
+        name: 'Beans',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+    ];
+
+    const result = groupBySection(items);
+
+    expect(result[0].items.map((i) => i.name)).toEqual(['Pasta', 'Rice', 'Beans']);
+  });
+
+  it('computes totalCount and checkedCount per section', () => {
+    const items = [
+      makeTripItem({
+        name: 'Bread',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 4 },
+        checked: true,
+      }),
+      makeTripItem({
+        name: 'Pasta',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+        checked: false,
+      }),
+      makeTripItem({
+        name: 'Soap',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 7 },
+        checked: true,
+      }),
+    ];
+
+    const result = groupBySection(items);
+
+    expect(result[0].totalCount).toBe(3);
+    expect(result[0].checkedCount).toBe(2);
   });
 });
