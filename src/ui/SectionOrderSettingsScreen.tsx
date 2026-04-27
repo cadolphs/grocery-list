@@ -1,33 +1,12 @@
 // SectionOrderSettingsScreen - manage store section ordering
-// Shows known sections with up/down reorder buttons and reset-to-default
+// Shows known section names with up/down reorder buttons and reset-to-default
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
-import { StoreLocation } from '../domain/types';
 import { appendNewSections } from '../domain/section-ordering';
 import { theme } from './theme';
-
-type SectionEntry = {
-  readonly key: string;
-  readonly section: string;
-  readonly aisleNumber: number | null;
-};
-
-const toSectionKey = (location: StoreLocation): string =>
-  `${location.section}::${location.aisleNumber}`;
-
-const parseSectionKey = (key: string): SectionEntry => {
-  const [section, aisleStr] = key.split('::');
-  const aisleNumber = aisleStr === 'null' ? null : Number(aisleStr);
-  return { key, section, aisleNumber };
-};
-
-const formatSectionDisplay = (entry: SectionEntry): string =>
-  entry.aisleNumber !== null
-    ? `Aisle ${entry.aisleNumber}: ${entry.section}`
-    : entry.section;
 
 const moveItem = <T,>(items: readonly T[], fromIndex: number, toIndex: number): T[] => {
   const result = [...items];
@@ -36,12 +15,24 @@ const moveItem = <T,>(items: readonly T[], fromIndex: number, toIndex: number): 
   return result;
 };
 
+const dedupeInOrder = (values: readonly string[]): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    if (!seen.has(value)) {
+      seen.add(value);
+      result.push(value);
+    }
+  }
+  return result;
+};
+
 export const SectionOrderSettingsScreen = (): React.JSX.Element => {
   const { stapleLibrary } = useServices();
   const { order, reorder, reset } = useSectionOrder();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
-  // Subscribe to staple-library mutations so knownSectionKeys re-derives when
+  // Subscribe to staple-library mutations so knownSectionNames re-derives when
   // a staple introducing a new section is added while this screen is mounted.
   // Version counter drives re-render without caching the (mutable) listAll array.
   const [stapleRevision, setStapleRevision] = useState(0);
@@ -52,34 +43,24 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
     return unsubscribe;
   }, [stapleLibrary]);
 
-  const knownSectionKeys = useMemo(() => {
-    const staples = stapleLibrary.listAll();
-    const seen = new Set<string>();
-    const keys: string[] = [];
-    for (const staple of staples) {
-      const key = toSectionKey(staple.storeLocation);
-      if (!seen.has(key)) {
-        seen.add(key);
-        keys.push(key);
-      }
-    }
-    return keys;
+  const knownSectionNames = useMemo(
+    () => dedupeInOrder(stapleLibrary.listAll().map((staple) => staple.storeLocation.section)),
     // stapleRevision participates in the dep list so mutations invalidate this memo.
-  }, [stapleLibrary, stapleRevision]);
+    [stapleLibrary, stapleRevision],
+  );
 
-  const orderedEntries: SectionEntry[] = useMemo(() => {
+  const orderedSectionNames: string[] = useMemo(() => {
     if (order !== null) {
-      return appendNewSections(order, knownSectionKeys).map(parseSectionKey);
+      return appendNewSections(order, knownSectionNames);
     }
-    return knownSectionKeys.map(parseSectionKey);
-  }, [order, knownSectionKeys]);
+    return knownSectionNames;
+  }, [order, knownSectionNames]);
 
   const moveSection = useCallback(
     (fromIndex: number, toIndex: number) => {
-      const currentKeys = orderedEntries.map((entry) => entry.key);
-      reorder(moveItem(currentKeys, fromIndex, toIndex));
+      reorder(moveItem(orderedSectionNames, fromIndex, toIndex));
     },
-    [orderedEntries, reorder],
+    [orderedSectionNames, reorder],
   );
 
   const handleMoveUp = useCallback(
@@ -92,10 +73,10 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
 
   const handleMoveDown = useCallback(
     (index: number) => {
-      if (index >= orderedEntries.length - 1) return;
+      if (index >= orderedSectionNames.length - 1) return;
       moveSection(index, index + 1);
     },
-    [orderedEntries.length, moveSection],
+    [orderedSectionNames.length, moveSection],
   );
 
   const handleReset = useCallback(() => {
@@ -106,17 +87,17 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
   return (
     <ScrollView testID="section-order-settings-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       <Text style={styles.header}>Store Section Order</Text>
-      {orderedEntries.map((entry, index) => (
-        <View key={entry.key} testID={`section-row-${entry.section}`} style={styles.sectionCard}>
-          <Text style={styles.sectionName}>{formatSectionDisplay(entry)}</Text>
+      {orderedSectionNames.map((sectionName, index) => (
+        <View key={sectionName} testID={`section-row-${sectionName}`} style={styles.sectionCard}>
+          <Text style={styles.sectionName}>{sectionName}</Text>
           <View style={styles.rowActions}>
             {index > 0 && (
-              <Pressable testID={`move-up-${entry.section}`} onPress={() => handleMoveUp(index)}>
+              <Pressable testID={`move-up-${sectionName}`} onPress={() => handleMoveUp(index)}>
                 <Text style={styles.actionText}>Up</Text>
               </Pressable>
             )}
-            {index < orderedEntries.length - 1 && (
-              <Pressable testID={`move-down-${entry.section}`} onPress={() => handleMoveDown(index)}>
+            {index < orderedSectionNames.length - 1 && (
+              <Pressable testID={`move-down-${sectionName}`} onPress={() => handleMoveDown(index)}>
                 <Text style={styles.actionText}>Down</Text>
               </Pressable>
             )}

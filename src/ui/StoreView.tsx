@@ -1,5 +1,5 @@
-// StoreView - displays trip items grouped by store aisle
-// Composes useTrip hook with groupByAisle pure function
+// StoreView - displays trip items grouped by store section
+// Composes useTrip hook with groupBySection pure function
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
@@ -7,7 +7,7 @@ import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { useServices } from './ServiceProvider';
-import { groupByAisle } from '../domain/item-grouping';
+import { groupBySection } from '../domain/item-grouping';
 import { sortByCustomOrder, appendNewSections } from '../domain/section-ordering';
 import { CompleteTripResult } from '../domain/trip';
 import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
@@ -130,18 +130,18 @@ export const StoreView = (): React.JSX.Element => {
   }
 
   const neededItems = items.filter((item) => item.needed);
-  const groups = groupByAisle(neededItems);
-  const knownKeys = groups.map((group) => `${group.section}::${group.aisleNumber}`);
-  const effectiveOrder = sectionOrder !== null ? appendNewSections(sectionOrder, knownKeys) : null;
-  const aisleGroups = sortByCustomOrder(groups, effectiveOrder);
+  const groups = groupBySection(neededItems);
+  const knownSectionNames = groups.map((group) => group.section);
+  const effectiveOrder = sectionOrder !== null ? appendNewSections(sectionOrder, knownSectionNames) : null;
+  const sectionGroups = sortByCustomOrder(groups, effectiveOrder);
 
   return (
     <ScrollView testID="store-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       <QuickAdd onAddItem={addItem} onSearch={stapleLibrary.search} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
-      {aisleGroups.map((aisleGroup) => (
+      {sectionGroups.map((sectionGroup) => (
         <AisleSection
-          key={`${aisleGroup.aisleNumber}-${aisleGroup.section}`}
-          aisleGroup={aisleGroup}
+          key={sectionGroup.section}
+          sectionGroup={sectionGroup}
           onItemPress={toggleCheckOff}
           onItemLongPress={handleEditStaple}
         />

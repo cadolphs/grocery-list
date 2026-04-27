@@ -142,7 +142,7 @@ describe('UI-WS-3: Toggle switches from home view to store view', () => {
     fireEvent.press(screen.getByText('Store'));
 
     // Then the store view is displayed
-    expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
+    expect(screen.getByText('Dairy')).toBeTruthy();
 
     // And the home view area headings are no longer visible
     expect(screen.queryByText('Fridge (2)')).toBeNull();
@@ -170,17 +170,16 @@ describe('UI-WS-4: Store view shows items organized by aisle and section', () =>
     // When the store view renders
     // (already rendered after toggle)
 
-    // Then Carlos sees "Aisle 3: Dairy" with "Whole milk" and "Butter"
-    expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
+    // Then Carlos sees the "Dairy" section with "Whole milk" and "Butter"
+    expect(screen.getByText('Dairy')).toBeTruthy();
     expect(screen.getByText('Whole milk')).toBeTruthy();
     expect(screen.getByText('Butter')).toBeTruthy();
 
-    // And Carlos sees "Aisle 5: Canned Goods" with "Canned beans"
-    expect(screen.getByText('Aisle 5: Canned Goods')).toBeTruthy();
+    // And Carlos sees the "Canned Goods" section with "Canned beans"
+    expect(screen.getByText('Canned Goods')).toBeTruthy();
     expect(screen.getByText('Canned beans')).toBeTruthy();
 
-    // And numbered aisles appear before named-only sections
-    // (visual ordering verified by render order via groupByAisle sort)
+    // Section ordering follows groupBySection (alphabetical by default).
   });
 });
 

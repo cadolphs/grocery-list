@@ -435,7 +435,7 @@ describe('US-11: Trip summary screen in UI', () => {
     // When Carlos taps "Switch to Store View"
     fireEvent.press(screen.getByText('Switch to Store View'));
 
-    // Then the store view opens with all trip items grouped by aisle
-    expect(screen.getByText('Aisle 3: Dairy')).toBeTruthy();
+    // Then the store view opens with all trip items grouped by section
+    expect(screen.getByText('Dairy')).toBeTruthy();
   });
 });

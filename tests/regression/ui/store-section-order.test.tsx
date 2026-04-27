@@ -44,13 +44,9 @@ function renderAppWithCustomOrder(customOrder: string[] | null) {
 }
 
 describe('StoreView section ordering integration', () => {
-  // TODO(02-02): Re-enable with section-name keys after StoreView swaps to
-  // section-name keys. ADR-004 migration (02-01) wipes the legacy composite
-  // seeds on first hook read, falling back to default sort and breaking the
-  // custom-order assertion. StoreView still uses composite knownKeys until 02-02.
-  it.skip('renders sections in custom order when custom order is set', () => {
+  it('renders sections in custom order when custom order is set', () => {
     // Custom order: Deli first, then Dairy, then Bakery
-    renderAppWithCustomOrder(['Deli::null', 'Dairy::3', 'Bakery::1']);
+    renderAppWithCustomOrder(['Deli', 'Dairy', 'Bakery']);
 
     // Get all section headers by testID pattern
     const storeScroll = screen.getByTestId('store-scroll');

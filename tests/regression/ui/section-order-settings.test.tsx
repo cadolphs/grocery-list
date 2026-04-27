@@ -78,7 +78,7 @@ describe('SectionOrderSettingsScreen', () => {
   });
 
   it('shows sections in custom order when custom order is set', () => {
-    renderAppWithSections(['Deli::null', 'Dairy::3', 'Bakery::1']);
+    renderAppWithSections(['Deli', 'Dairy', 'Bakery']);
     navigateToSectionOrderSettings();
 
     const sectionRows = screen.getAllByTestId(/^section-row-/);
@@ -89,7 +89,7 @@ describe('SectionOrderSettingsScreen', () => {
   });
 
   it('moves a section down when down button is pressed', () => {
-    renderAppWithSections(['Deli::null', 'Dairy::3', 'Bakery::1']);
+    renderAppWithSections(['Deli', 'Dairy', 'Bakery']);
     navigateToSectionOrderSettings();
 
     // Move Deli down (from index 0 to index 1)
@@ -102,7 +102,7 @@ describe('SectionOrderSettingsScreen', () => {
   });
 
   it('moves a section up when up button is pressed', () => {
-    renderAppWithSections(['Deli::null', 'Dairy::3', 'Bakery::1']);
+    renderAppWithSections(['Deli', 'Dairy', 'Bakery']);
     navigateToSectionOrderSettings();
 
     // Move Bakery up (from index 2 to index 1)
@@ -115,7 +115,7 @@ describe('SectionOrderSettingsScreen', () => {
   });
 
   it('resets to default order and persists', () => {
-    const { storage } = renderAppWithSections(['Deli::null', 'Dairy::3', 'Bakery::1']);
+    const { storage } = renderAppWithSections(['Deli', 'Dairy', 'Bakery']);
     navigateToSectionOrderSettings();
 
     fireEvent.press(screen.getByText('Reset to Default Order'));
@@ -126,13 +126,9 @@ describe('SectionOrderSettingsScreen', () => {
     expect(storage.loadOrder()).toBeNull();
   });
 
-  // TODO(02-02): Re-enable with section-name keys after StoreView/SectionOrderSettings
-  // swap to section-name keys. ADR-004 migration (02-01) wipes legacy composite
-  // entries on first read, so the "read-time merge invariant" assert below
-  // (storage.loadOrder() === savedOrder) cannot hold for legacy seeds.
-  it.skip('appends newly-introduced sections to the end when a custom order is saved', () => {
+  it('appends newly-introduced sections to the end when a custom order is saved', () => {
     // Custom order saved for three known sections
-    const savedOrder = ['Deli::null', 'Dairy::3', 'Bakery::1'];
+    const savedOrder = ['Deli', 'Dairy', 'Bakery'];
     // Staple library includes a staple whose storeLocation introduces a brand-new section key
     const stapleSeeds: readonly StapleSeed[] = [
       { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
@@ -155,11 +151,8 @@ describe('SectionOrderSettingsScreen', () => {
     expect(storage.loadOrder()).toEqual(savedOrder);
   });
 
-  // TODO(02-02): Re-enable with section-name keys after StoreView/SectionOrderSettings
-  // swap to section-name keys. The read-time merge invariant assert relies on
-  // legacy composite seeds surviving mount, but ADR-004 migration wipes them.
-  it.skip('reactively adds a newly-introduced section while the settings screen is mounted', () => {
-    const savedOrder = ['Deli::null', 'Dairy::3', 'Bakery::1'];
+  it('reactively adds a newly-introduced section while the settings screen is mounted', () => {
+    const savedOrder = ['Deli', 'Dairy', 'Bakery'];
     const { storage, stapleLibrary } = renderAppWithSections(savedOrder);
     navigateToSectionOrderSettings();
 

@@ -1,41 +1,41 @@
-// AisleSection - renders an aisle heading with its trip items
+// AisleSection - renders a section heading with its trip items
 // Pure presentational component
+//
+// Note: filename retained for scope; the prop is now sectionGroup (section-name keyed).
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { AisleGroup } from '../domain/item-grouping';
+import { SectionGroup } from '../domain/item-grouping';
 import { TripItemRow } from './TripItemRow';
 import { theme } from './theme';
 
 type AisleSectionProps = {
-  readonly aisleGroup: AisleGroup;
+  readonly sectionGroup: SectionGroup;
   readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
-const formatAisleHeading = (aisleGroup: AisleGroup): string =>
-  aisleGroup.aisleNumber !== null
-    ? `Aisle ${aisleGroup.aisleNumber}: ${aisleGroup.section}`
-    : aisleGroup.section;
+const formatSectionHeading = (sectionGroup: SectionGroup): string =>
+  sectionGroup.section;
 
-const formatProgress = (aisleGroup: AisleGroup): string =>
-  `${aisleGroup.checkedCount} of ${aisleGroup.totalCount}`;
+const formatProgress = (sectionGroup: SectionGroup): string =>
+  `${sectionGroup.checkedCount} of ${sectionGroup.totalCount}`;
 
-const isSectionComplete = (aisleGroup: AisleGroup): boolean =>
-  aisleGroup.checkedCount === aisleGroup.totalCount;
+const isSectionComplete = (sectionGroup: SectionGroup): boolean =>
+  sectionGroup.checkedCount === sectionGroup.totalCount;
 
-export const AisleSection = ({ aisleGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => (
-  <View style={styles.card} testID={`aisle-section-${aisleGroup.section}`}>
+export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => (
+  <View style={styles.card} testID={`aisle-section-${sectionGroup.section}`}>
     <View style={styles.header}>
-      <Text style={styles.heading}>{formatAisleHeading(aisleGroup)}</Text>
+      <Text style={styles.heading}>{formatSectionHeading(sectionGroup)}</Text>
       <View style={styles.headerRight}>
-        <Text style={styles.progress}>{formatProgress(aisleGroup)}</Text>
-        {isSectionComplete(aisleGroup) && (
-          <Text style={styles.checkmark} testID={`section-complete-${aisleGroup.section}`}>✓</Text>
+        <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
+        {isSectionComplete(sectionGroup) && (
+          <Text style={styles.checkmark} testID={`section-complete-${sectionGroup.section}`}>✓</Text>
         )}
       </View>
     </View>
-    {aisleGroup.items.map((item, index) => (
+    {sectionGroup.items.map((item, index) => (
       <View key={item.id}>
         {index > 0 && <View style={styles.separator} />}
         <TripItemRow

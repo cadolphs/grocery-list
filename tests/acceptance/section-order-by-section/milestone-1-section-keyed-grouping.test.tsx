@@ -90,7 +90,7 @@ const renderSettingsScreenWithStaples = (staples: AddStapleRequest[]) => {
 describe('US-01: Settings screen shows one row per section regardless of aisle count', () => {
   // Trace: US-01
 
-  it.skip('renders exactly one row per distinct section name; row labels are section names', () => {
+  it('renders exactly one row per distinct section name; row labels are section names', () => {
     // Given Carlos has staples in Inner Aisles at aisles 4, 5, 7 and Deli (no aisle)
     const staples = [
       stapleInput('Bread', 'Inner Aisles', 4),
