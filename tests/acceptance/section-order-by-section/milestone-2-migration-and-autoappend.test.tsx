@@ -135,7 +135,7 @@ describe('US-04: Empty stored order needs no migration', () => {
 describe('US-03: New section name appends to the order', () => {
   // Trace: US-03
 
-  it.skip('appends a brand-new section name to the end of the order', () => {
+  it('appends a brand-new section name to the end of the order', () => {
     // Given the section order is [Inner Aisles, Deli]
     const currentOrder = ['Inner Aisles', 'Deli'];
 
@@ -156,7 +156,7 @@ describe('US-03: New aisle inside a known section is a no-op', () => {
   // distinct section names only (deduped), so adding aisle 12 to Inner Aisles
   // does not introduce a new entry into knownSectionNames.
 
-  it.skip('produces zero diff when every known section name is already in the order', () => {
+  it('produces zero diff when every known section name is already in the order', () => {
     // Given the section order is [Inner Aisles, Deli]
     const currentOrder = ['Inner Aisles', 'Deli'];
 
@@ -176,7 +176,7 @@ describe('US-03: New aisle inside a known section is a no-op', () => {
 describe('US-03: Multiple new sections append in discovery order', () => {
   // Trace: US-03
 
-  it.skip('appends multiple unknown section names in input order', () => {
+  it('appends multiple unknown section names in input order', () => {
     // Given the section order is [Inner Aisles, Deli]
     const currentOrder = ['Inner Aisles', 'Deli'];
 
