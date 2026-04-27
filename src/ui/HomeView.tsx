@@ -1,7 +1,7 @@
 // HomeView - displays trip items grouped by house area
 // Composes useTrip hook with groupByArea pure function
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
@@ -25,13 +25,25 @@ const formatSweepProgress = (completedCount: number, totalAreas: number): string
 
 export const HomeView = (): React.JSX.Element => {
   const { areas } = useAreas();
-  const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, removeItemByStapleId, sweepProgress } = useTrip();
+  const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, sweepProgress } = useTrip();
   const [homeMode, setHomeMode] = useState<HomeMode>('sweep');
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
   const areaGroups = groupByArea(items, areas);
   const oneOffItems = getOneOffItems(items);
-  const allStaples = useMemo(() => stapleLibrary.listAll(), [stapleLibrary]);
+
+  // Subscribe to staple-library mutations so derived data (allStaples,
+  // checklistStaples, existingSections) refreshes on every add/update/remove.
+  // Mirrors the reactive pattern in SectionOrderSettingsScreen.
+  const [stapleRevision, setStapleRevision] = useState(0);
+  useEffect(() => {
+    const unsubscribe = stapleLibrary.subscribe(() => {
+      setStapleRevision((previous) => previous + 1);
+    });
+    return unsubscribe;
+  }, [stapleLibrary]);
+
+  const allStaples = useMemo(() => stapleLibrary.listAll(), [stapleLibrary, stapleRevision]);
   const checklistStaples = useMemo(
     () => allStaples.filter((s) => s.type === 'staple'),
     [allStaples],
@@ -106,9 +118,12 @@ export const HomeView = (): React.JSX.Element => {
   }, [stapleLibrary, syncStapleUpdate]);
 
   const handleDeleteStaple = useCallback((stapleId: string) => {
+    // Trip cleanup flows through stapleLibrary.subscribe -> handleStapleChange
+    // (wired in useAppInitialization, step 01-02). Removing the dual-write
+    // here is intentional — it was redundant and masked the stapleId-null
+    // fallback path delivered in step 01-01.
     stapleLibrary.remove(stapleId);
-    removeItemByStapleId(stapleId);
-  }, [stapleLibrary, removeItemByStapleId]);
+  }, [stapleLibrary]);
 
   const handleQuickAddSearch = useCallback((query: string): StapleItem[] => {
     return stapleLibrary.search(query).filter((s) => s.type === 'one-off');

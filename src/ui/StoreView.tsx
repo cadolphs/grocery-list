@@ -1,7 +1,7 @@
 // StoreView - displays trip items grouped by store aisle
 // Composes useTrip hook with groupByAisle pure function
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
@@ -30,9 +30,20 @@ export const StoreView = (): React.JSX.Element => {
   const [editStapleId, setEditStapleId] = useState<string | null>(null);
   const [editStapleName, setEditStapleName] = useState<string>('');
   const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
+  // Subscribe to staple-library mutations so existingSections re-derives when
+  // a staple introducing a new section is added/edited while StoreView is
+  // mounted. Mirrors SectionOrderSettingsScreen's reactive pattern.
+  const [stapleRevision, setStapleRevision] = useState(0);
+  useEffect(() => {
+    const unsubscribe = stapleLibrary.subscribe(() => {
+      setStapleRevision((previous) => previous + 1);
+    });
+    return unsubscribe;
+  }, [stapleLibrary]);
+
   const existingSections = useMemo(
     () => [...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section))],
-    [stapleLibrary],
+    [stapleLibrary, stapleRevision],
   );
 
   const handleFinishTrip = (): void => {
