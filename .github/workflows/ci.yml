@@ -36,6 +36,9 @@ jobs:
       - name: Lint
         run: npx eslint . --ext .ts,.tsx --max-warnings 0
 
+      - name: Test-coverage gate (sibling tests for src/domain and src/ports)
+        run: node scripts/check-domain-test-siblings.mjs
+
       - name: Unit tests with coverage
         run: npx jest --ci --coverage --bail
 

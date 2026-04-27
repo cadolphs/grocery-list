@@ -30,6 +30,7 @@ export default tseslint.config(
       "babel.config.js",
       "jest.setup.js",
       "stryker.config.mjs",
+      "scripts/**",
     ],
   }
 );
