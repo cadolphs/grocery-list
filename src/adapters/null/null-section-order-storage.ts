@@ -1,4 +1,5 @@
 // Null adapter for SectionOrderStorage - in-memory implementation for testing
+// subscribe() is a no-op: returns a no-op unsubscribe and never throws.
 
 import { SectionOrderStorage } from '../../ports/section-order-storage';
 
@@ -20,6 +21,9 @@ export const createNullSectionOrderStorage = (
     },
     clearOrder: () => {
       cachedOrder = null;
+    },
+    subscribe: (_listener: () => void): (() => void) => {
+      return () => {};
     },
     simulateRemoteChange: (order: string[] | null) => {
       cachedOrder = order === null ? null : [...order];

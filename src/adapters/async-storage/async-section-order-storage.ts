@@ -2,6 +2,7 @@
 // Cached reads/writes: initialize() hydrates from disk, then all ops use in-memory cache.
 // Writes update cache synchronously and persist to AsyncStorage in background.
 // null = no custom order (default sort).
+// Reactive subscribers via subscribe() are notified on every saveOrder/clearOrder.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SectionOrderStorage } from '../../ports/section-order-storage';
@@ -33,6 +34,11 @@ const persistInBackground = (order: string[] | null): void => {
 
 export const createAsyncSectionOrderStorage = (): AsyncSectionOrderStorage => {
   let cache: string[] | null = null;
+  const listeners = new Set<() => void>();
+
+  const notifySubscribers = (): void => {
+    listeners.forEach((listener) => listener());
+  };
 
   return {
     initialize: async (): Promise<void> => {
@@ -45,11 +51,20 @@ export const createAsyncSectionOrderStorage = (): AsyncSectionOrderStorage => {
     saveOrder: (order: string[]): void => {
       cache = [...order];
       persistInBackground(cache);
+      notifySubscribers();
     },
 
     clearOrder: (): void => {
       cache = null;
       persistInBackground(null);
+      notifySubscribers();
+    },
+
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 };

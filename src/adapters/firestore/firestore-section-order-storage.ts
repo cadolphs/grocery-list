@@ -2,6 +2,8 @@
 // Cached reads/writes: initialize() hydrates from Firestore via onSnapshot, then all ops use in-memory cache.
 // Writes update cache synchronously and persist to Firestore in background.
 // Optional onChange callback fires when remote data differs from cache (own-write echo detection).
+// Reactive subscribers via subscribe() also fire on local saveOrder/clearOrder and on
+// remote-delta snapshots; echoes (serialized-equal snapshots) do NOT notify.
 
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
@@ -39,6 +41,11 @@ export const createFirestoreSectionOrderStorage = (
   let unsubscribeFn: () => void = () => {};
   let isInitialized = false;
   const { onChange } = options;
+  const listeners = new Set<() => void>();
+
+  const notifySubscribers = (): void => {
+    listeners.forEach((listener) => listener());
+  };
 
   const handleSnapshot = (snapshot: { exists: () => boolean; data: () => { order: string[] | null } | undefined }): void => {
     const incomingOrder: string[] | null = snapshot.exists()
@@ -57,6 +64,7 @@ export const createFirestoreSectionOrderStorage = (
     if (incomingSerialized !== currentSerialized) {
       cache = incomingOrder;
       onChange?.();
+      notifySubscribers();
     }
   };
 
@@ -84,11 +92,20 @@ export const createFirestoreSectionOrderStorage = (
     saveOrder: (order: string[]): void => {
       cache = [...order];
       persistInBackground(db, uid, cache);
+      notifySubscribers();
     },
 
     clearOrder: (): void => {
       cache = null;
       persistInBackground(db, uid, null);
+      notifySubscribers();
+    },
+
+    subscribe: (listener: () => void): (() => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 };
