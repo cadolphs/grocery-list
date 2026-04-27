@@ -256,7 +256,7 @@ describe('M1-RS-5: Renaming includes the new name in the changes payload (so tri
 // M1-RS-6: No-op save (name unchanged) succeeds silently
 // =============================================================================
 
-describe.skip('M1-RS-6: No-op save succeeds and dismisses', () => {
+describe('M1-RS-6: No-op save succeeds and dismisses', () => {
   // AC8: No-op save (name unchanged) succeeds and dismisses without error.
   // Trace: US-RS-01 AC8
 
