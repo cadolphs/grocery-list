@@ -59,7 +59,7 @@ const wrapperWithStorage = (initialOrder: string[] | null) => {
 describe('US-04: Legacy composite-keyed order is wiped on first read', () => {
   // Trace: US-04, ADR-004
 
-  it.skip('clears storage and reports null when stored order contains "::" entries', () => {
+  it('clears storage and reports null when stored order contains "::" entries', () => {
     // Given the stored section order contains legacy composite entries
     const { wrapper, sectionOrderStorage } = wrapperWithStorage([
       'Inner Aisles::4',
@@ -80,7 +80,7 @@ describe('US-04: Legacy composite-keyed order is wiped on first read', () => {
 describe('US-04: Already-migrated section-name order is preserved', () => {
   // Trace: US-04 (idempotent: clean stored order passes through untouched)
 
-  it.skip('leaves storage unchanged when no entry contains "::"', () => {
+  it('leaves storage unchanged when no entry contains "::"', () => {
     // Given the stored section order contains section names only
     const { wrapper, sectionOrderStorage } = wrapperWithStorage(['Inner Aisles', 'Deli']);
 
@@ -98,7 +98,7 @@ describe('US-04: Already-migrated section-name order is preserved', () => {
 describe('US-04: Mixed legacy and section-name entries are wiped', () => {
   // Trace: US-04 boundary (predicate fires on ANY entry containing "::")
 
-  it.skip('clears storage when at least one entry contains "::"', () => {
+  it('clears storage when at least one entry contains "::"', () => {
     // Given the stored section order contains a clean entry and a legacy entry
     const { wrapper, sectionOrderStorage } = wrapperWithStorage(['Inner Aisles', 'Deli::null']);
 
@@ -113,7 +113,7 @@ describe('US-04: Mixed legacy and section-name entries are wiped', () => {
 describe('US-04: Empty stored order needs no migration', () => {
   // Trace: US-04 boundary (empty array has no "::" entries; predicate is false)
 
-  it.skip('leaves an empty stored order unchanged', () => {
+  it('leaves an empty stored order unchanged', () => {
     // Given the stored section order is an empty list
     const { wrapper, sectionOrderStorage } = wrapperWithStorage([]);
 

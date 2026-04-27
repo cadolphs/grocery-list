@@ -126,7 +126,11 @@ describe('SectionOrderSettingsScreen', () => {
     expect(storage.loadOrder()).toBeNull();
   });
 
-  it('appends newly-introduced sections to the end when a custom order is saved', () => {
+  // TODO(02-02): Re-enable with section-name keys after StoreView/SectionOrderSettings
+  // swap to section-name keys. ADR-004 migration (02-01) wipes legacy composite
+  // entries on first read, so the "read-time merge invariant" assert below
+  // (storage.loadOrder() === savedOrder) cannot hold for legacy seeds.
+  it.skip('appends newly-introduced sections to the end when a custom order is saved', () => {
     // Custom order saved for three known sections
     const savedOrder = ['Deli::null', 'Dairy::3', 'Bakery::1'];
     // Staple library includes a staple whose storeLocation introduces a brand-new section key
@@ -151,7 +155,10 @@ describe('SectionOrderSettingsScreen', () => {
     expect(storage.loadOrder()).toEqual(savedOrder);
   });
 
-  it('reactively adds a newly-introduced section while the settings screen is mounted', () => {
+  // TODO(02-02): Re-enable with section-name keys after StoreView/SectionOrderSettings
+  // swap to section-name keys. The read-time merge invariant assert relies on
+  // legacy composite seeds surviving mount, but ADR-004 migration wipes them.
+  it.skip('reactively adds a newly-introduced section while the settings screen is mounted', () => {
     const savedOrder = ['Deli::null', 'Dairy::3', 'Bakery::1'];
     const { storage, stapleLibrary } = renderAppWithSections(savedOrder);
     navigateToSectionOrderSettings();

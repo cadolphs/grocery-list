@@ -107,3 +107,51 @@ describe('useSectionOrder reactivity', () => {
     expect(sectionOrderStorage.listenerCount()).toBe(0);
   });
 });
+
+describe('useSectionOrder legacy composite migration (ADR-004)', () => {
+  it('wipes storage and surfaces null when any entry contains "::"', () => {
+    const sectionOrderStorage = createTestSectionOrderStorage([
+      'Inner Aisles::4',
+      'Deli::null',
+    ]);
+    const { wrapper } = createTestWrapper(sectionOrderStorage);
+
+    const { result } = renderHook(() => useSectionOrder(), { wrapper });
+
+    expect(sectionOrderStorage.loadOrder()).toBeNull();
+    expect(result.current.order).toBeNull();
+  });
+
+  it('preserves storage and surfaces order verbatim when no entry contains "::"', () => {
+    const sectionOrderStorage = createTestSectionOrderStorage(['Inner Aisles', 'Deli']);
+    const { wrapper } = createTestWrapper(sectionOrderStorage);
+
+    const { result } = renderHook(() => useSectionOrder(), { wrapper });
+
+    expect(sectionOrderStorage.loadOrder()).toEqual(['Inner Aisles', 'Deli']);
+    expect(result.current.order).toEqual(['Inner Aisles', 'Deli']);
+  });
+
+  it('wipes storage when mixed legacy and clean entries are present', () => {
+    const sectionOrderStorage = createTestSectionOrderStorage([
+      'Inner Aisles',
+      'Deli::null',
+    ]);
+    const { wrapper } = createTestWrapper(sectionOrderStorage);
+
+    const { result } = renderHook(() => useSectionOrder(), { wrapper });
+
+    expect(sectionOrderStorage.loadOrder()).toBeNull();
+    expect(result.current.order).toBeNull();
+  });
+
+  it('preserves an empty stored order unchanged', () => {
+    const sectionOrderStorage = createTestSectionOrderStorage([]);
+    const { wrapper } = createTestWrapper(sectionOrderStorage);
+
+    const { result } = renderHook(() => useSectionOrder(), { wrapper });
+
+    expect(sectionOrderStorage.loadOrder()).toEqual([]);
+    expect(result.current.order).toEqual([]);
+  });
+});
