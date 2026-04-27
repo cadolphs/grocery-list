@@ -3,7 +3,7 @@
 // (root cause B in fix-section-order-reactive RCA). Pure unit tests, no mocks.
 
 import { TripItem } from './types';
-import { AisleGroup } from './item-grouping';
+import { AisleGroup, SectionGroup } from './item-grouping';
 import { appendNewSections, sortByCustomOrder } from './section-ordering';
 
 const makeAisleGroup = (
@@ -12,6 +12,13 @@ const makeAisleGroup = (
 ): AisleGroup => ({
   section,
   aisleNumber,
+  items: [] as TripItem[],
+  totalCount: 0,
+  checkedCount: 0,
+});
+
+const makeSectionGroup = (section: string): SectionGroup => ({
+  section,
   items: [] as TripItem[],
   totalCount: 0,
   checkedCount: 0,
@@ -96,6 +103,59 @@ describe('sortByCustomOrder', () => {
     const result = sortByCustomOrder(groups, ['Seasonal::null', 'Dairy::5']);
 
     expect(result.map((g) => g.section)).toEqual(['Seasonal', 'Dairy']);
+  });
+
+  describe('SectionGroup overload (section-keyed)', () => {
+    test('sorts SectionGroups alphabetically by section name when sectionOrder is null', () => {
+      const produce = makeSectionGroup('Produce');
+      const bakery = makeSectionGroup('Bakery');
+      const innerAisles = makeSectionGroup('Inner Aisles');
+      const groups = [produce, innerAisles, bakery];
+
+      const result = sortByCustomOrder(groups, null);
+
+      expect(result.map((g) => g.section)).toEqual([
+        'Bakery',
+        'Inner Aisles',
+        'Produce',
+      ]);
+    });
+
+    test('sorts SectionGroups alphabetically by section name when sectionOrder is empty', () => {
+      const deli = makeSectionGroup('Deli');
+      const bakery = makeSectionGroup('Bakery');
+      const groups = [deli, bakery];
+
+      const result = sortByCustomOrder(groups, []);
+
+      expect(result.map((g) => g.section)).toEqual(['Bakery', 'Deli']);
+    });
+
+    test('reorders SectionGroups to match the custom sectionOrder when provided', () => {
+      const dairy = makeSectionGroup('Dairy');
+      const produce = makeSectionGroup('Produce');
+      const bakery = makeSectionGroup('Bakery');
+      const groups = [dairy, produce, bakery];
+
+      const result = sortByCustomOrder(groups, ['Produce', 'Bakery']);
+
+      expect(result.map((g) => g.section)).toEqual([
+        'Produce',
+        'Bakery',
+        'Dairy',
+      ]);
+    });
+
+    test('does not mutate input when sorting alphabetically', () => {
+      const produce = makeSectionGroup('Produce');
+      const bakery = makeSectionGroup('Bakery');
+      const groups = [produce, bakery];
+      const snapshot = [...groups];
+
+      sortByCustomOrder(groups, null);
+
+      expect(groups).toEqual(snapshot);
+    });
   });
 });
 

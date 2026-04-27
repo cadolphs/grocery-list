@@ -39,6 +39,15 @@ export const appendNewSections = (
   return newSections.length === 0 ? currentOrder : [...currentOrder, ...newSections];
 };
 
+// When no custom order applies, SectionGroups (no aisleNumber field) sort
+// alphabetically by section name. AisleGroups (composite-keyed, legacy) pass
+// through unchanged to preserve the default groupByAisle ordering.
+const isSectionKeyed = <T extends SectionLike>(groups: T[]): boolean =>
+  groups.length > 0 && groups[0].aisleNumber === undefined;
+
+const compareBySectionName = <T extends SectionLike>(a: T, b: T): number =>
+  a.section.localeCompare(b.section);
+
 export function sortByCustomOrder(
   groups: AisleGroup[],
   sectionOrder: string[] | null,
@@ -51,7 +60,12 @@ export function sortByCustomOrder<T extends SectionLike>(
   groups: T[],
   sectionOrder: string[] | null,
 ): T[] {
-  if (sectionOrder === null || sectionOrder.length === 0) return groups;
+  if (sectionOrder === null || sectionOrder.length === 0) {
+    if (isSectionKeyed(groups)) {
+      return [...groups].sort(compareBySectionName);
+    }
+    return groups;
+  }
 
   return [...groups].sort(compareByCustomOrder(sectionOrder));
 }

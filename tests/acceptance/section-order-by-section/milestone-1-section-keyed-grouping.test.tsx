@@ -123,7 +123,7 @@ describe('US-01: Settings screen shows one row per section regardless of aisle c
 describe('US-02: Null aisle items sort last within a section', () => {
   // Trace: US-02 (null sorts last within section)
 
-  it.skip('places aisle-numbered items before null-aisle items inside a single section', () => {
+  it('places aisle-numbered items before null-aisle items inside a single section', () => {
     // Given Carlos has trip items in Inner Aisles at aisle 4 and Inner Aisles at no aisle
     const items = [
       tripItem('Pasta', 'Inner Aisles', null),
@@ -143,7 +143,7 @@ describe('US-02: Null aisle items sort last within a section', () => {
 describe('US-02: No custom order falls back to alphabetical sections', () => {
   // Trace: US-02 (default sort = alphabetical by section name)
 
-  it.skip('sorts sections alphabetically when no custom order is set', () => {
+  it('sorts sections alphabetically when no custom order is set', () => {
     // Given Carlos has trip items in Produce, Inner Aisles, and Bakery
     const items = [
       tripItem('Apple', 'Produce', null),
@@ -170,7 +170,7 @@ describe('US-02: No custom order falls back to alphabetical sections', () => {
 describe('Edge: Empty trip yields no section cards', () => {
   // Trace: US-02 boundary
 
-  it.skip('returns an empty array for an empty trip', () => {
+  it('returns an empty array for an empty trip', () => {
     // Given Carlos has no trip items
     const items: TripItem[] = [];
 
@@ -185,7 +185,7 @@ describe('Edge: Empty trip yields no section cards', () => {
 describe('Edge: All-null aisle items render in a single section card', () => {
   // Trace: US-02 boundary (every item has null aisle in same section)
 
-  it.skip('groups all-null-aisle items into one section card', () => {
+  it('groups all-null-aisle items into one section card', () => {
     // Given Carlos has trip items only in Deli with no aisle numbers
     const items = [
       tripItem('Turkey', 'Deli', null),
