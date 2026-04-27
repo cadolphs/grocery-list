@@ -1,25 +1,17 @@
 // Section Ordering - pure functions for custom section sort order
 // No IO imports
 //
-// Section-keyed: groups are keyed by their `section` field. The legacy AisleGroup
-// shape (with composite section::aisleNumber keys) is still accepted at the type
-// level via the structural `SectionLike` constraint so the regression suite at
-// tests/acceptance/store-section-order/* keeps compiling until step 02-03 retires
-// it; production callers (StoreView, SectionOrderSettingsScreen) now pass
-// SectionGroup[] with section-name keys.
+// Section-keyed: groups are keyed by their `section` field. Custom-order keys
+// are section names; default sort (when no custom order is provided) is
+// alphabetical by section name.
 
-type SectionLike = { readonly section: string; readonly aisleNumber?: number | null };
-
-const groupKey = (group: SectionLike): string =>
-  group.aisleNumber === undefined
-    ? group.section
-    : `${group.section}::${group.aisleNumber}`;
+import { SectionGroup } from './item-grouping';
 
 const compareByCustomOrder = (
   sectionOrder: string[],
-) => (a: SectionLike, b: SectionLike): number => {
-  const indexA = sectionOrder.indexOf(groupKey(a));
-  const indexB = sectionOrder.indexOf(groupKey(b));
+) => (a: SectionGroup, b: SectionGroup): number => {
+  const indexA = sectionOrder.indexOf(a.section);
+  const indexB = sectionOrder.indexOf(b.section);
 
   // Both in custom order: sort by position
   if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -40,24 +32,15 @@ export const appendNewSections = (
   return newSections.length === 0 ? currentOrder : [...currentOrder, ...newSections];
 };
 
-// When no custom order applies, section-keyed groups (no aisleNumber field) sort
-// alphabetically by section name. Legacy composite-keyed groups pass through
-// unchanged to preserve the default groupByAisle ordering.
-const isSectionKeyed = <T extends SectionLike>(groups: T[]): boolean =>
-  groups.length > 0 && groups[0].aisleNumber === undefined;
-
-const compareBySectionName = <T extends SectionLike>(a: T, b: T): number =>
+const compareBySectionName = (a: SectionGroup, b: SectionGroup): number =>
   a.section.localeCompare(b.section);
 
-export const sortByCustomOrder = <T extends SectionLike>(
-  groups: T[],
+export const sortByCustomOrder = (
+  groups: SectionGroup[],
   sectionOrder: string[] | null,
-): T[] => {
+): SectionGroup[] => {
   if (sectionOrder === null || sectionOrder.length === 0) {
-    if (isSectionKeyed(groups)) {
-      return [...groups].sort(compareBySectionName);
-    }
-    return groups;
+    return [...groups].sort(compareBySectionName);
   }
 
   return [...groups].sort(compareByCustomOrder(sectionOrder));

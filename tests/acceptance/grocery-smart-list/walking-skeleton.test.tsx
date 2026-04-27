@@ -27,7 +27,7 @@ import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 import { completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
-import { groupByAisle } from '../../../src/domain/item-grouping';
+import { groupBySection } from '../../../src/domain/item-grouping';
 import { TripItem } from '../../../src/domain/types';
 //
 // Null adapters for testing:
@@ -344,7 +344,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
   // AC: Check-off state preserved across view switches
   // Trace: US-04, AC-2, AC-3, AC-4, AC-5
 
-  it('groups items by aisle and section in store view', () => {
+  it('groups items by section in store view', () => {
     // Given Carlos has trip items with aisle metadata
     const items = [
       { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
@@ -354,18 +354,16 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
     ];
 
     // When Carlos switches to store view
-    const storeGroups = groupByAisle(items as any);
+    const storeGroups = groupBySection(items as any);
 
-    // Then items are grouped by aisle/section with numbered aisles first
-    expect(storeGroups[0].aisleNumber).toBe(3);
-    expect(storeGroups[0].section).toBe('Dairy');
-    expect(storeGroups[0].items).toHaveLength(2);
-    expect(storeGroups[1].aisleNumber).toBe(5);
-    expect(storeGroups[1].section).toBe('Canned Goods');
-    expect(storeGroups[1].items).toHaveLength(1);
-    expect(storeGroups[2].aisleNumber).toBeNull();
-    expect(storeGroups[2].section).toBe('Deli');
-    expect(storeGroups[2].items).toHaveLength(1);
+    // Then items are grouped by section (each section appears in input order)
+    expect(storeGroups).toHaveLength(3);
+    const dairy = storeGroups.find((g) => g.section === 'Dairy')!;
+    expect(dairy.items).toHaveLength(2);
+    const cannedGoods = storeGroups.find((g) => g.section === 'Canned Goods')!;
+    expect(cannedGoods.items).toHaveLength(1);
+    const deli = storeGroups.find((g) => g.section === 'Deli')!;
+    expect(deli.items).toHaveLength(1);
   });
 
   it('excludes empty sections from store view', () => {
@@ -376,7 +374,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
     ];
 
     // When Carlos views store layout
-    const storeGroups = groupByAisle(items as any);
+    const storeGroups = groupBySection(items as any);
 
     // Then only sections with items are shown
     expect(storeGroups).toHaveLength(2);
@@ -480,7 +478,7 @@ describe('WS-5: Check Off Items in Store', () => {
     ];
 
     // When we compute the store view grouping
-    const groups = groupByAisle(items as TripItem[]);
+    const groups = groupBySection(items as TripItem[]);
     const dairy = groups.find(g => g.section === 'Dairy');
 
     // Then progress shows 2 of 4

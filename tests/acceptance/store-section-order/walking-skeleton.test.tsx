@@ -9,9 +9,18 @@
  * then enable the next. All tests after the first use it.skip().
  *
  * Driving Ports:
- * - Domain: sortByCustomOrder (NEW pure function in section-ordering.ts)
- * - Domain: groupByAisle (existing, provides input to sortByCustomOrder)
+ * - Domain: sortByCustomOrder (pure function in section-ordering.ts)
+ * - Domain: groupBySection (provides section-keyed input to sortByCustomOrder)
  * - Storage: SectionOrderStorage port via createNullSectionOrderStorage
+ *
+ * Regression note (post step 02-03): originally written against the legacy
+ * `groupByAisle` / `AisleGroup` shape with composite "section::aisleNumber"
+ * keys. After legacy export removal, these tests are migrated to the
+ * section-keyed contract (`groupBySection` / `SectionGroup`) with section
+ * names as custom-order keys. Each scenario uses a single-aisle-per-section
+ * fixture so the observable outcomes (alphabetical default sort, custom
+ * order honored, unknown sections appended) match the prior behavior --
+ * preserving regression coverage per DISTILL DWD-05.
  *
  * Story Trace:
  * - WS-1: US-SSO-02 (Store view uses custom section order)
@@ -23,20 +32,18 @@
  * - WS-7: US-SSO-02 (empty array order = default sort)
  */
 
-// --- Driving port imports (to be created during DELIVER wave) ---
+// --- Driving port imports ---
 // Domain ports:
-import { groupByAisle, AisleGroup } from '../../../src/domain/item-grouping';
+import { groupBySection } from '../../../src/domain/item-grouping';
 import { TripItem } from '../../../src/domain/types';
-// NEW domain module:
 import { sortByCustomOrder } from '../../../src/domain/section-ordering';
-// NEW null adapter:
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 
 // --- Test helpers ---
 
 /**
  * Creates a minimal TripItem for testing store view grouping.
- * Only section and aisleNumber matter for groupByAisle; other fields
+ * Only section and aisleNumber matter for grouping; other fields
  * are filled with sensible defaults.
  */
 const tripItem = (
@@ -55,14 +62,6 @@ const tripItem = (
   checked: false,
   checkedAt: null,
 });
-
-/**
- * Derives the section key from an AisleGroup, matching the
- * composite key format used in custom order lists.
- * Format: "${section}::${aisleNumber}"
- */
-const sectionKey = (group: AisleGroup): string =>
-  `${group.section}::${group.aisleNumber}`;
 
 // =============================================================================
 // WS-1: Custom section order overrides default sort (US-SSO-02)
@@ -83,17 +82,17 @@ describe('WS-1: Custom section order overrides default sort', () => {
       tripItem('Bread', 'Bakery', null),
     ];
 
-    // And Carlos has set his walking order
+    // And Carlos has set his walking order (section-name keys)
     const customOrder = [
-      'Health & Beauty::null',
-      'Deli::null',
-      'Dairy::3',
-      'Canned Goods::5',
-      'Bakery::null',
+      'Health & Beauty',
+      'Deli',
+      'Dairy',
+      'Canned Goods',
+      'Bakery',
     ];
 
     // When Carlos views the store layout
-    const defaultGroups = groupByAisle(items);
+    const defaultGroups = groupBySection(items);
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
     // Then sections appear in Carlos's walking order
@@ -115,7 +114,7 @@ describe('WS-2: Fallback to default order when no custom order exists', () => {
   // Trace: US-SSO-02, AC-2
 
   it('uses default sort when custom order is null', () => {
-    // Given Carlos has trip items in Dairy, Canned Goods, and Deli
+    // Given Carlos has trip items in Canned Goods, Dairy, and Deli
     const items = [
       tripItem('Whole milk', 'Dairy', 3),
       tripItem('Canned beans', 'Canned Goods', 5),
@@ -126,16 +125,13 @@ describe('WS-2: Fallback to default order when no custom order exists', () => {
     const customOrder = null;
 
     // When Carlos views the store layout
-    const defaultGroups = groupByAisle(items);
+    const defaultGroups = groupBySection(items);
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
-    // Then sections appear in default order: numbered aisles ascending, then named sections
-    expect(sorted[0].section).toBe('Dairy');
-    expect(sorted[0].aisleNumber).toBe(3);
-    expect(sorted[1].section).toBe('Canned Goods');
-    expect(sorted[1].aisleNumber).toBe(5);
+    // Then sections appear in default alphabetical order
+    expect(sorted[0].section).toBe('Canned Goods');
+    expect(sorted[1].section).toBe('Dairy');
     expect(sorted[2].section).toBe('Deli');
-    expect(sorted[2].aisleNumber).toBeNull();
   });
 });
 
@@ -149,7 +145,7 @@ describe('WS-3: Unknown sections append to end of custom order', () => {
 
   it('places unknown sections after all custom-ordered sections', () => {
     // Given Carlos has set his walking order to only Deli and Dairy
-    const customOrder = ['Deli::null', 'Dairy::3'];
+    const customOrder = ['Deli', 'Dairy'];
 
     // And Carlos has trip items in Deli, Dairy, and Bakery (Bakery not in order)
     const items = [
@@ -159,7 +155,7 @@ describe('WS-3: Unknown sections append to end of custom order', () => {
     ];
 
     // When Carlos views the store layout
-    const defaultGroups = groupByAisle(items);
+    const defaultGroups = groupBySection(items);
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
     // Then Deli appears first, Dairy second, Bakery last
@@ -178,16 +174,16 @@ describe('WS-4: Section order persists and loads from storage', () => {
   // Trace: US-SSO-01, AC-4
 
   it('saves and loads custom section order from storage', () => {
-    // Given Carlos has saved his walking order
+    // Given Carlos has saved his walking order (section-name keys)
     const storage = createNullSectionOrderStorage();
-    const orderToSave = ['Deli::null', 'Dairy::3', 'Produce::null'];
+    const orderToSave = ['Deli', 'Dairy', 'Produce'];
     storage.saveOrder(orderToSave);
 
     // When Carlos reopens the app and loads his section order
     const loaded = storage.loadOrder();
 
     // Then the stored order matches what he saved
-    expect(loaded).toEqual(['Deli::null', 'Dairy::3', 'Produce::null']);
+    expect(loaded).toEqual(['Deli', 'Dairy', 'Produce']);
   });
 });
 
@@ -202,11 +198,11 @@ describe('WS-5: Custom order still hides empty sections', () => {
   it('only shows sections that have items on the current trip', () => {
     // Given Carlos has set his walking order to 5 sections
     const customOrder = [
-      'Health & Beauty::null',
-      'Deli::null',
-      'Dairy::3',
-      'Canned Goods::5',
-      'Bakery::null',
+      'Health & Beauty',
+      'Deli',
+      'Dairy',
+      'Canned Goods',
+      'Bakery',
     ];
 
     // And Carlos has trip items only in Deli and Bakery
@@ -216,10 +212,10 @@ describe('WS-5: Custom order still hides empty sections', () => {
     ];
 
     // When Carlos views the store layout
-    const defaultGroups = groupByAisle(items);
+    const defaultGroups = groupBySection(items);
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
-    // Then only 2 sections are shown (groupByAisle already excludes empties)
+    // Then only 2 sections are shown (groupBySection already excludes empties)
     expect(sorted).toHaveLength(2);
     // And they appear in custom order: Deli first, Bakery second
     expect(sorted[0].section).toBe('Deli');
@@ -232,10 +228,10 @@ describe('WS-5: Custom order still hides empty sections', () => {
 // =============================================================================
 
 describe('WS-6: null stored order means default sort', () => {
-  // AC: null from storage = no custom order = default groupByAisle sort
+  // AC: null from storage = no custom order = default alphabetical sort
   // Trace: US-SSO-02, null semantics from architecture design
 
-  it('null order passes groups through unchanged', () => {
+  it('null order yields alphabetical default sort', () => {
     // Given the stored section order is null
     const storage = createNullSectionOrderStorage();
     const loaded = storage.loadOrder();
@@ -246,10 +242,10 @@ describe('WS-6: null stored order means default sort', () => {
       tripItem('Whole milk', 'Dairy', 3),
       tripItem('Deli turkey', 'Deli', null),
     ];
-    const defaultGroups = groupByAisle(items);
+    const defaultGroups = groupBySection(items);
     const sorted = sortByCustomOrder(defaultGroups, loaded);
 
-    // Then Dairy appears before Deli (default: numbered aisles first)
+    // Then Dairy appears before Deli (alphabetical default)
     expect(sorted[0].section).toBe('Dairy');
     expect(sorted[1].section).toBe('Deli');
   });
@@ -263,7 +259,7 @@ describe('WS-7: Empty array order falls back to default sort', () => {
   // AC: Empty list should not reorder groups (edge case defense)
   // Trace: US-SSO-02, boundary condition
 
-  it('empty array order does not reorder groups', () => {
+  it('empty array order yields alphabetical default sort', () => {
     // Given the stored section order is an empty list
     const customOrder: string[] = [];
 
@@ -272,10 +268,10 @@ describe('WS-7: Empty array order falls back to default sort', () => {
       tripItem('Whole milk', 'Dairy', 3),
       tripItem('Deli turkey', 'Deli', null),
     ];
-    const defaultGroups = groupByAisle(items);
+    const defaultGroups = groupBySection(items);
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
-    // Then default sort is preserved: Dairy before Deli
+    // Then default alphabetical sort: Dairy before Deli
     expect(sorted[0].section).toBe('Dairy');
     expect(sorted[1].section).toBe('Deli');
   });

@@ -20,7 +20,7 @@
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip, completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
-import { groupByAisle } from '../../../src/domain/item-grouping';
+import { groupBySection } from '../../../src/domain/item-grouping';
 // import { searchStaples } from '../../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
@@ -323,7 +323,7 @@ describe('US-10: Navigate Store Sections', () => {
       { name: 'Butter', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
       { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: false },
     ];
-    const groups = groupByAisle(items as any);
+    const groups = groupBySection(items as any);
 
     // When all Dairy items are checked
     const dairyComplete = groups[0].checkedCount === groups[0].totalCount;
@@ -343,7 +343,7 @@ describe('US-10: Navigate Store Sections', () => {
     ];
 
     // When we compute the store grouping
-    const groups = groupByAisle(items as any);
+    const groups = groupBySection(items as any);
     const produce = groups.find(g => g.section === 'Produce');
 
     // Then Produce shows 3 of 4
@@ -360,7 +360,7 @@ describe('US-10: Navigate Store Sections', () => {
     ];
 
     // When we compute the store grouping
-    const groups = groupByAisle(items as any);
+    const groups = groupBySection(items as any);
 
     // Then completed sections are identifiable
     const completed = groups.filter(g => g.checkedCount === g.totalCount);
@@ -376,7 +376,7 @@ describe('US-10: Navigate Store Sections', () => {
       { name: 'Milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true },
       { name: 'Beans', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, checked: true },
     ];
-    const groups = groupByAisle(items as any);
+    const groups = groupBySection(items as any);
 
     // When we check if all sections are complete
     const allComplete = groups.every(g => g.checkedCount === g.totalCount);
