@@ -107,6 +107,56 @@ describe('partitionSectionByAisle', () => {
     expect(subGroups.map((g) => g.aisleKey)).toEqual([4, 5, null]);
   });
 
+  test('each aisle sub-group reports its own checked / total counts', () => {
+    // GIVEN a section group "Inner Aisles" where aisle 4 has 3 items with 2 checked
+    // AND aisle 5 has 2 items with 0 checked
+    const items = [
+      makeItem('Bread', 'Inner Aisles', 4, true),
+      makeItem('Pasta', 'Inner Aisles', 4, true),
+      makeItem('Rice', 'Inner Aisles', 4, false),
+      makeItem('Cereal', 'Inner Aisles', 5, false),
+      makeItem('Oats', 'Inner Aisles', 5, false),
+    ];
+    const innerAisles = sectionGroupFor('Inner Aisles', items);
+
+    // WHEN the section is partitioned by aisle
+    const result = partitionSectionByAisle(innerAisles);
+
+    // THEN the aisle-4 sub-group reports 2 checked of 3 total
+    // AND the aisle-5 sub-group reports 0 checked of 2 total
+    expect(result).not.toBeNull();
+    const subGroups = result as AisleSubGroup[];
+    const aisle4 = subGroups.find((g) => g.aisleKey === 4);
+    const aisle5 = subGroups.find((g) => g.aisleKey === 5);
+    expect(aisle4).toBeDefined();
+    expect(aisle5).toBeDefined();
+    expect(aisle4!.checkedCount).toBe(2);
+    expect(aisle4!.totalCount).toBe(3);
+    expect(aisle5!.checkedCount).toBe(0);
+    expect(aisle5!.totalCount).toBe(2);
+  });
+
+  test('no-aisle tail group reports its own counts', () => {
+    // GIVEN a section group "Inner Aisles" with aisle 4 (1 item, 1 checked)
+    // AND one item with no aisle (unchecked)
+    const items = [
+      makeItem('Bread', 'Inner Aisles', 4, true),
+      makeItem('Mystery', 'Inner Aisles', null, false),
+    ];
+    const innerAisles = sectionGroupFor('Inner Aisles', items);
+
+    // WHEN the section is partitioned by aisle
+    const result = partitionSectionByAisle(innerAisles);
+
+    // THEN the no-aisle tail sub-group reports 0 checked of 1 total
+    expect(result).not.toBeNull();
+    const subGroups = result as AisleSubGroup[];
+    const noAisleTail = subGroups.find((g) => g.aisleKey === null);
+    expect(noAisleTail).toBeDefined();
+    expect(noAisleTail!.checkedCount).toBe(0);
+    expect(noAisleTail!.totalCount).toBe(1);
+  });
+
   test('item input order preserved inside each aisle sub-group', () => {
     // GIVEN a section group "Inner Aisles" where aisle 4 contains
     // items "Bread" then "Pasta" in input order
