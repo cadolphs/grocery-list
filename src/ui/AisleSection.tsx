@@ -1,11 +1,25 @@
-// AisleSection - renders a section heading with its trip items
-// Pure presentational component
+// AisleSection - renders a section heading with its trip items.
 //
-// Note: filename retained for scope; the prop is now sectionGroup (section-name keyed).
+// Two render branches, selected by the pure domain function
+// `partitionSectionByAisle`:
+//   - null      -> flat render path (single-aisle or all-null section).
+//   - subGroups -> inline aisle sub-group blocks within the same section card,
+//                  each preceded by a divider + numeric badge (or "No aisle"
+//                  for the null tail).
+//
+// The section header (name + section-level "X of Y" + section-level ✓) is
+// byte-identical across both branches — this is the D-NOREGRESS contract from
+// section-order-by-section.
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { SectionGroup } from '../domain/item-grouping';
+import {
+  AisleKey,
+  AisleSubGroup,
+  SectionGroup,
+  partitionSectionByAisle,
+} from '../domain/item-grouping';
+import { TripItem } from '../domain/types';
 import { TripItemRow } from './TripItemRow';
 import { theme } from './theme';
 
@@ -21,30 +35,75 @@ const formatProgress = (sectionGroup: SectionGroup): string =>
 const isSectionComplete = (sectionGroup: SectionGroup): boolean =>
   sectionGroup.checkedCount === sectionGroup.totalCount;
 
-export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => (
-  <View style={styles.card} testID={`aisle-section-${sectionGroup.section}`}>
-    <View style={styles.header}>
-      <Text style={styles.heading}>{sectionGroup.section}</Text>
-      <View style={styles.headerRight}>
-        <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
-        {isSectionComplete(sectionGroup) && (
-          <Text style={styles.checkmark} testID={`section-complete-${sectionGroup.section}`}>✓</Text>
-        )}
-      </View>
-    </View>
-    {sectionGroup.items.map((item, index) => (
-      <View key={item.id}>
-        {index > 0 && <View style={styles.separator} />}
-        <TripItemRow
-          item={item}
-          mode="store"
-          onPress={onItemPress ? () => onItemPress(item.name) : undefined}
-          onLongPress={onItemLongPress ? () => onItemLongPress(item.name, item.houseArea) : undefined}
-        />
-      </View>
-    ))}
+const aisleKeySlug = (aisleKey: AisleKey): string =>
+  aisleKey === null ? 'no-aisle' : String(aisleKey);
+
+const aisleBadgeLabel = (aisleKey: AisleKey): string =>
+  aisleKey === null ? 'No aisle' : String(aisleKey);
+
+type ItemHandlers = {
+  readonly onItemPress?: (name: string) => void;
+  readonly onItemLongPress?: (name: string, area: string) => void;
+};
+
+const renderItemRow = (item: TripItem, index: number, handlers: ItemHandlers): React.JSX.Element => (
+  <View key={item.id}>
+    {index > 0 && <View style={styles.separator} />}
+    <TripItemRow
+      item={item}
+      mode="store"
+      onPress={handlers.onItemPress ? () => handlers.onItemPress!(item.name) : undefined}
+      onLongPress={
+        handlers.onItemLongPress
+          ? () => handlers.onItemLongPress!(item.name, item.houseArea)
+          : undefined
+      }
+    />
   </View>
 );
+
+const AisleSubGroupBlock = ({
+  subGroup,
+  handlers,
+}: {
+  readonly subGroup: AisleSubGroup;
+  readonly handlers: ItemHandlers;
+}): React.JSX.Element => (
+  <View testID={`aisle-subgroup-${aisleKeySlug(subGroup.aisleKey)}`}>
+    <View style={styles.aisleDivider}>
+      <Text style={styles.aisleBadge}>{aisleBadgeLabel(subGroup.aisleKey)}</Text>
+    </View>
+    {subGroup.items.map((item, index) => renderItemRow(item, index, handlers))}
+  </View>
+);
+
+export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => {
+  const subGroups = partitionSectionByAisle(sectionGroup);
+  const handlers: ItemHandlers = { onItemPress, onItemLongPress };
+
+  return (
+    <View style={styles.card} testID={`aisle-section-${sectionGroup.section}`}>
+      <View style={styles.header}>
+        <Text style={styles.heading}>{sectionGroup.section}</Text>
+        <View style={styles.headerRight}>
+          <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
+          {isSectionComplete(sectionGroup) && (
+            <Text style={styles.checkmark} testID={`section-complete-${sectionGroup.section}`}>✓</Text>
+          )}
+        </View>
+      </View>
+      {subGroups === null
+        ? sectionGroup.items.map((item, index) => renderItemRow(item, index, handlers))
+        : subGroups.map((subGroup) => (
+            <AisleSubGroupBlock
+              key={aisleKeySlug(subGroup.aisleKey)}
+              subGroup={subGroup}
+              handlers={handlers}
+            />
+          ))}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -80,5 +139,20 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 0,
+  },
+  aisleDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  aisleBadge: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.color.textMuted,
+    backgroundColor: theme.color.tileAlt,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: theme.radius.pill,
   },
 });
