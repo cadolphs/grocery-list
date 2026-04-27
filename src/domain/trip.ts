@@ -76,6 +76,15 @@ export type StapleIdentity = {
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
+// Predicate factory: returns the matching rule shared by removeItemsByStaple.
+// Resolution: prefer stapleId equality; fall back to (name, houseArea) only
+// for staple-typed items (one-offs that share a name+area must NOT be removed).
+const matchesStapleIdentity = (staple: StapleIdentity) => (item: TripItem): boolean => {
+  if (item.stapleId != null) return item.stapleId === staple.id;
+  if (item.itemType !== 'staple') return false;
+  return item.name === staple.name && item.houseArea === staple.houseArea;
+};
+
 const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   id: generateTripItemId(),
   name: staple.name,
@@ -130,6 +139,25 @@ export const createTrip = (
     storage.saveTrip(buildTrip(tripId, items, createdAt, completedAreas));
   };
 
+  // Apply a partial patch to every item matching `name`, then persist.
+  // Used by check/uncheck/skip/unskip — all share this shape.
+  const updateItemByName = (name: string, patch: Partial<TripItem>): void => {
+    items = items.map((item) => (item.name === name ? { ...item, ...patch } : item));
+    persistTrip();
+  };
+
+  // Remove items matching predicate. If nothing matched, this is a no-op
+  // (no notify, no persist). Shared by removeItemByStapleId and
+  // removeItemsByStaple — both want the same "filter, short-circuit when
+  // unchanged, otherwise notify+persist" semantics.
+  const removeWhere = (shouldRemove: (item: TripItem) => boolean): void => {
+    const next = items.filter((item) => !shouldRemove(item));
+    if (next.length === items.length) return;
+    items = next;
+    notify();
+    persistTrip();
+  };
+
   return {
     start: (staples: ReadonlyArray<StapleInput>, carryover: readonly TripItem[] = []) => {
       const stapleItems = staples.map(stapleInputToTripItem);
@@ -172,39 +200,19 @@ export const createTrip = (
     getItems: () => [...items],
 
     checkOff: (name: string) => {
-      items = items.map((item) =>
-        item.name === name
-          ? { ...item, checked: true, checkedAt: new Date().toISOString() }
-          : item
-      );
-      persistTrip();
+      updateItemByName(name, { checked: true, checkedAt: new Date().toISOString() });
     },
 
     uncheckItem: (name: string) => {
-      items = items.map((item) =>
-        item.name === name
-          ? { ...item, checked: false, checkedAt: null }
-          : item
-      );
-      persistTrip();
+      updateItemByName(name, { checked: false, checkedAt: null });
     },
 
     skipItem: (name: string) => {
-      items = items.map((item) =>
-        item.name === name
-          ? { ...item, needed: false }
-          : item
-      );
-      persistTrip();
+      updateItemByName(name, { needed: false });
     },
 
     unskipItem: (name: string) => {
-      items = items.map((item) =>
-        item.name === name
-          ? { ...item, needed: true }
-          : item
-      );
-      persistTrip();
+      updateItemByName(name, { needed: true });
     },
 
     completeArea: (area: HouseArea) => {
@@ -293,25 +301,11 @@ export const createTrip = (
     },
 
     removeItemByStapleId: (stapleId: string) => {
-      const next = items.filter((item) => item.stapleId !== stapleId);
-      if (next.length === items.length) return;
-      items = next;
-      notify();
-      persistTrip();
+      removeWhere((item) => item.stapleId === stapleId);
     },
 
     removeItemsByStaple: (staple: StapleIdentity) => {
-      const matchesStaple = (item: TripItem): boolean => {
-        if (item.stapleId != null) return item.stapleId === staple.id;
-        // Fallback: only staple-typed items are eligible for the (name, houseArea) match.
-        if (item.itemType !== 'staple') return false;
-        return item.name === staple.name && item.houseArea === staple.houseArea;
-      };
-      const next = items.filter((item) => !matchesStaple(item));
-      if (next.length === items.length) return;
-      items = next;
-      notify();
-      persistTrip();
+      removeWhere(matchesStapleIdentity(staple));
     },
 
     initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => {
@@ -349,31 +343,23 @@ export const createTrip = (
     },
 
     complete: (): CompleteTripResult => {
-      const checkedItems = items.filter(isChecked);
-      const uncheckedItems = items.filter((item) => !isChecked(item));
-
-      const result: CompleteTripResult = {
-        purchasedStaples: checkedItems.filter(isStaple),
-        purchasedOneOffs: checkedItems.filter(isOneOff),
-        unboughtItems: uncheckedItems,
-      };
+      const result = categorizeItems(items);
 
       // Save carryover: unbought items with source changed to 'carryover'
-      const carryoverItems = uncheckedItems.map((item) => ({
+      const carryoverItems = result.unboughtItems.map((item) => ({
         ...item,
         source: 'carryover' as const,
       }));
       storage.saveCarryover(carryoverItems);
 
       // Persist trip as completed
-      const completedTrip: Trip = {
+      storage.saveTrip({
         id: tripId,
         items: [...items],
         status: 'completed',
         createdAt,
         completedAreas: [...completedAreas],
-      };
-      storage.saveTrip(completedTrip);
+      });
 
       return result;
     },
@@ -392,17 +378,20 @@ const isChecked = (item: TripItem): boolean => item.checked;
 const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
 const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 
-export const completeTrip = (
-  trip: TripService,
-  _library: StapleLibrary
-): CompleteTripResult => {
-  const items = trip.getItems();
+// Pure categorization: split items into purchased staples / one-offs / unbought.
+// Shared by the inline `complete()` (which also persists carryover and trip
+// status) and the standalone `completeTrip` (which only categorizes).
+const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
   const checkedItems = items.filter(isChecked);
   const uncheckedItems = items.filter((item) => !isChecked(item));
-
   return {
     purchasedStaples: checkedItems.filter(isStaple),
     purchasedOneOffs: checkedItems.filter(isOneOff),
     unboughtItems: uncheckedItems,
   };
 };
+
+export const completeTrip = (
+  trip: TripService,
+  _library: StapleLibrary
+): CompleteTripResult => categorizeItems(trip.getItems());
