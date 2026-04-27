@@ -314,7 +314,7 @@ describe('M1-RS-7: Add mode does not render a Name TextInput', () => {
 // M1-RS-8: Sheet title remains the snapshot `Edit '<itemName>'`
 // =============================================================================
 
-describe.skip('M1-RS-8: Sheet title is a snapshot of the original name (does not live-update)', () => {
+describe('M1-RS-8: Sheet title is a snapshot of the original name (does not live-update)', () => {
   // Implicit invariant from shared-artifacts-registry.md and DISCUSS technical
   // notes: the title `Edit '${itemName}'` continues to read from the itemName
   // prop set at sheet-open time. The title does NOT live-update as the user
