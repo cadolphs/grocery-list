@@ -26,8 +26,16 @@ export type SectionGroup = {
 
 // Compare two items within the same section: aisleNumber ascending, nulls last,
 // with input position as a stable secondary key.
+//
+// Fallback rationale: if an item is missing from `indexOf` (a wiring bug, since
+// `groupBySection` builds the map from the same input array it sorts), it sorts
+// to the END of the section rather than the front. This keeps the comparator
+// pure (no throw) while making the failure mode deterministic and visible
+// (unknown items appear in a stable, low-priority slot) rather than masked at
+// position 0.
 const compareItemsInSection = (
   indexOf: Map<TripItem, number>,
+  unknownIndex: number,
 ) => (a: TripItem, b: TripItem): number => {
   const aisleA = a.storeLocation.aisleNumber;
   const aisleB = b.storeLocation.aisleNumber;
@@ -39,7 +47,7 @@ const compareItemsInSection = (
   if (aisleA !== null && aisleB === null) return -1;
 
   // Equal aisle (both numeric-equal or both null): preserve input order.
-  return (indexOf.get(a) ?? 0) - (indexOf.get(b) ?? 0);
+  return (indexOf.get(a) ?? unknownIndex) - (indexOf.get(b) ?? unknownIndex);
 };
 
 const createSectionGroup = (section: string, items: TripItem[]): SectionGroup => ({
@@ -66,7 +74,7 @@ export const groupBySection = (items: TripItem[]): SectionGroup[] => {
     itemsBySection.get(section)!.push(item);
   }
 
-  const compare = compareItemsInSection(indexOf);
+  const compare = compareItemsInSection(indexOf, items.length);
 
   return sectionOrder.map((section) => {
     const sectionItems = [...itemsBySection.get(section)!].sort(compare);

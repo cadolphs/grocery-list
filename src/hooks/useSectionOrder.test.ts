@@ -72,11 +72,11 @@ describe('useSectionOrder reactivity', () => {
     expect(consumerB.result.current.order).toBeNull();
 
     act(() => {
-      consumerA.result.current.reorder(['Bakery::1', 'Produce::3']);
+      consumerA.result.current.reorder(['Bakery', 'Produce']);
     });
 
-    expect(consumerA.result.current.order).toEqual(['Bakery::1', 'Produce::3']);
-    expect(consumerB.result.current.order).toEqual(['Bakery::1', 'Produce::3']);
+    expect(consumerA.result.current.order).toEqual(['Bakery', 'Produce']);
+    expect(consumerB.result.current.order).toEqual(['Bakery', 'Produce']);
   });
 
   it('re-renders with updated order when storage emits change', () => {

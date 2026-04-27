@@ -192,6 +192,41 @@ describe('groupBySection', () => {
     expect(result[0].items.map((i) => i.name)).toEqual(['Pasta', 'Rice', 'Beans']);
   });
 
+  it('preserves every input item in the resulting groups (no silent loss)', () => {
+    // Contract: every item passed to groupBySection MUST appear in exactly one
+    // resulting group's items array. This guards against the comparator's
+    // fallback masking wiring bugs (D2).
+    const items = [
+      makeTripItem({
+        name: 'Bread',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 4 },
+      }),
+      makeTripItem({
+        name: 'Pasta',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
+      }),
+      makeTripItem({
+        name: 'Apple',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Produce', aisleNumber: null },
+      }),
+      makeTripItem({
+        name: 'Bulk Bin Oats',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Inner Aisles', aisleNumber: null },
+      }),
+    ];
+
+    const result = groupBySection(items);
+
+    const allGroupedIds = result.flatMap((g) => g.items.map((i) => i.id));
+    const inputIds = items.map((i) => i.id);
+    expect(allGroupedIds).toHaveLength(inputIds.length);
+    expect(allGroupedIds).toEqual(expect.arrayContaining(inputIds));
+  });
+
   it('computes totalCount and checkedCount per section', () => {
     const items = [
       makeTripItem({
