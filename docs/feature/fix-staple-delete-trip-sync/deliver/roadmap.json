@@ -1,0 +1,124 @@
+{
+  "roadmap": {
+    "project_id": "fix-staple-delete-trip-sync",
+    "created_at": "2026-04-27T00:00:00Z",
+    "total_steps": 4,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Restore single-source-of-truth reactivity for staple-delete to trip propagation",
+      "description": "Three-layer bugfix mapped 1:1 to the RCA root causes. Domain layer (A): widen the trip removal contract so deletes use the same identity rule as adds (stapleId, then name+houseArea fallback gated to staple-typed items). Reactivity layer (B): subscribe the diff-based handleStapleChange to stapleLibrary.subscribe in addition to stapleStorage.onChange so local UI deletes propagate without per-call-site dual-writes. UI layer (C): adopt the stapleRevision useEffect-subscribe pattern (already proven in SectionOrderSettingsScreen) in HomeView and StoreView so derived staple memos refresh on mutation. SEQUENCING CONSTRAINT (per RCA risk row 4): 01-01, 01-02, and 01-03 must land together — removing the HomeView dual-write before init wiring is in place would temporarily regress the fresh-stapleId delete path. The orchestrator commits per step, but the user-visible fix is only complete after 01-03.",
+      "estimated_duration": "3-4 hours",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Domain: removeItemsByStaple with id-then-(name,houseArea) fallback gated to itemType=staple",
+          "description": "Fix root cause A. Extend the trip service factory in src/domain/trip.ts with removeItemsByStaple({ id, name, houseArea }) that filters items using a two-step identity rule: (1) when item.stapleId is non-null/non-undefined, match by id; (2) when item.stapleId is null/undefined, fall back to (item.name === staple.name AND item.houseArea === staple.houseArea), but ONLY when item.itemType === 'staple' — one-off items must never be removed by name+area coincidence. Both mutators (the new removeItemsByStaple and the back-compat removeItemByStapleId) early-return without notify/persist when nothing matched, preventing redundant fan-out under double-firing (see RCA risk row 2). The id-only removeItemByStapleId stays in the public contract because the remote-sync diff path only has the deleted id, not the deleted record. Functional paradigm: pure factory function, no classes. Update src/domain/trip.test.ts to remove the test that codified the stapleId===null limitation as expected behavior, and add new behavioral tests for the fallback, the itemType guard, and the no-op early-return. fast-check property tests are welcome for the invariant 'for any staple S and trip with no item linked to S by id or by (name+area+staple-type), removeItemsByStaple(S) is a no-op'.",
+          "criteria": "GIVEN a trip containing one item with stapleId='s1' and one item with stapleId=null but matching name+houseArea of staple S (id='s2', itemType='staple') WHEN removeItemsByStaple(S) runs THEN only the matching name+area item is removed AND subscribers are notified once. GIVEN a trip containing a one-off item (itemType='oneoff') with stapleId=null and the same name+houseArea as a deleted staple WHEN removeItemsByStaple(deletedStaple) runs THEN the one-off is NOT removed AND subscribers are NOT notified. GIVEN a trip containing only items unrelated to staple S WHEN removeItemsByStaple(S) runs THEN items are unchanged AND subscribers are NOT notified AND persistence is NOT called. GIVEN a trip with an item carrying stapleId='s1' WHEN removeItemByStapleId('s1') runs THEN the item is removed AND subscribers notified once (back-compat preserved). GIVEN a trip with one item whose stapleId is null but whose name+houseArea matches staple S WHEN removeItemByStapleId(S.id) runs THEN that item is NOT removed (id-only path remains id-only). All assertions describe observable trip state and subscriber notifications; none reference internal filter helpers or private item arrays.",
+          "test_file": "src/domain/trip.test.ts",
+          "scenario_name": "removeItemsByStaple uses id-then-name+area fallback gated to staple-typed items",
+          "files_to_modify": [
+            "src/domain/trip.ts",
+            "src/domain/trip.test.ts"
+          ],
+          "implementation_notes": "Pure domain change. Factory function only — no classes. Place removeItemsByStaple alongside the existing removeItemByStapleId in the returned tripService object. Both methods follow the shape: compute next = items.filter(...); if (next.length === items.length) return; items = next; notify(); persistTrip(). The fallback predicate must read item.itemType === 'staple' before allowing name+houseArea match — confirm the exact field name on TripItem (likely itemType, possibly type) by reading the TripItem type definition first. Update the existing test at trip.test.ts:74-90 ('item added without stapleId is NOT removed by removeItemByStapleId'): KEEP it for removeItemByStapleId (id-only path is still id-only by design) and ADD a sibling test for the new removeItemsByStaple covering the fallback. Add tests for: (a) fallback removes a stapleId=null staple-typed item with matching name+area; (b) fallback does NOT remove a one-off with matching name+area (itemType guard); (c) no-match input is a no-op (no notify, no persist) — use a spy listener and a stub persistTrip; (d) id-match still works alongside fallback. Optional fast-check property: for any (trip, staple) where no item is linked by id and no staple-typed item shares (name, houseArea) with staple, removeItemsByStaple(staple) returns the same items reference (or equivalent). Mutation testing target: kill rate >= 80% on src/domain/trip.ts after this change — the no-op early-return, the itemType guard, and the two-branch identity match are all natural mutant magnets, so each needs at least one killing assertion. This step is RED via the new fallback and itemType-guard tests; the existing limitation-codifying test must be updated, not preserved.",
+          "deliverables": [
+            "src/domain/trip.ts: removeItemsByStaple({id,name,houseArea}) added; removeItemByStapleId retained as id-only back-compat; both methods early-return on no-op",
+            "src/domain/trip.test.ts: existing limitation test updated; new tests for fallback match, itemType=staple guard, no-op early-return, and id-only back-compat path"
+          ],
+          "estimated_duration": "45-60 minutes",
+          "dependencies": []
+        },
+        {
+          "id": "01-02",
+          "name": "Reactivity wiring: subscribe handleStapleChange to stapleLibrary.subscribe and switch to removeItemsByStaple",
+          "description": "Fix root cause B. In src/hooks/useAppInitialization.ts add a stapleLibrary.subscribe(onStapleChange) registration alongside the existing stapleStorage.onChange wiring (do not replace — both must fan into the same handler so cross-device remote sync continues to work). Track the returned unsubscribe in unsubscribeAll so teardown stays clean. Switch the 'removed' loop inside handleStapleChange from tripService.removeItemByStapleId(staple.id) to tripService.removeItemsByStaple(staple) so the new fallback identity is applied. Idempotency safety: diffStaples(previousStaples, currentStaples) returns empty arrays after the first fire updates previousStaples, so the second fire (delayed Firestore echo) is a true no-op (RCA risk row 2). Add or extend a test under src/hooks/useAppInitialization.test.ts (create if absent) that drives a local stapleLibrary.remove() and asserts trip cleanup occurred WITHOUT going through any Firestore echo path. Functional paradigm: hooks and factory functions only.",
+          "criteria": "GIVEN useAppInitialization initialized with a real in-memory stapleLibrary, a real tripService, and a fake stapleStorage whose onChange is never invoked WHEN stapleLibrary.remove(stapleId) is called locally AND the staple has at least one trip item linked by id THEN the trip's items collection no longer contains that item on the next tick. GIVEN the same setup AND a trip item with stapleId=null whose name+houseArea match the deleted staple AND itemType='staple' WHEN stapleLibrary.remove runs THEN that item is also removed (proves the wiring uses removeItemsByStaple, not removeItemByStapleId). GIVEN useAppInitialization has run cleanup (unsubscribeAll) WHEN stapleLibrary.remove is then called THEN tripService is NOT mutated (subscription was unwired). GIVEN both stapleLibrary.subscribe and stapleStorage.onChange fire for the same logical delete (double-fire) THEN tripService.removeItemsByStaple is called at most once with observable effect (idempotent diff prevents redundant mutation). Assertions reference only the public tripService surface (getItems, subscribe) and stapleLibrary.remove; no spying on private listener arrays or handler internals.",
+          "test_file": "src/hooks/useAppInitialization.test.ts",
+          "scenario_name": "Local stapleLibrary.remove triggers trip cleanup via domain subscription, independent of Firestore echo",
+          "files_to_modify": [
+            "src/hooks/useAppInitialization.ts",
+            "src/hooks/useAppInitialization.test.ts"
+          ],
+          "implementation_notes": "In useAppInitialization.ts around lines 159-247: keep the existing factories.createStapleStorage(uid, { onChange: onStapleChange }) wiring intact; ADD const unsubscribeStapleLibrary = stapleLibrary.subscribe(onStapleChange) after stapleLibrary is created and after handleStapleChange is defined. Ensure unsubscribeAll (or whatever the teardown aggregator is named) calls unsubscribeStapleLibrary(). Inside handleStapleChange replace the 'for (const staple of removed) tripService.removeItemByStapleId(staple.id)' line with 'for (const staple of removed) tripService.removeItemsByStaple(staple)'. Confirm previousStaples is updated AFTER the diff loop — without this, the idempotency claim fails. For the test file: if useAppInitialization.test.ts does not exist, create it. Build a real in-memory stapleLibrary (factory) and tripService (factory) — use the actual production factories, not mocks. For stapleStorage, write a tiny ~20-line in-memory fake (factory function) whose onChange is exposed but never auto-invoked, so the test isolates the new stapleLibrary.subscribe path. Drive scenarios via stapleLibrary.remove(id) and assert against tripService.getItems(). The double-fire test simulates the delayed Firestore echo by manually invoking onStapleChange a second time after the first has settled and asserting tripService.getItems() is unchanged. Functional paradigm: factory functions only, no classes. Behavioral assertions only — do not assert on internal listener counts.",
+          "deliverables": [
+            "src/hooks/useAppInitialization.ts: stapleLibrary.subscribe(onStapleChange) wired alongside stapleStorage.onChange; unsubscribe tracked in unsubscribeAll; removed-loop switched to removeItemsByStaple",
+            "src/hooks/useAppInitialization.test.ts: scenarios covering local-remove propagation, fallback-identity propagation, unsubscribe correctness, and idempotent double-fire"
+          ],
+          "estimated_duration": "60-90 minutes",
+          "dependencies": [
+            "01-01"
+          ]
+        },
+        {
+          "id": "01-03",
+          "name": "UI reactivity: drop dual-write, adopt stapleRevision pattern in HomeView and StoreView",
+          "description": "Fix root cause C and complete the user-facing fix. In src/ui/HomeView.tsx remove the manual removeItemByStapleId dual-write from handleDeleteStaple — trip cleanup now flows through useAppInitialization's stapleLibrary subscription (delivered in 01-02). Drop removeItemByStapleId from the useTrip destructure if HomeView is the only consumer; otherwise leave the hook export intact. Add the stapleRevision useState + useEffect-subscribe pattern (mirror src/ui/SectionOrderSettingsScreen.tsx:47-53) and thread stapleRevision through the dependency arrays of allStaples and checklistStaples memos so derived data refreshes on every staple-library mutation. Apply the same stapleRevision pattern in src/ui/StoreView.tsx around the existingSections memo (StoreView has no delete path today but staple add/edit currently leaks staleness until remount). Add a behavioral integration test src/ui/HomeView.test.tsx covering the user-facing scenario: delete a staple via the metadata bottom sheet flow, assert the staple disappears from the trip's rendered sweep group AND from the checklist on the next tick, with NO reset-sweep invocation. Sequencing: this step closes the loop — 01-01 alone leaves the dual-write redundant, 01-02 alone leaves UI memos stale, only after 01-03 does the user-visible defect close.",
+          "criteria": "GIVEN HomeView mounted in sweep mode with a trip containing a staple-linked item WHEN the user invokes the metadata-bottom-sheet delete flow for that staple THEN on the next tick the trip's rendered sweep group no longer contains that item AND no reset-sweep call was made. GIVEN HomeView mounted in checklist mode with the deleted staple present WHEN the staple is removed from the library THEN the checklist no longer renders that staple on the next tick (proves checklistStaples re-derives via stapleRevision). GIVEN a trip item that was QuickAdd'd as free-text (stapleId=null) but matches a later-created staple's name+houseArea WHEN the user deletes that staple THEN the trip item is also removed (cross-cutting verification of the 01-01 fallback through the full UI stack). GIVEN StoreView mounted with N existingSections WHEN a new staple is added in a previously-unseen section THEN existingSections re-derives to include that section on the next tick (regression coverage for the StoreView memo, no remount required). All assertions reference rendered tree state (testIDs, visible text) or public domain facade (tripService.getItems, stapleLibrary.listAll); none reference the internal stapleRevision counter, listener arrays, or memo dep arrays directly.",
+          "test_file": "src/ui/HomeView.test.tsx",
+          "scenario_name": "Deleting a staple in HomeView removes its trip item and refreshes the checklist without reset-sweep",
+          "files_to_modify": [
+            "src/ui/HomeView.tsx",
+            "src/ui/StoreView.tsx",
+            "src/ui/HomeView.test.tsx"
+          ],
+          "implementation_notes": "HomeView.tsx: (1) handleDeleteStaple becomes useCallback((stapleId) => { stapleLibrary.remove(stapleId); }, [stapleLibrary]) — drop the removeItemByStapleId call. (2) If HomeView is the only consumer of useTrip().removeItemByStapleId, drop it from the destructure (line ~28); otherwise leave it. (3) Add: const [stapleRevision, setStapleRevision] = useState(0); useEffect(() => stapleLibrary.subscribe(() => setStapleRevision(p => p + 1)), [stapleLibrary]); (4) Update memo deps: useMemo(() => stapleLibrary.listAll(), [stapleLibrary, stapleRevision]) for allStaples (line ~34); checklistStaples already depends on allStaples so it transitively refreshes. StoreView.tsx: same useState + useEffect pattern; thread stapleRevision into the existingSections memo deps (around lines 33-36). For HomeView.test.tsx (NEW file): use @testing-library/react-native; mount HomeView via a ServiceProvider supplying a real in-memory stapleLibrary and tripService (use production factories). Seed: one staple S with id='s1' name='Milk' houseArea='Kitchen'; one trip item linked to S; one trip item added via QuickAdd-free-text path with name='Bread' houseArea='Kitchen' itemType='staple' stapleId=null. Then add a staple matching 'Bread/Kitchen' so the second item now has a fallback target. Trigger delete on S: assert the Milk row is gone from sweep group AND from checklist. Trigger delete on the Bread staple: assert the stapleId=null Bread row is also gone (this test exercises 01-01 fallback through the full UI stack and is the cross-cutting acceptance verification mentioned as optional 01-04 — folding it in here keeps the roadmap to four steps). Behavioral assertions on rendered testIDs only. No spying on stapleRevision, no spying on private listeners. Functional paradigm: hooks only, no classes.",
+          "deliverables": [
+            "src/ui/HomeView.tsx: dual-write removed; stapleRevision subscription added; allStaples memo deps include stapleRevision",
+            "src/ui/StoreView.tsx: stapleRevision subscription added; existingSections memo deps include stapleRevision",
+            "src/ui/HomeView.test.tsx: integration scenarios for staple-delete -> trip cleanup (id path), staple-delete -> trip cleanup (name+area fallback path), and checklist-mode staleness regression"
+          ],
+          "estimated_duration": "60-75 minutes",
+          "dependencies": [
+            "01-02"
+          ]
+        },
+        {
+          "id": "01-04",
+          "name": "Cross-cutting acceptance verification for QuickAdd / handleSubmitTripItem (stapleId=null) deletion path",
+          "description": "Optional safety-net step. The 01-03 HomeView integration test already exercises one stapleId=null cleanup path (free-text add then matching-staple delete). This step adds explicit verification for the second stapleId=null source identified in the RCA: trip items added via handleSubmitTripItem in HomeView (the AddTripItemRequest path) and the free-text branch of QuickAdd. If the 01-03 test suite already covers both code paths to your satisfaction (it covers the QuickAdd free-text path), this step MAY be merged into 01-03 and skipped. Otherwise, add a focused test (extend HomeView.test.tsx or add a sibling QuickAdd.test.tsx) that submits a trip item via handleSubmitTripItem with a name+houseArea that matches an existing staple, then deletes that staple, and asserts the manually-added item is removed by the fallback. No production code changes — this step is test-only and exists to lock the cross-cutting invariant against future regressions.",
+          "criteria": "GIVEN a trip item added via handleSubmitTripItem (AddTripItemRequest path, no stapleId field) with name+houseArea matching an existing staple S of itemType='staple' WHEN the user deletes S via the staple-library remove flow THEN the manually-added item is removed from the trip on the next tick. GIVEN a trip item added via the QuickAdd free-text path (no suggestion selected, stapleId=null) with name+houseArea matching staple S WHEN S is deleted THEN that item is removed. GIVEN a trip item added via QuickAdd free-text whose name+houseArea does NOT match any deleted staple WHEN any unrelated staple is deleted THEN that item is preserved. Behavioral assertions on rendered tree or tripService.getItems() only.",
+          "test_file": "src/ui/HomeView.test.tsx",
+          "scenario_name": "Stable=null trip items added via handleSubmitTripItem and QuickAdd free-text are removed by fallback when the matching staple is deleted",
+          "files_to_modify": [
+            "src/ui/HomeView.test.tsx"
+          ],
+          "implementation_notes": "Test-only. NO production code changes. If 01-03's test suite already covers handleSubmitTripItem AND QuickAdd free-text scenarios (verify by reading the 01-03 deliverable before starting this step), MERGE this step into 01-03 and mark this step skipped in the delivery commit. Otherwise extend src/ui/HomeView.test.tsx (or add a QuickAdd.test.tsx sibling — prefer extending HomeView.test.tsx to keep the scenario in one place) with two targeted tests: (a) drive handleSubmitTripItem via the rendered UI (or via the bottom-sheet add flow if that is the production entry point) producing an item with stapleId=null; then drive stapleLibrary.remove on a matching staple; assert the item disappears. (b) drive the QuickAdd free-text branch (no suggestion accepted) producing stapleId=null; same delete + assert. Use the same in-memory ServiceProvider scaffolding as 01-03. Behavioral only — never assert on stapleId field directly; assert on the rendered row or on tripService.getItems().length. This step's value is locking down two specific code-path entry points called out in the RCA Branch A evidence (HomeView.tsx:99-101 and the QuickAdd free-text branch) that would otherwise rely on a single 01-03 test for coverage.",
+          "deliverables": [
+            "src/ui/HomeView.test.tsx (or sibling): explicit cross-cutting scenarios for handleSubmitTripItem stapleId=null cleanup AND QuickAdd free-text stapleId=null cleanup, OR a documented note in the 01-03 commit that these scenarios were folded in and 01-04 is intentionally a no-op"
+          ],
+          "estimated_duration": "20-30 minutes",
+          "dependencies": [
+            "01-03"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/hooks/",
+      "src/ui/"
+    ],
+    "test_directories": [
+      "src/domain/",
+      "src/hooks/",
+      "src/ui/"
+    ],
+    "excluded_patterns": [
+      "**/*.d.ts",
+      "**/index.ts",
+      "node_modules/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator-bugfix-scope",
+    "approved_at": "2026-04-27T00:00:00Z",
+    "note": "Bugfix scope derived from RCA at docs/feature/fix-staple-delete-trip-sync/deliver/rca-context.md (3 root causes A/B/C, 5-step proposed fix). 4 steps mapped to RCA layers: 01-01 domain (A), 01-02 reactivity wiring (B), 01-03 UI revision pattern + dual-write removal + integration test (C + completion of A/B), 01-04 optional cross-cutting acceptance verification for stapleId=null entry points. Sequencing constraint per RCA risk row 4: 01-01+01-02+01-03 must land together — the orchestrator commits per step but the user-facing fix is only complete after 01-03. Decomposition ratio = 4 steps / 4 production files (src/domain/trip.ts, src/hooks/useAppInitialization.ts, src/ui/HomeView.tsx, src/ui/StoreView.tsx) = 1.0, well under the 2.5 ceiling. Behavioral AC throughout — no private-method references, no listener-array assertions. Functional paradigm: factory functions, pure domain fns, hooks; no classes. Mutation testing kill-rate target >= 80% on src/domain/trip.ts is supported by the four mutant-magnet branches called out in 01-01 implementation notes (no-op early-return, itemType guard, id-match branch, fallback name+area branch)."
+  }
+}
