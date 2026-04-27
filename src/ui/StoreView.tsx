@@ -28,7 +28,6 @@ export const StoreView = (): React.JSX.Element => {
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
   const [editStapleId, setEditStapleId] = useState<string | null>(null);
-  const [editStapleName, setEditStapleName] = useState<string>('');
   const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
   // Subscribe to staple-library mutations so existingSections re-derives when
   // a staple introducing a new section is added/edited while StoreView is
@@ -67,7 +66,6 @@ export const StoreView = (): React.JSX.Element => {
     const staple = stapleLibrary.listAll().find((s) => s.name === name && s.houseArea === area);
     if (!staple) return;
     setEditStapleId(staple.id);
-    setEditStapleName(staple.name);
     setEditInitialValues({
       houseArea: staple.houseArea,
       section: staple.storeLocation.section,
@@ -81,7 +79,6 @@ export const StoreView = (): React.JSX.Element => {
     setMetadataSheetVisible(false);
     setMetadataSheetItemName('');
     setEditStapleId(null);
-    setEditStapleName('');
     setEditInitialValues(null);
   }, []);
 

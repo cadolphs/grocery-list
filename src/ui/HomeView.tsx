@@ -60,7 +60,6 @@ export const HomeView = (): React.JSX.Element => {
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
   const [editStapleId, setEditStapleId] = useState<string | null>(null);
-  const [editStapleName, setEditStapleName] = useState<string>('');
   const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
   const [settingsView, setSettingsView] = useState<SettingsView | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -82,7 +81,6 @@ export const HomeView = (): React.JSX.Element => {
     const staple = stapleLibrary.listAll().find((s) => s.name === name && s.houseArea === area);
     if (!staple) return;
     setEditStapleId(staple.id);
-    setEditStapleName(staple.name);
     setEditInitialValues({
       houseArea: staple.houseArea,
       section: staple.storeLocation.section,
@@ -96,7 +94,6 @@ export const HomeView = (): React.JSX.Element => {
     setMetadataSheetVisible(false);
     setMetadataSheetItemName('');
     setEditStapleId(null);
-    setEditStapleName('');
     setEditInitialValues(null);
   }, []);
 
@@ -156,6 +153,13 @@ export const HomeView = (): React.JSX.Element => {
   const handleRemoveFromChecklist = useCallback((name: string): void => {
     skipItem(name);
   }, [skipItem]);
+
+  // Single source of truth for "tap toggles needed" used by sweep tiles
+  // and one-off rows. Both paths previously inlined the same if/else.
+  const toggleItemNeeded = useCallback((name: string, currentlyNeeded: boolean): void => {
+    if (currentlyNeeded) skipItem(name);
+    else unskipItem(name);
+  }, [skipItem, unskipItem]);
 
   const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
     const isOneOff = staple.type === 'one-off';
@@ -248,11 +252,7 @@ export const HomeView = (): React.JSX.Element => {
               areaGroup={areaGroup}
               onItemPress={(name: string) => {
                 const item = areaGroup.items.find((i) => i.name === name);
-                if (item?.needed) {
-                  skipItem(name);
-                } else {
-                  unskipItem(name);
-                }
+                if (item) toggleItemNeeded(name, item.needed);
               }}
               onItemLongPress={handleEditStaple}
               onCompleteArea={completeArea}
@@ -270,13 +270,7 @@ export const HomeView = (): React.JSX.Element => {
                   key={item.id}
                   item={item}
                   mode="home"
-                  onPress={() => {
-                    if (item.needed) {
-                      skipItem(item.name);
-                    } else {
-                      unskipItem(item.name);
-                    }
-                  }}
+                  onPress={() => toggleItemNeeded(item.name, item.needed)}
                 />
               ))}
             </View>
@@ -401,13 +395,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 8,
   },
-  whiteboardPrompt: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.color.accent,
-    textAlign: 'center',
-    marginVertical: 8,
-  },
   oneOffsSection: {
     backgroundColor: theme.color.tile,
     borderRadius: theme.radius.lg,
@@ -471,12 +458,6 @@ const styles = StyleSheet.create({
   },
   settingsMenuContainer: {
     padding: 16,
-  },
-  settingsMenuHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.color.text,
-    marginBottom: 16,
   },
   settingsMenuItem: {
     backgroundColor: theme.color.tile,
