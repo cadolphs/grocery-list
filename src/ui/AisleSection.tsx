@@ -29,17 +29,15 @@ type AisleSectionProps = {
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
-const formatProgress = (sectionGroup: SectionGroup): string =>
-  `${sectionGroup.checkedCount} of ${sectionGroup.totalCount}`;
+// Section and aisle sub-group share the same checked/total count shape,
+// so progress formatting and completion are computed by a single helper pair.
+type Progress = { readonly checkedCount: number; readonly totalCount: number };
 
-const isSectionComplete = (sectionGroup: SectionGroup): boolean =>
-  sectionGroup.checkedCount === sectionGroup.totalCount;
+const formatProgress = (progress: Progress): string =>
+  `${progress.checkedCount} of ${progress.totalCount}`;
 
-const formatSubGroupProgress = (subGroup: AisleSubGroup): string =>
-  `${subGroup.checkedCount} of ${subGroup.totalCount}`;
-
-const isSubGroupComplete = (subGroup: AisleSubGroup): boolean =>
-  subGroup.checkedCount === subGroup.totalCount;
+const isComplete = (progress: Progress): boolean =>
+  progress.checkedCount === progress.totalCount;
 
 const aisleKeySlug = (aisleKey: AisleKey): string =>
   aisleKey === null ? 'no-aisle' : String(aisleKey);
@@ -79,8 +77,8 @@ const AisleSubGroupBlock = ({
     <View style={styles.aisleDivider}>
       <Text style={styles.aisleBadge}>{aisleBadgeLabel(subGroup.aisleKey)}</Text>
       <View style={styles.aisleDividerRight}>
-        <Text style={styles.aisleProgress}>{formatSubGroupProgress(subGroup)}</Text>
-        {isSubGroupComplete(subGroup) && (
+        <Text style={styles.aisleProgress}>{formatProgress(subGroup)}</Text>
+        {isComplete(subGroup) && (
           <Text
             style={styles.aisleCheckmark}
             testID={`aisle-subgroup-complete-${aisleKeySlug(subGroup.aisleKey)}`}
@@ -104,7 +102,7 @@ export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: Ais
         <Text style={styles.heading}>{sectionGroup.section}</Text>
         <View style={styles.headerRight}>
           <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
-          {isSectionComplete(sectionGroup) && (
+          {isComplete(sectionGroup) && (
             <Text style={styles.checkmark} testID={`section-complete-${sectionGroup.section}`}>✓</Text>
           )}
         </View>
