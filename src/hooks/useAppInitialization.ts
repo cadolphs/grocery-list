@@ -148,7 +148,7 @@ export const diffStaples = (
 // Apply each diff bucket to the trip. Each helper has one responsibility,
 // matching the three branches of handleStapleChange.
 
-const applyAddedStaplesToTrip = (
+export const applyAddedStaplesToTrip = (
   tripService: TripService,
   added: readonly StapleItem[],
 ): void => {

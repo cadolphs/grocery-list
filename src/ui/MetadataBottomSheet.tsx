@@ -247,18 +247,16 @@ export const MetadataBottomSheet = ({
       aisleNumber: aisleText ? parseInt(aisleText, 10) : null,
     };
 
+    // Single source of truth: stapleLibrary.subscribe -> applyAddedStaplesToTrip
+    // (wired in useAppInitialization) adds the trip row carrying the new
+    // staple's id. The previous direct onSubmitTripItem call here was a
+    // dual-write that produced a duplicate row without a stapleId, slipping
+    // past the stapleId-keyed dedup guard at trip.ts:178. Mirrors the
+    // analogous delete-path simplification in commit b32cd42.
     onSubmitStaple({
       name: itemName,
       houseArea: selectedArea,
       storeLocation,
-    });
-
-    onSubmitTripItem({
-      name: itemName,
-      houseArea: selectedArea,
-      storeLocation,
-      itemType: 'staple',
-      source: 'quick-add',
     });
 
     onDismiss();

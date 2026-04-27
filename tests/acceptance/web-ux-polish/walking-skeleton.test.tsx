@@ -33,6 +33,7 @@ import { createNullAreaStorage } from '../../../src/adapters/null/null-area-stor
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
 import { useIsWeb } from '../../../src/hooks/useIsWeb';
+import { diffStaples, applyAddedStaplesToTrip } from '../../../src/hooks/useAppInitialization';
 
 const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
 
@@ -51,6 +52,17 @@ function createTestServices() {
   tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+
+  // Mirror the production composition root: stapleLibrary subscription
+  // applies added staples to the trip via diffStaples + applyAddedStaplesToTrip.
+  let previousStaples = stapleLibrary.listAll();
+  stapleLibrary.subscribe(() => {
+    const currentStaples = stapleLibrary.listAll();
+    const { added } = diffStaples(previousStaples, currentStaples);
+    applyAddedStaplesToTrip(tripService, added);
+    previousStaples = currentStaples;
+  });
+
   return { stapleLibrary, tripService, areaManagement };
 }
 

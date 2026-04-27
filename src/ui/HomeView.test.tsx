@@ -260,6 +260,70 @@ const renderStoreView = (services: AppServices) =>
     </ServiceProvider>,
   );
 
+describe('HomeView staple-add flow (fix-staple-add-duplicate 01-01)', () => {
+  test('Adding a brand-new staple via the metadata bottom sheet yields exactly one trip row with the correct stapleId', async () => {
+    // GIVEN HomeView mounted with a real stapleLibrary, real tripService, and
+    // the production useAppInitialization wiring (so stapleLibrary.subscribe
+    // -> applyAddedStaplesToTrip is active). No staples preloaded.
+    const services = await initServicesWith([], ['Kitchen Cabinets']);
+    const tree = renderHomeView(services);
+
+    // Sanity: trip starts empty.
+    expect(services.tripService.getItems()).toEqual([]);
+
+    // WHEN the user types a brand-new item name into QuickAdd and presses
+    // Add, which opens the MetadataBottomSheet in add mode.
+    const quickAddInput = tree.getByPlaceholderText('Add an item...');
+    await act(async () => {
+      fireEvent.changeText(quickAddInput, 'Eggs');
+    });
+    await act(async () => {
+      fireEvent(quickAddInput, 'submitEditing');
+    });
+
+    // The bottom sheet is now visible. Select the Kitchen Cabinets area
+    // chip (it should already be the default, but tap to be explicit).
+    const areaButton =
+      tree.queryByTestId('area-button-Kitchen Cabinets-active') ??
+      tree.getByTestId('area-button-Kitchen Cabinets');
+    await act(async () => {
+      fireEvent.press(areaButton);
+    });
+
+    // Fill in the store section so the request is well-formed.
+    const sectionInput = tree.getByPlaceholderText('Store section...');
+    await act(async () => {
+      fireEvent.changeText(sectionInput, 'Dairy');
+    });
+
+    // Tap Add Item — this fires onSubmitStaple and (in the buggy path) ALSO
+    // onSubmitTripItem, producing a duplicate trip row.
+    const addItemButton = tree.getByText('Add Item');
+    await act(async () => {
+      fireEvent.press(addItemButton);
+    });
+
+    // THEN exactly one trip item exists, carrying the freshly-created
+    // staple's id. Today this fails: the trip has length 2 because the
+    // dual-write in MetadataBottomSheet's Staple-success branch added a
+    // second row without a stapleId, slipping past the stapleId-keyed
+    // dedup guard.
+    const items = services.tripService.getItems();
+    expect(items.length).toBe(1);
+
+    const eggsStaple = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Eggs');
+    if (!eggsStaple) throw new Error('Eggs staple was not created');
+
+    expect(items[0].name).toBe('Eggs');
+    expect(items[0].houseArea).toBe('Kitchen Cabinets');
+    expect(items[0].stapleId).toBe(eggsStaple.id);
+    expect(typeof items[0].stapleId).toBe('string');
+    expect(items[0].stapleId).not.toBe('');
+  });
+});
+
 describe('StoreView existingSections reactivity (fix-staple-delete-trip-sync 01-03)', () => {
   test('adding a staple in a new section refreshes the bottom-sheet section suggestions on next tick', async () => {
     // GIVEN StoreView mounted with no staples (so the existingSections set

@@ -24,6 +24,7 @@ import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
+import { diffStaples, applyAddedStaplesToTrip } from '../../../src/hooks/useAppInitialization';
 
 // UI-level imports:
 import { render, fireEvent, screen } from '@testing-library/react-native';
@@ -46,6 +47,19 @@ function createTestServices(preloadedStaples?: Array<{
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.start(library.listAll());
+
+  // Mirror the production composition root (initializeApp in
+  // useAppInitialization.ts): when the staple library changes, diff against
+  // the previous snapshot and apply added staples to the trip. This is the
+  // single source of truth for trip rows backed by new staples.
+  let previousStaples = library.listAll();
+  library.subscribe(() => {
+    const currentStaples = library.listAll();
+    const { added } = diffStaples(previousStaples, currentStaples);
+    applyAddedStaplesToTrip(tripService, added);
+    previousStaples = currentStaples;
+  });
+
   return { library, tripService, stapleStorage, tripStorage };
 }
 
