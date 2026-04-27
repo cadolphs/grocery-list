@@ -178,6 +178,21 @@ export const createTrip = (
       if (request.stapleId && items.some(i => i.stapleId === request.stapleId)) {
         return { success: false, error: 'staple already in trip' };
       }
+      // Defense-in-depth fallback: callers passing itemType='staple' without
+      // a stapleId must still be blocked when an existing staple-typed item
+      // shares (name, houseArea). Mirrors matchesStapleIdentity used on the
+      // remove path so add and remove identity rules stay symmetric.
+      if (
+        request.itemType === 'staple' &&
+        items.some(
+          (i) =>
+            i.itemType === 'staple' &&
+            i.name === request.name &&
+            i.houseArea === request.houseArea,
+        )
+      ) {
+        return { success: false, error: 'staple already in trip' };
+      }
 
       const tripItem: TripItem = {
         id: generateTripItemId(),

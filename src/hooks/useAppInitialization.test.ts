@@ -600,6 +600,13 @@ describe('initializeApp', () => {
     test('local stapleLibrary.remove also removes trip items matched by name+houseArea fallback (proves removeItemsByStaple wiring)', async () => {
       const authUser: AuthUser = { uid: 'user-fallback', email: 'fb@f.com' };
 
+      // Capture the trip storage so we can seed legacy state directly. The
+      // addItem path now correctly refuses staple-typed duplicates by
+      // (name, houseArea), so legacy stapleId=null staple items can only be
+      // injected via persisted state — which is exactly what this test
+      // simulates: a pre-existing trip from before the dedup fix.
+      let capturedTripStorage: InitializableTripStorage | undefined;
+
       const factories: AdapterFactories = {
         ...defaultFactories,
         createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
@@ -609,35 +616,62 @@ describe('initializeApp', () => {
           );
           return { ...storage, initialize: async () => {} };
         },
+        createTripStorage: () => {
+          capturedTripStorage = createInitializableTripStorage();
+          return capturedTripStorage;
+        },
       };
 
       const result = await initializeApp(authUser, factories);
       expect(result.isReady).toBe(true);
       const { stapleLibrary, tripService } = result.services!;
 
-      // Seed an additional, legacy-style trip item with stapleId=null but
-      // matching name + houseArea + itemType='staple'. This is the fallback
-      // identity that ONLY removeItemsByStaple (not removeItemByStapleId)
-      // can clean up.
-      const addResult = tripService.addItem({
-        name: 'Cinnamon',
-        houseArea: 'Pantry',
-        storeLocation: { section: 'Spices', aisleNumber: 5 },
-        itemType: 'staple',
-        source: 'carryover',
-        // stapleId intentionally omitted -> stored as null
+      // Seed legacy state directly via storage: one item linked by stapleId
+      // plus one legacy staple-typed item with stapleId=null sharing
+      // (name, houseArea). This is exactly the legacy data shape that the
+      // remove-side fallback must clean up.
+      const cinnamonStaple = stapleLibrary.listAll().find(s => s.name === 'Cinnamon')!;
+      capturedTripStorage!.saveTrip({
+        id: 'trip-fallback-fixture',
+        items: [
+          {
+            id: 'trip-item-linked',
+            name: 'Cinnamon',
+            houseArea: 'Pantry',
+            storeLocation: { section: 'Spices', aisleNumber: 5 },
+            itemType: 'staple',
+            stapleId: cinnamonStaple.id,
+            source: 'preloaded',
+            needed: true,
+            checked: false,
+            checkedAt: null,
+          },
+          {
+            id: 'trip-item-legacy',
+            name: 'Cinnamon',
+            houseArea: 'Pantry',
+            storeLocation: { section: 'Spices', aisleNumber: 5 },
+            itemType: 'staple',
+            stapleId: null,
+            source: 'carryover',
+            needed: true,
+            checked: false,
+            checkedAt: null,
+          },
+        ],
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        completedAreas: [],
       });
-      expect(addResult.success).toBe(true);
+      tripService.loadFromStorage();
 
       const before = tripService.getItems();
-      // 1 from initializeFromStorage (with stapleId) + 1 fallback (stapleId=null)
       expect(before).toHaveLength(2);
       const fallbackItem = before.find(i => i.stapleId === null);
       expect(fallbackItem).toBeDefined();
       expect(fallbackItem!.name).toBe('Cinnamon');
 
       // Drive locally.
-      const cinnamonStaple = stapleLibrary.listAll().find(s => s.name === 'Cinnamon')!;
       stapleLibrary.remove(cinnamonStaple.id);
 
       // Both items must be gone: id-linked and fallback-matched.

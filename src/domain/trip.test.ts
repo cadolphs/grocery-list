@@ -257,6 +257,61 @@ describe('TripService.subscribe', () => {
     expect(tripService.getItems()).toHaveLength(1);
   });
 
+  test('addItem rejects stapleId-less staple duplicate by (name, houseArea) fallback', () => {
+    // Defense-in-depth: callers passing itemType='staple' without stapleId
+    // must still be blocked when an existing staple shares (name, houseArea).
+    // Mirrors matchesStapleIdentity semantics on the remove path.
+    const tripService = createTestTripService();
+
+    const seedResult = tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Kitchen',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 's1',
+    });
+    expect(seedResult.success).toBe(true);
+
+    const duplicateResult = tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Kitchen',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'whiteboard',
+      // intentionally NO stapleId — the fallback guard must still catch this
+    });
+
+    expect(duplicateResult).toEqual({ success: false, error: 'staple already in trip' });
+    expect(tripService.getItems()).toHaveLength(1);
+  });
+
+  test('addItem allows a one-off with the same (name, houseArea) as an existing staple', () => {
+    // Negative control: the fallback guard is gated to itemType==='staple'.
+    // A one-off sharing name+houseArea with a staple must NOT be rejected.
+    const tripService = createTestTripService();
+
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Kitchen',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 's1',
+    });
+
+    const oneOffResult = tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Kitchen',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'one-off',
+      source: 'whiteboard',
+    });
+
+    expect(oneOffResult.success).toBe(true);
+    expect(tripService.getItems()).toHaveLength(2);
+  });
+
   test('unsubscribe stops notifications', () => {
     const tripService = createTestTripService();
     const notifications: number[] = [];
