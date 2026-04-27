@@ -277,6 +277,207 @@ describe('TripService.subscribe', () => {
   });
 });
 
+describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback gated to staple-typed items', () => {
+  test('id-match path: removes the linked item by stapleId (back-compat parity)', () => {
+    const tripService = createTestTripService();
+    tripService.addItem({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'whiteboard',
+      stapleId: 'staple-milk-1',
+    });
+
+    expect(tripService.getItems()).toHaveLength(1);
+
+    tripService.removeItemsByStaple({
+      id: 'staple-milk-1',
+      name: 'Milk',
+      houseArea: 'Fridge',
+    });
+
+    expect(tripService.getItems()).toHaveLength(0);
+  });
+
+  test('fallback path: removes a staple-typed item with stapleId=null when name+houseArea match', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    // Seed an item that has stapleId=null but matches name+houseArea (the bug scenario:
+    // legacy/pre-link state in which a staple-typed item is not linked by id yet).
+    storage.saveTrip({
+      id: 'trip-fallback',
+      items: [
+        {
+          id: 'item-1',
+          name: 'Bread',
+          houseArea: 'Kitchen Cabinets',
+          storeLocation: { section: 'Bakery', aisleNumber: 1 },
+          itemType: 'staple',
+          stapleId: null,
+          source: 'preloaded',
+          needed: true,
+          checked: false,
+          checkedAt: null,
+        },
+      ],
+      status: 'active',
+      createdAt: '2026-04-27T10:00:00Z',
+      completedAreas: [],
+    });
+    tripService.loadFromStorage();
+    expect(tripService.getItems()).toHaveLength(1);
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    tripService.removeItemsByStaple({
+      id: 'staple-bread-2',
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+    });
+
+    expect(tripService.getItems()).toHaveLength(0);
+    expect(notifications).toHaveLength(1);
+  });
+
+  test('itemType guard: does NOT remove a one-off with matching name+houseArea even if stapleId is null', () => {
+    const tripService = createTestTripService();
+    tripService.addItem({
+      name: 'Birthday Cake',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+    expect(tripService.getItems()).toHaveLength(1);
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    tripService.removeItemsByStaple({
+      id: 'staple-cake-x',
+      name: 'Birthday Cake',
+      houseArea: 'Kitchen Cabinets',
+    });
+
+    // The one-off item must remain — the (name, houseArea) coincidence
+    // must not remove non-staple items.
+    expect(tripService.getItems()).toHaveLength(1);
+    expect(notifications).toHaveLength(0);
+  });
+
+  test('no-match early-return: no notify, no persist when nothing matched', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Apples',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Produce', aisleNumber: 4 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-apples',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    tripService.removeItemsByStaple({
+      id: 'unrelated-staple',
+      name: 'Bananas',
+      houseArea: 'Garage Pantry',
+    });
+
+    // Items unchanged.
+    expect(tripService.getItems()).toHaveLength(1);
+    expect(tripService.getItems()[0].name).toBe('Apples');
+    // No subscriber notification.
+    expect(notifications).toHaveLength(0);
+    // No persistence call.
+    expect(saveTripSpy).not.toHaveBeenCalled();
+  });
+
+  test('mixed scenario: only the matching name+area staple-typed item is removed; one-off lookalike survives', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    // Two items share (name, houseArea) but differ in itemType. Only the staple-typed
+    // one (with stapleId=null) should be removed via fallback.
+    storage.saveTrip({
+      id: 'trip-mix',
+      items: [
+        {
+          id: 'item-staple-null',
+          name: 'Eggs',
+          houseArea: 'Fridge',
+          storeLocation: { section: 'Dairy', aisleNumber: 2 },
+          itemType: 'staple',
+          stapleId: null,
+          source: 'preloaded',
+          needed: true,
+          checked: false,
+          checkedAt: null,
+        },
+        {
+          id: 'item-oneoff',
+          name: 'Eggs',
+          houseArea: 'Fridge',
+          storeLocation: { section: 'Dairy', aisleNumber: 2 },
+          itemType: 'one-off',
+          stapleId: null,
+          source: 'quick-add',
+          needed: true,
+          checked: false,
+          checkedAt: null,
+        },
+      ],
+      status: 'active',
+      createdAt: '2026-04-27T10:00:00Z',
+      completedAreas: [],
+    });
+    tripService.loadFromStorage();
+    expect(tripService.getItems()).toHaveLength(2);
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    tripService.removeItemsByStaple({
+      id: 'staple-eggs-deleted',
+      name: 'Eggs',
+      houseArea: 'Fridge',
+    });
+
+    const remaining = tripService.getItems();
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].id).toBe('item-oneoff');
+    expect(remaining[0].itemType).toBe('one-off');
+    expect(notifications).toHaveLength(1);
+  });
+});
+
+describe('TripService.removeItemByStapleId — id-only contract preserved (back-compat)', () => {
+  test('no-match early-return: no notify, no persist when stapleId not present', () => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem({
+      name: 'Apples',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Produce', aisleNumber: 4 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-apples',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+    const saveTripSpy = jest.spyOn(storage, 'saveTrip' as any);
+    saveTripSpy.mockClear();
+
+    tripService.removeItemByStapleId('non-existent-staple-id');
+
+    expect(tripService.getItems()).toHaveLength(1);
+    expect(notifications).toHaveLength(0);
+    expect(saveTripSpy).not.toHaveBeenCalled();
+  });
+});
+
 describe('TripService.getSweepProgress reads areas live via getter', () => {
   test('totalAreas reflects mutations to the underlying areas array via getter', () => {
     // Arrange — mutable areas array; getter closes over it

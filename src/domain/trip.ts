@@ -63,7 +63,14 @@ export type TripService = {
   readonly initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => void;
   readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
   readonly removeItemByStapleId: (stapleId: string) => void;
+  readonly removeItemsByStaple: (staple: StapleIdentity) => void;
   readonly subscribe: (listener: () => void) => () => void;
+};
+
+export type StapleIdentity = {
+  readonly id: string;
+  readonly name: string;
+  readonly houseArea: HouseArea;
 };
 
 const generateTripItemId = (): string =>
@@ -286,7 +293,23 @@ export const createTrip = (
     },
 
     removeItemByStapleId: (stapleId: string) => {
-      items = items.filter((item) => item.stapleId !== stapleId);
+      const next = items.filter((item) => item.stapleId !== stapleId);
+      if (next.length === items.length) return;
+      items = next;
+      notify();
+      persistTrip();
+    },
+
+    removeItemsByStaple: (staple: StapleIdentity) => {
+      const matchesStaple = (item: TripItem): boolean => {
+        if (item.stapleId != null) return item.stapleId === staple.id;
+        // Fallback: only staple-typed items are eligible for the (name, houseArea) match.
+        if (item.itemType !== 'staple') return false;
+        return item.name === staple.name && item.houseArea === staple.houseArea;
+      };
+      const next = items.filter((item) => !matchesStaple(item));
+      if (next.length === items.length) return;
+      items = next;
       notify();
       persistTrip();
     },
