@@ -81,6 +81,37 @@ const decideSectionDropdownState = (
   return { kind: 'hidden' };
 };
 
+type RenameValidationResult =
+  | { readonly kind: 'invalid-empty' }
+  | { readonly kind: 'invalid-duplicate'; readonly trimmedName: string; readonly area: HouseArea }
+  | { readonly kind: 'ok'; readonly trimmedName: string };
+
+const validateRename = (
+  rawName: string,
+  area: HouseArea,
+  selfId: string,
+  findDuplicate: ((name: string, area: HouseArea) => StapleItem | undefined) | undefined,
+): RenameValidationResult => {
+  const trimmedName = rawName.trim();
+  if (trimmedName === '') return { kind: 'invalid-empty' };
+
+  if (findDuplicate) {
+    const duplicate = findDuplicate(trimmedName, area);
+    if (duplicate && duplicate.id !== selfId) {
+      return { kind: 'invalid-duplicate', trimmedName, area };
+    }
+  }
+
+  return { kind: 'ok', trimmedName };
+};
+
+const renameErrorMessage = (
+  result: Exclude<RenameValidationResult, { kind: 'ok' }>,
+): string => {
+  if (result.kind === 'invalid-empty') return 'Name is required';
+  return `"${result.trimmedName}" already exists in ${result.area}`;
+};
+
 export const MetadataBottomSheet = ({
   visible,
   itemName,
@@ -151,18 +182,10 @@ export const MetadataBottomSheet = ({
   const handleSaveEdit = (): void => {
     if (selectedArea === null || !editStapleId || !onSaveEdit) return;
 
-    const trimmedName = editedName.trim();
-    if (trimmedName === '') {
-      setNameError('Name is required');
+    const validation = validateRename(editedName, selectedArea, editStapleId, onFindDuplicate);
+    if (validation.kind !== 'ok') {
+      setNameError(renameErrorMessage(validation));
       return;
-    }
-
-    if (onFindDuplicate) {
-      const existing = onFindDuplicate(trimmedName, selectedArea);
-      if (existing && existing.id !== editStapleId) {
-        setNameError(`"${trimmedName}" already exists in ${selectedArea}`);
-        return;
-      }
     }
 
     const storeLocation = {
