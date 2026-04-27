@@ -231,6 +231,70 @@ Contract tests recommended for Firestore document schemas -- the Trip, Staple, A
 
 Development paradigm: **Functional** (factory functions, pure domain functions, React hooks; no classes).
 
+### Aisle Sub-Grouping (Store View Refinement)
+
+**Feature**: `aisle-subgroups-in-store-view` (refines `section-order-by-section` D2). Pure UI refinement + one new pure domain helper. No port, adapter, persistence, or dependency change.
+
+**Design summary**: Add `partitionSectionByAisle(group: SectionGroup): AisleSubGroup[] | null` to `src/domain/item-grouping.ts`. `null` means render flat (single-aisle, all-null, or empty). Otherwise: numeric-asc sub-groups followed by an optional `null`-keyed tail (`No aisle`). `AisleSection.tsx` consumes the helper and branches: flat path preserves today's render exactly; sub-grouped path renders inline AisleSubGroup blocks (divider + badge + per-aisle progress + items). Section-level header (text, X of Y, ✓) is identical on both branches → no regression in section behaviour.
+
+#### Reuse Analysis
+
+| Existing artifact | Decision | Rationale |
+|---|---|---|
+| `groupBySection` (item-grouping.ts) | EXTEND via composition | New helper consumes its output; signature unchanged |
+| `compareItemsInSection` | REUSE as-is | Already enforces aisle-asc + null-last + stable input order |
+| `SectionGroup` shape `{ section, items, totalCount, checkedCount }` | MIRROR in `AisleSubGroup` `{ aisleKey, items, totalCount, checkedCount }` | Symmetric aggregate semantics |
+| `AisleSection.tsx` | EXTEND in place | New body branch; no new top-level component file |
+| `TripItemRow` | REUSE | Item rendering unchanged |
+| `StoreView.tsx` | NO CHANGE | Continues to pass `SectionGroup` to `AisleSection` |
+
+#### Partition Helper Shape
+
+```ts
+export type AisleKey = number | null; // null sentinel === "no aisle" tail
+export type AisleSubGroup = {
+  readonly aisleKey: AisleKey;
+  readonly items: TripItem[];
+  readonly totalCount: number;
+  readonly checkedCount: number;
+};
+export const partitionSectionByAisle =
+  (group: SectionGroup): AisleSubGroup[] | null;
+```
+
+`null` return is the single source of truth for "flat render" (US-01 collapse rules: empty, all-null, or single distinct aisle).
+
+#### C4 Component (L3) — Touched Code Only
+
+```mermaid
+C4Component
+  title Aisle Sub-Grouping (Store View Refinement)
+
+  Container_Boundary(domain, "Domain Layer") {
+    Component(group_by_section, "groupBySection", "Pure function (existing)", "items -> SectionGroup[] aisle-asc, nulls last")
+    Component(partition, "partitionSectionByAisle", "Pure function (NEW)", "SectionGroup -> AisleSubGroup[] | null. null = flat. Numeric asc, null tail.")
+    Component(types, "types.ts", "TS types (existing)", "TripItem.storeLocation.aisleNumber")
+  }
+
+  Container_Boundary(ui, "UI Layer") {
+    Component(store_view, "StoreView.tsx", "React Native (unchanged)", "Calls groupBySection then sortByCustomOrder; one AisleSection per SectionGroup")
+    Component(aisle_section, "AisleSection.tsx", "React Native (extended)", "Calls partitionSectionByAisle; branches on null for flat, else renders inline AisleSubGroup blocks")
+    Component(trip_item_row, "TripItemRow.tsx", "React Native (unchanged)", "Single item row")
+  }
+
+  Rel(store_view, group_by_section, "Calls")
+  Rel(store_view, aisle_section, "Renders one per SectionGroup")
+  Rel(aisle_section, partition, "Calls per render")
+  Rel(aisle_section, trip_item_row, "Renders one per item (both branches)")
+  Rel(aisle_section, types, "Reads aisleNumber via TripItem")
+```
+
+Dependency direction unchanged: UI -> domain. `dependency-cruiser` rules continue to hold.
+
+#### Related ADR
+
+- ADR-005: Aisle Sub-Grouping Belongs in the Domain, Composing on `groupBySection`.
+
 ---
 
 ## Web App (Vite) Application Architecture

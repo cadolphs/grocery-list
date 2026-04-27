@@ -1,0 +1,204 @@
+{
+  "roadmap": {
+    "project_id": "aisle-subgroups-in-store-view",
+    "created_at": "2026-04-27T20:47:21Z",
+    "total_steps": 4,
+    "phases": 2,
+    "goal": "Partition items inside each section card by aisle with dividers, aisle badges, and per-aisle progress so Carlos can confirm aisle boundaries and aisle-level completion mid-shop.",
+    "methodology": "outside-in-tdd",
+    "paradigm": "functional",
+    "stack": {
+      "language": "typescript",
+      "test_runner": "jest",
+      "component_library": "@testing-library/react-native",
+      "mutation_tool": "stryker"
+    },
+    "wave_inputs": {
+      "discuss": "docs/feature/aisle-subgroups-in-store-view/discuss/user-stories.md",
+      "distill": "docs/feature/aisle-subgroups-in-store-view/distill/walking-skeleton.md",
+      "distill_decisions": "docs/feature/aisle-subgroups-in-store-view/distill/wave-decisions.md",
+      "design": "docs/feature/aisle-subgroups-in-store-view/design/architecture-design.md",
+      "design_boundaries": "docs/feature/aisle-subgroups-in-store-view/design/component-boundaries.md",
+      "adr": "docs/product/architecture/adr-005-aisle-subgrouping-domain-helper.md"
+    }
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Slice 01 — Aisle Partition + Dividers + Badges (US-01)",
+      "description": "Pure-function partition helper plus AisleSection render branch that draws dividers and aisle badges between aisle sub-groups. All-null and single-aisle sections must collapse to today's flat render path unchanged.",
+      "user_story": "US-01",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Domain unit — slice 01 partition shape & ordering",
+          "description": "Introduce AisleKey and AisleSubGroup types and implement partitionSectionByAisle as a pure function. Returns null for collapse cases (single distinct aisle key, including all-null). Numeric keys ascending, then null-keyed tail. Counts derived from items in each bucket.",
+          "criteria": "Multi-aisle section card renders one sub-group per distinct `aisleNumber`, ascending. All-null section card renders no sub-groups and no aisle badge. Single-aisle section card renders no sub-group and no aisle badge. Mixed null + numeric section places the null sub-group at the tail with badge `No aisle`. Item input order is preserved inside each aisle sub-group (existing tie-break behaviour).",
+          "depends_on": [],
+          "estimated_hours": 1.5,
+          "files_to_modify": [
+            "src/domain/item-grouping.ts",
+            "src/domain/item-grouping.test.ts"
+          ],
+          "test_file": "src/domain/item-grouping.test.ts",
+          "scenario_name": "Multi-aisle section partitions into ascending aisle sub-groups, All-null section collapses to flat, Single-aisle section collapses to flat, Mixed numeric + null section places null group at the tail, Item input order preserved inside each aisle sub-group",
+          "scenarios": [
+            "Multi-aisle section partitions into ascending aisle sub-groups",
+            "All-null section collapses to flat",
+            "Single-aisle section collapses to flat",
+            "Mixed numeric + null section places null group at the tail",
+            "Item input order preserved inside each aisle sub-group"
+          ],
+          "acceptance_criteria": [
+            "Multi-aisle section card renders one sub-group per distinct `aisleNumber`, ascending.",
+            "All-null section card renders no sub-groups and no aisle badge.",
+            "Single-aisle section card renders no sub-group and no aisle badge.",
+            "Mixed null + numeric section places the null sub-group at the tail with badge `No aisle`.",
+            "Item input order is preserved inside each aisle sub-group (existing tie-break behaviour)."
+          ],
+          "implementation_notes": "Add `AisleKey = number | null` and `AisleSubGroup = { aisleKey, items, totalCount, checkedCount }` types to `src/domain/item-grouping.ts`. Implement `partitionSectionByAisle(group: SectionGroup): AisleSubGroup[] | null`. `null` return signals the collapse cases (single-aisle, all-null, 0 distinct keys) — caller falls back to the existing flat render path. Numeric keys ascending, then null-keyed tail. Each sub-group's `totalCount`/`checkedCount` derived from the items partitioned into that bucket. Pure function — no React, no fixtures, no I/O. Build domain test fixtures by feeding raw `TripItem`s through `groupBySection` (per DISTILL D4). The `it.skip` discipline is between slices: slice 02 domain tests stay skipped until slice 02 step.",
+          "quality_gates": [
+            "npm test -- src/domain/item-grouping.test.ts",
+            "npm test -- src/ui/StoreView.test.tsx",
+            "npx tsc --noEmit"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Component — slice 01 render branches (dividers + badges)",
+          "description": "Extend AisleSection to call partitionSectionByAisle and branch: null returns the existing flat render unchanged; non-null renders inline aisle sub-group blocks with divider + numeric badge (or `No aisle` badge for the null tail). Section header text and section-level X of Y / ✓ stay byte-identical on both branches.",
+          "criteria": "Each sub-group is preceded by a divider with a numeric aisle badge. All-null section card renders no sub-groups and no aisle badge. Single-aisle section card renders no sub-group and no aisle badge. Mixed null + numeric section places the null sub-group at the tail with badge `No aisle`.",
+          "depends_on": [
+            "01-01"
+          ],
+          "estimated_hours": 1.5,
+          "files_to_modify": [
+            "src/ui/AisleSection.tsx",
+            "src/ui/AisleSection.test.tsx"
+          ],
+          "test_file": "src/ui/AisleSection.test.tsx",
+          "scenario_name": "Multi-aisle section renders divider + badge per aisle group, All-null section renders flat — no sub-group nodes, Single-aisle section renders flat — no badge, Mixed section places `No aisle` tail at the end, Section header is unchanged on the sub-grouped branch (@noregress)",
+          "scenarios": [
+            "Multi-aisle section renders divider + badge per aisle group",
+            "All-null section renders flat — no sub-group nodes",
+            "Single-aisle section renders flat — no badge",
+            "Mixed section places `No aisle` tail at the end",
+            "Section header is unchanged on the sub-grouped branch (D-NOREGRESS)"
+          ],
+          "acceptance_criteria": [
+            "Each sub-group is preceded by a divider with a numeric aisle badge.",
+            "All-null section card renders no sub-groups and no aisle badge.",
+            "Single-aisle section card renders no sub-group and no aisle badge.",
+            "Mixed null + numeric section places the null sub-group at the tail with badge `No aisle`."
+          ],
+          "implementation_notes": "Extend `src/ui/AisleSection.tsx` to call `partitionSectionByAisle(group)`. If it returns `null`, render the existing flat path unchanged (no behaviour change, regression-safe). If it returns sub-groups, render them inline as divider + badge + items blocks within the same section card — no new top-level component file. TestIDs per DESIGN D5: `aisle-subgroup-{aisleKey | 'no-aisle'}` for each sub-group node. The null tail uses badge label `No aisle`. Existing testIDs (`aisle-section-{section}`, `section-complete-{section}`) preserved. Use `@testing-library/react-native` `render` + `getByTestId` / `queryByTestId`, mirroring `StoreView.test.tsx` style. Build props by running `groupBySection` over `makeItem(...)` factories per DISTILL D4. Slice 02 component scenarios remain `it.skip` until 02-02.",
+          "quality_gates": [
+            "npm test -- src/domain/item-grouping.test.ts",
+            "npm test -- src/ui/AisleSection.test.tsx",
+            "npm test -- src/ui/StoreView.test.tsx",
+            "npx tsc --noEmit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Slice 02 — Per-Aisle Progress + Completion Checkmark (US-02)",
+      "description": "Each aisle sub-group reports its own `checkedCount of totalCount` and a ✓ when complete. Section-level header (text, X of Y, ✓) remains byte-identical — verified by four @noregress scenarios.",
+      "user_story": "US-02",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Domain unit — slice 02 per-aisle counts",
+          "description": "Verify `partitionSectionByAisle` reports per-aisle `checkedCount` / `totalCount` derived from the items partitioned into each bucket, including the `No aisle` tail.",
+          "criteria": "Each aisle sub-group renders `checkedCount of totalCount` for items within that aisle only. `No aisle` tail group in a mixed section also reports its own progress + checkmark.",
+          "depends_on": [
+            "01-01"
+          ],
+          "estimated_hours": 0.5,
+          "files_to_modify": [
+            "src/domain/item-grouping.ts",
+            "src/domain/item-grouping.test.ts"
+          ],
+          "test_file": "src/domain/item-grouping.test.ts",
+          "scenario_name": "Each aisle sub-group reports its own checked / total counts, `No aisle` tail group reports its own counts",
+          "scenarios": [
+            "Each aisle sub-group reports its own checked / total counts",
+            "`No aisle` tail group reports its own counts"
+          ],
+          "acceptance_criteria": [
+            "Each aisle sub-group renders `checkedCount of totalCount` for items within that aisle only.",
+            "`No aisle` tail group in a mixed section also reports its own progress + checkmark."
+          ],
+          "implementation_notes": "Unskip the slice 02 domain tests in `src/domain/item-grouping.test.ts`. PREPARE step: confirm whether 01-01 already wired `checkedCount` / `totalCount` correctly; if so, these tests should pass with no production change (the helper is already complete). If 01-01 left counts at 0/0 stubs, complete the count derivation in `partitionSectionByAisle` here. No new types or signatures — extends the same module. Counts always derived directly from items in each bucket; never trust upstream aggregates.",
+          "quality_gates": [
+            "npm test -- src/domain/item-grouping.test.ts",
+            "npm test -- src/ui/AisleSection.test.tsx",
+            "npm test -- src/ui/StoreView.test.tsx",
+            "npx tsc --noEmit"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Component — slice 02 progress + ✓ + noregress",
+          "description": "Render per-aisle `${checkedCount} of ${totalCount}` text and a ✓ when `checkedCount === totalCount` inside each sub-group block. Four @noregress scenarios assert the section-level header and section-level X of Y / ✓ stay byte-identical against today's behaviour on both flat and sub-grouped branches.",
+          "criteria": "Each aisle sub-group renders `checkedCount of totalCount` for items within that aisle only. Each aisle sub-group renders `✓` when `checkedCount === totalCount`. Section-level `X of Y` and `✓` continue to reflect the section as a whole (no behaviour change). All-null and single-aisle sections render no sub-group progress (only section progress). `No aisle` tail group in a mixed section also reports its own progress + checkmark.",
+          "depends_on": [
+            "01-02",
+            "02-01"
+          ],
+          "estimated_hours": 1.5,
+          "files_to_modify": [
+            "src/ui/AisleSection.tsx",
+            "src/ui/AisleSection.test.tsx"
+          ],
+          "test_file": "src/ui/AisleSection.test.tsx",
+          "scenario_name": "Aisle sub-group displays its own progress text, Aisle sub-group shows completion checkmark when fully checked, Section-level checkmark unaffected by partial-aisle completion (@noregress), Section-level checkmark shown when all aisles complete (@noregress), All-null section shows no sub-group progress (@noregress), Single-aisle section shows no sub-group progress (@noregress), `No aisle` tail in mixed section reports its own progress and ✓",
+          "scenarios": [
+            "Aisle sub-group displays its own progress text",
+            "Aisle sub-group shows completion checkmark when fully checked",
+            "Section-level checkmark unaffected by partial-aisle completion (@noregress)",
+            "Section-level checkmark shown when all aisles complete (@noregress)",
+            "All-null section shows no sub-group progress (@noregress)",
+            "Single-aisle section shows no sub-group progress (@noregress)",
+            "`No aisle` tail in mixed section reports its own progress and ✓"
+          ],
+          "acceptance_criteria": [
+            "Each aisle sub-group renders `checkedCount of totalCount` for items within that aisle only.",
+            "Each aisle sub-group renders `✓` when `checkedCount === totalCount`.",
+            "Section-level `X of Y` and `✓` continue to reflect the section as a whole (no behaviour change).",
+            "All-null and single-aisle sections render no sub-group progress (only section progress).",
+            "`No aisle` tail group in a mixed section also reports its own progress + checkmark."
+          ],
+          "implementation_notes": "Extend the sub-group render block in `src/ui/AisleSection.tsx` to display `${checkedCount} of ${totalCount}` and a ✓ when complete. Add testID `aisle-subgroup-complete-{aisleKey | 'no-aisle'}` on the per-aisle ✓ node (per DESIGN D5). The section-level header (section name text, section-level `X of Y`, section-level ✓) MUST stay byte-identical on the sub-grouped branch — the four @noregress scenarios pin this contract. All-null and single-aisle render paths still go through the flat branch unchanged (collapse signal from `partitionSectionByAisle === null`). `StoreView.test.tsx` regression gate must remain green at every test run. No new files; no top-level subgroup component.",
+          "quality_gates": [
+            "npm test -- src/domain/item-grouping.test.ts",
+            "npm test -- src/ui/AisleSection.test.tsx",
+            "npm test -- src/ui/StoreView.test.tsx",
+            "npx tsc --noEmit"
+          ]
+        }
+      ]
+    }
+  ],
+  "global_quality_gates": [
+    "All tests in src/domain/item-grouping.test.ts pass",
+    "All tests in src/ui/AisleSection.test.tsx pass",
+    "src/ui/StoreView.test.tsx remains green throughout (D-NOREGRESS regression gate)",
+    "TypeScript strict mode passes (npx tsc --noEmit)",
+    "No production code outside src/domain/item-grouping.ts and src/ui/AisleSection.tsx",
+    "No new test files outside src/domain/item-grouping.test.ts and src/ui/AisleSection.test.tsx"
+  ],
+  "scenario_index": {
+    "slice_01_domain": 5,
+    "slice_01_component": 5,
+    "slice_02_domain": 2,
+    "slice_02_component": 7,
+    "noregress_total": 5,
+    "total": 19
+  },
+  "handoff_notes": "Outside-in TDD with strict one-at-a-time discipline (DISTILL D7). Slice 02 scenarios (domain + component) start as `it.skip` and are unskipped only when their step begins. Within a step's scenarios, component-level tests may run together once GREEN. Domain tests are pure-function; no mocks, no fixtures (DISTILL CM-D). All aisle-grouping rules live in `partitionSectionByAisle` (ADR-005).",
+  "validation": {
+    "status": "pending"
+  }
+}
