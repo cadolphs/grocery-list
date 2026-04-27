@@ -145,6 +145,50 @@ export const diffStaples = (
   return { added, removed, updated };
 };
 
+// Apply each diff bucket to the trip. Each helper has one responsibility,
+// matching the three branches of handleStapleChange.
+
+const applyAddedStaplesToTrip = (
+  tripService: TripService,
+  added: readonly StapleItem[],
+): void => {
+  for (const staple of added) {
+    // Duplicate guard: skip if trip already has an item with this stapleId
+    const alreadyInTrip = tripService.getItems().some(item => item.stapleId === staple.id);
+    if (alreadyInTrip) continue;
+
+    tripService.addItem({
+      name: staple.name,
+      houseArea: staple.houseArea,
+      storeLocation: staple.storeLocation,
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: staple.id,
+    });
+  }
+};
+
+const applyRemovedStaplesToTrip = (
+  tripService: TripService,
+  removed: readonly StapleItem[],
+): void => {
+  for (const staple of removed) {
+    tripService.removeItemsByStaple(staple);
+  }
+};
+
+const applyUpdatedStaplesToTrip = (
+  tripService: TripService,
+  updated: readonly StapleItem[],
+): void => {
+  for (const staple of updated) {
+    tripService.syncStapleUpdate(staple.id, {
+      houseArea: staple.houseArea,
+      storeLocation: staple.storeLocation,
+    });
+  }
+};
+
 export const initializeApp = async (
   authUser: AuthUser | null,
   factories: AdapterFactories,
@@ -213,35 +257,12 @@ export const initializeApp = async (
       const currentStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
       const { added, removed, updated } = diffStaples(previousStaples, currentStaples);
 
-      for (const staple of added) {
-        // Duplicate guard: skip if trip already has an item with this stapleId
-        const alreadyInTrip = tripService.getItems().some(item => item.stapleId === staple.id);
-        if (alreadyInTrip) continue;
-
-        tripService.addItem({
-          name: staple.name,
-          houseArea: staple.houseArea,
-          storeLocation: staple.storeLocation,
-          itemType: 'staple',
-          source: 'preloaded',
-          stapleId: staple.id,
-        });
-      }
-
-      for (const staple of removed) {
-        tripService.removeItemsByStaple(staple);
-      }
-
-      // Propagate field updates (houseArea / storeLocation) from staple edits
-      // to the trip item carrying the same stapleId. syncStapleUpdate is
-      // idempotent (skips notify+persist when content equal), which guards
-      // against the onSnapshot echo loop after a UI-driven edit.
-      for (const staple of updated) {
-        tripService.syncStapleUpdate(staple.id, {
-          houseArea: staple.houseArea,
-          storeLocation: staple.storeLocation,
-        });
-      }
+      applyAddedStaplesToTrip(tripService, added);
+      applyRemovedStaplesToTrip(tripService, removed);
+      // syncStapleUpdate is idempotent (skips notify+persist when content
+      // equal), which guards against the onSnapshot echo loop after a
+      // UI-driven edit.
+      applyUpdatedStaplesToTrip(tripService, updated);
 
       previousStaples = currentStaples;
     };
