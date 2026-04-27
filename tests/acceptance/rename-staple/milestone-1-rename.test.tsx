@@ -289,7 +289,7 @@ describe('M1-RS-6: No-op save succeeds and dismisses', () => {
 // M1-RS-7: Add mode is unchanged — no Name TextInput appears
 // =============================================================================
 
-describe.skip('M1-RS-7: Add mode does not render a Name TextInput', () => {
+describe('M1-RS-7: Add mode does not render a Name TextInput', () => {
   // AC9: Add mode (mode === 'add') is unchanged: no Name TextInput appears
   //      (name comes from QuickAdd, as today).
   // Trace: US-RS-01 AC9
