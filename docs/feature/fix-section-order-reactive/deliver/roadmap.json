@@ -1,0 +1,139 @@
+{
+  "roadmap": {
+    "project_id": "fix-section-order-reactive",
+    "created_at": "2026-04-27T02:41:40Z",
+    "total_steps": 4,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Reactive section order with regression tests and CI gate",
+      "description": "Close the test-coverage gap on section-ordering pure functions, make SectionOrderStorage a reactive port so StoreView re-renders when the user reorders sections in settings, harden new-section handling at the StoreView call site, and add a CI gate that prevents future domain/port modules from landing without sibling tests.",
+      "estimated_duration": "3-5 hours",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Domain regression tests for section-ordering pure functions",
+          "description": "Create the missing sibling test file for src/domain/section-ordering.ts. Cover sortByCustomOrder behavior (null pass-through, empty pass-through, custom order beats input order, unordered groups appended after ordered ones preserving input order) and appendNewSections behavior (idempotent when nothing new, appends only unseen keys, preserves currentOrder ordering). This step closes the test-coverage gap (root cause B) but does not by itself fix the user-visible bug. Functional paradigm: pure-function tests, no mocks, no classes. fast-check property-based tests are welcome for the 'unordered groups preserve input order' invariant if it adds clarity.",
+          "criteria": "GIVEN groups [Dairy, Produce] and sectionOrder=null WHEN sortByCustomOrder runs THEN result equals input order. GIVEN groups [Dairy, Produce] and sectionOrder=[] THEN result equals input order. GIVEN groups [Dairy, Produce, Bakery] and sectionOrder=['Produce::3','Bakery::1'] THEN result is [Produce, Bakery, Dairy] (ordered first by custom positions, unordered Dairy appended last). GIVEN groups [A, B, C] (none in sectionOrder) and sectionOrder=['X::1'] THEN result preserves [A, B, C] (stable). GIVEN appendNewSections(['a','b'], ['a','b']) THEN returns ['a','b'] (idempotent, no new array allocation needed). GIVEN appendNewSections(['a'], ['a','b','c']) THEN returns ['a','b','c'] (appends unseen in input order). All assertions behavioral, none reference internal helpers like compareByCustomOrder or groupKey.",
+          "test_file": "src/domain/section-ordering.test.ts",
+          "scenario_name": "sortByCustomOrder and appendNewSections regression coverage",
+          "files_to_modify": [
+            "src/domain/section-ordering.test.ts"
+          ],
+          "implementation_notes": "NEW file. Pure unit tests via Jest. Import sortByCustomOrder and appendNewSections from ./section-ordering. Construct AisleGroup fixtures inline (small factory helper if needed, but keep test file self-contained). Do NOT import React, hooks, or adapters. Optional: one fast-check property asserting that for any permutation of groups disjoint from sectionOrder, sortByCustomOrder preserves their relative order. The pure functions may already be correct; this step is RED only in the sense that the test file does not exist — it locks behavior so future refactors stay safe and gives Stryker mutants something to kill.",
+          "deliverables": [
+            "src/domain/section-ordering.test.ts with >= 6 behavioral assertions covering both exported functions"
+          ],
+          "estimated_duration": "30-45 minutes",
+          "dependencies": []
+        },
+        {
+          "id": "01-02",
+          "name": "Reactive SectionOrderStorage port with subscribe fan-out",
+          "description": "Fix the user-visible bug (root cause A). Extend the SectionOrderStorage port with subscribe(listener: () => void) => () => void. Implement an in-memory listener registry (fan-out) inside the firestore and async-storage adapters: saveOrder, clearOrder, and remote snapshot deltas all notify subscribers; echo (serialized-equal) writes do not notify, mirroring the existing onChange dedupe at firestore-section-order-storage.ts:54-60. The null adapter exposes a no-op subscribe returning a no-op unsubscribe. Wire useSectionOrder so it subscribes inside a useEffect and re-runs loadOrder() on each notification, updating its useState. The hook must remain a factory of values (no classes). Add a hook test using a real ~30-line in-memory fake SectionOrderStorage (NOT a Jest mock) with working fan-out: render two consumers of useSectionOrder against a shared fake via ServiceProvider, call reorder on consumer A, assert consumer B's order updates on the next tick. Extend the firestore adapter test to cover: subscribe fires on local saveOrder, subscribe fires on remote snapshot delta, subscribe does NOT fire on echo (parallels existing onChange tests around lines 158-189).",
+          "criteria": "GIVEN two consumers of useSectionOrder sharing one storage instance WHEN consumer A calls reorder(['Bakery::1','Produce::3']) THEN consumer B's order equals ['Bakery::1','Produce::3'] on the next React tick (act flush). GIVEN a fresh storage with one subscriber WHEN saveOrder is called THEN the subscriber listener is invoked exactly once. GIVEN a subscriber WHEN unsubscribe (returned from subscribe) is called and saveOrder is then invoked THEN the listener is NOT invoked. GIVEN the firestore adapter with one subscriber WHEN a remote snapshot delivers an order different from the cache THEN subscriber fires once. GIVEN the firestore adapter with one subscriber WHEN a remote snapshot delivers an order serialized-equal to the cache (echo) THEN subscriber does NOT fire. GIVEN the null adapter WHEN subscribe is called THEN it returns a no-op unsubscribe and never throws. All assertions describe observable behavior; none reference private listener arrays or registry internals.",
+          "test_file": "src/hooks/useSectionOrder.test.ts",
+          "scenario_name": "Reorder in one consumer propagates to other consumers via storage subscribe",
+          "files_to_modify": [
+            "src/ports/section-order-storage.ts",
+            "src/adapters/firestore/firestore-section-order-storage.ts",
+            "src/adapters/async-storage/async-section-order-storage.ts",
+            "src/adapters/null/null-section-order-storage.ts",
+            "src/hooks/useSectionOrder.ts",
+            "src/hooks/useSectionOrder.test.ts",
+            "src/adapters/firestore/firestore-section-order-storage.test.ts"
+          ],
+          "implementation_notes": "Port: add readonly subscribe: (listener: () => void) => () => void. Adapters: maintain a Set<() => void>; saveOrder/clearOrder iterate the set after mutation; firestore adapter additionally notifies from handleSnapshot when the serialized-equality check fails (replace or augment the existing onChange call so external onChange and subscribers both fire). Hook: useEffect(() => sectionOrderStorage.subscribe(() => setOrder(sectionOrderStorage.loadOrder())), [sectionOrderStorage]). The hook test builds a real fake (factory function returning the port shape with a working Set-based fan-out) and uses @testing-library/react-native renderHook with a ServiceProvider supplying that fake. Functional paradigm strict: no classes, factory functions only. Watch for re-render volume — the existing serialized compare in firestore adapter already dedupes echoes; keep it. This is the GREEN that fixes the user-visible alphabetical-fallback bug.",
+          "deliverables": [
+            "Updated SectionOrderStorage port with subscribe method",
+            "Fan-out registry in firestore-section-order-storage.ts (echo-suppressed)",
+            "Fan-out registry in async-section-order-storage.ts",
+            "No-op subscribe in null-section-order-storage.ts",
+            "useSectionOrder subscribes via useEffect and reloads on notify",
+            "src/hooks/useSectionOrder.test.ts with shared-storage two-consumer propagation test using a real in-memory fake",
+            "Extended firestore-section-order-storage.test.ts covering subscribe local/remote/echo cases"
+          ],
+          "estimated_duration": "90-120 minutes",
+          "dependencies": [
+            "01-01"
+          ]
+        },
+        {
+          "id": "01-03",
+          "name": "Apply appendNewSections at StoreView call site",
+          "description": "Harden the StoreView render path so newly-discovered sections (sections present in the data but absent from the persisted order) get a deterministic position appended after the user-defined order, rather than triggering the alphabetical fallback in groupByAisle. Modify the call at src/ui/StoreView.tsx:125 to pass sortByCustomOrder(groups, sectionOrder !== null ? appendNewSections(sectionOrder, knownKeys) : null), where knownKeys is derived from the current groups (their groupKey strings). When sectionOrder is null (user has never customized), behavior is unchanged. Add a behavioral acceptance test rendering StoreView with a sectionOrder that omits a newly-introduced section and assert the new section renders AFTER the ordered sections.",
+          "criteria": "GIVEN StoreView rendered with groups [Produce, Bakery, NewAisle] and sectionOrder=['Produce::3','Bakery::1'] WHEN the component mounts THEN AisleSection testIDs render in order Produce, Bakery, NewAisle (NewAisle appended after the ordered sections, NOT alphabetically interleaved). GIVEN StoreView rendered with sectionOrder=null AND groups [Bakery, Produce] WHEN it mounts THEN existing alphabetical/group ordering behavior is preserved (no regression). Test references rendered testIDs only; no assertions on internal sort comparators or helper invocations.",
+          "test_file": "src/ui/StoreView.test.tsx",
+          "scenario_name": "Newly-discovered sections append after the user's custom order",
+          "files_to_modify": [
+            "src/ui/StoreView.tsx",
+            "src/ui/StoreView.test.tsx"
+          ],
+          "implementation_notes": "Single-line behavioral change at the call site. Compute knownKeys = groups.map(g => `${g.section}::${g.aisleNumber}`) (or reuse a shared groupKey helper if exposed; if not, keep the inline derivation — section-ordering.ts already encapsulates groupKey internally and we should not export it just for this). The acceptance test uses @testing-library/react-native, mounts StoreView with a ServiceProvider whose sectionOrderStorage.loadOrder returns the partial order, and asserts the order of AisleSection testIDs in the rendered tree. Keep the test purely behavioral — no spies on sortByCustomOrder.",
+          "deliverables": [
+            "Updated StoreView.tsx call site applying appendNewSections when sectionOrder is non-null",
+            "src/ui/StoreView.test.tsx (new or extended) with the append-after-ordered acceptance test"
+          ],
+          "estimated_duration": "30-45 minutes",
+          "dependencies": [
+            "01-02"
+          ]
+        },
+        {
+          "id": "01-04",
+          "name": "CI gate enforcing sibling tests for src/domain and src/ports",
+          "description": "Prevent future regressions of root cause B (modules landing without tests). Add a Node script scripts/check-domain-test-siblings.mjs that walks src/domain/ and src/ports/, lists every .ts/.tsx file excluding *.test.ts(x) and index.ts, and asserts a sibling *.test.ts or *.test.tsx exists. Exit non-zero with a clear list of offending modules when any are missing. Wire the script into CI: if an existing workflow runs lint/typecheck/test on PRs, add a step there; otherwise create .github/workflows/test-coverage-gate.yml that runs on push and pull_request and invokes node scripts/check-domain-test-siblings.mjs. Verify the gate fires by adding a temporary throwaway domain file in a local run (not committed) — or by unit-testing the script logic if convenient.",
+          "criteria": "GIVEN a hypothetical src/domain/foo.ts with no sibling foo.test.ts WHEN node scripts/check-domain-test-siblings.mjs runs THEN it exits with a non-zero code AND prints the offending path. GIVEN every existing module in src/domain/ and src/ports/ has a sibling test (after step 01-01) WHEN the script runs THEN it exits zero. GIVEN a CI workflow on push/pull_request WHEN the workflow runs THEN it invokes the script and fails the build on non-zero exit. The script ignores index.ts, *.test.ts, *.test.tsx, and *.d.ts. It must not require additional dev dependencies beyond Node built-ins (fs, path, url).",
+          "test_file": "scripts/check-domain-test-siblings.mjs",
+          "scenario_name": "CI fails when a domain or port module lacks a sibling test",
+          "files_to_modify": [
+            "scripts/check-domain-test-siblings.mjs",
+            ".github/workflows/test-coverage-gate.yml"
+          ],
+          "implementation_notes": "NEW script using only Node built-ins (fs/promises, path, url) — zero npm deps. Walk the two directories non-recursively first; if subdirectories appear later, support recursion. Print results in a format like: 'MISSING TEST: src/domain/foo.ts (expected sibling foo.test.ts or foo.test.tsx)'. Exit code: 0 on success, 1 on any missing sibling. For the workflow file: trigger on push to main and pull_request, run on ubuntu-latest, set up Node (use the version from package.json engines if present, else latest LTS), checkout, then run the script directly — no npm install needed. If a suitable existing workflow under .github/workflows/ already exists (look for one running tests on PRs), prefer adding a job/step there over creating a new workflow file; document the choice in the commit message. Keep functional style — a couple of small pure helpers, no classes.",
+          "deliverables": [
+            "scripts/check-domain-test-siblings.mjs (executable Node script, zero deps)",
+            ".github/workflows/test-coverage-gate.yml OR a new step in an existing PR workflow that invokes the script"
+          ],
+          "estimated_duration": "30-45 minutes",
+          "dependencies": [
+            "01-01"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/ports/",
+      "src/adapters/firestore/",
+      "src/adapters/async-storage/",
+      "src/adapters/null/",
+      "src/hooks/",
+      "src/ui/",
+      "scripts/",
+      ".github/workflows/"
+    ],
+    "test_directories": [
+      "src/domain/",
+      "src/hooks/",
+      "src/ui/",
+      "src/adapters/firestore/"
+    ],
+    "excluded_patterns": [
+      "**/*.d.ts",
+      "**/index.ts",
+      "node_modules/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator-bugfix-scope",
+    "approved_at": "2026-04-26T00:00:00Z",
+    "note": "Bugfix scope. No DISTILL artifacts to validate against. Roadmap derived from RCA context. Auto-quality-gate passed (decomposition 0.4, NN-NN format, behavioral AC). Validate CLI exit 0 with verbose-criteria warnings (non-blocking)."
+  }
+}
