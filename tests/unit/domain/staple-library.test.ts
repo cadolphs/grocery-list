@@ -111,6 +111,54 @@ describe('staple library', () => {
       }
       expect(library.listAll()[0].name).toBe('Milkk');
     });
+
+    it('merges changes.name into the persisted staple', () => {
+      const storage = createNullStapleStorage();
+      const library = createStapleLibrary(storage);
+
+      library.addStaple({
+        name: 'Milkk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      });
+      const stapleId = library.listAll()[0].id;
+
+      const result = library.updateStaple(stapleId, { name: 'Milk' });
+
+      expect(result.success).toBe(true);
+      const updated = library.listAll().find((s) => s.id === stapleId);
+      expect(updated).toBeDefined();
+      expect(updated!.name).toBe('Milk');
+      expect(updated!.houseArea).toBe('Fridge');
+      expect(updated!.storeLocation).toEqual({ section: 'Dairy', aisleNumber: 3 });
+    });
+
+    it('rejects rename when post-merge name duplicates another staple in same area', () => {
+      const storage = createNullStapleStorage();
+      const library = createStapleLibrary(storage);
+
+      library.addStaple({
+        name: 'Milkk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      });
+      library.addStaple({
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      });
+      const milkkId = library.listAll().find((s) => s.name === 'Milkk')!.id;
+
+      const result = library.updateStaple(milkkId, { name: 'Milk' });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('already exists in Fridge');
+      }
+      // Milkk staple unchanged after rejection
+      const milkk = library.listAll().find((s) => s.id === milkkId);
+      expect(milkk!.name).toBe('Milkk');
+    });
   });
 
   describe('addOneOff', () => {

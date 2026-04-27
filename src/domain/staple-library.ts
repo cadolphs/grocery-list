@@ -116,6 +116,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
         return { success: false, error: 'name is required' };
       }
 
+      const updatedName = changes.name?.trim() ?? staple.name;
       const updatedHouseArea = changes.houseArea ?? staple.houseArea;
       const updatedStoreLocation = changes.storeLocation ?? staple.storeLocation;
 
@@ -127,15 +128,16 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
         return { success: false, error: 'store section is required' };
       }
 
-      if (isDuplicateExcludingSelf(existing, id, staple.name, updatedHouseArea)) {
+      if (isDuplicateExcludingSelf(existing, id, updatedName, updatedHouseArea)) {
         return {
           success: false,
-          error: `"${staple.name}" already exists in ${updatedHouseArea}`,
+          error: `"${updatedName}" already exists in ${updatedHouseArea}`,
         };
       }
 
       const updatedStaple: StapleItem = {
         ...staple,
+        name: updatedName,
         houseArea: updatedHouseArea,
         storeLocation: updatedStoreLocation,
       };
