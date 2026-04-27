@@ -24,6 +24,19 @@ export type SectionGroup = {
   readonly checkedCount: number;
 };
 
+// AisleKey identifies an aisle sub-group within a section.
+// `null` represents the "no aisle" tail bucket for items missing aisleNumber.
+export type AisleKey = number | null;
+
+// AisleSubGroup mirrors SectionGroup's count shape but at the per-aisle level.
+// Counts are derived from the items in this bucket; the UI never recomputes.
+export type AisleSubGroup = {
+  readonly aisleKey: AisleKey;
+  readonly items: TripItem[];
+  readonly totalCount: number;
+  readonly checkedCount: number;
+};
+
 // Compare two items within the same section: aisleNumber ascending, nulls last,
 // with input position as a stable secondary key.
 //
@@ -80,6 +93,67 @@ export const groupBySection = (items: TripItem[]): SectionGroup[] => {
     const sectionItems = [...itemsBySection.get(section)!].sort(compare);
     return createSectionGroup(section, sectionItems);
   });
+};
+
+const createAisleSubGroup = (
+  aisleKey: AisleKey,
+  items: TripItem[],
+): AisleSubGroup => ({
+  aisleKey,
+  items,
+  totalCount: items.length,
+  checkedCount: items.filter((item) => item.checked).length,
+});
+
+// Bucket items by aisleKey, preserving input order within each bucket.
+// Returns numeric buckets keyed by their aisle number plus a separate null bucket.
+const bucketByAisleKey = (
+  items: TripItem[],
+): { numericBuckets: Map<number, TripItem[]>; nullBucket: TripItem[] } => {
+  const numericBuckets = new Map<number, TripItem[]>();
+  const nullBucket: TripItem[] = [];
+  for (const item of items) {
+    const aisle = item.storeLocation.aisleNumber;
+    if (aisle === null) {
+      nullBucket.push(item);
+      continue;
+    }
+    if (!numericBuckets.has(aisle)) {
+      numericBuckets.set(aisle, []);
+    }
+    numericBuckets.get(aisle)!.push(item);
+  }
+  return { numericBuckets, nullBucket };
+};
+
+const distinctAisleKeyCount = (
+  numericBuckets: Map<number, TripItem[]>,
+  nullBucket: TripItem[],
+): number => numericBuckets.size + (nullBucket.length > 0 ? 1 : 0);
+
+// Partitions a SectionGroup into per-aisle sub-groups.
+// Returns null when the section has exactly one distinct aisle key (including
+// the all-null case): the caller falls back to the existing flat render path.
+// Otherwise returns numeric-ascending sub-groups followed by an optional
+// null-keyed tail. Pure function; no React, no IO.
+export const partitionSectionByAisle = (
+  group: SectionGroup,
+): AisleSubGroup[] | null => {
+  const { numericBuckets, nullBucket } = bucketByAisleKey(group.items);
+
+  if (distinctAisleKeyCount(numericBuckets, nullBucket) <= 1) {
+    return null;
+  }
+
+  const ascendingNumericKeys = [...numericBuckets.keys()].sort((a, b) => a - b);
+  const numericSubGroups = ascendingNumericKeys.map((key) =>
+    createAisleSubGroup(key, numericBuckets.get(key)!),
+  );
+
+  if (nullBucket.length === 0) {
+    return numericSubGroups;
+  }
+  return [...numericSubGroups, createAisleSubGroup(null, nullBucket)];
 };
 
 const isStaple = (item: TripItem): boolean => item.itemType !== 'one-off';
