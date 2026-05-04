@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { AuthResult } from '../auth/AuthService';
 import { theme } from './theme';
 
@@ -69,7 +69,10 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
   const isSubmitting = screenState.kind === 'submitting';
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -102,7 +105,7 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
       <Pressable onPress={toggleMode} disabled={isSubmitting}>
         <Text style={styles.toggleText}>{toggleLabel(mode)}</Text>
       </Pressable>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

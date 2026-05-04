@@ -2,7 +2,7 @@
 // Collects item type (Staple/One-off), house area, store section, and aisle
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, Modal, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
@@ -311,7 +311,17 @@ export const MetadataBottomSheet = ({
       onRequestClose={onDismiss}
     >
       <Pressable style={styles.overlay} onPress={onDismiss}>
-        <Pressable style={styles.sheet}>
+        <KeyboardAvoidingView
+          style={styles.kbAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          pointerEvents="box-none"
+        >
+          <Pressable style={styles.sheet}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.sheetContent}
+              showsVerticalScrollIndicator={false}
+            >
           {sheetMode === 'duplicate-warning' && duplicateStaple ? (
             <>
               <Text style={styles.title}>Duplicate Found</Text>
@@ -495,7 +505,9 @@ export const MetadataBottomSheet = ({
           )}
             </>
           )}
-        </Pressable>
+            </ScrollView>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Pressable>
     </Modal>
   );
@@ -505,7 +517,13 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  kbAvoid: {
+    flex: 1,
     justifyContent: 'flex-end',
+  },
+  sheetContent: {
+    paddingBottom: 8,
   },
   sheet: {
     backgroundColor: theme.color.ground,

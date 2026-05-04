@@ -2,7 +2,7 @@
 // Shows list of configured areas with Add/Edit/Delete functionality
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { theme } from './theme';
@@ -222,40 +222,53 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
   };
 
   return (
-    <ScrollView testID="area-settings-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-      <Text style={styles.header}>House Areas</Text>
-      {areas.map(renderAreaRow)}
-      {renderDeleteDialog()}
-      {isAdding ? (
-        <View style={styles.addForm}>
-          <TextInput
-            testID="area-name-input"
-            style={styles.nameInput}
-            value={newAreaName}
-            onChangeText={setNewAreaName}
-            placeholder="Area name"
-            autoFocus
-          />
-          {addError && <Text style={styles.errorText}>{addError}</Text>}
-          <View style={styles.formButtons}>
-            <Pressable style={styles.saveButton} onPress={handleSaveNewArea}>
-              <Text style={styles.saveButtonText}>Save</Text>
-            </Pressable>
-            <Pressable style={styles.cancelButton} onPress={handleCancelAdd}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
+    <KeyboardAvoidingView
+      style={styles.kbAvoid}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        testID="area-settings-scroll"
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.header}>House Areas</Text>
+        {areas.map(renderAreaRow)}
+        {renderDeleteDialog()}
+        {isAdding ? (
+          <View style={styles.addForm}>
+            <TextInput
+              testID="area-name-input"
+              style={styles.nameInput}
+              value={newAreaName}
+              onChangeText={setNewAreaName}
+              placeholder="Area name"
+              autoFocus
+            />
+            {addError && <Text style={styles.errorText}>{addError}</Text>}
+            <View style={styles.formButtons}>
+              <Pressable style={styles.saveButton} onPress={handleSaveNewArea}>
+                <Text style={styles.saveButtonText}>Save</Text>
+              </Pressable>
+              <Pressable style={styles.cancelButton} onPress={handleCancelAdd}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      ) : (
-        <Pressable style={styles.addButton} testID="add-area-button" onPress={handleAddPress}>
-          <Text style={styles.addButtonText}>Add Area</Text>
-        </Pressable>
-      )}
-    </ScrollView>
+        ) : (
+          <Pressable style={styles.addButton} testID="add-area-button" onPress={handleAddPress}>
+            <Text style={styles.addButtonText}>Add Area</Text>
+          </Pressable>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  kbAvoid: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
