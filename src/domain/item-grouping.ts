@@ -131,29 +131,44 @@ const distinctAisleKeyCount = (
   nullBucket: TripItem[],
 ): number => numericBuckets.size + (nullBucket.length > 0 ? 1 : 0);
 
-// Partitions a SectionGroup into per-aisle sub-groups.
-// Returns null when the section has exactly one distinct aisle key (including
-// the all-null case): the caller falls back to the existing flat render path.
-// Otherwise returns numeric-ascending sub-groups followed by an optional
-// null-keyed tail. Pure function; no React, no IO.
+// Discriminated union describing how a SectionGroup partitions by aisle.
+// `flat-no-aisle`  : section has no aisle metadata (all aisleNumber = null) → flat render, no badge.
+// `single-aisle`   : section has exactly one numeric aisle, no null items → flat list with `Aisle N` badge in header.
+// `multi-aisle`    : section spans 2+ distinct aisle keys (numeric or numeric+null tail) → per-aisle subgroups.
+export type AislePartition =
+  | { readonly kind: 'flat-no-aisle' }
+  | { readonly kind: 'single-aisle'; readonly aisleNumber: number }
+  | { readonly kind: 'multi-aisle'; readonly subGroups: AisleSubGroup[] };
+
+// Partitions a SectionGroup into one of three aisle shapes (see `AislePartition`).
+// Pure function; no React, no IO.
 export const partitionSectionByAisle = (
   group: SectionGroup,
-): AisleSubGroup[] | null => {
+): AislePartition => {
   const { numericBuckets, nullBucket } = bucketByAisleKey(group.items);
+  const numericKeyCount = numericBuckets.size;
+  const hasNulls = nullBucket.length > 0;
 
-  if (distinctAisleKeyCount(numericBuckets, nullBucket) <= 1) {
-    return null;
+  // All-null (or empty): no aisle data anywhere → flat render, no badge.
+  if (numericKeyCount === 0) {
+    return { kind: 'flat-no-aisle' };
   }
 
+  // Exactly one numeric aisle and no null items → single-aisle render with header badge.
+  if (numericKeyCount === 1 && !hasNulls) {
+    const [aisleNumber] = numericBuckets.keys();
+    return { kind: 'single-aisle', aisleNumber };
+  }
+
+  // 2+ distinct keys (numeric+numeric, or numeric+null) → multi-aisle subgroups.
   const ascendingNumericKeys = [...numericBuckets.keys()].sort((a, b) => a - b);
   const numericSubGroups = ascendingNumericKeys.map((key) =>
     createAisleSubGroup(key, numericBuckets.get(key)!),
   );
-
-  if (nullBucket.length === 0) {
-    return numericSubGroups;
-  }
-  return [...numericSubGroups, createAisleSubGroup(null, nullBucket)];
+  const subGroups = hasNulls
+    ? [...numericSubGroups, createAisleSubGroup(null, nullBucket)]
+    : numericSubGroups;
+  return { kind: 'multi-aisle', subGroups };
 };
 
 const isStaple = (item: TripItem): boolean => item.itemType !== 'one-off';

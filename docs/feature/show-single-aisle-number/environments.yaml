@@ -1,0 +1,15 @@
+target_environments:
+  - name: clean
+    description: "Pure business-logic + UI render-condition change. No installer state."
+    platform: [ios, android, web]
+    preconditions: []
+coexistence_matrix: []
+platform_coverage:
+  iOS: [supported per Expo SDK 54]
+  Android: [supported per Expo SDK 54]
+  Web: [Firebase Hosting target]
+  CI: [GitHub Actions ubuntu-latest]
+deployment_assumptions:
+  - "Change ships as standard Expo OTA update for already-deployed app versions"
+  - "No data migration; pure render-time logic"
+  - "Per-feature Stryker run will fire (touched src/domain/item-grouping.ts)"

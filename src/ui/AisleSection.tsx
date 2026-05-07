@@ -93,29 +93,49 @@ const AisleSubGroupBlock = ({
 );
 
 export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => {
-  const subGroups = partitionSectionByAisle(sectionGroup);
+  const partition = partitionSectionByAisle(sectionGroup);
   const handlers: ItemHandlers = { onItemPress, onItemLongPress };
+
+  // When partition.kind === 'single-aisle', render an `Aisle N` badge in the
+  // section header reusing the existing per-aisle badge style (DDD-2). Other
+  // kinds (flat-no-aisle, multi-aisle) leave the slot empty.
+  const headerBadge: React.ReactNode =
+    partition.kind === 'single-aisle' ? (
+      <Text
+        testID={`section-aisle-badge-${partition.aisleNumber}`}
+        style={styles.aisleBadge}
+      >
+        Aisle {partition.aisleNumber}
+      </Text>
+    ) : null;
+
+  // Body rendering: flat-no-aisle and single-aisle render the same flat item
+  // list; multi-aisle renders inline subgroup blocks. The visible difference
+  // between flat-no-aisle and single-aisle lives in `headerBadge` above.
+  const body =
+    partition.kind === 'multi-aisle'
+      ? partition.subGroups.map((subGroup) => (
+          <AisleSubGroupBlock
+            key={aisleKeySlug(subGroup.aisleKey)}
+            subGroup={subGroup}
+            handlers={handlers}
+          />
+        ))
+      : sectionGroup.items.map((item, index) => renderItemRow(item, index, handlers));
 
   return (
     <View style={styles.card} testID={`aisle-section-${sectionGroup.section}`}>
       <View style={styles.header}>
         <Text style={styles.heading}>{sectionGroup.section}</Text>
         <View style={styles.headerRight}>
+          {headerBadge}
           <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
           {isComplete(sectionGroup) && (
             <Text style={styles.checkmark} testID={`section-complete-${sectionGroup.section}`}>✓</Text>
           )}
         </View>
       </View>
-      {subGroups === null
-        ? sectionGroup.items.map((item, index) => renderItemRow(item, index, handlers))
-        : subGroups.map((subGroup) => (
-            <AisleSubGroupBlock
-              key={aisleKeySlug(subGroup.aisleKey)}
-              subGroup={subGroup}
-              handlers={handlers}
-            />
-          ))}
+      {body}
     </View>
   );
 };

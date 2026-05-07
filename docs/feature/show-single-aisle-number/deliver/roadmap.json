@@ -1,0 +1,38 @@
+{
+  "roadmap": {
+    "project_id": "show-single-aisle-number",
+    "created_at": "2026-05-07T18:00:00Z",
+    "total_steps": 1,
+    "phases": 1
+  },
+  "validation": { "status": "approved" },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Render single-aisle badge in AisleSection header",
+      "description": "Single-step finish: flip the headerBadge __SCAFFOLD__ in src/ui/AisleSection.tsx to render the aisle number badge for the discriminated-union 'single-aisle' kind, matching the visual style of the multi-aisle per-subgroup badge (DDD-2 consistency). Walking-skeleton scenario in tests/regression/show-single-aisle-number.test.tsx flips RED -> GREEN. Functional paradigm: hook + JSX expression only, no new component class.",
+      "estimated_duration": "15-30 minutes",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Render single-aisle badge",
+          "description": "DISTILL already widened src/domain/item-grouping.ts to the AislePartition discriminated union and migrated all existing tests; the helper return shape is stable. DISTILL also added a switch on partition.kind in src/ui/AisleSection.tsx where the single-aisle arm renders the flat list correctly but leaves headerBadge as null with a __SCAFFOLD__ marker — that is the ONLY remaining RED. Step body: locate the __SCAFFOLD__ marker in src/ui/AisleSection.tsx; replace the null assignment with a JSX badge that displays the aisle number for kind === 'single-aisle' (e.g. <Text testID={`section-aisle-badge-${partition.aisleNumber}`} style={...}>{partition.aisleNumber}</Text>). Reuse the existing badge style from the multi-aisle arm verbatim — do NOT introduce a new style object or component. The walking-skeleton test in tests/regression/show-single-aisle-number.test.tsx queries by testID `section-aisle-badge-12`, so the testID template MUST be exactly `section-aisle-badge-${aisleNumber}`. Verify by running `npm test`: the previously RED walking-skeleton test goes GREEN, and all four other regression locks plus all existing AisleSection.test.tsx and item-grouping.test.ts tests stay GREEN. Final check: `grep __SCAFFOLD__ src/` returns zero matches.",
+          "criteria": "GIVEN AisleSection is rendered with a partition of kind 'single-aisle' and aisleNumber 12 WHEN the component mounts THEN an element with testID 'section-aisle-badge-12' is in the rendered tree AND its text content includes '12' AND the multi-aisle and flat-no-aisle render paths remain byte-equivalent to the prior commit (no regressions in existing AisleSection.test.tsx). The walking-skeleton scenario in tests/regression/show-single-aisle-number.test.tsx must transition from RED to GREEN. The full `npm test` run is green; no existing test regresses. After GREEN, `grep -r __SCAFFOLD__ src/` returns zero matches.",
+          "test_file": "tests/regression/show-single-aisle-number.test.tsx",
+          "scenario_name": "walking-skeleton: single-aisle section renders aisle 12 badge",
+          "files_to_modify": [
+            "src/ui/AisleSection.tsx"
+          ],
+          "implementation_notes": "Read src/ui/AisleSection.tsx first to locate the __SCAFFOLD__ marker and the existing multi-aisle badge JSX (so style reuse is verbatim). The widening DISTILL did already gives you the partition object as a discriminated union — TypeScript should narrow inside the kind === 'single-aisle' branch so partition.aisleNumber is statically typed. Render the badge as a sibling/header element to the flat list, matching the multi-aisle layout's badge placement. Do NOT add a new export, do NOT introduce a Pressable or interaction surface — it is purely informational. After GREEN, do not refactor in this step — Phase 3 (L1-L6 refactoring) handles polish. COMMIT message: 'feat(show-single-aisle-number): render aisle badge for single-aisle sections in store view' with trailer 'Step-ID: 01-01'. Functional paradigm only.",
+          "deliverables": [
+            "src/ui/AisleSection.tsx: __SCAFFOLD__ marker removed; headerBadge slot renders aisle number for single-aisle kind using the multi-aisle badge style verbatim; testID template `section-aisle-badge-${aisleNumber}` used.",
+            "tests/regression/show-single-aisle-number.test.tsx walking-skeleton scenario flips RED -> GREEN; all four existing GREEN regression locks remain GREEN.",
+            "Full npm test run green; no existing test regresses; zero __SCAFFOLD__ markers remain in src/."
+          ],
+          "estimated_duration": "15-30 minutes",
+          "dependencies": []
+        }
+      ]
+    }
+  ]
+}
