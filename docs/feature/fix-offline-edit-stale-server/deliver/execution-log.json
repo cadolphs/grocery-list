@@ -1,0 +1,69 @@
+{
+  "schema_version": "3.0",
+  "feature_id": "fix-offline-edit-stale-server",
+  "events": [
+    {
+      "sid": "01-01",
+      "p": "RED",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T19:42:18Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T19:43:43Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T19:43:48Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "RED",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T19:50:23Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T19:52:40Z"
+    },
+    {
+      "sid": "02-01",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T19:53:24Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "RED",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T20:00:09Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T20:03:52Z"
+    },
+    {
+      "sid": "02-02",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-09-14T20:04:14Z"
+    }
+  ]
+}
