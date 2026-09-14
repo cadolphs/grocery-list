@@ -1,6 +1,7 @@
 // Local-write watermark helpers shared by the four Firestore adapters (trip,
-// staples, areas, section order). Pure functions plus two thin AsyncStorage
-// wrappers; this module imports none of the adapters.
+// staples, areas, section order). Pure functions plus thin wrappers over the
+// two effects the adapters share, the AsyncStorage mirror and the device clock;
+// this module imports none of the adapters.
 //
 // Problem (RCA fix-offline-edit-stale-server): an edit made offline, followed by
 // a process kill, is durably held only in the AsyncStorage mirror. On the next
@@ -45,6 +46,8 @@ export type MirrorEnvelope<T> = {
 // Adapter-supplied v1 reader. Returns the parsed value wrapped, or null when
 // the raw string holds nothing usable. Wrapping keeps "value is null" (section
 // order's `{ order: null }`) distinct from "nothing usable" when T admits null.
+// Where the v1 key held the raw JSON value, buildRawJsonV1Parser builds it;
+// section order, whose v1 key held `{ order }`, supplies its own.
 export type ParseV1<T> = (raw: string) => { readonly value: T } | null;
 
 // Adapter-supplied v2 value guard. A type predicate rather than `T | null` for
@@ -123,6 +126,13 @@ export const rePushStamp = (watermark: DocumentWatermark, serverWrittenAt: numbe
     ? watermark.cachedValueWrittenAt
     : null;
 
+// --- Clock (the one effect here besides AsyncStorage) ---
+
+// The stamp a local write carries: the hybrid logical clock formula in
+// nextWrittenAt, fed the device clock and this document's floor.
+export const mintLocalStamp = (watermark: DocumentWatermark): number =>
+  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
+
 // --- v2 envelope decoding ---
 
 const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
@@ -143,6 +153,18 @@ const decodeV2Envelope = <T>(raw: string, validateV2: ValidateV2<T>): MirrorEnve
   if (!('value' in envelope) || !validateV2(envelope.value)) return null;
   return { value: envelope.value, writtenAt: extractWrittenAt(envelope) };
 };
+
+// --- v1 fallback parsing ---
+
+// Builds the v1 reader for a document whose pre-upgrade mirror held the raw
+// JSON value under the v1 key: parse, then admit the value only if it passes
+// the adapter's guard.
+export const buildRawJsonV1Parser =
+  <T>(isValue: (candidate: unknown) => candidate is T): ParseV1<T> =>
+  (raw) => {
+    const json = tryParseJson(raw);
+    return json !== null && isValue(json.parsed) ? { value: json.parsed } : null;
+  };
 
 // --- AsyncStorage wrappers ---
 

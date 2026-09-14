@@ -32,8 +32,9 @@ import { DEFAULT_HOUSE_AREAS } from '../async-storage/async-area-storage';
 import {
   DocumentWatermark,
   UNSTAMPED,
+  buildRawJsonV1Parser,
   extractWrittenAt,
-  nextWrittenAt,
+  mintLocalStamp,
   observeStamp,
   rePushStamp,
   readMirrorEnvelope,
@@ -77,20 +78,8 @@ const isUsableAreaList = (candidate: unknown): candidate is string[] =>
 // --- AsyncStorage mirror (v2 envelope, v1 fallback) ---
 
 // Pre-upgrade v1 mirrors hold the raw JSON array under the v1 key.
-const parseV1Mirror = (raw: string): { readonly value: string[] } | null => {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return isUsableAreaList(parsed) ? { value: parsed } : null;
-  } catch {
-    return null;
-  }
-};
-
 const readAreaMirror = (uid: string) =>
-  readMirrorEnvelope<string[]>(uid, 'areas', parseV1Mirror, isUsableAreaList);
-
-const mintLocalStamp = (watermark: DocumentWatermark): number =>
-  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
+  readMirrorEnvelope<string[]>(uid, 'areas', buildRawJsonV1Parser(isUsableAreaList), isUsableAreaList);
 
 // null means "the server has nothing to say" — an absent document, a missing
 // field, or an empty list. It is deliberately NOT read as "the user has no areas".

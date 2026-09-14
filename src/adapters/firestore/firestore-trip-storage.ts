@@ -25,8 +25,9 @@ import { TripStorage } from '../../ports/trip-storage';
 import {
   DocumentWatermark,
   UNSTAMPED,
+  buildRawJsonV1Parser,
   extractWrittenAt,
-  nextWrittenAt,
+  mintLocalStamp,
   observeStamp,
   rePushStamp,
   readMirrorEnvelope,
@@ -49,13 +50,6 @@ type DocumentSnapshot<Data> = {
   exists: () => boolean;
   data: () => Data | undefined;
 };
-
-// --- Watermarks (RCA 6.2) ---
-//
-// The per-document watermark record and its transitions (observeStamp,
-// rePushStamp) live in local-write-watermark.ts; only the clock read stays here.
-const mintLocalStamp = (watermark: DocumentWatermark): number =>
-  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
 
 // --- Firestore documents ---
 
@@ -95,22 +89,11 @@ const isTrip = (candidate: unknown): candidate is Trip =>
   isRecord(candidate) && isTripItemList(candidate.items);
 
 // Pre-upgrade v1 mirrors hold the raw JSON value under the v1 key.
-const parseV1Mirror =
-  <T>(isValue: (candidate: unknown) => candidate is T) =>
-  (raw: string): { readonly value: T } | null => {
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      return isValue(parsed) ? { value: parsed } : null;
-    } catch {
-      return null;
-    }
-  };
-
 const readTripMirror = (uid: string) =>
-  readMirrorEnvelope<Trip>(uid, 'trip', parseV1Mirror(isTrip), isTrip);
+  readMirrorEnvelope<Trip>(uid, 'trip', buildRawJsonV1Parser(isTrip), isTrip);
 
 const readCarryoverMirror = (uid: string) =>
-  readMirrorEnvelope<readonly TripItem[]>(uid, 'carryover', parseV1Mirror(isTripItemList), isTripItemList);
+  readMirrorEnvelope<readonly TripItem[]>(uid, 'carryover', buildRawJsonV1Parser(isTripItemList), isTripItemList);
 
 // --- Domain helpers ---
 
@@ -209,13 +192,13 @@ export const createFirestoreTripStorage = (
 
     // Server data has arrived — it is authoritative for the rest of this
     // session, so the empty-snapshot guard stands down on both branches below.
-    const tripRePushWrittenAt = rePushStamp(tripWatermark, serverWrittenAt);
-    if (cachedTrip !== null && tripRePushWrittenAt !== null) {
+    const rePushWrittenAt = rePushStamp(tripWatermark, serverWrittenAt);
+    if (cachedTrip !== null && rePushWrittenAt !== null) {
       // The server holds an older document than the edit in cache: push the
       // edit back with its own stamp. The echo carries that stamp and equal
       // content, so it short-circuits above and cannot loop.
       tripHydratedFromLocal = false;
-      persistTripInBackground(db, uid, cachedTrip, tripRePushWrittenAt);
+      persistTripInBackground(db, uid, cachedTrip, rePushWrittenAt);
       return;
     }
 
@@ -255,9 +238,9 @@ export const createFirestoreTripStorage = (
       return;
     }
 
-    const carryoverRePushWrittenAt = rePushStamp(carryoverWatermark, serverWrittenAt);
-    if (carryoverRePushWrittenAt !== null) {
-      persistCarryoverInBackground(db, uid, cachedCarryover, carryoverRePushWrittenAt);
+    const rePushWrittenAt = rePushStamp(carryoverWatermark, serverWrittenAt);
+    if (rePushWrittenAt !== null) {
+      persistCarryoverInBackground(db, uid, cachedCarryover, rePushWrittenAt);
       return;
     }
 

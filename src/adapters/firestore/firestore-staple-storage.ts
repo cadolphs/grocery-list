@@ -27,8 +27,9 @@ import { StapleStorage } from '../../ports/staple-storage';
 import {
   DocumentWatermark,
   UNSTAMPED,
+  buildRawJsonV1Parser,
   extractWrittenAt,
-  nextWrittenAt,
+  mintLocalStamp,
   observeStamp,
   rePushStamp,
   readMirrorEnvelope,
@@ -69,20 +70,8 @@ const isStapleItemList = (candidate: unknown): candidate is StapleItem[] =>
   Array.isArray(candidate);
 
 // Pre-upgrade v1 mirrors hold the raw JSON array under the v1 key.
-const parseV1Mirror = (raw: string): { readonly value: StapleItem[] } | null => {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return isStapleItemList(parsed) ? { value: parsed } : null;
-  } catch {
-    return null;
-  }
-};
-
 const readStapleMirror = (uid: string) =>
-  readMirrorEnvelope<StapleItem[]>(uid, 'staples', parseV1Mirror, isStapleItemList);
-
-const mintLocalStamp = (watermark: DocumentWatermark): number =>
-  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
+  readMirrorEnvelope<StapleItem[]>(uid, 'staples', buildRawJsonV1Parser(isStapleItemList), isStapleItemList);
 
 const serializeItems = (items: StapleItem[]): string =>
   JSON.stringify(items);

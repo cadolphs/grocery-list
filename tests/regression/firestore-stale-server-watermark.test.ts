@@ -18,9 +18,9 @@
 // AsyncStorage access is case (c)'s pre-upgrade v1 seed and the check that the
 // v1 key is gone afterwards.
 //
-// The cases are a describe.each row table, one row per mirrored document.
-// Step 02-02 appends the staples, areas and section-order rows; nothing else in
-// this file should need to change for that.
+// The cases are a describe.each row table, one row per mirrored document (trip,
+// carryover, staples, areas, section order), plus one section-order-only case
+// for a mirrored clear.
 
 import type { StapleItem, Trip, TripItem } from '../../src/domain/types';
 import type { FirestoreTripStorage } from '../../src/adapters/firestore/firestore-trip-storage';

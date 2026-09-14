@@ -36,7 +36,7 @@ import {
   DocumentWatermark,
   UNSTAMPED,
   extractWrittenAt,
-  nextWrittenAt,
+  mintLocalStamp,
   observeStamp,
   rePushStamp,
   readMirrorEnvelope,
@@ -99,9 +99,6 @@ const parseV1Mirror = (raw: string): { readonly value: SectionOrder } | null => 
 
 const readSectionOrderMirror = (uid: string) =>
   readMirrorEnvelope<SectionOrder>(uid, 'sectionOrder', parseV1Mirror, isSectionOrder);
-
-const mintLocalStamp = (watermark: DocumentWatermark): number =>
-  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
 
 // null means "the server has nothing to say" — an absent document or a missing
 // order field. A remote clear is indistinguishable from silence at this level and
