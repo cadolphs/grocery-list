@@ -162,11 +162,11 @@ All four Firestore adapters follow the same pattern:
 4. **Local writes**: update cache synchronously, call `setDoc` fire-and-forget (unchanged)
 5. **Own-write echo**: `onSnapshot` fires for own writes; adapter detects no-change and skips `onChange` callback (compare serialized state)
 6. **Cleanup**: `onSnapshot` returns unsubscribe function; stored by init hook and called on unmount/logout
-7. **Local durability (native)**: hydrate the in-memory cache from a versioned, uid-scoped AsyncStorage mirror (`firestore-cache:v1:{uid}:{doc}`) BEFORE subscribing; treat an absent or empty first snapshot as *unknown*, never as *empty*, so it can never overwrite mirrored data; write through to the mirror on every local mutation.
+7. **Local durability (native)**: hydrate the in-memory cache from a versioned, uid-scoped AsyncStorage mirror (`firestore-cache:v1:{uid}:{doc}`) BEFORE subscribing, and resolve readiness from the mirror when it yields an entry (await the first snapshot only when it does not); treat an absent or empty first snapshot as *unknown*, never as *empty*, so it can never overwrite mirrored data; write through to the mirror on every local mutation.
 
 Step 7 added 2026-09-14 (feature `fix-offline-staple-cache-wipe`). Without it, an offline cold start yields empty caches, and the trip domain then rebuilds a completed trip from an empty staple list and persists the empty result over the local mirror.
 
-A note on when the guard disarms: the staple, area and section-order adapters disarm the empty-snapshot guard ONLY when a snapshot actually carries data. The trip adapter still disarms on every local write, which is a known inconsistency and a widening of the window in which a late server snapshot can clobber an offline edit. Harmonising the trip adapter is an open follow-up.
+Mirror-first readiness landed 2026-09-14 (feature `fix-slow-render-flaky-network`): `initialize()` no longer waits for a first snapshot that connected-but-dead wifi can withhold indefinitely, so a user with a mirror renders immediately; the `onSnapshot` subscription is still registered and later snapshots flow through the existing `onChange`/`subscribe` fan-out.
 
 #### onChange Callback Contract
 

@@ -138,7 +138,17 @@ export const createFirestoreStapleStorage = (
         hydratedFromLocal = true;
       }
 
-      return new Promise<void>((resolve) => {
+      // Step 2: readiness. A mirror entry — including a mirrored empty list,
+      // which records a deliberate decision — means the cache already holds
+      // what the app needs to render, so initialize() resolves without waiting
+      // for the network: the Firestore SDK withholds the first snapshot on
+      // connected-but-dead wifi until its offline timer fires. With no mirror
+      // (first install / new uid) the first snapshot remains the only source of
+      // truth, so we await it as before. The subscription is registered in
+      // both cases; only the await is skipped.
+      const hydratedFromMirror = localStaples !== null;
+
+      const firstSnapshot = new Promise<void>((resolve) => {
         let resolved = false;
         unsubscribeFn = onSnapshot(buildDocRef(db, uid), (snapshot) => {
           handleSnapshot(snapshot as { exists: () => boolean; data: () => { items: StapleItem[] } | undefined });
@@ -148,6 +158,8 @@ export const createFirestoreStapleStorage = (
           }
         });
       });
+
+      return hydratedFromMirror ? undefined : firstSnapshot;
     },
 
     unsubscribe: (): void => {

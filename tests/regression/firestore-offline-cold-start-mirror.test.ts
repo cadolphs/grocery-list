@@ -16,6 +16,12 @@
 // arrives at all. This file adds a controllable snapshot mode so both regimes are
 // exercised, and asserts through the StapleStorage port surface returned by the
 // factory — never through an internal helper.
+//
+// Readiness (RCA Root Cause A, feature fix-slow-render-flaky-network): when the
+// mirror yields an entry, initialize() resolves from it instead of awaiting the
+// first snapshot, so a withheld snapshot no longer blocks the app's isReady
+// gate. The subscription is registered either way; with no mirror entry the
+// first snapshot remains the only source of truth and initialize() waits.
 
 import type { StapleItem, TripItem } from '../../src/domain/types';
 import type { StapleStorage } from '../../src/ports/staple-storage';
@@ -143,13 +149,14 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     expect(adapterB.loadAll()).toEqual([milk]);
   });
 
-  test('mirrored staples are readable before initialize() resolves when the first snapshot is withheld', async () => {
+  test('initialize() resolves from the mirror before the first snapshot when it is withheld', async () => {
     const adapterA = await createInitializedAdapter();
     const milk = makeStaple();
     adapterA.save(milk);
 
-    // Connected-but-dead wifi: the callback is registered but never fires, so
-    // initialize() stays pending forever. Hydration must not depend on it.
+    // Connected-but-dead wifi: the callback is registered but never fires.
+    // Readiness must come from the mirror, and hydration must not depend on
+    // the snapshot either.
     snapshotMode = 'withheld';
     const adapterB = createAdapter();
     let initializeResolved = false;
@@ -159,8 +166,47 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
 
     await settlePendingReads();
 
-    expect(initializeResolved).toBe(false);
+    expect(initializeResolved).toBe(true);
     expect(adapterB.loadAll()).toEqual([milk]);
+    expect(mockOnSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ path: staplesDocPath(TEST_UID) }),
+      expect.any(Function)
+    );
+  });
+
+  test('a mirrored empty staple list is a recorded decision and resolves initialize() when the first snapshot is withheld', async () => {
+    const adapterA = await createInitializedAdapter();
+    adapterA.save(makeStaple());
+    adapterA.remove('staple-1');
+
+    snapshotMode = 'withheld';
+    const adapterB = createAdapter();
+    let initializeResolved = false;
+    void adapterB.initialize().then(() => {
+      initializeResolved = true;
+    });
+
+    await settlePendingReads();
+
+    expect(initializeResolved).toBe(true);
+    expect(adapterB.loadAll()).toEqual([]);
+  });
+
+  test('a uid with no mirror entry keeps initialize() pending when the first snapshot is withheld', async () => {
+    snapshotMode = 'withheld';
+    const adapter = createAdapter();
+    let initializeResolved = false;
+    void adapter.initialize().then(() => {
+      initializeResolved = true;
+    });
+
+    await settlePendingReads();
+
+    expect(initializeResolved).toBe(false);
+    expect(mockOnSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ path: staplesDocPath(TEST_UID) }),
+      expect.any(Function)
+    );
   });
 
   test('a late absent snapshot does not overwrite the mirrored staples', async () => {
@@ -334,7 +380,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     expect(adapter.loadAll()).toEqual([...DEFAULT_HOUSE_AREAS]);
   });
 
-  test('mirrored areas are readable before initialize() resolves when the first snapshot is withheld', async () => {
+  test('initialize() resolves from the mirror before the first snapshot when it is withheld', async () => {
     const adapterA = await createInitializedAreaAdapter();
     adapterA.saveAll(CUSTOM_AREAS);
 
@@ -347,8 +393,29 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
 
     await settlePendingReads();
 
-    expect(initializeResolved).toBe(false);
+    expect(initializeResolved).toBe(true);
     expect(adapterB.loadAll()).toEqual(CUSTOM_AREAS);
+    expect(mockOnSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ path: areasDocPath(AREAS_UID) }),
+      expect.any(Function)
+    );
+  });
+
+  test('a uid with no mirror entry keeps initialize() pending when the first snapshot is withheld', async () => {
+    snapshotMode = 'withheld';
+    const adapter = createAreaAdapter();
+    let initializeResolved = false;
+    void adapter.initialize().then(() => {
+      initializeResolved = true;
+    });
+
+    await settlePendingReads();
+
+    expect(initializeResolved).toBe(false);
+    expect(mockOnSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ path: areasDocPath(AREAS_UID) }),
+      expect.any(Function)
+    );
   });
 
   test.each([
@@ -492,7 +559,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     expect(adapterB.loadOrder()).toBeNull();
   });
 
-  test('mirrored order is readable before initialize() resolves when the first snapshot is withheld', async () => {
+  test('initialize() resolves from the mirror before the first snapshot when it is withheld', async () => {
     const adapterA = await createInitializedSectionOrderAdapter();
     adapterA.saveOrder(SAVED_ORDER);
 
@@ -505,8 +572,47 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
 
     await settlePendingReads();
 
-    expect(initializeResolved).toBe(false);
+    expect(initializeResolved).toBe(true);
     expect(adapterB.loadOrder()).toEqual(SAVED_ORDER);
+    expect(mockOnSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ path: sectionOrderDocPath(ORDER_UID) }),
+      expect.any(Function)
+    );
+  });
+
+  test('a mirrored cleared order is a recorded decision and resolves initialize() when the first snapshot is withheld', async () => {
+    const adapterA = await createInitializedSectionOrderAdapter();
+    adapterA.saveOrder(SAVED_ORDER);
+    adapterA.clearOrder();
+
+    snapshotMode = 'withheld';
+    const adapterB = createSectionOrderAdapter();
+    let initializeResolved = false;
+    void adapterB.initialize().then(() => {
+      initializeResolved = true;
+    });
+
+    await settlePendingReads();
+
+    expect(initializeResolved).toBe(true);
+    expect(adapterB.loadOrder()).toBeNull();
+  });
+
+  test('a uid with no mirror entry keeps initialize() pending when the first snapshot is withheld', async () => {
+    snapshotMode = 'withheld';
+    const adapter = createSectionOrderAdapter();
+    let initializeResolved = false;
+    void adapter.initialize().then(() => {
+      initializeResolved = true;
+    });
+
+    await settlePendingReads();
+
+    expect(initializeResolved).toBe(false);
+    expect(mockOnSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({ path: sectionOrderDocPath(ORDER_UID) }),
+      expect.any(Function)
+    );
   });
 
   test.each([
