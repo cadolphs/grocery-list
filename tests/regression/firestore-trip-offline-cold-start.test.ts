@@ -258,3 +258,87 @@ describe('Firestore trip adapter — a local edit survives a late empty snapshot
     expect(adapterC.loadTrip()).toEqual(serverTrip);
   });
 });
+
+// Third defect (fix-slow-render-flaky-network, RCA Root Cause A): initialize()
+// awaited the first snapshot even when the AsyncStorage mirror had already
+// hydrated the cache. On connected-but-dead wifi the Firestore SDK withholds
+// that first snapshot (re-arming a 10 s offline timer on every stream restart),
+// so the app sat on the loading screen although the data to render was on disk.
+// Readiness must come from the mirror; the subscription still goes live so
+// later snapshots flow through onChange.
+describe('Offline cold start renders the mirrored trip before any snapshot fires, and keeps waiting when there is no mirror', () => {
+  const onSnapshotPaths = (): string[] =>
+    mockOnSnapshot.mock.calls.map(([docRef]) => docRef.path);
+
+  // Observe readiness without awaiting: under 'withheld' the promise may never
+  // settle, so a then-flag read after the reads have drained is the only
+  // timer-free way to distinguish "resolved" from "pending".
+  const observeInitialize = async (storage: { initialize: () => Promise<void> }) => {
+    let initializeResolved = false;
+    void storage.initialize().then(() => {
+      initializeResolved = true;
+    });
+    await settlePendingReads();
+    return initializeResolved;
+  };
+
+  it('resolves initialize() from the trip and carryover mirrors while the first snapshot is withheld, with both subscriptions registered', async () => {
+    const adapterA = await createFreshAdapter();
+    const savedTrip = makeTrip();
+    const savedCarryover: readonly TripItem[] = [makeTripItem({ id: 'carry-1', name: 'Olive Oil' })];
+    adapterA.saveTrip(savedTrip);
+    adapterA.saveCarryover(savedCarryover);
+    jest.clearAllMocks();
+
+    snapshotMode = 'withheld';
+    const adapterB = createAdapter();
+    const initializeResolved = await observeInitialize(adapterB);
+
+    expect(initializeResolved).toBe(true);
+    expect(adapterB.loadTrip()).toEqual(savedTrip);
+    expect(adapterB.loadCarryover()).toEqual(savedCarryover);
+    expect(onSnapshotPaths()).toEqual(
+      expect.arrayContaining([tripDocPath(TEST_UID), carryoverDocPath(TEST_UID)])
+    );
+  });
+
+  it('keeps initialize() pending on a first install with no mirror while the first snapshot is withheld', async () => {
+    snapshotMode = 'withheld';
+    const adapterB = createAdapter();
+    const initializeResolved = await observeInitialize(adapterB);
+
+    expect(initializeResolved).toBe(false);
+  });
+
+  it('keeps initialize() pending when only the trip mirror exists and the first snapshot is withheld', async () => {
+    const adapterA = await createFreshAdapter();
+    adapterA.saveTrip(makeTrip());
+
+    snapshotMode = 'withheld';
+    const adapterB = createAdapter();
+    const initializeResolved = await observeInitialize(adapterB);
+
+    expect(initializeResolved).toBe(false);
+  });
+
+  it('a data-bearing trip snapshot arriving after early resolution updates loadTrip() and fires onChange', async () => {
+    const adapterA = await createFreshAdapter();
+    adapterA.saveTrip(makeTrip());
+    adapterA.saveCarryover([makeTripItem({ id: 'carry-1', name: 'Olive Oil' })]);
+
+    const onChange = jest.fn();
+    snapshotMode = 'delayed';
+    const adapterB = createAdapter(onChange);
+    const initializeResolved = await observeInitialize(adapterB);
+    expect(initializeResolved).toBe(true);
+
+    const serverTrip = makeTrip({
+      id: 'trip-offline-2',
+      items: [makeTripItem({ id: 'trip-item-2', name: 'Bread' })],
+    });
+    deliverSnapshot(tripDocPath(TEST_UID), { trip: serverTrip });
+
+    expect(adapterB.loadTrip()).toEqual(serverTrip);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+});

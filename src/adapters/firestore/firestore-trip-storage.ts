@@ -226,7 +226,18 @@ export const createFirestoreTripStorage = (
         carryoverHydratedFromLocal = true;
       }
 
-      return new Promise<void>((resolve) => {
+      // Step 2: readiness. Both mirrors present means the cache already holds
+      // everything the app needs to render, so initialize() resolves without
+      // waiting for the network: the Firestore SDK withholds the first snapshot
+      // on connected-but-dead wifi until its offline timer fires, and that
+      // timer re-arms on every stream restart. Requiring BOTH keys keeps a
+      // completed trip from being rebuilt without its carryover. With no mirror
+      // (first install / new uid) the first snapshots remain the only source
+      // of truth, so we await them as before. The subscriptions are registered
+      // in both cases; only the await is skipped.
+      const hydratedFromMirror = localTrip !== null && localCarryover !== null;
+
+      const firstSnapshots = new Promise<void>((resolve) => {
         let tripResolved = false;
         let carryoverResolved = false;
 
@@ -252,6 +263,8 @@ export const createFirestoreTripStorage = (
           }
         });
       });
+
+      return hydratedFromMirror ? undefined : firstSnapshots;
     },
 
     unsubscribe: (): void => {
