@@ -1,4 +1,5 @@
 import { SectionOrderStorage } from '../../ports/section-order-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- Firestore mock infrastructure ---
 
@@ -65,10 +66,14 @@ const createFreshStorage = async () => {
   return storage as SectionOrderStorage & { initialize: () => Promise<void>; subscribe: (l: () => void) => () => void };
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
   capturedSnapshotCallback = null;
+  // The adapter mirrors every write to AsyncStorage for offline durability, so a
+  // leftover mirror from a previous test would hydrate the next adapter with a
+  // stale section order.
+  await AsyncStorage.clear();
 });
 
 // --- Tests ---

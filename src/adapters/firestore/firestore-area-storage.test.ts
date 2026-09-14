@@ -1,4 +1,5 @@
 import { AreaStorage } from '../../ports/area-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- Firestore mock infrastructure ---
 
@@ -65,10 +66,14 @@ const createFreshStorage = async () => {
   return storage as AreaStorage & { initialize: () => Promise<void> };
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
   capturedSnapshotCallback = null;
+  // The adapter mirrors every write to AsyncStorage for offline durability, so a
+  // leftover mirror from a previous test would hydrate the next adapter with a
+  // stale area list.
+  await AsyncStorage.clear();
 });
 
 // --- Tests ---
