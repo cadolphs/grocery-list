@@ -55,3 +55,8 @@ reports/
 # Firebase local cache & logs
 .firebase/
 firebase-debug.log
+# nWave activation marker (keep .nwave/local-config.json trackable)
+.nwave/*
+!.nwave/local-config.json
+# Claude Code per-session scheduler lock (machine-local, never shared)
+.claude/scheduled_tasks.lock
