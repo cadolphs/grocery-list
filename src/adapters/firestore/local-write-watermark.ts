@@ -86,6 +86,43 @@ export const extractWrittenAt = (data: Record<string, unknown> | undefined): num
   return isFiniteNumber(candidate) ? candidate : null;
 };
 
+// --- Per-document watermark state (RCA 6.2) ---
+//
+// Two stamps per document. `cachedValueWrittenAt` is the watermark of the value
+// currently in cache and is the comparison key against an incoming server stamp
+// (null when the cached value is unstamped: no mirror, a v1 mirror, or an
+// adopted unstamped document). `highestObservedWrittenAt` is the hybrid-logical
+// clock floor used to mint the next local stamp: the highest stamp this adapter
+// has ever seen, never lowered by adopting an unstamped document.
+export type DocumentWatermark = {
+  readonly cachedValueWrittenAt: number | null;
+  readonly highestObservedWrittenAt: number | null;
+};
+
+export const UNSTAMPED: DocumentWatermark = {
+  cachedValueWrittenAt: null,
+  highestObservedWrittenAt: null,
+};
+
+const laterOf = (left: number | null, right: number | null): number | null =>
+  left === null ? right : right === null ? left : Math.max(left, right);
+
+// The cached value now carries `writtenAt`; the floor only ever rises. One
+// transition serves hydration, local writes and adoption alike.
+export const observeStamp = (watermark: DocumentWatermark, writtenAt: number | null): DocumentWatermark => ({
+  cachedValueWrittenAt: writtenAt,
+  highestObservedWrittenAt: laterOf(watermark.highestObservedWrittenAt, writtenAt),
+});
+
+// The stamp a REPUSH re-sends the cached value with (the cached value's own,
+// not bumped, so a second re-push writes identical bytes), or null when the
+// incoming document is to be adopted.
+export const rePushStamp = (watermark: DocumentWatermark, serverWrittenAt: number | null): number | null =>
+  watermark.cachedValueWrittenAt !== null &&
+  resolveAdoption(serverWrittenAt, watermark.cachedValueWrittenAt) === 'repush'
+    ? watermark.cachedValueWrittenAt
+    : null;
+
 // --- v2 envelope decoding ---
 
 const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>

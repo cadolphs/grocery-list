@@ -120,7 +120,7 @@ describe('firestore section order storage implements section order storage port'
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: SECTION_ORDER_DOC_PATH }),
-      { order }
+      { order, writtenAt: expect.any(Number) }
     );
   });
 
@@ -132,7 +132,7 @@ describe('firestore section order storage implements section order storage port'
 
     expect(mockSetDoc).toHaveBeenLastCalledWith(
       expect.objectContaining({ path: SECTION_ORDER_DOC_PATH }),
-      { order: null }
+      { order: null, writtenAt: expect.any(Number) }
     );
   });
 

@@ -16,14 +16,32 @@
 // Absence semantics differ from the staple and area adapters: here `null` is a
 // legitimate stored value — the user can deliberately clear the order. The mirror
 // therefore stores an ENVELOPE, so "no mirror entry" (AsyncStorage returns null)
-// stays distinguishable from "mirrored null" (envelope with order: null). Without
-// that distinction the fix would trade a silent wipe for a silent resurrection of
-// an order the user cleared.
+// stays distinguishable from "mirrored null". The v2 envelope shared by all
+// adapters ({ value, writtenAt }) already provides that presence, so its value is
+// the bare `string[] | null`; only the pre-upgrade v1 mirror carries the inner
+// { order } wrapper. Without the distinction the fix would trade a silent wipe
+// for a silent resurrection of an order the user cleared.
+//
+// Local-write watermark (fix-offline-edit-stale-server): every local write —
+// a clear included — is stamped with a client-generated `writtenAt`, sent on
+// the document and kept in the v2 mirror envelope. When a data-bearing snapshot
+// arrives, an OLDER stamped document is re-pushed with the mirrored value
+// (REPUSH) instead of replacing it; a newer, equal or unstamped one is adopted
+// as before (ADOPT). See local-write-watermark.ts for the rule and its rationale.
 
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SectionOrderStorage } from '../../ports/section-order-storage';
+import {
+  DocumentWatermark,
+  UNSTAMPED,
+  extractWrittenAt,
+  nextWrittenAt,
+  observeStamp,
+  rePushStamp,
+  readMirrorEnvelope,
+  writeMirrorEnvelope,
+} from './local-write-watermark';
 
 export type FirestoreSectionOrderStorageOptions = {
   readonly onChange?: () => void;
@@ -34,65 +52,64 @@ export type FirestoreSectionOrderStorage = SectionOrderStorage & {
   readonly unsubscribe: () => void;
 };
 
-// The mirror envelope. Its presence means "this uid has a mirrored decision";
-// its `order` field carries that decision, which may legitimately be null.
+type SectionOrder = string[] | null;
+
+// The pre-upgrade v1 mirror shape. Its presence meant "this uid has a mirrored
+// decision"; its `order` field carried that decision, which may be null.
 type MirroredSectionOrder = {
-  readonly order: string[] | null;
+  readonly order: SectionOrder;
+};
+
+type SectionOrderDocumentData = { readonly order?: SectionOrder; readonly writtenAt?: number };
+
+type DocumentSnapshot = {
+  exists: () => boolean;
+  data: () => SectionOrderDocumentData | undefined;
 };
 
 const buildDocRef = (db: Firestore, uid: string) =>
   doc(db, 'users', uid, 'data', 'sectionOrder');
 
-// AsyncStorage key namespace: versioned + uid-scoped, matching buildTripCacheKey
-// and buildStapleCacheKey, so mirrors never collide across users.
-const buildSectionOrderCacheKey = (uid: string): string =>
-  `firestore-cache:v1:${uid}:sectionOrder`;
-
 const persistInBackground = (
   db: Firestore,
   uid: string,
-  order: string[] | null
+  order: SectionOrder,
+  writtenAt: number
 ): void => {
-  setDoc(buildDocRef(db, uid), { order });
+  setDoc(buildDocRef(db, uid), { order, writtenAt });
 };
 
-const mirrorOrderToAsyncStorage = (uid: string, order: string[] | null): void => {
-  // Fire-and-forget: setItem is async but we don't await. Matches the existing
-  // setDoc fire-and-forget pattern above.
-  const envelope: MirroredSectionOrder = { order };
-  AsyncStorage.setItem(buildSectionOrderCacheKey(uid), JSON.stringify(envelope));
-};
+// --- AsyncStorage mirror (v2 envelope, v1 fallback) ---
 
-// Returns null for "no mirror entry", an envelope for "mirrored decision".
-const readOrderFromAsyncStorage = async (
-  uid: string
-): Promise<MirroredSectionOrder | null> => {
-  const raw = await AsyncStorage.getItem(buildSectionOrderCacheKey(uid));
-  if (raw === null) return null;
+const isSectionOrder = (candidate: unknown): candidate is SectionOrder =>
+  candidate === null || Array.isArray(candidate);
+
+// Pre-upgrade v1 mirrors hold { order } under the v1 key; an envelope whose
+// order is neither null nor an array is no usable mirror.
+const parseV1Mirror = (raw: string): { readonly value: SectionOrder } | null => {
   try {
-    const parsed = JSON.parse(raw) as { order?: unknown } | null;
+    const parsed = JSON.parse(raw) as Partial<MirroredSectionOrder> | null;
     if (parsed === null || typeof parsed !== 'object') return null;
     const { order } = parsed;
-    if (order === null) return { order: null };
-    if (!Array.isArray(order)) return null;
-    return { order: order as string[] };
+    return isSectionOrder(order) ? { value: order } : null;
   } catch {
     return null;
   }
 };
 
+const readSectionOrderMirror = (uid: string) =>
+  readMirrorEnvelope<SectionOrder>(uid, 'sectionOrder', parseV1Mirror, isSectionOrder);
+
+const mintLocalStamp = (watermark: DocumentWatermark): number =>
+  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
+
 // null means "the server has nothing to say" — an absent document or a missing
 // order field. A remote clear is indistinguishable from silence at this level and
 // is deliberately resolved in favour of keeping data (see the guard below).
-const extractIncomingOrder = (snapshot: {
-  exists: () => boolean;
-  data: () => { order: string[] | null } | undefined;
-}): string[] | null =>
-  snapshot.exists()
-    ? (snapshot.data() as { order: string[] | null } | undefined)?.order ?? null
-    : null;
+const extractIncomingOrder = (data: SectionOrderDocumentData | undefined): SectionOrder =>
+  data?.order ?? null;
 
-const serializeOrder = (order: string[] | null): string =>
+const serializeOrder = (order: SectionOrder): string =>
   JSON.stringify(order);
 
 export const createFirestoreSectionOrderStorage = (
@@ -100,7 +117,8 @@ export const createFirestoreSectionOrderStorage = (
   uid: string,
   options: FirestoreSectionOrderStorageOptions = {}
 ): FirestoreSectionOrderStorage => {
-  let cache: string[] | null = null;
+  let cache: SectionOrder = null;
+  let watermark: DocumentWatermark = UNSTAMPED;
   let unsubscribeFn: () => void = () => {};
   let isInitialized = false;
   // True while the cache came from the AsyncStorage mirror and the server has
@@ -117,16 +135,20 @@ export const createFirestoreSectionOrderStorage = (
     listeners.forEach((listener) => listener());
   };
 
-  const commitLocalChange = (updatedOrder: string[] | null): void => {
+  const commitLocalChange = (updatedOrder: SectionOrder): void => {
+    const writtenAt = mintLocalStamp(watermark);
     cache = updatedOrder;
-    persistInBackground(db, uid, cache);
-    mirrorOrderToAsyncStorage(uid, cache);
+    watermark = observeStamp(watermark, writtenAt);
+    persistInBackground(db, uid, cache, writtenAt);
+    writeMirrorEnvelope(uid, 'sectionOrder', cache, writtenAt);
     notifySubscribers();
   };
 
-  const handleSnapshot = (snapshot: { exists: () => boolean; data: () => { order: string[] | null } | undefined }): void => {
-    const incomingOrder = extractIncomingOrder(snapshot);
+  const handleSnapshot = (snapshot: DocumentSnapshot): void => {
+    const data = snapshot.exists() ? snapshot.data() : undefined;
+    const incomingOrder = extractIncomingOrder(data);
     const serverHasOrder = incomingOrder !== null;
+    const serverWrittenAt = extractWrittenAt(data);
 
     // Preserve AsyncStorage hydration: if the server says "nothing here" but we
     // have a locally-mirrored order, keep the local copy. The server wins only
@@ -138,6 +160,7 @@ export const createFirestoreSectionOrderStorage = (
     if (!isInitialized) {
       // First snapshot for a uid with no mirror entry: the server is all we have.
       cache = incomingOrder;
+      watermark = observeStamp(watermark, serverWrittenAt);
       isInitialized = true;
       return;
     }
@@ -147,12 +170,23 @@ export const createFirestoreSectionOrderStorage = (
       return;
     }
 
-    cache = incomingOrder;
-    if (serverHasOrder) {
-      // Server data has arrived — it is authoritative for the rest of this
-      // session, so the empty-snapshot guard stands down.
+    // Server data has arrived — it is authoritative for the rest of this
+    // session, so the empty-snapshot guard stands down on both branches below.
+    const rePushWrittenAt = serverHasOrder ? rePushStamp(watermark, serverWrittenAt) : null;
+    if (rePushWrittenAt !== null) {
+      // The server holds an older document than the decision in cache (an
+      // order or a clear): push it back with its own stamp. The echo carries
+      // that stamp and equal content, so it short-circuits above and cannot loop.
       hydratedFromLocal = false;
-      mirrorOrderToAsyncStorage(uid, cache);
+      persistInBackground(db, uid, cache, rePushWrittenAt);
+      return;
+    }
+
+    cache = incomingOrder;
+    watermark = observeStamp(watermark, serverWrittenAt);
+    if (serverHasOrder) {
+      hydratedFromLocal = false;
+      writeMirrorEnvelope(uid, 'sectionOrder', cache, serverWrittenAt);
     }
     onChange?.();
     notifySubscribers();
@@ -165,14 +199,15 @@ export const createFirestoreSectionOrderStorage = (
       // which is what connected-but-dead wifi produces — the mirrored order is
       // already readable and the guard above protects it. Hydration runs before
       // any listener can register, so it must not notify.
-      const mirroredOrder = await readOrderFromAsyncStorage(uid);
-      if (mirroredOrder !== null) {
-        cache = mirroredOrder.order;
+      const mirror = await readSectionOrderMirror(uid);
+      if (mirror !== null) {
+        cache = mirror.value;
+        watermark = observeStamp(watermark, mirror.writtenAt);
         isInitialized = true;
         hydratedFromLocal = true;
       }
 
-      // Step 2: readiness. A mirror envelope — including one whose order is
+      // Step 2: readiness. A mirror envelope — including one whose value is
       // null, which records a deliberate clear — means the cache already holds
       // what the app needs to render, so initialize() resolves without waiting
       // for the network: the Firestore SDK withholds the first snapshot on
@@ -180,12 +215,12 @@ export const createFirestoreSectionOrderStorage = (
       // (first install / new uid) the first snapshot remains the only source of
       // truth, so initialize() awaits it. The subscription is registered in
       // both cases; only the await is skipped.
-      const hydratedFromMirror = mirroredOrder !== null;
+      const hydratedFromMirror = mirror !== null;
 
       // Settles on the first snapshot; later resolve() calls are no-ops.
       const firstSnapshot = new Promise<void>((resolve) => {
         unsubscribeFn = onSnapshot(buildDocRef(db, uid), (snapshot) => {
-          handleSnapshot(snapshot as { exists: () => boolean; data: () => { order: string[] | null } | undefined });
+          handleSnapshot(snapshot as DocumentSnapshot);
           resolve();
         });
       });

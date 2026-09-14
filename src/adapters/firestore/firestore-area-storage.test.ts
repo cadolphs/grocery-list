@@ -112,7 +112,7 @@ describe('firestore area storage implements area storage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: AREAS_DOC_PATH }),
-      { items: areas }
+      { items: areas, writtenAt: expect.any(Number) }
     );
   });
 

@@ -163,10 +163,13 @@ All four Firestore adapters follow the same pattern:
 5. **Own-write echo**: `onSnapshot` fires for own writes; adapter detects no-change and skips `onChange` callback (compare serialized state)
 6. **Cleanup**: `onSnapshot` returns unsubscribe function; stored by init hook and called on unmount/logout
 7. **Local durability (native)**: hydrate the in-memory cache from a versioned, uid-scoped AsyncStorage mirror (`firestore-cache:v1:{uid}:{doc}`) BEFORE subscribing, and resolve readiness from the mirror when it yields an entry (await the first snapshot only when it does not); treat an absent or empty first snapshot as *unknown*, never as *empty*, so it can never overwrite mirrored data; write through to the mirror on every local mutation.
+8. **Local-write watermark**: every local write is stamped with a client-generated hybrid-logical-clock `writtenAt` (`max(Date.now(), lastSeen + 1)`) carried on the document and in the mirror; the mirror is a v2 envelope `{ value, writtenAt }` under `firestore-cache:v2:{uid}:{doc}`, with v1 read as a stamp-less fallback and removed on the first v2 write; a data-bearing snapshot is adopted unless both stamps are present and the server's is older, in which case the adapter keeps its cache and re-pushes it with the mirror's own stamp (ties adopt; a missing stamp on either side adopts). On React Native the mirror is the only durable record of a local write -- any future change to the write path must preserve the watermark.
 
 Step 7 added 2026-09-14 (feature `fix-offline-staple-cache-wipe`). Without it, an offline cold start yields empty caches, and the trip domain then rebuilds a completed trip from an empty staple list and persists the empty result over the local mirror.
 
 Mirror-first readiness landed 2026-09-14 (feature `fix-slow-render-flaky-network`): `initialize()` no longer waits for a first snapshot that connected-but-dead wifi can withhold indefinitely, so a user with a mirror renders immediately; the `onSnapshot` subscription is still registered and later snapshots flow through the existing `onChange`/`subscribe` fan-out.
+
+Step 8 added 2026-09-14 (feature `fix-offline-edit-stale-server`). Without it, an edit made offline and cut short by a process kill survives only in the mirror, and the server's older document, arriving first on the next launch, silently overwrote it under arrival-ordered last-writer-wins.
 
 #### onChange Callback Contract
 

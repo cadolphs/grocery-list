@@ -126,7 +126,7 @@ describe('firestore staple storage implements staple storage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: STAPLES_DOC_PATH }),
-      { items: [item] }
+      { items: [item], writtenAt: expect.any(Number) }
     );
   });
 
@@ -140,7 +140,7 @@ describe('firestore staple storage implements staple storage port', () => {
     expect(storage.loadAll()).toEqual([]);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: STAPLES_DOC_PATH }),
-      { items: [] }
+      { items: [], writtenAt: expect.any(Number) }
     );
   });
 
@@ -165,7 +165,7 @@ describe('firestore staple storage implements staple storage port', () => {
     expect(storage.loadAll()).toEqual([updated]);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: STAPLES_DOC_PATH }),
-      { items: [updated] }
+      { items: [updated], writtenAt: expect.any(Number) }
     );
   });
 

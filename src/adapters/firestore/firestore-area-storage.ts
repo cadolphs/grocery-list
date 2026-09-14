@@ -17,12 +17,28 @@
 // The defaults are a NEW-USER fallback, not an override. Resolution order is:
 // mirrored areas, then server areas, then DEFAULT_HOUSE_AREAS when neither has
 // anything to say.
+//
+// Local-write watermark (fix-offline-edit-stale-server): every local write is
+// stamped with a client-generated `writtenAt`, sent on the document and kept
+// in the v2 mirror envelope. When a data-bearing snapshot arrives, an OLDER
+// stamped document is re-pushed with the mirrored value (REPUSH) instead of
+// replacing it; a newer, equal or unstamped one is adopted as before (ADOPT).
+// See local-write-watermark.ts for the rule and its rationale.
 
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AreaStorage } from '../../ports/area-storage';
 import { DEFAULT_HOUSE_AREAS } from '../async-storage/async-area-storage';
+import {
+  DocumentWatermark,
+  UNSTAMPED,
+  extractWrittenAt,
+  nextWrittenAt,
+  observeStamp,
+  rePushStamp,
+  readMirrorEnvelope,
+  writeMirrorEnvelope,
+} from './local-write-watermark';
 
 export type FirestoreAreaStorageOptions = {
   readonly onChange?: () => void;
@@ -33,54 +49,54 @@ export type FirestoreAreaStorage = AreaStorage & {
   readonly unsubscribe: () => void;
 };
 
+type AreaDocumentData = { readonly items?: string[]; readonly writtenAt?: number };
+
+type DocumentSnapshot = {
+  exists: () => boolean;
+  data: () => AreaDocumentData | undefined;
+};
+
 const buildDocRef = (db: Firestore, uid: string) =>
   doc(db, 'users', uid, 'data', 'areas');
-
-// AsyncStorage key namespace: versioned + uid-scoped, matching buildTripCacheKey
-// and buildStapleCacheKey, so mirrors never collide with legacy
-// async-area-storage keys or across users.
-const buildAreaCacheKey = (uid: string): string =>
-  `firestore-cache:v1:${uid}:areas`;
 
 const persistInBackground = (
   db: Firestore,
   uid: string,
-  areas: string[]
+  areas: string[],
+  writtenAt: number
 ): void => {
-  setDoc(buildDocRef(db, uid), { items: areas });
+  setDoc(buildDocRef(db, uid), { items: areas, writtenAt });
 };
 
-const mirrorAreasToAsyncStorage = (uid: string, areas: string[]): void => {
-  // Fire-and-forget: setItem is async but we don't await. Matches the existing
-  // setDoc fire-and-forget pattern above.
-  AsyncStorage.setItem(buildAreaCacheKey(uid), JSON.stringify(areas));
-};
+// An empty or non-array list is no usable data — in the mirror (v1 and v2
+// alike) and on the server — so the defaults fallback stays a genuine-no-data
+// fallback.
+const isUsableAreaList = (candidate: unknown): candidate is string[] =>
+  Array.isArray(candidate) && candidate.length > 0;
 
-// null means "no usable mirror entry" — the defaults fallback applies.
-const readAreasFromAsyncStorage = async (
-  uid: string
-): Promise<string[] | null> => {
-  const raw = await AsyncStorage.getItem(buildAreaCacheKey(uid));
-  if (raw === null) return null;
+// --- AsyncStorage mirror (v2 envelope, v1 fallback) ---
+
+// Pre-upgrade v1 mirrors hold the raw JSON array under the v1 key.
+const parseV1Mirror = (raw: string): { readonly value: string[] } | null => {
   try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed) || parsed.length === 0) return null;
-    return parsed as string[];
+    const parsed: unknown = JSON.parse(raw);
+    return isUsableAreaList(parsed) ? { value: parsed } : null;
   } catch {
     return null;
   }
 };
 
+const readAreaMirror = (uid: string) =>
+  readMirrorEnvelope<string[]>(uid, 'areas', parseV1Mirror, isUsableAreaList);
+
+const mintLocalStamp = (watermark: DocumentWatermark): number =>
+  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
+
 // null means "the server has nothing to say" — an absent document, a missing
 // field, or an empty list. It is deliberately NOT read as "the user has no areas".
-const extractIncomingAreas = (snapshot: {
-  exists: () => boolean;
-  data: () => { items: string[] } | undefined;
-}): string[] | null => {
-  if (!snapshot.exists()) return null;
-  const parsed = (snapshot.data() as { items?: string[] } | undefined)?.items;
-  if (!Array.isArray(parsed) || parsed.length === 0) return null;
-  return parsed;
+const extractIncomingAreas = (data: AreaDocumentData | undefined): string[] | null => {
+  const items = data?.items;
+  return isUsableAreaList(items) ? items : null;
 };
 
 const serializeAreas = (areas: string[]): string =>
@@ -92,6 +108,7 @@ export const createFirestoreAreaStorage = (
   options: FirestoreAreaStorageOptions = {}
 ): FirestoreAreaStorage => {
   let cache: string[] = [];
+  let watermark: DocumentWatermark = UNSTAMPED;
   let unsubscribeFn: () => void = () => {};
   let isInitialized = false;
   // True while the cache came from the AsyncStorage mirror and the server has
@@ -109,14 +126,18 @@ export const createFirestoreAreaStorage = (
   };
 
   const commitLocalChange = (updatedAreas: string[]): void => {
+    const writtenAt = mintLocalStamp(watermark);
     cache = updatedAreas;
-    persistInBackground(db, uid, cache);
-    mirrorAreasToAsyncStorage(uid, cache);
+    watermark = observeStamp(watermark, writtenAt);
+    persistInBackground(db, uid, cache, writtenAt);
+    writeMirrorEnvelope(uid, 'areas', cache, writtenAt);
   };
 
-  const handleSnapshot = (snapshot: { exists: () => boolean; data: () => { items: string[] } | undefined }): void => {
-    const incomingAreas = extractIncomingAreas(snapshot);
+  const handleSnapshot = (snapshot: DocumentSnapshot): void => {
+    const data = snapshot.exists() ? snapshot.data() : undefined;
+    const incomingAreas = extractIncomingAreas(data);
     const serverHasAreas = incomingAreas !== null;
+    const serverWrittenAt = extractWrittenAt(data);
 
     // Preserve AsyncStorage hydration: if the server says "nothing here" but we
     // have a locally-mirrored list, keep the local copy. The server wins only
@@ -131,6 +152,7 @@ export const createFirestoreAreaStorage = (
     if (!isInitialized) {
       // First snapshot for a uid with no mirror entry: the server is all we have.
       cache = resolvedAreas;
+      watermark = observeStamp(watermark, serverWrittenAt);
       isInitialized = true;
       return;
     }
@@ -140,12 +162,23 @@ export const createFirestoreAreaStorage = (
       return;
     }
 
-    cache = resolvedAreas;
-    if (serverHasAreas) {
-      // Server data has arrived — it is authoritative for the rest of this
-      // session, so the empty-snapshot guard stands down.
+    // Server data has arrived — it is authoritative for the rest of this
+    // session, so the empty-snapshot guard stands down on both branches below.
+    const rePushWrittenAt = serverHasAreas ? rePushStamp(watermark, serverWrittenAt) : null;
+    if (rePushWrittenAt !== null) {
+      // The server holds an older document than the edit in cache: push the
+      // edit back with its own stamp. The echo carries that stamp and equal
+      // content, so it short-circuits above and cannot loop.
       hydratedFromLocal = false;
-      mirrorAreasToAsyncStorage(uid, cache);
+      persistInBackground(db, uid, cache, rePushWrittenAt);
+      return;
+    }
+
+    cache = resolvedAreas;
+    watermark = observeStamp(watermark, serverWrittenAt);
+    if (serverHasAreas) {
+      hydratedFromLocal = false;
+      writeMirrorEnvelope(uid, 'areas', cache, serverWrittenAt);
     }
     onChange?.();
     notifyListeners();
@@ -158,9 +191,10 @@ export const createFirestoreAreaStorage = (
       // which is what connected-but-dead wifi produces — the mirrored areas are
       // already readable and the guard above protects them. Hydration runs
       // before any listener can register, so it must not notify.
-      const localAreas = await readAreasFromAsyncStorage(uid);
-      if (localAreas !== null) {
-        cache = localAreas;
+      const mirror = await readAreaMirror(uid);
+      if (mirror !== null) {
+        cache = mirror.value;
+        watermark = observeStamp(watermark, mirror.writtenAt);
         isInitialized = true;
         hydratedFromLocal = true;
       }
@@ -174,12 +208,12 @@ export const createFirestoreAreaStorage = (
       // (first install / new uid) the first snapshot remains the only source of
       // truth, so initialize() awaits it. The subscription is registered in
       // both cases; only the await is skipped.
-      const hydratedFromMirror = localAreas !== null;
+      const hydratedFromMirror = mirror !== null;
 
       // Settles on the first snapshot; later resolve() calls are no-ops.
       const firstSnapshot = new Promise<void>((resolve) => {
         unsubscribeFn = onSnapshot(buildDocRef(db, uid), (snapshot) => {
-          handleSnapshot(snapshot as { exists: () => boolean; data: () => { items: string[] } | undefined });
+          handleSnapshot(snapshot as DocumentSnapshot);
           resolve();
         });
       });

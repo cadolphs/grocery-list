@@ -22,8 +22,12 @@
 // Step 02-02 appends the staples, areas and section-order rows; nothing else in
 // this file should need to change for that.
 
-import type { Trip, TripItem } from '../../src/domain/types';
+import type { StapleItem, Trip, TripItem } from '../../src/domain/types';
 import type { FirestoreTripStorage } from '../../src/adapters/firestore/firestore-trip-storage';
+import type { FirestoreStapleStorage } from '../../src/adapters/firestore/firestore-staple-storage';
+import type { FirestoreAreaStorage } from '../../src/adapters/firestore/firestore-area-storage';
+import type { FirestoreSectionOrderStorage } from '../../src/adapters/firestore/firestore-section-order-storage';
+import { DEFAULT_HOUSE_AREAS } from '../../src/adapters/async-storage/async-area-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   deliverSnapshot,
@@ -148,7 +152,99 @@ const carryoverRow = defineRow<FirestoreTripStorage, readonly TripItem[]>({
   assertsOnChange: false,
 });
 
-const rows: readonly AnyWatermarkRow[] = [tripRow, carryoverRow];
+const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+  id: 'staple-1',
+  name: 'Milk',
+  houseArea: 'Kitchen',
+  storeLocation: { section: 'Dairy', aisleNumber: 3 },
+  type: 'staple',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  ...overrides,
+});
+
+const createStapleAdapter = (db: unknown, uid: string, onChange: () => void): FirestoreStapleStorage => {
+  const { createFirestoreStapleStorage } = require('../../src/adapters/firestore/firestore-staple-storage');
+  return createFirestoreStapleStorage(db, uid, { onChange });
+};
+
+// The staple port has no replace-all write. Each value is a one-item library
+// under a fixed id, so writing it is a save the first time and an update after.
+const stapleRow = defineRow<FirestoreStapleStorage, StapleItem[]>({
+  document: 'staples',
+  mirrorDocName: 'staples',
+  docPath: `users/${TEST_UID}/data/staples`,
+  serverField: 'items',
+  createAdapter: createStapleAdapter,
+  values: [
+    [makeStaple({ name: 'Milk' })],
+    [makeStaple({ name: 'Oat Milk' })],
+    [makeStaple({ name: 'Soy Milk' })],
+  ],
+  write: (adapter, items) => {
+    const knownIds = new Set(adapter.loadAll().map((item) => item.id));
+    items.forEach((item) => (knownIds.has(item.id) ? adapter.update(item) : adapter.save(item)));
+  },
+  read: (adapter) => adapter.loadAll(),
+  silence: [],
+  seedV1Mirror: (items) => JSON.stringify(items),
+  assertsOnChange: true,
+});
+
+const createAreaAdapter = (db: unknown, uid: string, onChange: () => void): FirestoreAreaStorage => {
+  const { createFirestoreAreaStorage } = require('../../src/adapters/firestore/firestore-area-storage');
+  return createFirestoreAreaStorage(db, uid, { onChange });
+};
+
+// Areas use non-empty lists throughout: an empty list is "no usable data" to
+// this adapter, on the server and in the mirror alike.
+const areaRow = defineRow<FirestoreAreaStorage, string[]>({
+  document: 'areas',
+  mirrorDocName: 'areas',
+  docPath: `users/${TEST_UID}/data/areas`,
+  serverField: 'items',
+  createAdapter: createAreaAdapter,
+  values: [
+    ['Fridge', 'Pantry'],
+    ['Fridge', 'Pantry', 'Garage'],
+    ['Attic', 'Shed'],
+  ],
+  write: (adapter, areas) => adapter.saveAll(areas),
+  read: (adapter) => adapter.loadAll(),
+  silence: [...DEFAULT_HOUSE_AREAS],
+  seedV1Mirror: (areas) => JSON.stringify(areas),
+  assertsOnChange: true,
+});
+
+const createSectionOrderAdapter = (
+  db: unknown,
+  uid: string,
+  onChange: () => void
+): FirestoreSectionOrderStorage => {
+  const { createFirestoreSectionOrderStorage } = require('../../src/adapters/firestore/firestore-section-order-storage');
+  return createFirestoreSectionOrderStorage(db, uid, { onChange });
+};
+
+// The pre-upgrade section-order mirror was already an envelope, { order }, so
+// that its presence could record a deliberate clear.
+const sectionOrderRow = defineRow<FirestoreSectionOrderStorage, string[]>({
+  document: 'section order',
+  mirrorDocName: 'sectionOrder',
+  docPath: `users/${TEST_UID}/data/sectionOrder`,
+  serverField: 'order',
+  createAdapter: createSectionOrderAdapter,
+  values: [
+    ['Produce', 'Dairy'],
+    ['Dairy', 'Produce', 'Frozen'],
+    ['Bakery', 'Snacks'],
+  ],
+  write: (adapter, order) => adapter.saveOrder(order),
+  read: (adapter) => adapter.loadOrder(),
+  silence: null,
+  seedV1Mirror: (order) => JSON.stringify({ order }),
+  assertsOnChange: true,
+});
+
+const rows: readonly AnyWatermarkRow[] = [tripRow, carryoverRow, stapleRow, areaRow, sectionOrderRow];
 
 // --- Harness helpers ---
 
@@ -305,3 +401,49 @@ describe.each(rows)(
     });
   }
 );
+
+// --- Section order only: a mirrored clear is a stamped decision ---
+//
+// Section order is the one document whose null is a stored value, so its v2
+// envelope can be { value: null, writtenAt: W }. That envelope must count as a
+// present mirror for readiness AND its stamp must beat an older server order.
+
+describe('Stale server after process restart — section order document: a mirrored clear beats an older server order', () => {
+  const ORDER = ['Produce', 'Dairy'];
+
+  it('(e) a cleared order is a present v2 envelope: initialize() resolves from it, loadOrder() is null, and an older stamped server order is rejected with one re-push of the clear', async () => {
+    // Adapter A saves an order, then clears it, and is killed.
+    setSnapshotMode('immediate');
+    const adapterA = createSectionOrderAdapter(mockDb, TEST_UID, () => {});
+    await adapterA.initialize();
+    adapterA.saveOrder(ORDER);
+    adapterA.clearOrder();
+    const W = lastWrittenAtFor(sectionOrderRow.docPath);
+    expect(typeof W === 'number' && Number.isFinite(W)).toBe(true);
+
+    // Adapter B cold-starts on connected-but-dead wifi: the first snapshot is
+    // withheld, so readiness can only come from the mirrored clear.
+    setSnapshotMode('withheld');
+    const onChange = jest.fn();
+    const adapterB = createSectionOrderAdapter(mockDb, TEST_UID, onChange);
+    let initializeResolved = false;
+    void adapterB.initialize().then(() => {
+      initializeResolved = true;
+    });
+    await settlePendingReads();
+
+    expect(initializeResolved).toBe(true);
+    expect(adapterB.loadOrder()).toBeNull();
+    const setDocCountBefore = setDocCallsFor(sectionOrderRow.docPath).length;
+
+    // The withheld callback is registered; firing it now is the 'delayed'
+    // regime: the server's OLDER order finally arrives.
+    deliverSnapshot(sectionOrderRow.docPath, { order: ORDER, writtenAt: 1 });
+
+    expect(adapterB.loadOrder()).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
+    const rePushes = setDocCallsFor(sectionOrderRow.docPath).slice(setDocCountBefore);
+    expect(rePushes).toHaveLength(1);
+    expect(rePushes[0][1]).toEqual({ order: null, writtenAt: W });
+  });
+});
