@@ -2,7 +2,9 @@
 // Bug: adding an item during sweep via handleStapleChange doesn't update React state
 // because tripService has no subscription mechanism for external consumers
 
-import { createTrip, TripService } from './trip';
+import { createTrip, StapleInput, TripService } from './trip';
+import { Trip, TripItem } from './types';
+import { TripStorage } from '../ports/trip-storage';
 import { createNullTripStorage, NullTripStorageWithSync } from '../adapters/null/null-trip-storage';
 
 const createTestTripService = (): TripService =>
@@ -761,5 +763,257 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     expect(milk).toBeDefined();
     expect(milk!.houseArea).toBe('Garage Pantry');
     expect(milk!.storeLocation).toEqual({ section: 'Dry Goods', aisleNumber: 5 });
+  });
+});
+
+// --- Regression: RCA fix-offline-staple-cache-wipe, cause F2 ---
+// On a cold start an empty staple list can mean "no staples exist" OR
+// "staples have not loaded yet". The completed branch of initializeFromStorage
+// used to trust the empty list, rebuild an empty trip and persist it over the
+// durable mirror. The guard refuses exactly one combination: a completed
+// stored trip that still holds items, rebuilt from zero staples and zero
+// carryover. Every other corner of the decision cube keeps today's behaviour,
+// so the matrix below drives all 16 combinations exhaustively.
+
+const STORED_TRIP_ID = 'stored-trip';
+
+const storedTripItem: TripItem = {
+  id: 'stored-item-1',
+  name: 'StoredMilk',
+  houseArea: 'Fridge',
+  storeLocation: { section: 'Dairy', aisleNumber: 1 },
+  itemType: 'staple',
+  stapleId: 'staple-milk',
+  source: 'preloaded',
+  needed: true,
+  checked: false,
+  checkedAt: null,
+};
+
+const carryoverTripItem: TripItem = {
+  id: 'carry-1',
+  name: 'Leftover',
+  houseArea: 'Kitchen Cabinets',
+  storeLocation: { section: 'Bakery', aisleNumber: 4 },
+  itemType: 'one-off',
+  stapleId: null,
+  source: 'carryover',
+  needed: true,
+  checked: false,
+  checkedAt: null,
+};
+
+const breadStaple: StapleInput = {
+  id: 'staple-bread',
+  name: 'Bread',
+  houseArea: 'Kitchen Cabinets',
+  storeLocation: { section: 'Bakery', aisleNumber: 2 },
+};
+
+type StoredTripState = 'absent' | 'completed-with-items' | 'completed-empty' | 'active';
+type ListState = 'empty' | 'non-empty';
+
+const storedTripFor = (state: StoredTripState): Trip | null => {
+  switch (state) {
+    case 'absent':
+      return null;
+    case 'completed-with-items':
+      return {
+        id: STORED_TRIP_ID,
+        items: [storedTripItem],
+        status: 'completed',
+        createdAt: '2026-04-12T09:00:00Z',
+        completedAreas: ['Fridge'],
+      };
+    case 'completed-empty':
+      return {
+        id: STORED_TRIP_ID,
+        items: [],
+        status: 'completed',
+        createdAt: '2026-04-12T09:00:00Z',
+        completedAreas: [],
+      };
+    case 'active':
+      return {
+        id: STORED_TRIP_ID,
+        items: [storedTripItem],
+        status: 'active',
+        createdAt: '2026-04-12T09:00:00Z',
+        completedAreas: ['Fridge'],
+      };
+  }
+};
+
+// Full observable universe of one initializeFromStorage call: what the user
+// sees, what was written to the durable mirror, and how often it was written.
+type InitializeOutcome = {
+  readonly visibleItemNames: readonly string[];
+  readonly visibleCompletedAreas: readonly string[];
+  readonly saveTripCalls: number;
+  readonly clearCarryoverCalls: number;
+  readonly storedTripIdentity: 'none' | 'same-as-stored' | 'newly-generated';
+  readonly storedTripStatus: 'none' | 'active' | 'completed';
+  readonly storedTripItemNames: readonly string[];
+  readonly remainingCarryoverNames: readonly string[];
+};
+
+const runInitializeFromStorage = (
+  storedTripState: StoredTripState,
+  staples: readonly StapleInput[],
+  carryover: readonly TripItem[],
+): InitializeOutcome => {
+  const mirror = createNullTripStorage();
+  const storedTrip = storedTripFor(storedTripState);
+  if (storedTrip) mirror.saveTrip(storedTrip);
+  mirror.saveCarryover(carryover);
+
+  let saveTripCalls = 0;
+  let clearCarryoverCalls = 0;
+  const countingStorage: TripStorage = {
+    ...mirror,
+    saveTrip: (trip: Trip) => {
+      saveTripCalls += 1;
+      mirror.saveTrip(trip);
+    },
+    clearCarryover: () => {
+      clearCarryoverCalls += 1;
+      mirror.clearCarryover();
+    },
+  };
+
+  const tripService = createTrip(countingStorage, () => ['Fridge', 'Kitchen Cabinets']);
+  tripService.initializeFromStorage(staples);
+
+  const persisted = mirror.loadTrip();
+  const identity = (): InitializeOutcome['storedTripIdentity'] => {
+    if (persisted === null) return 'none';
+    return persisted.id === STORED_TRIP_ID ? 'same-as-stored' : 'newly-generated';
+  };
+
+  return {
+    visibleItemNames: tripService.getItems().map((item) => item.name),
+    visibleCompletedAreas: [...tripService.getSweepProgress().completedAreas],
+    saveTripCalls,
+    clearCarryoverCalls,
+    storedTripIdentity: identity(),
+    storedTripStatus: persisted === null ? 'none' : persisted.status,
+    storedTripItemNames: persisted === null ? [] : persisted.items.map((item) => item.name),
+    remainingCarryoverNames: mirror.loadCarryover().map((item) => item.name),
+  };
+};
+
+// A rebuild always mints a new trip id, persists exactly once, and leaves the
+// mirror holding an active trip whose items are the rebuilt list.
+const rebuiltTrip = (
+  itemNames: readonly string[],
+  clearCarryoverCalls: number,
+  remainingCarryoverNames: readonly string[],
+): InitializeOutcome => ({
+  visibleItemNames: itemNames,
+  visibleCompletedAreas: [],
+  saveTripCalls: 1,
+  clearCarryoverCalls,
+  storedTripIdentity: 'newly-generated',
+  storedTripStatus: 'active',
+  storedTripItemNames: itemNames,
+  remainingCarryoverNames,
+});
+
+// The stored trip is adopted in memory: nothing written, nothing cleared,
+// the mirror keeps its id, status and items.
+const storedTripAdoptedUntouched = (
+  itemNames: readonly string[],
+  completedAreas: readonly string[],
+  storedTripStatus: 'active' | 'completed',
+  remainingCarryoverNames: readonly string[],
+): InitializeOutcome => ({
+  visibleItemNames: itemNames,
+  visibleCompletedAreas: completedAreas,
+  saveTripCalls: 0,
+  clearCarryoverCalls: 0,
+  storedTripIdentity: 'same-as-stored',
+  storedTripStatus,
+  storedTripItemNames: itemNames,
+  remainingCarryoverNames,
+});
+
+type InitializeCase = {
+  readonly storedTrip: StoredTripState;
+  readonly staples: ListState;
+  readonly carryover: ListState;
+  readonly expected: InitializeOutcome;
+};
+
+const initializeCases: readonly InitializeCase[] = [
+  // No stored trip: fresh-start rebuild, carryover untouched by this branch.
+  { storedTrip: 'absent', staples: 'empty', carryover: 'empty', expected: rebuiltTrip([], 0, []) },
+  { storedTrip: 'absent', staples: 'empty', carryover: 'non-empty', expected: rebuiltTrip([], 0, ['Leftover']) },
+  { storedTrip: 'absent', staples: 'non-empty', carryover: 'empty', expected: rebuiltTrip(['Bread'], 0, []) },
+  { storedTrip: 'absent', staples: 'non-empty', carryover: 'non-empty', expected: rebuiltTrip(['Bread'], 0, ['Leftover']) },
+
+  // Completed trip that still holds items: the single refused combination.
+  {
+    storedTrip: 'completed-with-items',
+    staples: 'empty',
+    carryover: 'empty',
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'completed', []),
+  },
+  { storedTrip: 'completed-with-items', staples: 'empty', carryover: 'non-empty', expected: rebuiltTrip(['Leftover'], 1, []) },
+  { storedTrip: 'completed-with-items', staples: 'non-empty', carryover: 'empty', expected: rebuiltTrip(['Bread'], 1, []) },
+  { storedTrip: 'completed-with-items', staples: 'non-empty', carryover: 'non-empty', expected: rebuiltTrip(['Bread', 'Leftover'], 1, []) },
+
+  // Completed trip with nothing to lose: a genuine new user is never refused.
+  { storedTrip: 'completed-empty', staples: 'empty', carryover: 'empty', expected: rebuiltTrip([], 1, []) },
+  { storedTrip: 'completed-empty', staples: 'empty', carryover: 'non-empty', expected: rebuiltTrip(['Leftover'], 1, []) },
+  { storedTrip: 'completed-empty', staples: 'non-empty', carryover: 'empty', expected: rebuiltTrip(['Bread'], 1, []) },
+  { storedTrip: 'completed-empty', staples: 'non-empty', carryover: 'non-empty', expected: rebuiltTrip(['Bread', 'Leftover'], 1, []) },
+
+  // Active trip: always adopted, never rebuilt, for every input combination.
+  {
+    storedTrip: 'active',
+    staples: 'empty',
+    carryover: 'empty',
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', []),
+  },
+  {
+    storedTrip: 'active',
+    staples: 'empty',
+    carryover: 'non-empty',
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', ['Leftover']),
+  },
+  {
+    storedTrip: 'active',
+    staples: 'non-empty',
+    carryover: 'empty',
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', []),
+  },
+  {
+    storedTrip: 'active',
+    staples: 'non-empty',
+    carryover: 'non-empty',
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', ['Leftover']),
+  },
+];
+
+describe('initializeFromStorage refuses a completed-trip rebuild that would erase the stored item list', () => {
+  test.each(initializeCases)(
+    'stored trip $storedTrip, staples $staples, carryover $carryover',
+    ({ storedTrip, staples, carryover, expected }) => {
+      const outcome = runInitializeFromStorage(
+        storedTrip,
+        staples === 'empty' ? [] : [breadStaple],
+        carryover === 'empty' ? [] : [carryoverTripItem],
+      );
+
+      expect(outcome).toEqual(expected);
+    },
+  );
+
+  test('deliberately pinned: with a completed stored trip holding items, deleting every staple restores that trip instead of a fresh empty trip, and storage is still not written (recovery is Reset Sweep)', () => {
+    const outcome = runInitializeFromStorage('completed-with-items', [], []);
+
+    expect(outcome.visibleItemNames).toEqual(['StoredMilk']);
+    expect(outcome.saveTripCalls).toBe(0);
+    expect(outcome.storedTripItemNames).toEqual(['StoredMilk']);
   });
 });

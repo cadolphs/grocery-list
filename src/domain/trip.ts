@@ -333,18 +333,27 @@ export const createTrip = (
         return;
       }
       if (savedTrip.status === 'completed') {
-        // Completed trip: start new trip with carryover
         const carryover = storage.loadCarryover();
-        const stapleItems = staples.map(stapleInputToTripItem);
-        items = [...stapleItems, ...carryover];
-        storage.clearCarryover();
-        tripId = generateTripId();
-        createdAt = new Date().toISOString();
-        completedAreas.clear();
-        persistTrip();
-        return;
+        // An empty staple list means either "no staples exist" or "staples have
+        // not loaded yet"; the domain cannot tell the two apart. When the only
+        // inputs to the rebuild are empty and the stored trip still holds items,
+        // rebuilding would replace a real list with an empty one and persist
+        // that loss. Refuse it and fall through to adopting the stored trip.
+        const rebuildWouldEraseStoredItems =
+          savedTrip.items.length > 0 && staples.length === 0 && carryover.length === 0;
+        if (!rebuildWouldEraseStoredItems) {
+          // Completed trip: start new trip with carryover
+          const stapleItems = staples.map(stapleInputToTripItem);
+          items = [...stapleItems, ...carryover];
+          storage.clearCarryover();
+          tripId = generateTripId();
+          createdAt = new Date().toISOString();
+          completedAreas.clear();
+          persistTrip();
+          return;
+        }
       }
-      // Active trip: load existing items
+      // Active trip, or a refused completed rebuild: load existing items
       tripId = savedTrip.id;
       createdAt = savedTrip.createdAt;
       items = [...savedTrip.items];
