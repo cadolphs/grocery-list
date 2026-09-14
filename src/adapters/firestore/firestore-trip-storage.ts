@@ -10,12 +10,25 @@
 // Native (persistentLocalCache() throws UNIMPLEMENTED — see
 // firebase-js-sdk#7947). Without this mirror, a cold-start while offline
 // returns empty state from onSnapshot and the user loses their trip.
+//
+// Local-write watermark (fix-offline-edit-stale-server): every local write is
+// stamped with a client-generated `writtenAt`, sent on the document and kept
+// in the v2 mirror envelope. When a data-bearing snapshot arrives, an OLDER
+// stamped document is re-pushed with the mirrored value (REPUSH) instead of
+// replacing it; a newer, equal or unstamped one is adopted as before (ADOPT).
+// See local-write-watermark.ts for the rule and its rationale.
 
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
+import {
+  extractWrittenAt,
+  nextWrittenAt,
+  readMirrorEnvelope,
+  resolveAdoption,
+  writeMirrorEnvelope,
+} from './local-write-watermark';
 
 export type FirestoreTripStorageOptions = {
   readonly onChange?: () => void;
@@ -26,73 +39,115 @@ export type FirestoreTripStorage = TripStorage & {
   readonly unsubscribe: () => void;
 };
 
+type TripDocumentData = { readonly trip?: Trip; readonly writtenAt?: number };
+type CarryoverDocumentData = { readonly items?: TripItem[]; readonly writtenAt?: number };
+
+type DocumentSnapshot<Data> = {
+  exists: () => boolean;
+  data: () => Data | undefined;
+};
+
+// --- Watermarks (RCA 6.2) ---
+//
+// Two stamps per document. `cachedValueWrittenAt` is the watermark of the value
+// currently in cache and is the comparison key against an incoming server stamp
+// (null when the cached value is unstamped: no mirror, a v1 mirror, or an
+// adopted unstamped document). `highestObservedWrittenAt` is the hybrid-logical
+// clock floor used to mint the next local stamp: the highest stamp this adapter
+// has ever seen, never lowered by adopting an unstamped document.
+type DocumentWatermark = {
+  readonly cachedValueWrittenAt: number | null;
+  readonly highestObservedWrittenAt: number | null;
+};
+
+const UNSTAMPED: DocumentWatermark = {
+  cachedValueWrittenAt: null,
+  highestObservedWrittenAt: null,
+};
+
+const laterOf = (left: number | null, right: number | null): number | null =>
+  left === null ? right : right === null ? left : Math.max(left, right);
+
+// The cached value now carries `writtenAt`; the floor only ever rises.
+const observeStamp = (watermark: DocumentWatermark, writtenAt: number | null): DocumentWatermark => ({
+  cachedValueWrittenAt: writtenAt,
+  highestObservedWrittenAt: laterOf(watermark.highestObservedWrittenAt, writtenAt),
+});
+
+const mintLocalStamp = (watermark: DocumentWatermark): number =>
+  nextWrittenAt(Date.now(), watermark.highestObservedWrittenAt);
+
+// The stamp a REPUSH re-sends the cached value with (the cached value's own,
+// not bumped, so a second re-push writes identical bytes), or null when the
+// incoming document is to be adopted.
+const rePushStamp = (watermark: DocumentWatermark, serverWrittenAt: number | null): number | null =>
+  watermark.cachedValueWrittenAt !== null &&
+  resolveAdoption(serverWrittenAt, watermark.cachedValueWrittenAt) === 'repush'
+    ? watermark.cachedValueWrittenAt
+    : null;
+
+// --- Firestore documents ---
+
 const buildTripDocRef = (db: Firestore, uid: string) =>
   doc(db, 'users', uid, 'data', 'trip');
 
 const buildCarryoverDocRef = (db: Firestore, uid: string) =>
   doc(db, 'users', uid, 'data', 'carryover');
 
-// AsyncStorage key namespace: versioned + uid-scoped to avoid collision with
-// legacy async-trip-storage keys (e.g. @grocery/active_trip).
-const buildTripCacheKey = (uid: string): string =>
-  `firestore-cache:v1:${uid}:trip`;
-
-const buildCarryoverCacheKey = (uid: string): string =>
-  `firestore-cache:v1:${uid}:carryover`;
-
 const persistTripInBackground = (
   db: Firestore,
   uid: string,
-  trip: Trip
+  trip: Trip,
+  writtenAt: number
 ): void => {
-  setDoc(buildTripDocRef(db, uid), { trip });
+  setDoc(buildTripDocRef(db, uid), { trip, writtenAt });
 };
 
 const persistCarryoverInBackground = (
   db: Firestore,
   uid: string,
-  items: readonly TripItem[]
+  items: readonly TripItem[],
+  writtenAt: number
 ): void => {
-  setDoc(buildCarryoverDocRef(db, uid), { items: [...items] });
+  setDoc(buildCarryoverDocRef(db, uid), { items: [...items], writtenAt });
 };
 
-const mirrorTripToAsyncStorage = (uid: string, trip: Trip): void => {
-  // Fire-and-forget: AsyncStorage.setItem is async but we don't await. Matches
-  // the existing setDoc fire-and-forget pattern above.
-  AsyncStorage.setItem(buildTripCacheKey(uid), JSON.stringify(trip));
-};
+// --- AsyncStorage mirror (v2 envelope, v1 fallback) ---
 
-const mirrorCarryoverToAsyncStorage = (
-  uid: string,
-  items: readonly TripItem[]
-): void => {
-  AsyncStorage.setItem(buildCarryoverCacheKey(uid), JSON.stringify(items));
-};
+const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
+  typeof candidate === 'object' && candidate !== null;
 
-const readTripFromAsyncStorage = async (uid: string): Promise<Trip | null> => {
-  const raw = await AsyncStorage.getItem(buildTripCacheKey(uid));
-  if (raw === null) return null;
-  try {
-    return JSON.parse(raw) as Trip;
-  } catch {
-    return null;
-  }
-};
+const isTripItemList = (candidate: unknown): candidate is readonly TripItem[] =>
+  Array.isArray(candidate);
 
-const readCarryoverFromAsyncStorage = async (
-  uid: string
-): Promise<readonly TripItem[] | null> => {
-  const raw = await AsyncStorage.getItem(buildCarryoverCacheKey(uid));
-  if (raw === null) return null;
-  try {
-    return JSON.parse(raw) as readonly TripItem[];
-  } catch {
-    return null;
-  }
-};
+const isTrip = (candidate: unknown): candidate is Trip =>
+  isRecord(candidate) && isTripItemList(candidate.items);
+
+// Pre-upgrade v1 mirrors hold the raw JSON value under the v1 key.
+const parseV1Mirror =
+  <T>(isValue: (candidate: unknown) => candidate is T) =>
+  (raw: string): { readonly value: T } | null => {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      return isValue(parsed) ? { value: parsed } : null;
+    } catch {
+      return null;
+    }
+  };
+
+const readTripMirror = (uid: string) =>
+  readMirrorEnvelope<Trip>(uid, 'trip', parseV1Mirror(isTrip), isTrip);
+
+const readCarryoverMirror = (uid: string) =>
+  readMirrorEnvelope<readonly TripItem[]>(uid, 'carryover', parseV1Mirror(isTripItemList), isTripItemList);
+
+// --- Domain helpers ---
 
 const serializeTrip = (trip: Trip | null): string =>
   JSON.stringify(trip);
+
+const serializeItems = (items: readonly TripItem[]): string =>
+  JSON.stringify(items);
 
 const deriveCheckoffsFromItems = (
   items: readonly TripItem[]
@@ -125,6 +180,8 @@ export const createFirestoreTripStorage = (
 ): FirestoreTripStorage => {
   let cachedTrip: Trip | null = null;
   let cachedCarryover: readonly TripItem[] = [];
+  let tripWatermark: DocumentWatermark = UNSTAMPED;
+  let carryoverWatermark: DocumentWatermark = UNSTAMPED;
   let unsubscribeTripFn: () => void = () => {};
   let unsubscribeCarryoverFn: () => void = () => {};
   let isTripInitialized = false;
@@ -141,24 +198,29 @@ export const createFirestoreTripStorage = (
   const { onChange } = options;
 
   const commitLocalTripChange = (updatedTrip: Trip): void => {
+    const writtenAt = mintLocalStamp(tripWatermark);
     cachedTrip = updatedTrip;
-    persistTripInBackground(db, uid, updatedTrip);
-    mirrorTripToAsyncStorage(uid, updatedTrip);
+    tripWatermark = observeStamp(tripWatermark, writtenAt);
+    persistTripInBackground(db, uid, updatedTrip, writtenAt);
+    writeMirrorEnvelope(uid, 'trip', updatedTrip, writtenAt);
   };
 
   const commitLocalCarryoverChange = (updatedItems: readonly TripItem[]): void => {
+    const writtenAt = mintLocalStamp(carryoverWatermark);
     cachedCarryover = updatedItems;
-    persistCarryoverInBackground(db, uid, updatedItems);
-    mirrorCarryoverToAsyncStorage(uid, updatedItems);
+    carryoverWatermark = observeStamp(carryoverWatermark, writtenAt);
+    persistCarryoverInBackground(db, uid, updatedItems, writtenAt);
+    writeMirrorEnvelope(uid, 'carryover', updatedItems, writtenAt);
   };
 
-  const handleTripSnapshot = (snapshot: { exists: () => boolean; data: () => { trip: Trip } | undefined }): void => {
-    const incomingTrip: Trip | null = snapshot.exists()
-      ? (snapshot.data() as { trip: Trip })?.trip ?? null
-      : null;
+  const handleTripSnapshot = (snapshot: DocumentSnapshot<TripDocumentData>): void => {
+    const data = snapshot.exists() ? snapshot.data() : undefined;
+    const incomingTrip: Trip | null = data?.trip ?? null;
+    const serverWrittenAt = extractWrittenAt(data);
 
     if (!isTripInitialized) {
       cachedTrip = incomingTrip;
+      tripWatermark = observeStamp(tripWatermark, serverWrittenAt);
       isTripInitialized = true;
       return;
     }
@@ -170,25 +232,37 @@ export const createFirestoreTripStorage = (
       return;
     }
 
-    const incomingSerialized = serializeTrip(incomingTrip);
-    const currentSerialized = serializeTrip(cachedTrip);
-
-    if (incomingSerialized !== currentSerialized) {
-      cachedTrip = incomingTrip;
-      if (incomingTrip !== null) {
-        // Server data has arrived — it is authoritative for the rest of this
-        // session, so the empty-snapshot guard stands down.
-        tripHydratedFromLocal = false;
-        mirrorTripToAsyncStorage(uid, incomingTrip);
-      }
-      onChange?.();
+    if (serializeTrip(incomingTrip) === serializeTrip(cachedTrip)) {
+      return;
     }
+
+    // Server data has arrived — it is authoritative for the rest of this
+    // session, so the empty-snapshot guard stands down on both branches below.
+    const tripRePushWrittenAt = rePushStamp(tripWatermark, serverWrittenAt);
+    if (cachedTrip !== null && tripRePushWrittenAt !== null) {
+      // The server holds an older document than the edit in cache: push the
+      // edit back with its own stamp. The echo carries that stamp and equal
+      // content, so it short-circuits above and cannot loop.
+      tripHydratedFromLocal = false;
+      persistTripInBackground(db, uid, cachedTrip, tripRePushWrittenAt);
+      return;
+    }
+
+    cachedTrip = incomingTrip;
+    tripWatermark = observeStamp(tripWatermark, serverWrittenAt);
+    if (incomingTrip !== null) {
+      tripHydratedFromLocal = false;
+      writeMirrorEnvelope(uid, 'trip', incomingTrip, serverWrittenAt);
+    }
+    onChange?.();
   };
 
-  const handleCarryoverSnapshot = (snapshot: { exists: () => boolean; data: () => { items: TripItem[] } | undefined }): void => {
+  const handleCarryoverSnapshot = (snapshot: DocumentSnapshot<CarryoverDocumentData>): void => {
+    const data = snapshot.exists() ? snapshot.data() : undefined;
     const incomingItems: readonly TripItem[] | null = snapshot.exists()
-      ? (snapshot.data() as { items: TripItem[] })?.items ?? []
+      ? data?.items ?? []
       : null;
+    const serverWrittenAt = extractWrittenAt(data);
 
     // Preserve AsyncStorage hydration for carryover on empty snapshot — same
     // rationale as the trip path above.
@@ -196,13 +270,29 @@ export const createFirestoreTripStorage = (
       return;
     }
 
-    cachedCarryover = incomingItems ?? [];
-    if (incomingItems !== null) {
-      // An existing document (even with items: []) is a stored decision, so
-      // the guard stands down; an absent document is silence and leaves it armed.
-      carryoverHydratedFromLocal = false;
-      mirrorCarryoverToAsyncStorage(uid, cachedCarryover);
+    if (incomingItems === null) {
+      cachedCarryover = [];
+      carryoverWatermark = observeStamp(carryoverWatermark, null);
+      return;
     }
+
+    // An existing document (even with items: []) is a stored decision, so
+    // the guard stands down; an absent document is silence and leaves it armed.
+    carryoverHydratedFromLocal = false;
+
+    if (serializeItems(incomingItems) === serializeItems(cachedCarryover)) {
+      return;
+    }
+
+    const carryoverRePushWrittenAt = rePushStamp(carryoverWatermark, serverWrittenAt);
+    if (carryoverRePushWrittenAt !== null) {
+      persistCarryoverInBackground(db, uid, cachedCarryover, carryoverRePushWrittenAt);
+      return;
+    }
+
+    cachedCarryover = incomingItems;
+    carryoverWatermark = observeStamp(carryoverWatermark, serverWrittenAt);
+    writeMirrorEnvelope(uid, 'carryover', incomingItems, serverWrittenAt);
   };
 
   return {
@@ -211,18 +301,20 @@ export const createFirestoreTripStorage = (
       // Firestore. This way if the first onSnapshot fires exists=false
       // (offline cold-start, no remote doc yet), the mirrored data is already
       // in memory and the empty-snapshot guard above prevents clobbering.
-      const [localTrip, localCarryover] = await Promise.all([
-        readTripFromAsyncStorage(uid),
-        readCarryoverFromAsyncStorage(uid),
+      const [tripMirror, carryoverMirror] = await Promise.all([
+        readTripMirror(uid),
+        readCarryoverMirror(uid),
       ]);
 
-      if (localTrip !== null) {
-        cachedTrip = localTrip;
+      if (tripMirror !== null) {
+        cachedTrip = tripMirror.value;
+        tripWatermark = observeStamp(tripWatermark, tripMirror.writtenAt);
         isTripInitialized = true;
         tripHydratedFromLocal = true;
       }
-      if (localCarryover !== null) {
-        cachedCarryover = localCarryover;
+      if (carryoverMirror !== null) {
+        cachedCarryover = carryoverMirror.value;
+        carryoverWatermark = observeStamp(carryoverWatermark, carryoverMirror.writtenAt);
         carryoverHydratedFromLocal = true;
       }
 
@@ -235,7 +327,7 @@ export const createFirestoreTripStorage = (
       // (first install / new uid) the first snapshots remain the only source
       // of truth, so initialize() awaits them. The subscriptions are registered
       // in both cases; only the await is skipped.
-      const hydratedFromMirror = localTrip !== null && localCarryover !== null;
+      const hydratedFromMirror = tripMirror !== null && carryoverMirror !== null;
 
       // Settles once both documents have delivered their first snapshot; later
       // resolve() calls are no-ops.
@@ -250,13 +342,13 @@ export const createFirestoreTripStorage = (
         };
 
         unsubscribeTripFn = onSnapshot(buildTripDocRef(db, uid), (snapshot) => {
-          handleTripSnapshot(snapshot as { exists: () => boolean; data: () => { trip: Trip } | undefined });
+          handleTripSnapshot(snapshot as DocumentSnapshot<TripDocumentData>);
           tripSnapshotArrived = true;
           resolveOnceBothArrived();
         });
 
         unsubscribeCarryoverFn = onSnapshot(buildCarryoverDocRef(db, uid), (snapshot) => {
-          handleCarryoverSnapshot(snapshot as { exists: () => boolean; data: () => { items: TripItem[] } | undefined });
+          handleCarryoverSnapshot(snapshot as DocumentSnapshot<CarryoverDocumentData>);
           carryoverSnapshotArrived = true;
           resolveOnceBothArrived();
         });

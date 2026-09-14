@@ -131,7 +131,7 @@ describe('firestore trip storage implements TripStorage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: TRIP_DOC_PATH }),
-      { trip }
+      { trip, writtenAt: expect.any(Number) }
     );
   });
 
@@ -211,7 +211,7 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadCarryover()).toEqual(items);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: CARRYOVER_DOC_PATH }),
-      { items }
+      { items, writtenAt: expect.any(Number) }
     );
   });
 
@@ -242,7 +242,7 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadCarryover()).toEqual([]);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: CARRYOVER_DOC_PATH }),
-      { items: [] }
+      { items: [], writtenAt: expect.any(Number) }
     );
   });
 });
