@@ -1,0 +1,144 @@
+{
+  "roadmap": {
+    "project_id": "fix-offline-staple-cache-wipe",
+    "created_at": "2026-09-14T00:00:00Z",
+    "total_steps": 3,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Close the destructive rebuild path in the trip domain (RCA F2)",
+      "description": "Closes RCA causal-chain links 5-7: initializeFromStorage([]) on a completed trip rebuilds an empty item list, clears carryover and calls persistTrip(), which overwrites the durable AsyncStorage trip mirror. ORDERING RATIONALE: this phase ships FIRST because it is the data-loss stopper, it is independent of F1 (pure domain change, src/domain/trip.ts only), and it must be in place before the three adapters change underneath it in phase 02. It also delivers standalone user value: once the destructive rebuild is refused, the stored trip's items stay in memory, so an offline cold start renders the real list from the trip mirror instead of an empty one, even before F1 lands. Functional paradigm: pure factory function, no classes.",
+      "estimated_duration": "45-60 minutes",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Refuse a completed-trip rebuild that would destroy the stored item list",
+          "description": "RCA cause F2 (causal chain steps 5-7). On the completed branch, initializeFromStorage currently trusts an empty staple list as ground truth. Distinguish 'no staples exist' from 'staples not loaded yet' by refusing any rebuild whose inputs (staples plus carryover) are empty while the stored completed trip still has items: adopt the stored trip in memory instead, persist nothing, clear nothing. Every other combination keeps today's behaviour exactly.",
+          "criteria": "GIVEN a stored trip with status 'completed' and a non-empty item list WHEN initializeFromStorage([]) is called and carryover is empty THEN getItems() returns the stored trip's items AND no trip is written to storage AND carryover is not cleared. GIVEN the same stored trip WHEN carryover is non-empty OR the staple list is non-empty THEN the normal rebuild happens unchanged (new trip id, items = staples + carryover, carryover cleared, trip persisted). GIVEN no stored trip OR a stored completed trip with zero items WHEN initializeFromStorage([]) is called THEN the fresh-start rebuild happens unchanged \u2014 a genuine new user is never refused. The tests MUST be RED against current trip.ts (today the first case yields zero items and one persist call).",
+          "acceptance_criteria": [
+            "Completed stored trip with items, zero staples, zero carryover: visible items equal the stored trip's items and its completed areas are restored",
+            "That same case performs zero writes to trip storage and zero carryover clears \u2014 the durable mirror is untouched",
+            "Zero staples but non-empty carryover on a completed trip still rebuilds, persists and clears carryover as today",
+            "Non-empty staple list always rebuilds and persists, for every stored-trip state",
+            "No stored trip, or a stored completed trip with zero items, still produces the normal fresh rebuild \u2014 genuine new users are never refused",
+            "Active stored trips and all other initializeFromStorage behaviour are unchanged",
+            "Known limitation, pinned deliberately: a user who deletes every staple while online, with a completed stored trip that still holds items and no carryover, sees that trip's items restored rather than a fresh empty trip. Storage is still not written. This is a PERMANENT consequence of the closed-world guard, not a temporary one -- it does NOT self-correct when 02-01 lands, because the guard reads only (staples, carryover, stored items) and never observes the mirror. Recovery is Reset Sweep. A test must pin this case so a future change cannot alter it silently."
+          ],
+          "test_file": "src/domain/trip.test.ts",
+          "scenario_name": "initializeFromStorage refuses a completed-trip rebuild that would erase the stored item list",
+          "files_to_modify": [
+            "src/domain/trip.ts",
+            "src/domain/trip.test.ts"
+          ],
+          "implementation_notes": "RED first. Read src/domain/trip.ts:326-353 (initializeFromStorage) and src/domain/trip.test.ts for the local style (createTrip + createNullTripStorage from src/adapters/null/null-trip-storage, behavioural assertions on getItems()). The RCA records that `grep -rn \"initializeFromStorage(\\[\\])\" tests/ src/` returns zero matches today \u2014 this step must make that grep non-empty. TEST PARADIGM: the decision space is finite, so drive it exhaustively with a test.each matrix over stored-trip state (absent | completed-with-items | completed-empty | active) x staples (empty | non-empty) x carryover (empty | non-empty) \u2014 16 cases, stronger here than sampling. bypass: fast-check is not a project dependency; do not add one for this fix. STATE-DELTA: assert over the full observable universe per case \u2014 items, trip id changed/unchanged, saveTrip call count, clearCarryover call count \u2014 not just the one slot under test. MUTATION RESISTANCE (src/domain/ is in the >=80% Stryker gate): the guard is a three-way conjunction; the matrix kills &&->||, emptiness-predicate flips and condition->true/false mutants because every corner of the cube is pinned. Keep the change inside initializeFromStorage \u2014 do not touch persistTrip, complete() or the active branch. COMMIT: 'fix(offline-staple-cache-wipe): refuse completed-trip rebuild that would erase stored items' with trailer 'Step-ID: 01-01'.\n\nKNOWN LIMITATION (required by nw-acceptance-designer-reviewer, wording corrected by orchestrator): the guard is a closed-world heuristic, not a hydration signal. The domain cannot observe adapter hydration without a StapleStorage port change, which would make F2 depend on F1 and invert step ordering. Accepted trade: a rare, recoverable surprise (old items reappear after deleting all staples) in exchange for eliminating silent destruction of the user's list on every offline cold start. Do NOT write a code comment or test name claiming this converges or self-corrects once the staple mirror ships -- it does not.",
+          "deliverables": [
+            "src/domain/trip.ts: completed branch refuses rebuild + persist + carryover clear when the rebuild inputs are empty and the stored trip has items; adopts the stored trip in memory instead",
+            "src/domain/trip.test.ts: exhaustive matrix over stored-trip state x staples x carryover, including the previously untested initializeFromStorage([]) call, with saveTrip/clearCarryover call-count assertions",
+            "Full npm test run green; no existing domain, hook, UI or regression test regresses"
+          ],
+          "estimated_duration": "45-60 minutes",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Complete the AsyncStorage write-through mirror for the three remaining adapters (RCA F1)",
+      "description": "Closes RCA primary cause and causal-chain links 2-4: the mirror scoped by docs/feature/fix-native-firestore-offline-cache/rca.md section 4.2 shipped for the trip adapter only (commit a8a3093). The staple, area and section-order adapters have zero local durability, because persistentLocalCache() is web-only in firebase-config.ts:52-66 (it throws UNIMPLEMENTED on React Native). NOTE: docs/product/architecture/brief.md claims the persistent cache is enabled \u2014 that claim is false on native and is the origin of this bug; do not rely on it. This phase extends the brief's six-step Real-Time Sync Pattern with: hydrate from the local mirror BEFORE subscribing; treat an absent or empty first snapshot as 'unknown', never as 'empty'; mirror every local write. Copy the shipped pattern from firestore-trip-storage.ts (mirror helpers 59-92, empty-snapshot guard 150-190, hydrate-before-subscribe 193-210) and ADR-002. BATCHING DECISION: the staple adapter is split from area + section-order because it sits on the primary causal chain and its absent-value semantics (empty array) differ from area (DEFAULT_HOUSE_AREAS fallback that must not clobber mirrored custom areas) and section-order (null is a legitimate stored value, so 'no mirror entry' must be distinguished from 'mirrored null'). Area and section-order are batched into one step rather than two near-identical ones. Two steps, not three: under the identical-pattern batching threshold.",
+      "estimated_duration": "3-4 hours",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Staple adapter: hydrate before subscribe, preserve on empty snapshot, mirror every write",
+          "description": "RCA primary cause, causal-chain links 2-4. firestore-staple-storage.ts:44-77 binds readiness to a remote round trip and sets cache=[] when the first snapshot reports the document absent. Give it the trip adapter's durability contract: read the versioned uid-scoped mirror before subscribing, keep the mirrored list when the server says 'nothing here', and write through to AsyncStorage on save, remove, update and updateArea.",
+          "criteria": "GIVEN adapter A saved staples for a uid WHEN a fresh adapter B cold-starts for the same uid and the first snapshot reports the document absent THEN loadAll() returns adapter A's staples. GIVEN the first snapshot is WITHHELD (connected-but-dead / flapping wifi \u2014 the callback never fires, so initialize() stays pending) THEN loadAll() still returns the mirrored staples: hydration precedes subscription. GIVEN a snapshot that DOES carry data THEN it replaces the cache and is mirrored. GIVEN a uid with no mirror entry and an absent snapshot THEN loadAll() returns [] \u2014 genuine new users are unaffected. The regression test MUST be RED against current firestore-staple-storage.ts. Existing adapter tests, migration tests and the trip cold-start regression test all stay green.",
+          "acceptance_criteria": [
+            "Cold start with an absent first snapshot returns the staples saved by the previous session, not an empty list",
+            "With the first snapshot withheld indefinitely, the mirrored staples are readable before initialize() resolves",
+            "An absent or empty snapshot never overwrites mirrored staples; a snapshot carrying data replaces and re-mirrors them",
+            "save, remove, update and updateArea each survive a cold start",
+            "A uid with no mirror entry and an absent snapshot still reports an empty staple list, and staples are never visible across uids",
+            "An already-migrated user whose staples hydrate from the mirror does not re-run the legacy AsyncStorage migration on an offline cold start"
+          ],
+          "test_file": "tests/regression/firestore-offline-cold-start-mirror.test.ts",
+          "scenario_name": "Staple adapter recovers mirrored staples on an offline cold start with a delayed or absent first snapshot",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-staple-storage.ts",
+            "src/adapters/firestore/firestore-staple-storage.test.ts",
+            "tests/regression/firestore-offline-cold-start-mirror.test.ts"
+          ],
+          "implementation_notes": "RED first. Create tests/regression/firestore-offline-cold-start-mirror.test.ts as a sibling of firestore-trip-offline-cold-start.test.ts \u2014 reuse its mock shape (mockStore + setDoc that does NOT publish + onSnapshot firing immediately), but ADD a controllable snapshot mode: the existing file only models offline as a fast hard failure, which is precisely the gap the RCA names. Add a mode where the registered callback is captured and never invoked (withheld) and one where it is invoked later (delayed), then assert loadAll() from the object the factory returned while initialize() is still pending. The real AsyncStorage is mocked by jest-expo's setup for @react-native-async-storage/async-storage; confirm it behaves as an in-memory store across adapter instances within a test, and reset it between tests. GREEN: mirror firestore-trip-storage.ts \u2014 key helper in the buildTripCacheKey family (versioned, uid-scoped), fire-and-forget setItem on write, a read on initialize() that also marks the cache initialised so the first snapshot goes through the guard, and a hydrated-from-local flag that disarms once real server data arrives. Do NOT change when initialize() resolves \u2014 render-before-network is F3 and is out of scope. WATCH: migration.ts:14 treats an empty staple list as 'migration needed'; hydrating from the mirror now correctly suppresses a spurious re-migration on offline cold start \u2014 pin that with the sixth criterion rather than discovering it as a regression. EXEMPT FROM PARADIGM: adapter wiring and cold-start sequencing are single-example integration concerns, not invariants; src/adapters/ is outside the Stryker scope. COMMIT: 'fix(offline-staple-cache-wipe): mirror staple adapter to AsyncStorage and preserve it on empty snapshots' with trailer 'Step-ID: 02-01'.",
+          "deliverables": [
+            "src/adapters/firestore/firestore-staple-storage.ts: versioned uid-scoped AsyncStorage mirror, hydrate-before-subscribe, empty-snapshot preservation guard, write-through on all four mutators",
+            "tests/regression/firestore-offline-cold-start-mirror.test.ts: new regression covering delayed/withheld first snapshot and empty-snapshot preservation for staples",
+            "src/adapters/firestore/firestore-staple-storage.test.ts: co-located coverage extended for hydration and the preservation guard",
+            "Full npm test run green; migration, trip cold-start and adapter suites unaffected"
+          ],
+          "estimated_duration": "1.5-2 hours",
+          "dependencies": [
+            "01-01"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Area and section-order adapters: same mirror, with their own absent-value semantics",
+          "description": "RCA primary cause plus the custom-area secondary symptom. firestore-area-storage.ts:49-59 substitutes DEFAULT_HOUSE_AREAS on an absent snapshot, which silently drops trip items in custom areas via groupByArea; firestore-section-order-storage.ts:50-59 resets the cache to null. Apply the same mirror as 02-01, batched because the mechanism is identical, while respecting each adapter's distinct notion of absence: defaults are a new-user fallback, not an override; a mirrored null order is a real value, not a missing entry.",
+          "criteria": "GIVEN a user with custom areas WHEN a fresh adapter cold-starts and the first snapshot is absent, empty or withheld THEN loadAll() returns the mirrored custom areas, not DEFAULT_HOUSE_AREAS. GIVEN a user with no mirrored areas THEN the defaults fallback still applies. GIVEN a saved section order WHEN the first snapshot is absent, empty or withheld THEN loadOrder() returns the mirrored order; GIVEN an order that was deliberately cleared THEN it stays cleared across a cold start rather than resurrecting. GIVEN trip items in custom areas THEN they remain grouped and visible after an offline cold start. The regression tests MUST be RED against the current adapters. Subscriber fan-out and echo-suppression behaviour are unchanged.",
+          "acceptance_criteria": [
+            "Absent, empty or withheld first snapshot never replaces mirrored custom areas with DEFAULT_HOUSE_AREAS",
+            "A user with no mirrored areas still receives the defaults fallback on first run",
+            "Absent, empty or withheld first snapshot never resets a mirrored section order to null",
+            "A deliberately cleared section order stays cleared across a cold start \u2014 'mirrored null' is distinguished from 'no mirror entry'",
+            "Trip items in custom areas remain grouped and visible after an offline cold start (RCA secondary symptom)",
+            "Existing subscriber notification and echo-suppression behaviour of both adapters is unchanged"
+          ],
+          "test_file": "tests/regression/firestore-offline-cold-start-mirror.test.ts",
+          "scenario_name": "Area and section-order adapters preserve mirrored values when the first snapshot is absent or withheld",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-area-storage.ts",
+            "src/adapters/firestore/firestore-section-order-storage.ts",
+            "src/adapters/firestore/firestore-area-storage.test.ts",
+            "src/adapters/firestore/firestore-section-order-storage.test.ts",
+            "tests/regression/firestore-offline-cold-start-mirror.test.ts"
+          ],
+          "implementation_notes": "RED first, extending the regression file created in 02-01 (reuse its withheld/delayed snapshot harness \u2014 do not fork a third regression file). Two semantics need care and are why this step is not a copy-paste of 02-01. AREAS: the defaults fallback must move from 'what we return when the snapshot is absent' to 'what we return when neither the mirror nor the server has anything'; a mirrored list wins over defaults. Pin both directions \u2014 custom areas preserved, and a first-run user still gets defaults \u2014 or the fix trades one silent wipe for another. SECTION ORDER: null is a legitimate stored value, so the mirror must encode 'no entry' distinctly from 'null'; if that distinction is not representable in the stored form, the crafter must make it so rather than inferring it. Keep the subscriber fan-out and serialized-equality echo suppression exactly as they are; hydration happens before any listener can register, so it must not notify. Do not change when initialize() resolves (F3, out of scope). The custom-area criterion is the RCA's secondary symptom \u2014 assert it through the grouping behaviour, not through groupByArea internals. EXEMPT FROM PARADIGM: adapter wiring and cold-start sequencing are single-example integration concerns; src/adapters/ is outside the Stryker scope. COMMIT: 'fix(offline-staple-cache-wipe): mirror area and section-order adapters and preserve them on empty snapshots' with trailer 'Step-ID: 02-02'.",
+          "deliverables": [
+            "src/adapters/firestore/firestore-area-storage.ts: AsyncStorage mirror with defaults demoted to a genuine-no-data fallback",
+            "src/adapters/firestore/firestore-section-order-storage.ts: AsyncStorage mirror distinguishing a mirrored null order from a missing entry",
+            "tests/regression/firestore-offline-cold-start-mirror.test.ts: extended with area and section-order cold-start cases plus the custom-area grouping regression",
+            "Co-located adapter tests extended; full npm test run green with no regressions"
+          ],
+          "estimated_duration": "1.5-2 hours",
+          "dependencies": [
+            "02-01"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/adapters/firestore/"
+    ],
+    "test_directories": [
+      "src/domain/",
+      "src/adapters/firestore/",
+      "tests/regression/"
+    ],
+    "excluded_patterns": [
+      "**/*.d.ts",
+      "**/index.ts",
+      "node_modules/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "nw-solution-architect; reviewed by nw-acceptance-designer-reviewer (APPROVED, conditional)",
+    "approved_at": "2026-09-14T00:00:00Z",
+    "note": "Scope derived from docs/feature/fix-offline-staple-cache-wipe/deliver/rca.md, approved scope F1 + F2 only. F3 (render-before-network / early init resolution), the auth-gate additivity and the onIdTokenChanged fragility are explicitly NOT roadmapped; no step may change when initialize() resolves. 3 steps / 4 production files = 0.75, well under the 2.5 ceiling. ORDERING: F2 (01-01) precedes F1 because it is the data-loss stopper, is independent of the adapters, and alone restores a visible list on offline cold start via the trip mirror; F1 then removes the condition that triggers it. BATCHING: the three F1 adapters are two steps, not three \u2014 staple is separated because it is on the primary causal chain and pairs with 01-01, while area and section-order are batched together; their absent-value semantics (defaults fallback, legitimate null) are materially different from staple's empty array, so this is not an identical-pattern violation and stays under the 3-step batching threshold. TEST GAPS from the RCA's 'Why tests missed it' are each closed: delayed/withheld first snapshot (02-01 criterion 2, harness reused by 02-02); initializeFromStorage([]) \u2014 currently zero matches repo-wide (01-01); both directions of the F2 guard, genuine-new-user rebuild vs unhydrated refusal (01-01 criteria 3-5); empty snapshot not overwriting mirrored staples, areas or section order (02-01 criterion 3, 02-02 criteria 1 and 3). Mutation gate: only 01-01 touches src/domain/, and its exhaustive 16-case matrix plus saveTrip/clearCarryover call-count assertions target the >=80% Stryker kill rate; src/adapters/ is outside the mutation scope by CLAUDE.md policy. Paradigm: functional TypeScript throughout \u2014 factory functions, pure domain functions, no classes; fast-check is not a dependency and must not be added, so property coverage is approximated with exhaustive test.each matrices. ARCHITECTURE FOLLOW-UP (not a step, no production code): docs/product/architecture/brief.md states that persistentLocalCache() is enabled, which is false on native (firebase-config.ts:52-66 makes it web-only) and is the origin of this bug; the brief's Real-Time Sync Pattern section should be corrected to a 7-step contract including hydrate-before-subscribe and empty-snapshot preservation once this fix lands, and ADR-002's precedent extended to all four adapters. REVIEW: APPROVED with one condition -- pin the F2 guard's known false positive as an explicit acceptance criterion (added as 01-01 criterion 7). Orchestrator corrected the reviewer's stated rationale: the false positive is PERMANENT, not a window that closes when 02-01 ships."
+  }
+}

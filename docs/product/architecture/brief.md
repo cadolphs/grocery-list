@@ -20,7 +20,7 @@ Grocery Smart List is a React Native / Expo SDK 54 mobile application targeting 
 - Functional paradigm: factory functions, pure domain functions, hooks (no classes)
 - Expo SDK 54 with Firebase JS SDK (not React Native Firebase)
 - Existing hexagonal architecture with ports-and-adapters must be preserved
-- `persistentLocalCache()` already enabled on Firestore client
+- `persistentLocalCache()` is enabled on **web only** (`src/adapters/firestore/firebase-config.ts`). On React Native it throws `FirestoreError(UNIMPLEMENTED)` because IndexedDB does not exist there (firebase-js-sdk#7947), so **native has no durable Firestore cache**. Local durability on native is an AsyncStorage write-through mirror implemented inside each Firestore adapter. CORRECTED 2026-09-14 (feature `fix-offline-staple-cache-wipe`): this line previously claimed the cache was enabled outright, and that false premise is why three of the four adapters shipped with no local durability at all.
 - Last-write-wins conflict resolution (single-user app)
 
 ### Architectural Style
@@ -162,6 +162,11 @@ All four Firestore adapters follow the same pattern:
 4. **Local writes**: update cache synchronously, call `setDoc` fire-and-forget (unchanged)
 5. **Own-write echo**: `onSnapshot` fires for own writes; adapter detects no-change and skips `onChange` callback (compare serialized state)
 6. **Cleanup**: `onSnapshot` returns unsubscribe function; stored by init hook and called on unmount/logout
+7. **Local durability (native)**: hydrate the in-memory cache from a versioned, uid-scoped AsyncStorage mirror (`firestore-cache:v1:{uid}:{doc}`) BEFORE subscribing; treat an absent or empty first snapshot as *unknown*, never as *empty*, so it can never overwrite mirrored data; write through to the mirror on every local mutation.
+
+Step 7 added 2026-09-14 (feature `fix-offline-staple-cache-wipe`). Without it, an offline cold start yields empty caches, and the trip domain then rebuilds a completed trip from an empty staple list and persists the empty result over the local mirror.
+
+A note on when the guard disarms: the staple, area and section-order adapters disarm the empty-snapshot guard ONLY when a snapshot actually carries data. The trip adapter still disarms on every local write, which is a known inconsistency and a widening of the window in which a late server snapshot can clobber an offline edit. Harmonising the trip adapter is an open follow-up.
 
 #### onChange Callback Contract
 
@@ -194,7 +199,7 @@ Extends existing `migration.ts`:
 | Attribute | Strategy |
 |-----------|----------|
 | Real-time consistency | `onSnapshot` listeners on all 4 document types; <5s propagation via Firestore infrastructure |
-| Fault tolerance | Local cache remains authoritative; `setDoc` is fire-and-forget; `persistentLocalCache()` ensures offline writes queue and replay |
+| Fault tolerance | Local cache remains authoritative; `setDoc` is fire-and-forget. On web, `persistentLocalCache()` queues and replays offline writes. On native there is no Firestore persistence, so durability comes from the per-adapter AsyncStorage mirror (see the Real-Time Sync Pattern below). |
 | Maintainability | All adapters follow identical factory-function pattern; onChange callback is the only new parameter |
 | Testability | Adapters testable via port interfaces; onChange callback testable by invoking it in tests; domain logic unchanged and fully unit-testable |
 | No data loss | Migration checks Firestore-empty before writing; cloud-wins when both exist |
