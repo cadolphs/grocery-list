@@ -1,0 +1,31 @@
+# Jobs To Be Done — grocery-list
+#
+# Source of truth for JTBD job statements. Every user story in
+# docs/feature/**/discuss/ MUST reference a `job_id` from this file
+# (or `infrastructure-only` with rationale). See nw-jtbd-bdd-integration.
+#
+# Schema:
+#   id: stable kebab-case identifier
+#   name: short human label
+#   statement: "When [situation], I want to [motivation], so I can [outcome]."
+#   actor: persona/role this job belongs to
+#   context: where in the product surface this job lives
+#   created: ISO date
+#
+# Bootstrapped: 2026-05-07 (during DISCUSS for show-single-aisle-number)
+
+jobs:
+  - id: store-navigation
+    name: Store Navigation
+    statement: |
+      When I am shopping at the store and walking through it section by section,
+      I want to know exactly which aisle each item is in,
+      so I can pick the right items without backtracking or guessing.
+    actor: Carlos (in-store shopper)
+    context: Store view during an active shopping trip
+    created: 2026-05-07
+    notes: |
+      Originally referenced as "JS4" in section-order-by-section and
+      aisle-subgroups-in-store-view. Formalized here on jobs.yaml bootstrap.
+      All store-view feature stories trace to this job until further
+      decomposition is justified.
