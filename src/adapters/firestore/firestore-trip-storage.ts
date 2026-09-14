@@ -128,13 +128,29 @@ export const createFirestoreTripStorage = (
   let unsubscribeTripFn: () => void = () => {};
   let unsubscribeCarryoverFn: () => void = () => {};
   let isTripInitialized = false;
-  // Tracks whether the current cachedTrip came from the AsyncStorage mirror
-  // (as opposed to a Firestore snapshot). When true, an incoming empty
-  // snapshot (exists=false) MUST NOT clobber the cache — the server simply
-  // has no data yet (offline / cold-start) and our local mirror is the truth.
+  // True while the cache came from the AsyncStorage mirror and the server has
+  // not yet sent anything of its own. While armed, a snapshot reporting "no
+  // trip" / "no carryover" means "the server has nothing to say" (offline cold
+  // start), not "the user deleted everything", so it MUST NOT clobber the
+  // mirror. Only a snapshot actually carrying data disarms it — local writes
+  // deliberately do not, because a local write is no evidence about server
+  // state. For carryover, an existing document with items: [] IS server data
+  // (clearCarryover persists []) and disarms; exists=false is silence.
   let tripHydratedFromLocal = false;
   let carryoverHydratedFromLocal = false;
   const { onChange } = options;
+
+  const commitTripChange = (updatedTrip: Trip): void => {
+    cachedTrip = updatedTrip;
+    persistTripInBackground(db, uid, updatedTrip);
+    mirrorTripToAsyncStorage(uid, updatedTrip);
+  };
+
+  const commitCarryoverChange = (updatedItems: readonly TripItem[]): void => {
+    cachedCarryover = updatedItems;
+    persistCarryoverInBackground(db, uid, updatedItems);
+    mirrorCarryoverToAsyncStorage(uid, updatedItems);
+  };
 
   const handleTripSnapshot = (snapshot: { exists: () => boolean; data: () => { trip: Trip } | undefined }): void => {
     const incomingTrip: Trip | null = snapshot.exists()
@@ -159,10 +175,10 @@ export const createFirestoreTripStorage = (
 
     if (incomingSerialized !== currentSerialized) {
       cachedTrip = incomingTrip;
-      // Once server data arrives, future empty-snapshot protection is off —
-      // the server is now authoritative for this session.
-      tripHydratedFromLocal = false;
       if (incomingTrip !== null) {
+        // Server data has arrived — it is authoritative for the rest of this
+        // session, so the empty-snapshot guard stands down.
+        tripHydratedFromLocal = false;
         mirrorTripToAsyncStorage(uid, incomingTrip);
       }
       onChange?.();
@@ -180,11 +196,12 @@ export const createFirestoreTripStorage = (
       return;
     }
 
-    const resolved = incomingItems ?? [];
-    cachedCarryover = resolved;
-    carryoverHydratedFromLocal = false;
+    cachedCarryover = incomingItems ?? [];
     if (incomingItems !== null) {
-      mirrorCarryoverToAsyncStorage(uid, resolved);
+      // An existing document (even with items: []) is a stored decision, so
+      // the guard stands down; an absent document is silence and leaves it armed.
+      carryoverHydratedFromLocal = false;
+      mirrorCarryoverToAsyncStorage(uid, cachedCarryover);
     }
   };
 
@@ -245,10 +262,7 @@ export const createFirestoreTripStorage = (
     loadTrip: (): Trip | null => cachedTrip ? { ...cachedTrip, items: [...cachedTrip.items] } : null,
 
     saveTrip: (trip: Trip): void => {
-      cachedTrip = trip;
-      tripHydratedFromLocal = false;
-      persistTripInBackground(db, uid, trip);
-      mirrorTripToAsyncStorage(uid, trip);
+      commitTripChange(trip);
     },
 
     loadCheckoffs: (): ReadonlyMap<string, string> => {
@@ -259,41 +273,29 @@ export const createFirestoreTripStorage = (
     saveCheckoffs: (checkoffs: ReadonlyMap<string, string>): void => {
       if (!cachedTrip) return;
       const updatedItems = applyCheckoffsToItems(cachedTrip.items, checkoffs);
-      cachedTrip = { ...cachedTrip, items: updatedItems };
-      tripHydratedFromLocal = false;
-      persistTripInBackground(db, uid, cachedTrip);
-      mirrorTripToAsyncStorage(uid, cachedTrip);
+      commitTripChange({ ...cachedTrip, items: updatedItems });
     },
 
     updateItemArea: (oldName: string, newName: string): void => {
       if (!cachedTrip) return;
-      cachedTrip = {
+      commitTripChange({
         ...cachedTrip,
         items: cachedTrip.items.map((item) =>
           item.houseArea === oldName
             ? { ...item, houseArea: newName }
             : item
         ),
-      };
-      tripHydratedFromLocal = false;
-      persistTripInBackground(db, uid, cachedTrip);
-      mirrorTripToAsyncStorage(uid, cachedTrip);
+      });
     },
 
     saveCarryover: (items: readonly TripItem[]): void => {
-      cachedCarryover = [...items];
-      carryoverHydratedFromLocal = false;
-      persistCarryoverInBackground(db, uid, items);
-      mirrorCarryoverToAsyncStorage(uid, items);
+      commitCarryoverChange([...items]);
     },
 
     loadCarryover: (): readonly TripItem[] => [...cachedCarryover],
 
     clearCarryover: (): void => {
-      cachedCarryover = [];
-      carryoverHydratedFromLocal = false;
-      persistCarryoverInBackground(db, uid, []);
-      mirrorCarryoverToAsyncStorage(uid, []);
+      commitCarryoverChange([]);
     },
   };
 };

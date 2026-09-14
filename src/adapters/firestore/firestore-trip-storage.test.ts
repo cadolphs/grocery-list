@@ -288,6 +288,29 @@ describe('firestore trip storage onChange callback', () => {
     expect(onChangeCallCount).toBe(0);
   });
 
+  test('a post-write absent echo does not null a trip hydrated from the mirror', async () => {
+    // Seed the mirror through a previous session, then drop the remote doc so
+    // the next cold start hydrates from the mirror with an absent snapshot.
+    const previousSession = await createFreshStorage();
+    previousSession.saveTrip(makeTrip());
+    delete mockStore[TRIP_DOC_PATH];
+
+    const onChange = jest.fn();
+    const storage = await createFreshStorage(onChange);
+
+    const editedTrip = makeTrip({
+      items: [makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' })],
+    });
+    storage.saveTrip(editedTrip);
+
+    // A local write is no evidence about server state: an absent snapshot
+    // arriving after the edit must not clobber the cache.
+    simulateRemoteSnapshot(TRIP_DOC_PATH, undefined);
+
+    expect(storage.loadTrip()).toEqual(editedTrip);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   test('unsubscribe stops all listeners', async () => {
     mockStore[TRIP_DOC_PATH] = undefined;
     mockStore[CARRYOVER_DOC_PATH] = undefined;
