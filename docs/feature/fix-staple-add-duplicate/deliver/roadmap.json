@@ -1,0 +1,82 @@
+{
+  "roadmap": {
+    "project_id": "fix-staple-add-duplicate",
+    "created_at": "2026-04-27T19:00:00Z",
+    "total_steps": 2,
+    "phases": 1
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Drop dual-write in MetadataBottomSheet and harden addItem dedup guard",
+      "description": "Two-step bugfix mapped to RCA root causes A and B (rca.md). Step 01-01 fixes the user-visible bug at the UI seam: drop the redundant onSubmitTripItem call from MetadataBottomSheet's Staple-success branch so the trip row flows exclusively through the stapleLibrary.subscribe -> applyAddedStaplesToTrip subscription path (already in production for delete-sync). Driven by a new RED integration test in HomeView.test.tsx that exercises the full submit flow. Step 01-02 hardens the dedup guard at the domain seam: extend addItem in trip.ts to reject same name+houseArea staple-typed duplicates, mirroring the matchesStapleIdentity predicate used by removeItemsByStaple. Driven by a new RED unit test in trip.test.ts. Each step is an independently committable full TDD cycle. Functional paradigm: factory functions and hooks; no classes.",
+      "estimated_duration": "1-2 hours",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "UI: drop dual-write in MetadataBottomSheet Staple-success branch",
+          "description": "Fixes the user-visible bug. RCA root cause A: MetadataBottomSheet.handleSubmit currently performs two writes for a new staple — onSubmitStaple (which fires the library subscription that adds the trip row with stapleId via applyAddedStaplesToTrip in useAppInitialization) AND a direct onSubmitTripItem call (which adds a second row without stapleId, bypassing the stapleId-keyed dedup guard at trip.ts:178). Drop the second call. The subscription path is single-source-of-truth for staple-driven trip adds (precedent: delete-path was simplified the same way in commit b32cd42). RED: write a new integration test in src/ui/HomeView.test.tsx that mounts HomeView via the production ServiceProvider with an in-memory stapleLibrary and tripService and the real useAppInitialization wiring, drives the full new-staple submit flow (QuickAdd input -> open metadata bottom sheet -> select area -> press 'Add Item'), and asserts that on the next tick tripService.getItems() has length exactly 1 with a non-null stapleId. This test must fail against the current MetadataBottomSheet.tsx (will see two rows). GREEN: in MetadataBottomSheet.tsx, locate the Staple-success branch of handleSubmit (around lines 256-262, immediately after the onSubmitStaple call) and remove the onSubmitTripItem(...) call along with any local variables that exist only for it. Leave alone: the one-off branch (around lines 211-232 — addOneOff notifies but applyAddedStaplesToTrip filters type==='staple' so one-offs would not auto-add), the 'Add to trip instead' duplicate-warning branch (around lines 267-279 — staple already exists, no library mutation, no subscription fires), and the 'Skip, add with defaults' branch (around lines 286-306 — same one-off path reasoning). Run the full test suite — the new integration test passes and no existing tests regress.",
+          "criteria": "GIVEN HomeView mounted with a real stapleLibrary, real tripService, and real useAppInitialization wiring (stapleLibrary.subscribe -> applyAddedStaplesToTrip is active) WHEN the user submits a brand-new staple via QuickAdd + MetadataBottomSheet THEN tripService.getItems() has length exactly 1 AND that single item has a non-null stapleId equal to the freshly-created staple's id AND items[0].name and items[0].houseArea match the user input. The test MUST fail against the current MetadataBottomSheet.tsx (asserting length===1 will see length===2 today). The full npm test run is green after the GREEN phase; no existing trip, hook, UI, or domain test regresses. Behavioral assertions on the public domain surface (tripService.getItems) and rendered tree only — no spying on internal listeners, no probing of stapleRevision counters, no reference to the dedup guard's private predicate.",
+          "test_file": "src/ui/HomeView.test.tsx",
+          "scenario_name": "Adding a brand-new staple via the metadata bottom sheet yields exactly one trip row with the correct stapleId",
+          "files_to_modify": [
+            "src/ui/MetadataBottomSheet.tsx",
+            "src/ui/HomeView.test.tsx"
+          ],
+          "implementation_notes": "RED first. Read src/ui/HomeView.test.tsx to understand existing scaffolding (it's the integration entry point — look for ServiceProvider mount, in-memory factory wiring, QuickAdd flow helpers). The add-item-flow feature likely already provides helpers for typing into QuickAdd and opening the bottom sheet — reuse them. If not, drive interactions directly via @testing-library/react-native: fireEvent on the QuickAdd TextInput, waitFor the bottom sheet sheet, fireEvent on an area chip, fireEvent on 'Add Item'. Use act/waitFor for async settling — the subscription -> applyAddedStaplesToTrip path is async via the diffStaples handler in useAppInitialization. Assert tripService.getItems().length === 1 and items[0].stapleId is a non-empty string equal to stapleLibrary.listAll().find(s => s.name === ...).id. Run npm test against just the new test — it MUST be RED. GREEN: open src/ui/MetadataBottomSheet.tsx; search for 'onSubmitStaple(' inside handleSubmit; the immediately following block is the dual-write. Drop the onSubmitTripItem(...) call. Confirm by reading nearby lines that you are in the Staple-success branch (NOT the one-off branch, NOT the 'Add to trip instead' branch, NOT the 'Skip, add with defaults' branch). After the change, run the full npm test suite — the new integration test passes; no other tests regress. If a test elsewhere relied on the dual-write firing, it is encoding the bug — flag it before changing it. COMMIT message: 'fix(staple-add-duplicate): drop dual-write in MetadataBottomSheet Staple-success branch' with trailer 'Step-ID: 01-01'. Functional paradigm: hooks and factory functions only; behavioral assertions only.",
+          "deliverables": [
+            "src/ui/HomeView.test.tsx: new integration test driving the full new-staple submit flow and asserting exactly one trip row with correct stapleId; test was RED before the fix, GREEN after",
+            "src/ui/MetadataBottomSheet.tsx: onSubmitTripItem call removed from Staple-success branch of handleSubmit; one-off, 'Add to trip instead', and 'Skip with defaults' branches untouched",
+            "Full npm test run green; the new integration test passes; no existing tests regress"
+          ],
+          "estimated_duration": "30-45 minutes",
+          "dependencies": []
+        },
+        {
+          "id": "01-02",
+          "name": "Domain: harden addItem dedup guard with (name, houseArea) fallback for staple-typed items",
+          "description": "Defense-in-depth at the domain seam. RCA root cause B: the dedup guard at trip.ts:178 is stapleId-only ('if (request.stapleId && items.some(i => i.stapleId === request.stapleId))'), so any caller passing itemType='staple' without a stapleId can slip a duplicate through. The remove path uses matchesStapleIdentity at trip.ts:82-86 which falls back to (name, houseArea) for staple-typed items — this step makes the add path symmetric. Even with 01-01's dual-write removal in place, this guard prevents recurrence if any future caller forgets to pass stapleId. RED: write a new unit test in src/domain/trip.test.ts: GIVEN a tripService seeded with one staple-typed item (stapleId='s1', name='Milk', houseArea='Kitchen') WHEN addItem({itemType:'staple', name:'Milk', houseArea:'Kitchen'}) is called with NO stapleId THEN result is {success:false, error:<duplicate-staple message>} AND items length is still 1. This test fails today because the guard short-circuits when stapleId is absent. GREEN: in src/domain/trip.ts addItem (around lines 174-198), after the existing stapleId guard at line 178, add a second guard: if request.itemType === 'staple' AND items contains an item with itemType === 'staple' AND same name AND same houseArea, return {success:false, error:<same string the stapleId guard uses>}. Reuse matchesStapleIdentity if its signature fits, or write the inline equivalent. Run the full test suite — the new unit test passes; no existing tests regress.",
+          "criteria": "GIVEN a tripService seeded with one item (stapleId='s1', name='Milk', houseArea='Kitchen', itemType='staple') WHEN addItem({itemType:'staple', name:'Milk', houseArea:'Kitchen'}) is called (no stapleId) THEN the result is {success:false, error:<existing duplicate-staple error string>} AND tripService.getItems() still has length 1. The test MUST fail against the current trip.ts (today the guard at line 178 bypasses when stapleId is absent and the second add succeeds). GIVEN the same setup WHEN addItem is called with itemType='oneoff', name='Milk', houseArea='Kitchen' THEN the call succeeds (one-offs are not gated by the staple-identity fallback — only itemType='staple' triggers the new check). After the GREEN phase, the full npm test run is green; no existing trip, hook, UI, or domain test regresses. Behavioral assertions on the public AddTripItemResult surface and tripService.getItems only — no probing of the guard's private predicate.",
+          "test_file": "src/domain/trip.test.ts",
+          "scenario_name": "addItem rejects stapleId-less staple duplicates by (name, houseArea); one-offs unaffected",
+          "files_to_modify": [
+            "src/domain/trip.ts",
+            "src/domain/trip.test.ts"
+          ],
+          "implementation_notes": "RED first. Read src/domain/trip.test.ts to find the existing addItem test cluster (search for 'addItem' or 'staple already in trip' to locate the dedup-related tests). Match the file's testing style (factory imports, in-memory persistTrip stub, assertion patterns). The new test should sit alongside the existing stapleId-keyed dedup test. Use the EXACT error string already used by the stapleId guard for consistency — read the existing test/code to find it (likely 'staple already in trip'). Add the symmetric one-off test (one-off with same name+area NOT rejected) to lock the itemType guard semantics — this kills the obvious mutant where the itemType check is dropped and one-offs get incorrectly rejected. Run npm test on just the new tests — they MUST be RED. GREEN: open src/domain/trip.ts; locate addItem (around lines 174-198) and the existing guard at line 178. After that guard, before the append logic, add: 'if (request.itemType === \"staple\" && items.some(i => i.itemType === \"staple\" && i.name === request.name && i.houseArea === request.houseArea)) { return { success: false, error: \"staple already in trip\" }; }' (use whatever exact error string the existing stapleId guard returns). Read matchesStapleIdentity at trip.ts:82-86 — if its predicate uses any normalization (toLowerCase, trim), match that semantic exactly so add and remove identity rules stay symmetric. Run full npm test — both new tests pass; nothing regresses. COMMIT message: 'fix(staple-add-duplicate): harden trip.addItem dedup guard with name+houseArea fallback for staple items' with trailer 'Step-ID: 01-02'. Functional paradigm: pure factory function changes only. Mutation-testing magnets: itemType check, AND chain, name equality, houseArea equality — each is killed by the two-test pair above (positive case + negative one-off case).",
+          "deliverables": [
+            "src/domain/trip.test.ts: new tests for stapleId-less staple duplicate rejection and one-off non-rejection; both behaviors locked",
+            "src/domain/trip.ts: addItem guard extended with (name, houseArea) fallback for itemType='staple'; identity rule symmetric with removeItemsByStaple",
+            "Full npm test run green; the new unit tests pass; no existing tests regress"
+          ],
+          "estimated_duration": "20-30 minutes",
+          "dependencies": [
+            "01-01"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/domain/",
+      "src/ui/"
+    ],
+    "test_directories": [
+      "src/domain/",
+      "src/ui/"
+    ],
+    "excluded_patterns": [
+      "**/*.d.ts",
+      "**/index.ts",
+      "node_modules/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "orchestrator-bugfix-scope",
+    "approved_at": "2026-04-27T19:00:00Z",
+    "note": "Bugfix scope derived from RCA at docs/feature/fix-staple-add-duplicate/deliver/rca.md (root causes A and B). 2 steps each a full TDD cycle (RED -> GREEN -> COMMIT), independently shippable. 01-01 fixes the user-visible bug at the UI seam (drop dual-write in MetadataBottomSheet) driven by an integration test in HomeView.test.tsx. 01-02 hardens the domain dedup guard (defense-in-depth, mirrors matchesStapleIdentity used by remove path) driven by a unit test in trip.test.ts. Decomposition ratio = 2 steps / 2 production files = 1.0, well under 2.5 ceiling. Behavioral AC throughout — no private-method references, no listener-array assertions. Functional paradigm: factory functions and hooks; no classes. Mutation-testing per-feature strategy in CLAUDE.md applies to src/domain/trip.ts; the 01-02 unit test pair (positive duplicate rejection + negative one-off pass-through) is constructed to kill the obvious mutants on the new guard (itemType drop, AND -> OR, name/houseArea predicate flips)."
+  }
+}

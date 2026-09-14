@@ -1,0 +1,90 @@
+{
+  "schema_version": "3.0",
+  "feature_id": "fix-staple-add-duplicate",
+  "events": [
+    {
+      "sid": "01-01",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T18:57:18Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "RED_ACCEPTANCE",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: bugfix scope; integration test in HomeView.test.tsx written in RED_UNIT serves as the port-to-port behavioral test",
+      "t": "2026-04-27T18:57:20Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "RED_UNIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T18:58:03Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "GREEN",
+      "s": "SKIPPED",
+      "d": "BLOCKED_BY_DEPENDENCY: production fix applied (MetadataBottomSheet dual-write removed) and new HomeView test passes, but 3 pre-existing tests encode the bug by asserting trip-row appearance from the dual-write path without wiring useAppInitialization subscription. Tests: tests/acceptance/add-item-flow/walking-skeleton.test.tsx WS-AIF-3, tests/acceptance/web-ux-polish/walking-skeleton.test.tsx WS-3, tests/acceptance/add-item-flow/milestone-1-metadata.test.tsx US-AIF-04 'new section name is accepted'. All three construct services via createStapleLibrary+createTrip without the stapleLibrary.subscribe -> applyAddedStaplesToTrip wiring. Per step directive, flagging back to orchestrator rather than modifying.",
+      "t": "2026-04-27T18:59:22Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "COMMIT",
+      "s": "SKIPPED",
+      "d": "BLOCKED_BY_DEPENDENCY: COMMIT not executed because GREEN was blocked. Production fix (MetadataBottomSheet dual-write removed) and new HomeView test are in working tree but uncommitted, awaiting orchestrator triage of 3 bug-encoding tests that assert trip rows via the now-removed dual-write path: tests/acceptance/add-item-flow/walking-skeleton.test.tsx WS-AIF-3, tests/acceptance/web-ux-polish/walking-skeleton.test.tsx WS-3, tests/acceptance/add-item-flow/milestone-1-metadata.test.tsx US-AIF-04. Per step directive, flagging rather than modifying.",
+      "t": "2026-04-27T18:59:53Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T19:03:32Z"
+    },
+    {
+      "sid": "01-01",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T19:03:59Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T19:05:45Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "RED_ACCEPTANCE",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: bugfix scope; unit test in trip.test.ts written in RED_UNIT is the canonical RED for this domain change",
+      "t": "2026-04-27T19:05:47Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "RED_UNIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T19:06:19Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T19:08:27Z"
+    },
+    {
+      "sid": "01-02",
+      "p": "COMMIT",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-27T19:08:53Z"
+    }
+  ]
+}
