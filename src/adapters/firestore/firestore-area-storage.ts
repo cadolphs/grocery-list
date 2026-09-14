@@ -172,18 +172,15 @@ export const createFirestoreAreaStorage = (
       // network: the Firestore SDK withholds the first snapshot on
       // connected-but-dead wifi until its offline timer fires. With no mirror
       // (first install / new uid) the first snapshot remains the only source of
-      // truth, so we await it as before. The subscription is registered in
+      // truth, so initialize() awaits it. The subscription is registered in
       // both cases; only the await is skipped.
       const hydratedFromMirror = localAreas !== null;
 
+      // Settles on the first snapshot; later resolve() calls are no-ops.
       const firstSnapshot = new Promise<void>((resolve) => {
-        let resolved = false;
         unsubscribeFn = onSnapshot(buildDocRef(db, uid), (snapshot) => {
           handleSnapshot(snapshot as { exists: () => boolean; data: () => { items: string[] } | undefined });
-          if (!resolved) {
-            resolved = true;
-            resolve();
-          }
+          resolve();
         });
       });
 

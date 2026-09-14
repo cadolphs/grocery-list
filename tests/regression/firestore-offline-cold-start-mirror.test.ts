@@ -10,12 +10,12 @@
 // dead wifi produces an empty staple list, which then propagates into the
 // completed-trip rebuild and erases the stored trip.
 //
-// The existing sibling `firestore-trip-offline-cold-start.test.ts` models offline
-// as a fast hard failure (airplane mode). The real store condition is
-// connected-but-dead or flapping wifi: the first snapshot is DELAYED, or never
-// arrives at all. This file adds a controllable snapshot mode so both regimes are
-// exercised, and asserts through the StapleStorage port surface returned by the
-// factory — never through an internal helper.
+// The real store condition is connected-but-dead or flapping wifi: the first
+// snapshot is DELAYED, or never arrives at all. The shared harness in
+// `helpers/offline-firestore-harness.ts` (also used by the trip sibling
+// `firestore-trip-offline-cold-start.test.ts`) makes snapshot delivery
+// controllable so both regimes are exercised. Assertions go through the port
+// surface returned by each factory — never through an internal helper.
 //
 // Readiness (RCA Root Cause A, feature fix-slow-render-flaky-network): when the
 // mirror yields an entry, initialize() resolves from it instead of awaiting the
@@ -30,62 +30,20 @@ import type { SectionOrderStorage } from '../../src/ports/section-order-storage'
 import type { AreaGroup } from '../../src/domain/item-grouping';
 import { DEFAULT_HOUSE_AREAS } from '../../src/adapters/async-storage/async-area-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  deliverSnapshot,
+  forgetRemoteDoc,
+  mockOnSnapshot,
+  resetOfflineFirestore,
+  setSnapshotMode,
+  settlePendingReads,
+} from './helpers/offline-firestore-harness';
 
-// --- Firestore mock infrastructure ---
+// --- Firestore mock infrastructure (shared harness) ---
 
-type MockDocData = Record<string, unknown> | undefined;
-const mockStore: Record<string, MockDocData> = {};
-
-type SnapshotCallback = (snapshot: {
-  exists: () => boolean;
-  data: () => MockDocData;
-}) => void;
-
-// Snapshot delivery regimes, modelling the three real network conditions:
-//   'immediate' — the server answers at once (airplane mode / healthy network)
-//   'withheld'  — the callback is registered but never invoked (connected-but-dead
-//                 wifi: Firestore withholds the initial event until it decides it
-//                 is offline, which on flapping wifi can be unbounded)
-//   'delayed'   — the callback is captured and the test decides when it fires
-type SnapshotMode = 'immediate' | 'withheld' | 'delayed';
-
-let snapshotMode: SnapshotMode = 'immediate';
-const capturedCallbacks: Record<string, SnapshotCallback> = {};
-
-const buildSnapshot = (data: MockDocData) => ({
-  exists: () => data !== undefined,
-  data: () => data,
-});
-
-const mockDoc = jest.fn((_db: unknown, ...pathSegments: string[]) => ({
-  path: pathSegments.join('/'),
-}));
-
-// Offline Firestore: the write is queued locally and never reaches the backing
-// store that future subscribers read. A process restart loses it.
-const mockSetDoc = jest.fn(async (_docRef: { path: string }, _data: unknown) => {});
-
-const mockOnSnapshot = jest.fn(
-  (docRef: { path: string }, callback: SnapshotCallback) => {
-    capturedCallbacks[docRef.path] = callback;
-    if (snapshotMode === 'immediate') {
-      callback(buildSnapshot(mockStore[docRef.path]));
-    }
-    return jest.fn();
-  }
+jest.mock('firebase/firestore', () =>
+  require('./helpers/offline-firestore-harness').firestoreModule
 );
-
-jest.mock('firebase/firestore', () => ({
-  doc: mockDoc,
-  setDoc: mockSetDoc,
-  onSnapshot: mockOnSnapshot,
-}));
-
-// Deliver a snapshot to an already-registered subscriber.
-const deliverSnapshot = (path: string, data: MockDocData): void => {
-  mockStore[path] = data;
-  capturedCallbacks[path]?.(buildSnapshot(data));
-};
 
 // --- Test helpers ---
 
@@ -123,16 +81,9 @@ const createInitializedAdapter = async (
   return adapter;
 };
 
-// Let queued microtasks (the AsyncStorage read inside initialize) settle without
-// awaiting initialize() itself — which, under 'withheld', never resolves.
-const settlePendingReads = (): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, 0));
-
 beforeEach(async () => {
   jest.clearAllMocks();
-  snapshotMode = 'immediate';
-  Object.keys(mockStore).forEach((key) => delete mockStore[key]);
-  Object.keys(capturedCallbacks).forEach((key) => delete capturedCallbacks[key]);
+  resetOfflineFirestore();
   await AsyncStorage.clear();
 });
 
@@ -142,7 +93,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     const milk = makeStaple();
     adapterA.save(milk);
 
-    // Process restart: fresh adapter, same uid. mockStore is still empty because
+    // Process restart: fresh adapter, same uid. The backing store is still empty because
     // the offline setDoc never published, so onSnapshot reports exists()===false.
     const adapterB = await createInitializedAdapter();
 
@@ -157,7 +108,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     // Connected-but-dead wifi: the callback is registered but never fires.
     // Readiness must come from the mirror, and hydration must not depend on
     // the snapshot either.
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createAdapter();
     let initializeResolved = false;
     void adapterB.initialize().then(() => {
@@ -179,7 +130,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     adapterA.save(makeStaple());
     adapterA.remove('staple-1');
 
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createAdapter();
     let initializeResolved = false;
     void adapterB.initialize().then(() => {
@@ -193,7 +144,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
   });
 
   test('a uid with no mirror entry keeps initialize() pending when the first snapshot is withheld', async () => {
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapter = createAdapter();
     let initializeResolved = false;
     void adapter.initialize().then(() => {
@@ -214,7 +165,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     const milk = makeStaple();
     adapterA.save(milk);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createAdapter();
     void adapterB.initialize();
     await settlePendingReads();
@@ -229,7 +180,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     const milk = makeStaple();
     adapterA.save(milk);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createAdapter();
     void adapterB.initialize();
     await settlePendingReads();
@@ -244,7 +195,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     const milk = makeStaple();
     adapterA.save(milk);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createAdapter();
     void adapterB.initialize();
     await settlePendingReads();
@@ -255,8 +206,8 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     expect(adapterB.loadAll()).toEqual([bread]);
 
     // The server-authoritative list is now what a later cold start recovers.
-    snapshotMode = 'immediate';
-    delete mockStore[staplesDocPath(TEST_UID)];
+    setSnapshotMode('immediate');
+    forgetRemoteDoc(staplesDocPath(TEST_UID));
     const adapterC = await createInitializedAdapter();
 
     expect(adapterC.loadAll()).toEqual([bread]);
@@ -384,7 +335,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     const adapterA = await createInitializedAreaAdapter();
     adapterA.saveAll(CUSTOM_AREAS);
 
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createAreaAdapter();
     let initializeResolved = false;
     void adapterB.initialize().then(() => {
@@ -402,7 +353,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
   });
 
   test('a uid with no mirror entry keeps initialize() pending when the first snapshot is withheld', async () => {
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapter = createAreaAdapter();
     let initializeResolved = false;
     void adapter.initialize().then(() => {
@@ -427,7 +378,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
       const adapterA = await createInitializedAreaAdapter();
       adapterA.saveAll(CUSTOM_AREAS);
 
-      snapshotMode = 'delayed';
+      setSnapshotMode('delayed');
       const adapterB = createAreaAdapter();
       void adapterB.initialize();
       await settlePendingReads();
@@ -442,7 +393,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     const adapterA = await createInitializedAreaAdapter();
     adapterA.saveAll(CUSTOM_AREAS);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createAreaAdapter();
     void adapterB.initialize();
     await settlePendingReads();
@@ -452,8 +403,8 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
 
     expect(adapterB.loadAll()).toEqual(serverAreas);
 
-    snapshotMode = 'immediate';
-    delete mockStore[areasDocPath(AREAS_UID)];
+    setSnapshotMode('immediate');
+    forgetRemoteDoc(areasDocPath(AREAS_UID));
     const adapterC = await createInitializedAreaAdapter();
 
     expect(adapterC.loadAll()).toEqual(serverAreas);
@@ -480,7 +431,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     const adapterA = await createInitializedAreaAdapter();
     adapterA.saveAll(CUSTOM_AREAS);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createAreaAdapter();
     const listener = jest.fn();
     void adapterB.initialize();
@@ -563,7 +514,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     const adapterA = await createInitializedSectionOrderAdapter();
     adapterA.saveOrder(SAVED_ORDER);
 
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createSectionOrderAdapter();
     let initializeResolved = false;
     void adapterB.initialize().then(() => {
@@ -585,7 +536,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     adapterA.saveOrder(SAVED_ORDER);
     adapterA.clearOrder();
 
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createSectionOrderAdapter();
     let initializeResolved = false;
     void adapterB.initialize().then(() => {
@@ -599,7 +550,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
   });
 
   test('a uid with no mirror entry keeps initialize() pending when the first snapshot is withheld', async () => {
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapter = createSectionOrderAdapter();
     let initializeResolved = false;
     void adapter.initialize().then(() => {
@@ -622,7 +573,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     const adapterA = await createInitializedSectionOrderAdapter();
     adapterA.saveOrder(SAVED_ORDER);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createSectionOrderAdapter();
     void adapterB.initialize();
     await settlePendingReads();
@@ -642,7 +593,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     const adapterA = await createInitializedSectionOrderAdapter();
     adapterA.saveOrder(SAVED_ORDER);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createSectionOrderAdapter();
     void adapterB.initialize();
     await settlePendingReads();
@@ -652,8 +603,8 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
 
     expect(adapterB.loadOrder()).toEqual(serverOrder);
 
-    snapshotMode = 'immediate';
-    delete mockStore[sectionOrderDocPath(ORDER_UID)];
+    setSnapshotMode('immediate');
+    forgetRemoteDoc(sectionOrderDocPath(ORDER_UID));
     const adapterC = await createInitializedSectionOrderAdapter();
 
     expect(adapterC.loadOrder()).toEqual(serverOrder);
@@ -663,7 +614,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     const adapterA = await createInitializedSectionOrderAdapter();
     adapterA.saveOrder(SAVED_ORDER);
 
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createSectionOrderAdapter();
     const listener = jest.fn();
     void adapterB.initialize();

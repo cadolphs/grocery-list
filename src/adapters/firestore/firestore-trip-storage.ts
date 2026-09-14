@@ -140,13 +140,13 @@ export const createFirestoreTripStorage = (
   let carryoverHydratedFromLocal = false;
   const { onChange } = options;
 
-  const commitTripChange = (updatedTrip: Trip): void => {
+  const commitLocalTripChange = (updatedTrip: Trip): void => {
     cachedTrip = updatedTrip;
     persistTripInBackground(db, uid, updatedTrip);
     mirrorTripToAsyncStorage(uid, updatedTrip);
   };
 
-  const commitCarryoverChange = (updatedItems: readonly TripItem[]): void => {
+  const commitLocalCarryoverChange = (updatedItems: readonly TripItem[]): void => {
     cachedCarryover = updatedItems;
     persistCarryoverInBackground(db, uid, updatedItems);
     mirrorCarryoverToAsyncStorage(uid, updatedItems);
@@ -233,34 +233,32 @@ export const createFirestoreTripStorage = (
       // timer re-arms on every stream restart. Requiring BOTH keys keeps a
       // completed trip from being rebuilt without its carryover. With no mirror
       // (first install / new uid) the first snapshots remain the only source
-      // of truth, so we await them as before. The subscriptions are registered
+      // of truth, so initialize() awaits them. The subscriptions are registered
       // in both cases; only the await is skipped.
       const hydratedFromMirror = localTrip !== null && localCarryover !== null;
 
+      // Settles once both documents have delivered their first snapshot; later
+      // resolve() calls are no-ops.
       const firstSnapshots = new Promise<void>((resolve) => {
-        let tripResolved = false;
-        let carryoverResolved = false;
+        let tripSnapshotArrived = false;
+        let carryoverSnapshotArrived = false;
 
-        const maybeResolve = () => {
-          if (tripResolved && carryoverResolved) {
+        const resolveOnceBothArrived = () => {
+          if (tripSnapshotArrived && carryoverSnapshotArrived) {
             resolve();
           }
         };
 
         unsubscribeTripFn = onSnapshot(buildTripDocRef(db, uid), (snapshot) => {
           handleTripSnapshot(snapshot as { exists: () => boolean; data: () => { trip: Trip } | undefined });
-          if (!tripResolved) {
-            tripResolved = true;
-            maybeResolve();
-          }
+          tripSnapshotArrived = true;
+          resolveOnceBothArrived();
         });
 
         unsubscribeCarryoverFn = onSnapshot(buildCarryoverDocRef(db, uid), (snapshot) => {
           handleCarryoverSnapshot(snapshot as { exists: () => boolean; data: () => { items: TripItem[] } | undefined });
-          if (!carryoverResolved) {
-            carryoverResolved = true;
-            maybeResolve();
-          }
+          carryoverSnapshotArrived = true;
+          resolveOnceBothArrived();
         });
       });
 
@@ -275,7 +273,7 @@ export const createFirestoreTripStorage = (
     loadTrip: (): Trip | null => cachedTrip ? { ...cachedTrip, items: [...cachedTrip.items] } : null,
 
     saveTrip: (trip: Trip): void => {
-      commitTripChange(trip);
+      commitLocalTripChange(trip);
     },
 
     loadCheckoffs: (): ReadonlyMap<string, string> => {
@@ -286,12 +284,12 @@ export const createFirestoreTripStorage = (
     saveCheckoffs: (checkoffs: ReadonlyMap<string, string>): void => {
       if (!cachedTrip) return;
       const updatedItems = applyCheckoffsToItems(cachedTrip.items, checkoffs);
-      commitTripChange({ ...cachedTrip, items: updatedItems });
+      commitLocalTripChange({ ...cachedTrip, items: updatedItems });
     },
 
     updateItemArea: (oldName: string, newName: string): void => {
       if (!cachedTrip) return;
-      commitTripChange({
+      commitLocalTripChange({
         ...cachedTrip,
         items: cachedTrip.items.map((item) =>
           item.houseArea === oldName
@@ -302,13 +300,13 @@ export const createFirestoreTripStorage = (
     },
 
     saveCarryover: (items: readonly TripItem[]): void => {
-      commitCarryoverChange([...items]);
+      commitLocalCarryoverChange([...items]);
     },
 
     loadCarryover: (): readonly TripItem[] => [...cachedCarryover],
 
     clearCarryover: (): void => {
-      commitCarryoverChange([]);
+      commitLocalCarryoverChange([]);
     },
   };
 };

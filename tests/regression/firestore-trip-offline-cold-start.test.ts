@@ -15,69 +15,28 @@
 // A local write is no evidence about server state; only a snapshot actually
 // carrying data may disarm the guard.
 //
-// The mock models offline Firestore: setDoc never publishes to the backing store
-// that future subscribers read. Snapshot delivery is controllable so the tests
-// can express "edit, then a late snapshot". Assertions go through the port
-// surface returned by the factory — never through an internal helper.
+// The shared harness in `helpers/offline-firestore-harness.ts` models offline
+// Firestore: setDoc never publishes to the backing store that future subscribers
+// read, and snapshot delivery is controllable so the tests can express "edit,
+// then a late snapshot". Assertions go through the port surface returned by the
+// factory — never through an internal helper.
 
 import { Trip, TripItem } from '../../src/domain/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  deliverSnapshot,
+  forgetRemoteDoc,
+  mockOnSnapshot,
+  resetOfflineFirestore,
+  setSnapshotMode,
+  settlePendingReads,
+} from './helpers/offline-firestore-harness';
 
-// --- Firestore mock infrastructure ---
+// --- Firestore mock infrastructure (shared harness) ---
 
-type MockDocData = Record<string, unknown> | undefined;
-const mockStore: Record<string, MockDocData> = {};
-
-type SnapshotCallback = (snapshot: {
-  exists: () => boolean;
-  data: () => MockDocData;
-}) => void;
-
-// Snapshot delivery regimes, modelling the three real network conditions:
-//   'immediate' — the server answers at once (airplane mode / healthy network)
-//   'withheld'  — the callback is registered but never invoked (connected-but-dead
-//                 wifi: Firestore withholds the initial event until it decides it
-//                 is offline, which on flapping wifi can be unbounded)
-//   'delayed'   — the callback is captured and the test decides when it fires
-type SnapshotMode = 'immediate' | 'withheld' | 'delayed';
-
-let snapshotMode: SnapshotMode = 'immediate';
-const capturedCallbacks: Record<string, SnapshotCallback> = {};
-
-const buildSnapshot = (data: MockDocData) => ({
-  exists: () => data !== undefined,
-  data: () => data,
-});
-
-const mockDoc = jest.fn((_db: unknown, ...pathSegments: string[]) => ({
-  path: pathSegments.join('/'),
-}));
-
-// Offline Firestore: the write is queued locally and never reaches the backing
-// store that future subscribers read. A process restart loses it.
-const mockSetDoc = jest.fn(async (_docRef: { path: string }, _data: unknown) => {});
-
-const mockOnSnapshot = jest.fn(
-  (docRef: { path: string }, callback: SnapshotCallback) => {
-    capturedCallbacks[docRef.path] = callback;
-    if (snapshotMode === 'immediate') {
-      callback(buildSnapshot(mockStore[docRef.path]));
-    }
-    return jest.fn();
-  }
+jest.mock('firebase/firestore', () =>
+  require('./helpers/offline-firestore-harness').firestoreModule
 );
-
-jest.mock('firebase/firestore', () => ({
-  doc: mockDoc,
-  setDoc: mockSetDoc,
-  onSnapshot: mockOnSnapshot,
-}));
-
-// Deliver a snapshot to an already-registered subscriber.
-const deliverSnapshot = (path: string, data: MockDocData): void => {
-  mockStore[path] = data;
-  capturedCallbacks[path]?.(buildSnapshot(data));
-};
 
 // --- Test helpers ---
 
@@ -121,16 +80,10 @@ const createFreshAdapter = async () => {
   return storage;
 };
 
-// Let queued microtasks (the AsyncStorage read inside initialize) settle without
-// awaiting initialize() itself — which, under 'withheld'/'delayed', stays
-// pending until the first snapshot is delivered.
-const settlePendingReads = (): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, 0));
-
 // Cold start with the first snapshot delayed: the mirror is hydrated but the
 // server has not spoken yet.
 const createHydratedAdapterAwaitingSnapshot = async (onChange?: () => void) => {
-  snapshotMode = 'delayed';
+  setSnapshotMode('delayed');
   const storage = createAdapter(onChange);
   void storage.initialize();
   await settlePendingReads();
@@ -139,9 +92,7 @@ const createHydratedAdapterAwaitingSnapshot = async (onChange?: () => void) => {
 
 beforeEach(async () => {
   jest.clearAllMocks();
-  snapshotMode = 'immediate';
-  Object.keys(mockStore).forEach((key) => delete mockStore[key]);
-  Object.keys(capturedCallbacks).forEach((key) => delete capturedCallbacks[key]);
+  resetOfflineFirestore();
   await AsyncStorage.clear();
 });
 
@@ -153,7 +104,7 @@ describe('Firestore trip adapter — offline cold-start regression', () => {
     adapterA.saveTrip(savedTrip);
 
     // Simulate process restart: new adapter instance, same uid.
-    // mockStore is still empty (setDoc did not publish), so onSnapshot will
+    // The backing store is still empty (setDoc did not publish), so onSnapshot will
     // fire exists=false. Any in-process cache in adapter A is gone.
     const adapterB = await createFreshAdapter();
 
@@ -251,8 +202,8 @@ describe('Firestore trip adapter — a local edit survives a late empty snapshot
     expect(adapterB.loadTrip()).toBeNull();
 
     // The server-authoritative trip is what a later cold start recovers.
-    snapshotMode = 'immediate';
-    delete mockStore[tripDocPath(TEST_UID)];
+    setSnapshotMode('immediate');
+    forgetRemoteDoc(tripDocPath(TEST_UID));
     const adapterC = await createFreshAdapter();
 
     expect(adapterC.loadTrip()).toEqual(serverTrip);
@@ -290,7 +241,7 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
     adapterA.saveCarryover(savedCarryover);
     jest.clearAllMocks();
 
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createAdapter();
     const initializeResolved = await observeInitialize(adapterB);
 
@@ -303,7 +254,7 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
   });
 
   it('keeps initialize() pending on a first install with no mirror while the first snapshot is withheld', async () => {
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createAdapter();
     const initializeResolved = await observeInitialize(adapterB);
 
@@ -314,7 +265,7 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
     const adapterA = await createFreshAdapter();
     adapterA.saveTrip(makeTrip());
 
-    snapshotMode = 'withheld';
+    setSnapshotMode('withheld');
     const adapterB = createAdapter();
     const initializeResolved = await observeInitialize(adapterB);
 
@@ -327,7 +278,7 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
     adapterA.saveCarryover([makeTripItem({ id: 'carry-1', name: 'Olive Oil' })]);
 
     const onChange = jest.fn();
-    snapshotMode = 'delayed';
+    setSnapshotMode('delayed');
     const adapterB = createAdapter(onChange);
     const initializeResolved = await observeInitialize(adapterB);
     expect(initializeResolved).toBe(true);
