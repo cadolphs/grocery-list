@@ -1,0 +1,141 @@
+{
+  "roadmap": {
+    "project_id": "fix-slow-render-flaky-network",
+    "created_at": "2026-09-14T00:00:00Z",
+    "total_steps": 3,
+    "phases": 2
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Harmonise the trip adapter's guard-disarm semantics (RCA D4, Root Cause B)",
+      "description": "Closes RCA Branch B: the trip adapter clears its empty-snapshot guard on every local write (firestore-trip-storage.ts:249, 263, 278, 285, 294) and the carryover handler clears it on every snapshot that passes the guard, including exists=false (179-185). The three F1 adapters follow the rule 'only a snapshot that carries data disarms; local writes never touch the flag' (staple 119-123, area 144-148, section-order 151-155). Today the asymmetry is masked because the app cannot render — and so the user cannot edit — until the first snapshot has already been processed. ORDERING RATIONALE: this phase ships FIRST and alone because it is a strict narrowing of when a flag is cleared (safe in isolation, no behaviour change on any path a user can reach today), and because phase 02 (F3, render before the first snapshot) opens exactly the edit-before-snapshot window in which the current semantics clobber a local edit with null. F3 is unsafe without D4; D4 is safe without F3. It also removes the inconsistency recorded at docs/product/architecture/brief.md:169. Functional paradigm: factory function, closures over local state, no classes.",
+      "estimated_duration": "1.5-2 hours",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Trip adapter: disarm the empty-snapshot guard only on a data-bearing snapshot, never on a local write",
+          "description": "RCA Root Cause B / Step 1. In handleTripSnapshot (157-169) move the disarm inside the incomingTrip !== null branch; in handleCarryoverSnapshot (183-188) disarm and re-mirror only when incomingItems !== null (an existing document with items: [] is a stored decision and DOES disarm; absence is silence and does NOT). Delete the five local-write disarms in saveTrip, saveCheckoffs, updateItemArea, saveCarryover and clearCarryover. Rewrite the flag comment at 131-135 to the F1 wording. To pin this the trip regression file needs the sibling's controllable snapshot harness (snapshotMode immediate|withheld|delayed, capturedCallbacks, deliverSnapshot, settlePendingReads, AsyncStorage.clear in beforeEach) — today it fires the snapshot synchronously and cannot express 'edit, then a late snapshot' (RCA E28).",
+          "criteria": "GIVEN adapter A saved trip T for a uid and adapter B cold-starts with the first snapshot DELAYED (mirror hydrated, initialize() still pending) WHEN B.saveTrip(T') is called and THEN an absent (exists=false) trip snapshot is delivered THEN B.loadTrip() equals T' (not null, not T) AND onChange was not called. GIVEN the same setup for carryover (A saved C, B hydrates, B.saveCarryover(C'), absent carryover snapshot delivered TWICE to model flapping) THEN B.loadCarryover() equals C'. GIVEN A cleared carryover (mirror holds []) and B hydrates WHEN an absent carryover snapshot is delivered, B.saveCarryover(C') is called, and a second absent snapshot is delivered THEN B.loadCarryover() equals C' (the first absent snapshot must not have disarmed the guard). POSITIVE CONTROL: GIVEN B hydrated from the mirror WHEN a snapshot carrying trip T2 is delivered THEN B.loadTrip() equals T2, a later cold-start adapter C recovers T2 from the mirror, AND a subsequent absent snapshot now nulls the trip (server has spoken, guard stood down). The new tests MUST be RED against the current adapter (today the first case yields null and one onChange call). Existing trip regression, unit, migration and acceptance tests stay green.",
+          "acceptance_criteria": [
+            "A local trip edit made after mirror hydration survives a later absent snapshot: loadTrip() returns the edited trip and onChange is not invoked",
+            "A local carryover edit made after mirror hydration survives two consecutive absent carryover snapshots (flapping reconnect)",
+            "An absent carryover snapshot received while the mirror holds an empty carryover does not disarm the guard for a later local edit",
+            "A snapshot carrying trip data still replaces the mirrored trip, is re-mirrored (a later cold start recovers it), and stands the guard down so a subsequent absent snapshot is honoured",
+            "saveTrip, saveCheckoffs, updateItemArea, saveCarryover and clearCarryover no longer clear the hydrated-from-local flags; the trip regression file gains the withheld/delayed snapshot harness and clears AsyncStorage between tests",
+            "Existing adapter behaviour on the first snapshot for a uid with no mirror entry is unchanged: the server is all we have"
+          ],
+          "test_file": "tests/regression/firestore-trip-offline-cold-start.test.ts",
+          "scenario_name": "A local edit survives a late empty snapshot (trip and carryover) while a data-bearing snapshot still wins",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-trip-storage.ts",
+            "tests/regression/firestore-trip-offline-cold-start.test.ts",
+            "src/adapters/firestore/firestore-trip-storage.test.ts"
+          ],
+          "implementation_notes": "RED first. HARNESS: port tests/regression/firestore-offline-cold-start-mirror.test.ts:38-82 (SnapshotMode, capturedCallbacks, buildSnapshot, deliverSnapshot) and its settlePendingReads helper (120-123) into the trip regression file; mockOnSnapshot must capture the callback and fire immediately only in 'immediate' mode so the two existing tests keep passing unchanged. Add AsyncStorage.clear() plus snapshotMode/capturedCallbacks resets to beforeEach (mirror sibling 125-131) — the file currently has no AsyncStorage reset, and phase 02 needs a genuinely empty mirror for its no-mirror control. Define tripDocPath/carryoverDocPath helpers (users/{uid}/data/trip, users/{uid}/data/carryover). Pass an onChange jest.fn() through createFirestoreTripStorage options for the 'not called' assertion. In this step do NOT await initialize() under 'delayed' — it cannot resolve until phase 02; use void initialize() + await settlePendingReads(), exactly as the sibling does. GREEN: apply RCA section 5 Step 1 verbatim in spirit — trip handler: disarm + mirror only when incomingTrip !== null; carryover handler: disarm + mirror only when incomingItems !== null; remove the five write-path disarms; comment 131-135 becomes the F1 wording ('Only a snapshot actually carrying data disarms it — local writes deliberately do not, because a local write is no evidence about server state'). Optional, same spirit as the F1 adapters' commitLocalChange: extract commitTripChange / commitCarryoverChange and route the five mutators through them — pure refactor, keep the adapter shape and the port surface. Do NOT touch initialize() resolution timing in this step (that is 02-01). UNIT TEST (optional but recommended): in firestore-trip-storage.test.ts add one D4 case using the existing simulateRemoteSnapshot helper — seed the mirror, initialize, saveTrip, then simulateRemoteSnapshot(TRIP_DOC_PATH, undefined) does not null the cache. Residual accepted (RCA R6): a genuine remote deletion while the guard is armed is ignored for the session; the app never calls deleteDoc (E33). EXEMPT FROM PARADIGM: adapter cold-start sequencing and snapshot ordering are single-example integration concerns, not invariants; src/adapters/ is outside the Stryker scope; fast-check is not a dependency and must not be added. COMMIT: 'fix(slow-render-flaky-network): disarm the trip adapter empty-snapshot guard only on data-bearing snapshots' with trailer 'Step-ID: 01-01'.",
+          "deliverables": [
+            "src/adapters/firestore/firestore-trip-storage.ts: disarm moved inside the data-bearing branch of both snapshot handlers; five write-path disarms removed; flag comment aligned with the F1 adapters",
+            "tests/regression/firestore-trip-offline-cold-start.test.ts: withheld/delayed snapshot harness, AsyncStorage reset, late-empty-snapshot tests for trip and carryover, positive control for a data-bearing snapshot",
+            "src/adapters/firestore/firestore-trip-storage.test.ts: one D4 unit case (post-write absent echo does not null a hydrated cache)",
+            "Full npm test run green; no existing regression, adapter, migration, hook or acceptance test regresses"
+          ],
+          "estimated_duration": "1.5-2 hours",
+          "dependencies": []
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Resolve adapter readiness from the AsyncStorage mirror (RCA F3, Root Cause A)",
+      "description": "Closes RCA Branch A: every adapter's initialize() hydrates from the mirror first (E5) and then returns a Promise resolved only inside the first onSnapshot callback (E1-E4); useAppInitialization awaits all four with Promise.all (E6) and App.tsx shows LoadingScreen until then (E9). On React Native the SDK withholds the first snapshot for an empty memory-only view until it declares itself Offline after a 10 s timer that re-arms on every stream restart (E21-E25), so a flaky-network cold start blocks for 10 s to unbounded although a correct list is already in memory. Uniform rule: if the mirror yielded an entry, resolve immediately; the subscription is registered either way and later snapshots flow through the existing onChange/subscribe fan-out (E10-E14). If the mirror yielded nothing, keep today's behaviour and await the first snapshot. No port change: InitializableStorage.initialize stays () => Promise<void>. BATCHING DECISION: the trip adapter is its own step because its predicate is compound (BOTH trip and carryover mirrors, RCA R5 — the completed-trip rebuild consumes carryover) and its acceptance lives in the trip regression file whose harness 01-01 just built; staples, areas and section-order are batched into one step because the change is the identical three lines per adapter and their acceptance is the inversion of three existing assertions in one shared file. Two steps, not four: under the identical-pattern batching threshold. Depends on phase 01: with early readiness the user can edit before the first snapshot, which is only safe once D4 has landed.",
+      "estimated_duration": "2-2.5 hours",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Trip adapter: resolve initialize() when both trip and carryover mirrors are present",
+          "description": "RCA Root Cause A / Step 2, trip row of the predicate table. In initialize() (192-238) compute hydratedFromMirror = localTrip !== null && localCarryover !== null from the reads already performed at 197-210. Still construct the first-snapshot promise and register BOTH onSnapshot subscriptions; return immediately when hydratedFromMirror, otherwise return the promise (today's behaviour for a first install / new uid). Requiring both keys prevents initializeFromStorage (trip.ts:335-355) from rebuilding a completed trip without server-side carryover and then clearing it.",
+          "criteria": "GIVEN adapter A saved trip T and carryover C for a uid WHEN adapter B is created with the first snapshot WITHHELD and initialize() is called THEN initialize() resolves (observed via a then-flag after settlePendingReads) AND B.loadTrip() equals T AND B.loadCarryover() equals C AND mockOnSnapshot was called for both the trip and the carryover doc paths. GIVEN AsyncStorage holds no mirror for the uid WHEN the first snapshot is withheld THEN initialize() stays pending. GIVEN only the trip mirror exists (carryover key absent) WHEN the first snapshot is withheld THEN initialize() stays pending (RCA R5). GIVEN both mirrors exist and initialize() has resolved WHEN a data-bearing trip snapshot arrives later THEN loadTrip() reflects it and onChange fires (the subscription is live, not merely registered). The early-resolve test MUST be RED against the post-01-01 adapter (today initialize() stays pending under withheld). The 01-01 tests and the two original trip regression tests stay green.",
+          "acceptance_criteria": [
+            "With both trip and carryover mirrors present and the first snapshot withheld, initialize() resolves and loadTrip()/loadCarryover() return the mirrored values",
+            "Both onSnapshot subscriptions are still registered when initialize() resolves early — readiness no longer waits for the network, but sync is not dropped",
+            "A uid with no mirror entry and a withheld first snapshot keeps initialize() pending: first-install behaviour is unchanged",
+            "With only the trip mirror present (no carryover entry), initialize() keeps waiting for the first snapshot",
+            "A data-bearing snapshot arriving after early resolution updates loadTrip() and fires onChange",
+            "The 01-01 late-empty-snapshot tests still pass, now with initialize() resolved before the local edit"
+          ],
+          "test_file": "tests/regression/firestore-trip-offline-cold-start.test.ts",
+          "scenario_name": "Offline cold start renders the mirrored trip before any snapshot fires, and keeps waiting when there is no mirror",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-trip-storage.ts",
+            "tests/regression/firestore-trip-offline-cold-start.test.ts"
+          ],
+          "implementation_notes": "RED first, reusing the harness built in 01-01. Observe resolution with the sibling's pattern (let initializeResolved = false; void adapterB.initialize().then(() => { initializeResolved = true; }); await settlePendingReads(); expect(initializeResolved).toBe(true)) — do not add timers or fake clocks. For the 'both doc paths' assertion, check mockOnSnapshot.mock.calls for objects whose path equals tripDocPath(uid) and carryoverDocPath(uid). For the one-mirror control, seed only the trip key via a prior adapter that calls saveTrip but never saveCarryover on a cleared AsyncStorage. GREEN: three-line change — compute hydratedFromMirror from the two reads already in initialize(); keep 'const firstSnapshot = new Promise(...)' with both onSnapshot registrations exactly as today (the subscription MUST be created before returning; only the await is skipped; the promise never rejects so leaving it un-awaited is safe); return hydratedFromMirror ? undefined : firstSnapshot. Keep the existing 'both callbacks' maybeResolve logic for the no-mirror path. No port change; no change to useAppInitialization.ts, whose late-binding onChange is already safe under early resolution (RCA Contributing factor 3: initializeFromStorage reads loadTrip() synchronously at 235, and the handler is bound at 238 before any further await). Optionally tighten the 01-01 delayed-mode tests to await initialize() now that it resolves. Known, accepted: online cold start now renders from the mirror and then re-renders on the first snapshot (RCA R1, cosmetic; onChange is suppressed by the serialized compare for single-device echoes); multi-device edit-on-stale-render (R2) and migrationNeeded observing the mirror (R4) are recorded and out of scope. EXEMPT FROM PARADIGM: cold-start sequencing is single-example integration testing; src/adapters/ is outside the Stryker scope; do not add fast-check. COMMIT: 'fix(slow-render-flaky-network): resolve trip adapter readiness from the AsyncStorage mirror' with trailer 'Step-ID: 02-01'.",
+          "deliverables": [
+            "src/adapters/firestore/firestore-trip-storage.ts: initialize() returns as soon as both mirrors are hydrated, otherwise awaits the first snapshots; subscriptions registered in both cases",
+            "tests/regression/firestore-trip-offline-cold-start.test.ts: early-resolve test with subscription assertion, no-mirror control, one-mirror control, post-resolve snapshot delivery test",
+            "Full npm test run green; wire-firestore-trip-sync acceptance tests and useAppInitialization tests unaffected"
+          ],
+          "estimated_duration": "45-60 minutes",
+          "dependencies": [
+            "01-01"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Staple, area and section-order adapters: resolve initialize() from the mirror; invert the three pinned assertions; update the architecture brief",
+          "description": "RCA Root Cause A / Step 2 for the three F1 adapters, plus Step 3 and the docs touch from section 6. Same three-line change as 02-01 with each adapter's own 'mirror yielded an entry' predicate, all already computed by the existing hydration code: staples localStaples !== null (134-139; a mirrored [] is a recorded decision), areas localAreas !== null (161-166; the reader already returns null for empty/invalid), section-order mirroredOrder !== null (168-173; envelope present, order: null is a legitimate decision). The three regression tests at firestore-offline-cold-start-mirror.test.ts:162, 350, 508 currently assert initialize() stays pending under 'withheld' (RCA E27); they were written to prove hydration does not depend on the snapshot and become the F3 acceptance tests once inverted. Keep the withheld regime and the loadAll()/loadOrder() assertions in them so hydration-independence is still exercised (R8). Fold in the docs-only touch: brief.md step 7 gains 'and resolve readiness from the mirror', and the line-169 note recording the D4 inconsistency is removed because 01-01 closed it.",
+          "criteria": "GIVEN a mirrored staple list (including a mirrored empty list), mirrored custom areas, or a mirrored section order (including a deliberately cleared, mirrored null order) WHEN a fresh adapter cold-starts with the first snapshot WITHHELD THEN initialize() resolves AND the mirrored value is readable through the port AND onSnapshot was registered for the adapter's doc path. GIVEN a uid with no mirror entry WHEN the first snapshot is withheld THEN initialize() stays pending for each of the three adapters. GIVEN initialize() resolved early WHEN a data-bearing snapshot arrives THEN the existing 'replaces the mirrored value and is re-mirrored' and subscriber-notification tests still pass unchanged. The three inverted assertions MUST be RED against the current adapters (initialize() is pending today) and GREEN after the change; every other test in the file is untouched and stays green. docs/product/architecture/brief.md describes readiness as mirror-first in step 7 and no longer records the trip-adapter disarm inconsistency.",
+          "acceptance_criteria": [
+            "With a mirror entry present and the first snapshot withheld, initialize() resolves for the staple, area and section-order adapters and the mirrored value is readable (assertions at lines 162, 350, 508 inverted, tests renamed to '...initialize() resolves from the mirror before the first snapshot when it is withheld')",
+            "A mirrored empty staple list and a mirrored null section order both count as 'entry present' and resolve initialize()",
+            "A uid with no mirror entry and a withheld first snapshot keeps initialize() pending for all three adapters",
+            "onSnapshot is still registered when initialize() resolves early, for each adapter",
+            "All existing preservation, re-mirror, subscriber-notification, cross-uid and migration tests in the file pass unchanged — the withheld regime is retained",
+            "docs/product/architecture/brief.md Real-Time Sync Pattern step 7 reads 'hydrate ... BEFORE subscribing and resolve readiness from the mirror', and the paragraph at line 169 about the trip adapter's write-disarm inconsistency is removed"
+          ],
+          "test_file": "tests/regression/firestore-offline-cold-start-mirror.test.ts",
+          "scenario_name": "initialize() resolves from the mirror before the first snapshot when it is withheld (staples, areas, section order)",
+          "files_to_modify": [
+            "src/adapters/firestore/firestore-staple-storage.ts",
+            "src/adapters/firestore/firestore-area-storage.ts",
+            "src/adapters/firestore/firestore-section-order-storage.ts",
+            "tests/regression/firestore-offline-cold-start-mirror.test.ts",
+            "docs/product/architecture/brief.md"
+          ],
+          "implementation_notes": "RED first: flip the three expect(initializeResolved).toBe(false) assertions to toBe(true) and rename the tests; add expect(mockOnSnapshot).toHaveBeenCalledWith(expect.objectContaining({ path: <docPath> }), expect.any(Function)) to each; add per-adapter no-mirror withheld controls (cleared AsyncStorage, snapshotMode = 'withheld', flag stays false after settlePendingReads) and the two predicate-edge cases (staples: A.save then A.remove leaves a mirrored []; section-order: A.saveOrder then A.clearOrder leaves a mirrored null envelope — both must resolve). Do NOT weaken the loadAll()/loadOrder() assertions in the inverted tests: they are what still proves hydration precedes the snapshot (R8). GREEN: in each initialize() name the predicate (const hydratedFromMirror = localX !== null), keep the mirror-to-cache block as is, keep 'const firstSnapshot = new Promise(...)' with the onSnapshot registration, and return hydratedFromMirror ? undefined : firstSnapshot. Port surface and onChange/subscribe contracts unchanged; hydration still must not notify. DOCS: in docs/product/architecture/brief.md edit step 7 (line 165) to '...BEFORE subscribing, and resolve readiness from the mirror when it yields an entry (await the first snapshot only when it does not)...' and delete the paragraph at line 169; add one sentence after line 167 noting the readiness change landed 2026-09-14 (feature fix-slow-render-flaky-network). Optional, comment only: src/hooks/useAppInitialization.ts header (lines 1-9) may note that readiness is mirror-first when a mirror exists — if you touch it, no code change. R4 (migrationNeeded now observes mirror state on an online cold start) is accepted and recorded in the RCA; do not add a guard here. EXEMPT FROM PARADIGM: cold-start sequencing is single-example integration testing; src/adapters/ is outside the Stryker scope; do not add fast-check. COMMIT: 'fix(slow-render-flaky-network): resolve staple, area and section-order readiness from the mirror' with trailer 'Step-ID: 02-02'.",
+          "deliverables": [
+            "src/adapters/firestore/firestore-staple-storage.ts, firestore-area-storage.ts, firestore-section-order-storage.ts: initialize() returns once the mirror is hydrated, otherwise awaits the first snapshot; subscription registered in both cases",
+            "tests/regression/firestore-offline-cold-start-mirror.test.ts: three assertions inverted and tests renamed, subscription-registered assertions, no-mirror withheld controls, mirrored-[] and mirrored-null predicate cases",
+            "docs/product/architecture/brief.md: step 7 states mirror-first readiness; the D4 inconsistency note is removed",
+            "Full npm test run green"
+          ],
+          "estimated_duration": "1-1.5 hours",
+          "dependencies": [
+            "02-01"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/adapters/firestore/"
+    ],
+    "test_directories": [
+      "src/adapters/firestore/",
+      "tests/regression/"
+    ],
+    "excluded_patterns": [
+      "**/*.d.ts",
+      "**/index.ts",
+      "node_modules/**",
+      ".expo/**"
+    ]
+  },
+  "validation": {
+    "status": "approved",
+    "reviewer": "nw-solution-architect; reviewed by nw-acceptance-designer-reviewer (APPROVED)",
+    "approved_at": "2026-09-14T18:09:48Z",
+    "note": "SCOPE derived from docs/feature/fix-slow-render-flaky-network/deliver/rca.md sections 5-8, user-approved: Root Causes A and B, fix direction D4 then F3, NO watermark. 3 steps / 4 production files (firestore-trip-storage.ts, firestore-staple-storage.ts, firestore-area-storage.ts, firestore-section-order-storage.ts) = 0.75, under the 2.5 ceiling; docs/product/architecture/brief.md is a docs-only touch folded into 02-02 and not counted. ORDERING: D4 (01-01) strictly precedes F3 (02-01, 02-02). D4 is a strict narrowing of when the hydrated-from-local flag is cleared and is safe alone — no user-reachable path changes today because the render gate sequences every edit after the first snapshot. F3 opens the edit-before-first-snapshot window; under the current write-disarm semantics an edit in that window followed by an exists=false snapshot nulls cachedTrip (RCA backwards-chain check). So F3 without D4 is the clobber the prior RCA feared, and D4 without F3 is harmless. Within phase 02 the trip adapter goes first (02-01) because its predicate is compound (both mirrors, R5) and its acceptance reuses the harness 01-01 introduces; the three F1 adapters follow (02-02) as a single batched step because the change is the identical three lines and their acceptance is the inversion of three assertions in one shared file. BATCHING: two F3 steps rather than four — trip separated for its compound predicate and different test file; staple/area/section-order batched under the identical-pattern threshold, with each adapter's predicate spelled out (mirrored [] and mirrored null both count as 'entry present'). RCA TEST GAPS closed: E28 (trip regression file cannot express 'before any snapshot' or 'late snapshot') — 01-01 adds the withheld/delayed harness plus AsyncStorage reset; E29 (no test pins the trip disarm either way) — 01-01 tests (b), carryover twin and positive control; RCA section 6 test (a) with the no-mirror control and the subscription-registered assertion — 02-01, plus the R5 one-mirror control; E27 (three assertions pin the blocking behaviour) — 02-02 inverts 162/350/508 while keeping the withheld regime and the load assertions so R8 (hydration-before-subscribe regression masked by the inversion) is covered. DEVIATIONS from the RCA sketch, with reasons: (1) the carryover twin includes a local saveCarryover on adapter B before the absent snapshots — without a write, a non-empty mirrored carryover already survives absent snapshots under today's guard (179), so the RCA's two-absent-snapshots-only sketch would not be RED; the E16 'disarm on silence' path is pinned separately via the mirrored-[] case; (2) the positive control also asserts that a later absent snapshot IS honoured after server data arrived, which is the observable meaning of 'disarm'; (3) 02-01 adds a one-mirror control to pin R5; (4) 02-02 adds no-mirror withheld controls per adapter so the 'brand-new device still waits for the server' half of the rule is pinned, not just the early-resolve half. PARADIGM: functional TypeScript, factory functions, no classes; fast-check is not a dependency and must not be added; adapter cold-start sequencing is single-example integration testing and is exempt from the PBT mandate; src/adapters/ is outside the Stryker mutation scope by CLAUDE.md policy, so no mutation gate applies to this delivery. NO PORT CHANGE: InitializableStorage.initialize stays () => Promise<void>; useAppInitialization.ts has no code change (optional header comment only). ACCEPTED RISKS recorded in RCA section 7 and not mitigated here: R1 online cold start renders mirror then re-renders (cosmetic), R2 multi-device edit-on-stale-render (pre-existing whole-document LWW), R3 completed-trip rebuild against mirrored staples (self-corrects via handleStapleChange), R4 migrationNeeded observing the mirror (three coincidences), R6 remote deletion ignored while armed (app never deletes). OUT OF SCOPE, explicitly: R7 stale-server-wins after process restart and the local-write watermark that fixes it (RCA section 8.1, separate follow-up — pre-existing, neither caused nor widened by F3); auth-gate additivity (App.tsx:20-22, useAppInitialization.ts:350-352); the evolution doc section 8.3-8.4 follow-ups (area adapter's adapter-to-adapter import, ADR renumbering). COMMITS: conventional 'fix(slow-render-flaky-network): ...' with a 'Step-ID: NN-NN' trailer, one per step."
+  }
+}

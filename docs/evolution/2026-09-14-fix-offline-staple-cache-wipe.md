@@ -123,7 +123,7 @@ Mutation survivors are pre-existing constants (house-area string literals, trip-
 
 ## 8. Follow-ups (not in this fix)
 
-1. **Harmonise the trip adapter's disarm semantics** with the three new adapters (D4). It currently disarms on every local write, the widening that keeps F3 blocked.
-2. **F3 — render from local cache without awaiting the network.** Needs the local-write watermark first. Until then, a flaky cold start still waits before showing the (now correct) list.
+1. **Harmonise the trip adapter's disarm semantics** with the three new adapters (D4). It currently disarms on every local write, the widening that keeps F3 blocked. — *Closed 2026-09-14 by `fix-slow-render-flaky-network` (commit `aff301c`; see `2026-09-14-fix-slow-render-flaky-network.md` D4).*
+2. **F3 — render from local cache without awaiting the network.** Needs the local-write watermark first. Until then, a flaky cold start still waits before showing the (now correct) list. — *Closed 2026-09-14 by `fix-slow-render-flaky-network` (commits `529616b`, `654ce94`). The watermark premise was re-examined and found not to gate F3; the watermark remains a separate follow-up for stale-server-wins after a process restart (that doc §8.1).*
 3. **`firestore-area-storage.ts` imports `DEFAULT_HOUSE_AREAS` from `../async-storage/async-area-storage`** — a pre-existing adapter-to-adapter import that violates the brief's own enforcement rule. Not introduced here. Clean fix: relocate the constant to the domain.
 4. **ADR numbering collision** in `docs/adrs/` — two ADR-001, two ADR-002, two ADR-003, from two merged series. Renumber before adding ADR-009.
