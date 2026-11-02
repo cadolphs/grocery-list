@@ -2,7 +2,7 @@ name: Deploy Web
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ['CI']
     types: [completed]
     branches: [main]
 
@@ -38,6 +38,10 @@ jobs:
 
       - name: Export web bundle
         run: npx expo export -p web
+
+      # Running-version marker for `npm run control -- health --sha <sha>`.
+      - name: Stamp deployed version
+        run: echo '{"sha":"${{ github.event.workflow_run.head_sha }}"}' > dist/version.json
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
