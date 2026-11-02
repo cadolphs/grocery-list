@@ -63,3 +63,6 @@ firebase-debug.log
 
 # control CLI state (sessions, dev log, screenshots, videos)
 .control/
+
+# jest --coverage output (npm run verify)
+coverage/
