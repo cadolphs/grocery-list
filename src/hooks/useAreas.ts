@@ -2,7 +2,11 @@
 // Reads areas from context and exposes them as reactive state
 
 import { useState, useCallback, useEffect } from 'react';
-import { AreaResult, DeleteResult, DeleteOptions } from '../domain/area-management';
+import {
+  AreaResult,
+  DeleteResult,
+  DeleteOptions,
+} from '../domain/area-management';
 import { useServices } from '../ui/ServiceProvider';
 
 export type UseAreasResult = {

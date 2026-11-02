@@ -55,9 +55,13 @@ describe('useAppInitialization', () => {
     });
 
     expect(result.current.services!.stapleLibrary).toBeDefined();
-    expect(result.current.services!.stapleLibrary.listAll).toBeInstanceOf(Function);
+    expect(result.current.services!.stapleLibrary.listAll).toBeInstanceOf(
+      Function,
+    );
     expect(result.current.services!.tripService).toBeDefined();
-    expect(result.current.services!.tripService.getItems).toBeInstanceOf(Function);
+    expect(result.current.services!.tripService.getItems).toBeInstanceOf(
+      Function,
+    );
   });
 
   it('loads existing staples from AsyncStorage during init', async () => {
@@ -97,7 +101,7 @@ describe('useAppInitialization', () => {
 
   it('reports error when initialization fails', async () => {
     (AsyncStorage.getItem as jest.Mock).mockRejectedValue(
-      new Error('Storage unavailable')
+      new Error('Storage unavailable'),
     );
 
     const { result } = renderHook(() => useAppInitialization());

@@ -33,7 +33,10 @@ import { createNullAreaStorage } from '../../../src/adapters/null/null-area-stor
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
 import { useIsWeb } from '../../../src/hooks/useIsWeb';
-import { diffStaples, applyAddedStaplesToTrip } from '../../../src/hooks/useAppInitialization';
+import {
+  diffStaples,
+  applyAddedStaplesToTrip,
+} from '../../../src/hooks/useAppInitialization';
 
 const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
 
@@ -43,15 +46,23 @@ function setWebPlatform(isWeb: boolean) {
 
 function createTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripAreas = ['Fridge', 'Kitchen Cabinets'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+  tripService.start(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
 
   // Mirror the production composition root: stapleLibrary subscription
   // applies added staples to the trip via diffStaples + applyAddedStaplesToTrip.
@@ -69,9 +80,13 @@ function createTestServices() {
 function renderApp() {
   const services = createTestServices();
   render(
-    <ServiceProvider stapleLibrary={services.stapleLibrary} tripService={services.tripService} areaManagement={services.areaManagement}>
+    <ServiceProvider
+      stapleLibrary={services.stapleLibrary}
+      tripService={services.tripService}
+      areaManagement={services.areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
   return services;
 }
@@ -169,7 +184,10 @@ describe('WS-3: Enter key in metadata sheet submits the form', () => {
 
     // In the sheet, default type is "Staple", default area is 'Kitchen Cabinets'
     // Fill section and aisle
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'International');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'International',
+    );
     const aisleInput = screen.getByPlaceholderText('Aisle number');
     fireEvent.changeText(aisleInput, '7');
 
@@ -179,7 +197,9 @@ describe('WS-3: Enter key in metadata sheet submits the form', () => {
     // Sheet dismisses, item is in trip
     expect(screen.queryByText("Add 'Tahini'")).toBeNull();
     const tripItems = services.tripService.getItems();
-    expect(tripItems.some(i => i.name === 'Tahini' && i.itemType === 'staple')).toBe(true);
+    expect(
+      tripItems.some((i) => i.name === 'Tahini' && i.itemType === 'staple'),
+    ).toBe(true);
   });
 });
 
@@ -207,7 +227,10 @@ describe.skip('WS-5: Focus returns to QuickAdd input after sheet is dismissed', 
     fireEvent(input, 'submitEditing');
 
     // Add the item
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'International');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'International',
+    );
     fireEvent.press(screen.getByText('Add Item'));
 
     // Assertion: input has the "focused" marker (implementation-defined).

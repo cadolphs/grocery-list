@@ -31,11 +31,19 @@ function renderApp() {
   const tripService = createTrip(tripStorage, tripAreas);
   tripService.start([]);
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   render(
-    <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+    <ServiceProvider
+      stapleLibrary={stapleLibrary}
+      tripService={tripService}
+      areaManagement={areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 

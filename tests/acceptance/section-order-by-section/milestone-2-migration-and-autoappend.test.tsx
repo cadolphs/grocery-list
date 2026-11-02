@@ -38,7 +38,11 @@ const wrapperWithStorage = (initialOrder: string[] | null) => {
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, ['Pantry']);
   const areaStorage = createNullAreaStorage(['Pantry']);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ServiceProvider
       stapleLibrary={stapleLibrary}
@@ -82,7 +86,10 @@ describe('US-04: Already-migrated section-name order is preserved', () => {
 
   it('leaves storage unchanged when no entry contains "::"', () => {
     // Given the stored section order contains section names only
-    const { wrapper, sectionOrderStorage } = wrapperWithStorage(['Inner Aisles', 'Deli']);
+    const { wrapper, sectionOrderStorage } = wrapperWithStorage([
+      'Inner Aisles',
+      'Deli',
+    ]);
 
     // When the hook loads
     const { result } = renderHook(() => useSectionOrder(), { wrapper });
@@ -100,7 +107,10 @@ describe('US-04: Mixed legacy and section-name entries are wiped', () => {
 
   it('clears storage when at least one entry contains "::"', () => {
     // Given the stored section order contains a clean entry and a legacy entry
-    const { wrapper, sectionOrderStorage } = wrapperWithStorage(['Inner Aisles', 'Deli::null']);
+    const { wrapper, sectionOrderStorage } = wrapperWithStorage([
+      'Inner Aisles',
+      'Deli::null',
+    ]);
 
     // When the hook loads
     renderHook(() => useSectionOrder(), { wrapper });

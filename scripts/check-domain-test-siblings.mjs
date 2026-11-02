@@ -140,18 +140,18 @@ const main = async () => {
         ? ` (${allowlistSize} module(s) on technical-debt allowlist)`
         : '';
     console.log(
-      `OK: every behavioral module under ${SCAN_DIRS.join(', ')} has a sibling *.test.ts(x)${note}`
+      `OK: every behavioral module under ${SCAN_DIRS.join(', ')} has a sibling *.test.ts(x)${note}`,
     );
     process.exit(0);
   }
   console.error('Missing sibling tests:');
   for (const path of missing) {
     console.error(
-      `  MISSING TEST: ${path} (expected sibling ${stripExt(basename(path))}.test.ts or ${stripExt(basename(path))}.test.tsx)`
+      `  MISSING TEST: ${path} (expected sibling ${stripExt(basename(path))}.test.ts or ${stripExt(basename(path))}.test.tsx)`,
     );
   }
   console.error(
-    `\n${missing.length} module(s) missing sibling tests. Add a *.test.ts(x) sibling for each, or — if the module is genuinely type-only — restructure it so the type-only heuristic detects it.`
+    `\n${missing.length} module(s) missing sibling tests. Add a *.test.ts(x) sibling for each, or — if the module is genuinely type-only — restructure it so the type-only heuristic detects it.`,
   );
   process.exit(1);
 };

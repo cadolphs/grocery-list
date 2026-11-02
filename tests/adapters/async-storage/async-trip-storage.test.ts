@@ -99,7 +99,7 @@ describe('createAsyncTripStorage', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         TRIP_KEY,
-        JSON.stringify(trip)
+        JSON.stringify(trip),
       );
     });
 
@@ -121,7 +121,8 @@ describe('createAsyncTripStorage', () => {
     it('loads checkoffs from AsyncStorage into cache', async () => {
       const checkoffs = { 'item-1': '2026-01-01T00:00:00.000Z' };
       (AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
-        if (key === CHECKOFFS_KEY) return Promise.resolve(JSON.stringify(checkoffs));
+        if (key === CHECKOFFS_KEY)
+          return Promise.resolve(JSON.stringify(checkoffs));
         return Promise.resolve(null);
       });
 
@@ -154,7 +155,7 @@ describe('createAsyncTripStorage', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         CHECKOFFS_KEY,
-        JSON.stringify({ 'item-1': '2026-01-01T00:00:00.000Z' })
+        JSON.stringify({ 'item-1': '2026-01-01T00:00:00.000Z' }),
       );
     });
   });

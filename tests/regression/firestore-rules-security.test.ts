@@ -9,7 +9,9 @@ describe('firestore.rules security invariants', () => {
   });
 
   describe('rules file content', () => {
-    const rules = existsSync(RULES_PATH) ? readFileSync(RULES_PATH, 'utf8') : '';
+    const rules = existsSync(RULES_PATH)
+      ? readFileSync(RULES_PATH, 'utf8')
+      : '';
 
     it('declares rules_version 2', () => {
       expect(rules).toMatch(/rules_version\s*=\s*['"]2['"]/);

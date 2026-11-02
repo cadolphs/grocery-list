@@ -22,12 +22,14 @@ export const useAuth = (authService: AuthService): UseAuthResult => {
   }, [authService]);
 
   const signIn = useCallback(
-    (email: string, password: string): Promise<AuthResult> => authService.signIn(email, password),
+    (email: string, password: string): Promise<AuthResult> =>
+      authService.signIn(email, password),
     [authService],
   );
 
   const signUp = useCallback(
-    (email: string, password: string): Promise<AuthResult> => authService.signUp(email, password),
+    (email: string, password: string): Promise<AuthResult> =>
+      authService.signUp(email, password),
     [authService],
   );
 

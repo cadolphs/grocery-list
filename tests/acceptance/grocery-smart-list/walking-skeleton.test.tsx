@@ -39,7 +39,13 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 // import { HomeView } from '../../../src/ui/HomeView';
 // import { StoreView } from '../../../src/ui/StoreView';
 
-const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+const DEFAULT_AREAS: readonly string[] = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
 
 // =============================================================================
 // WS-1: Add a Staple Item (US-01)
@@ -108,14 +114,17 @@ describe('WS-1: Add a Staple Item', () => {
 
     // Then "Birthday candles" appears on the current trip
     expect(trip.getItems()).toContainEqual(
-      expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
+      expect.objectContaining({
+        name: 'Birthday candles',
+        itemType: 'one-off',
+      }),
     );
 
     // And "Birthday candles" does not appear in the staple library
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
     expect(library.listAll()).not.toContainEqual(
-      expect.objectContaining({ name: 'Birthday candles' })
+      expect.objectContaining({ name: 'Birthday candles' }),
     );
   });
 
@@ -139,7 +148,10 @@ describe('WS-1: Add a Staple Item', () => {
     // Then the app prevents the duplicate and shows a message
     expect(result.success).toBe(false);
     expect(result).toEqual(
-      expect.objectContaining({ success: false, error: expect.stringContaining('already exists in Fridge') })
+      expect.objectContaining({
+        success: false,
+        error: expect.stringContaining('already exists in Fridge'),
+      }),
     );
     expect(library.listAll()).toHaveLength(1);
   });
@@ -181,11 +193,31 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     // Given Carlos has staples in the library
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    library.addStaple({ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    library.addStaple({ name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } });
-    library.addStaple({ name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
-    library.addStaple({ name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } });
+    library.addStaple({
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    library.addStaple({
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    library.addStaple({
+      name: 'Toilet paper',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
+    });
+    library.addStaple({
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    });
+    library.addStaple({
+      name: 'Canned beans',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+    });
 
     // When Carlos starts a new sweep
     const tripStorage = createNullTripStorage();
@@ -195,17 +227,27 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
 
     // Then items are grouped by house area
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
-    expect(grouped.find(g => g.area === 'Fridge')?.items).toHaveLength(2);
-    expect(grouped.find(g => g.area === 'Bathroom')?.items).toHaveLength(2);
-    expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(1);
+    expect(grouped.find((g) => g.area === 'Fridge')?.items).toHaveLength(2);
+    expect(grouped.find((g) => g.area === 'Bathroom')?.items).toHaveLength(2);
+    expect(grouped.find((g) => g.area === 'Garage Pantry')?.items).toHaveLength(
+      1,
+    );
   });
 
   it('shows all 5 house areas even when some are empty', () => {
     // Given Carlos has staples only in "Fridge" and "Bathroom"
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    library.addStaple({ name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
+    library.addStaple({
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    library.addStaple({
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start(library.listAll());
@@ -215,9 +257,13 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
 
     // Then all 5 house areas are visible
     expect(grouped).toHaveLength(5);
-    expect(grouped.find(g => g.area === 'Freezer')?.items).toHaveLength(0);
-    expect(grouped.find(g => g.area === 'Kitchen Cabinets')?.items).toHaveLength(0);
-    expect(grouped.find(g => g.area === 'Garage Pantry')?.items).toHaveLength(0);
+    expect(grouped.find((g) => g.area === 'Freezer')?.items).toHaveLength(0);
+    expect(
+      grouped.find((g) => g.area === 'Kitchen Cabinets')?.items,
+    ).toHaveLength(0);
+    expect(grouped.find((g) => g.area === 'Garage Pantry')?.items).toHaveLength(
+      0,
+    );
   });
 
   it('newly added staple appears on next sweep', () => {
@@ -236,10 +282,11 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     trip.start(library.listAll());
 
     // Then "Oat milk" appears pre-loaded in "Fridge"
-    const fridgeItems = groupByArea(trip.getItems(), DEFAULT_AREAS)
-      .find(g => g.area === 'Fridge')?.items;
+    const fridgeItems = groupByArea(trip.getItems(), DEFAULT_AREAS).find(
+      (g) => g.area === 'Fridge',
+    )?.items;
     expect(fridgeItems).toContainEqual(
-      expect.objectContaining({ name: 'Oat milk' })
+      expect.objectContaining({ name: 'Oat milk' }),
     );
   });
 });
@@ -278,10 +325,10 @@ describe('WS-3: Quick-Add Item', () => {
 
     // Then item appears on trip AND in staple library
     expect(trip.getItems()).toContainEqual(
-      expect.objectContaining({ name: 'Canned tomatoes' })
+      expect.objectContaining({ name: 'Canned tomatoes' }),
     );
     expect(library.listAll()).toContainEqual(
-      expect.objectContaining({ name: 'Canned tomatoes' })
+      expect.objectContaining({ name: 'Canned tomatoes' }),
     );
   });
 
@@ -304,7 +351,7 @@ describe('WS-3: Quick-Add Item', () => {
 
     // Then item is on the trip but not in the staple library
     expect(trip.getItems()).toContainEqual(
-      expect.objectContaining({ name: 'Deli turkey', itemType: 'one-off' })
+      expect.objectContaining({ name: 'Deli turkey', itemType: 'one-off' }),
     );
     expect(library.listAll()).toHaveLength(0);
   });
@@ -327,7 +374,10 @@ describe('WS-3: Quick-Add Item', () => {
     // Then the item is not added
     expect(result.success).toBe(false);
     expect(result).toEqual(
-      expect.objectContaining({ success: false, error: expect.stringContaining('area is required') })
+      expect.objectContaining({
+        success: false,
+        error: expect.stringContaining('area is required'),
+      }),
     );
     expect(trip.getItems()).toHaveLength(0);
   });
@@ -347,10 +397,38 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
   it('groups items by section in store view', () => {
     // Given Carlos has trip items with aisle metadata
     const items = [
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 }, itemType: 'staple', checked: false, needed: true },
-      { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 }, itemType: 'staple', checked: false, needed: true },
-      { name: 'Deli turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null }, itemType: 'one-off', checked: false, needed: true },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        itemType: 'staple',
+        checked: false,
+        needed: true,
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        itemType: 'staple',
+        checked: false,
+        needed: true,
+      },
+      {
+        name: 'Canned beans',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+        itemType: 'staple',
+        checked: false,
+        needed: true,
+      },
+      {
+        name: 'Deli turkey',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Deli', aisleNumber: null },
+        itemType: 'one-off',
+        checked: false,
+        needed: true,
+      },
     ];
 
     // When Carlos switches to store view
@@ -369,8 +447,18 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
   it('excludes empty sections from store view', () => {
     // Given Carlos has items only in Dairy and Deli
     const items = [
-      { name: 'Whole milk', storeLocation: { section: 'Dairy', aisleNumber: 3 }, needed: true, checked: false },
-      { name: 'Deli turkey', storeLocation: { section: 'Deli', aisleNumber: null }, needed: true, checked: false },
+      {
+        name: 'Whole milk',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        needed: true,
+        checked: false,
+      },
+      {
+        name: 'Deli turkey',
+        storeLocation: { section: 'Deli', aisleNumber: null },
+        needed: true,
+        checked: false,
+      },
     ];
 
     // When Carlos views store layout
@@ -384,14 +472,20 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
     // Given Carlos has checked off "Whole milk" in store view
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([{ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
+    trip.start([
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
     trip.checkOff('Whole milk');
 
     // When Carlos views the items (toggle does not change data, only grouping)
     const items = trip.getItems();
 
     // Then "Whole milk" is still checked off
-    const milk = items.find(i => i.name === 'Whole milk');
+    const milk = items.find((i) => i.name === 'Whole milk');
     expect(milk?.checked).toBe(true);
   });
 });
@@ -411,18 +505,24 @@ describe('WS-5: Check Off Items in Store', () => {
     // Given Carlos has an active trip with "Whole milk"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([{ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
+    trip.start([
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
 
     // When Carlos checks off "Whole milk"
     trip.checkOff('Whole milk');
 
     // Then "Whole milk" shows as in the cart
-    const milk = trip.getItems().find(i => i.name === 'Whole milk');
+    const milk = trip.getItems().find((i) => i.name === 'Whole milk');
     expect(milk?.checked).toBe(true);
 
     // And the check-off is persisted to storage
     const loadedTrip = tripStorage.loadTrip();
-    const loadedMilk = loadedTrip?.items.find(i => i.name === 'Whole milk');
+    const loadedMilk = loadedTrip?.items.find((i) => i.name === 'Whole milk');
     expect(loadedMilk?.checked).toBe(true);
   });
 
@@ -430,19 +530,25 @@ describe('WS-5: Check Off Items in Store', () => {
     // Given Carlos has checked off "Butter"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([{ name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }]);
+    trip.start([
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
     trip.checkOff('Butter');
 
     // When Carlos taps "Butter" again
     trip.uncheckItem('Butter');
 
     // Then "Butter" is unchecked
-    const butter = trip.getItems().find(i => i.name === 'Butter');
+    const butter = trip.getItems().find((i) => i.name === 'Butter');
     expect(butter?.checked).toBe(false);
 
     // And the uncheck is persisted to storage
     const loadedTrip = tripStorage.loadTrip();
-    const loadedButter = loadedTrip?.items.find(i => i.name === 'Butter');
+    const loadedButter = loadedTrip?.items.find((i) => i.name === 'Butter');
     expect(loadedButter?.checked).toBe(false);
   });
 
@@ -451,9 +557,21 @@ describe('WS-5: Check Off Items in Store', () => {
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
     trip1.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: null },
+      },
     ]);
     trip1.checkOff('Milk');
     trip1.checkOff('Eggs');
@@ -465,21 +583,45 @@ describe('WS-5: Check Off Items in Store', () => {
 
     // Then all 3 items are still checked off
     const items = trip2.getItems();
-    expect(items.filter(i => i.checked)).toHaveLength(3);
+    expect(items.filter((i) => i.checked)).toHaveLength(3);
   });
 
   it('section progress updates on check-off', () => {
     // Given Carlos is viewing a section with 4 items — 2 unchecked, 2 checked
     const items = [
-      { name: 'Milk', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false, needed: true },
-      { name: 'Butter', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: false, needed: true },
-      { name: 'Yogurt', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true, needed: true },
-      { name: 'Cheese', houseArea: 'Fridge' as const, storeLocation: { section: 'Dairy', aisleNumber: 3 }, checked: true, needed: true },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge' as const,
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        checked: false,
+        needed: true,
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge' as const,
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        checked: false,
+        needed: true,
+      },
+      {
+        name: 'Yogurt',
+        houseArea: 'Fridge' as const,
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        checked: true,
+        needed: true,
+      },
+      {
+        name: 'Cheese',
+        houseArea: 'Fridge' as const,
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+        checked: true,
+        needed: true,
+      },
     ];
 
     // When we compute the store view grouping
     const groups = groupBySection(items as TripItem[]);
-    const dairy = groups.find(g => g.section === 'Dairy');
+    const dairy = groups.find((g) => g.section === 'Dairy');
 
     // Then progress shows 2 of 4
     expect(dairy?.checkedCount).toBe(2);
@@ -504,21 +646,26 @@ describe('WS-6: Complete Trip with Carryover', () => {
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
     library.addStaple({
-      name: 'Whole milk', houseArea: 'Fridge',
+      name: 'Whole milk',
+      houseArea: 'Fridge',
       storeLocation: { section: 'Dairy', aisleNumber: 3 },
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start(library.listAll());
     trip.addItem({
-      name: 'Birthday candles', houseArea: 'Kitchen Cabinets',
+      name: 'Birthday candles',
+      houseArea: 'Kitchen Cabinets',
       storeLocation: { section: 'Baking', aisleNumber: 12 },
-      itemType: 'one-off', source: 'quick-add',
+      itemType: 'one-off',
+      source: 'quick-add',
     });
     trip.addItem({
-      name: 'Avocados', houseArea: 'Fridge',
+      name: 'Avocados',
+      houseArea: 'Fridge',
       storeLocation: { section: 'Produce', aisleNumber: null },
-      itemType: 'one-off', source: 'quick-add',
+      itemType: 'one-off',
+      source: 'quick-add',
     });
     trip.checkOff('Whole milk');
     trip.checkOff('Birthday candles');
@@ -529,24 +676,30 @@ describe('WS-6: Complete Trip with Carryover', () => {
 
     // Then bought staple re-queues (it is in the library, so it will pre-load next trip)
     expect(result.purchasedStaples).toContainEqual(
-      expect.objectContaining({ name: 'Whole milk' })
+      expect.objectContaining({ name: 'Whole milk' }),
     );
     // And bought one-off is cleared
     expect(result.purchasedOneOffs).toContainEqual(
-      expect.objectContaining({ name: 'Birthday candles' })
+      expect.objectContaining({ name: 'Birthday candles' }),
     );
     // And unbought one-off carries over
     expect(result.unboughtItems).toContainEqual(
-      expect.objectContaining({ name: 'Avocados' })
+      expect.objectContaining({ name: 'Avocados' }),
     );
 
     // Verify next trip has staples + carried-over items
     const nextTrip = createTrip(tripStorage);
     nextTrip.start(library.listAll(), result.unboughtItems);
     const nextItems = nextTrip.getItems();
-    expect(nextItems).toContainEqual(expect.objectContaining({ name: 'Whole milk' }));
-    expect(nextItems).toContainEqual(expect.objectContaining({ name: 'Avocados' }));
-    expect(nextItems).not.toContainEqual(expect.objectContaining({ name: 'Birthday candles' }));
+    expect(nextItems).toContainEqual(
+      expect.objectContaining({ name: 'Whole milk' }),
+    );
+    expect(nextItems).toContainEqual(
+      expect.objectContaining({ name: 'Avocados' }),
+    );
+    expect(nextItems).not.toContainEqual(
+      expect.objectContaining({ name: 'Birthday candles' }),
+    );
   });
 
   it('unbought items carry over exactly once without duplicates', () => {
@@ -554,7 +707,18 @@ describe('WS-6: Complete Trip with Carryover', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const carryover: TripItem[] = [
-      { id: 'carry-1', name: 'Avocados', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null }, itemType: 'one-off', stapleId: null, source: 'carryover', needed: true, checked: false, checkedAt: null },
+      {
+        id: 'carry-1',
+        name: 'Avocados',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Produce', aisleNumber: null },
+        itemType: 'one-off',
+        stapleId: null,
+        source: 'carryover',
+        needed: true,
+        checked: false,
+        checkedAt: null,
+      },
     ];
     trip.start([], carryover);
     // Carlos did not buy "Avocados" again
@@ -567,7 +731,9 @@ describe('WS-6: Complete Trip with Carryover', () => {
     // Then "Avocados" appears once on the next trip
     const nextTrip = createTrip(tripStorage);
     nextTrip.start(library.listAll(), result.unboughtItems);
-    const avocadoEntries = nextTrip.getItems().filter(i => i.name === 'Avocados');
+    const avocadoEntries = nextTrip
+      .getItems()
+      .filter((i) => i.name === 'Avocados');
     expect(avocadoEntries).toHaveLength(1);
   });
 
@@ -575,11 +741,31 @@ describe('WS-6: Complete Trip with Carryover', () => {
     // Given Carlos has 5 staples in the library
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    library.addStaple({ name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    library.addStaple({ name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } });
-    library.addStaple({ name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
-    library.addStaple({ name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } });
+    library.addStaple({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    library.addStaple({
+      name: 'Eggs',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    library.addStaple({
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: null },
+    });
+    library.addStaple({
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    });
+    library.addStaple({
+      name: 'Toilet paper',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
+    });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start(library.listAll());
@@ -596,19 +782,43 @@ describe('WS-6: Complete Trip with Carryover', () => {
   it('all items bought results in clean next trip with only staples', () => {
     // Given Carlos has checked all items: 3 staples and 2 one-offs
     const staples = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: null },
+      },
     ];
     const stapleStorage = createNullStapleStorage(staples);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start(library.listAll());
-    trip.addItem({ name: 'Candles', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Baking', aisleNumber: 12 }, itemType: 'one-off', source: 'quick-add' });
-    trip.addItem({ name: 'Flowers', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Floral', aisleNumber: null }, itemType: 'one-off', source: 'quick-add' });
+    trip.addItem({
+      name: 'Candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 12 },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+    trip.addItem({
+      name: 'Flowers',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Floral', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
     // Check all items
-    trip.getItems().forEach(i => trip.checkOff(i.name));
+    trip.getItems().forEach((i) => trip.checkOff(i.name));
 
     // When Carlos finishes the trip
     const result = completeTrip(trip, library);
@@ -617,6 +827,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
     const nextTrip = createTrip(tripStorage);
     nextTrip.start(library.listAll(), result.unboughtItems);
     expect(nextTrip.getItems()).toHaveLength(3);
-    expect(nextTrip.getItems().every(i => i.itemType === 'staple')).toBe(true);
+    expect(nextTrip.getItems().every((i) => i.itemType === 'staple')).toBe(
+      true,
+    );
   });
 });

@@ -16,8 +16,16 @@ import { createTrip } from '../../../src/domain/trip';
 
 function renderAppInStoreView() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -27,7 +35,7 @@ function renderAppInStoreView() {
   render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 
   // Switch to Store view

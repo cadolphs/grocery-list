@@ -46,24 +46,26 @@ export type AisleSubGroup = {
 // pure (no throw) while making the failure mode deterministic and visible
 // (unknown items appear in a stable, low-priority slot) rather than masked at
 // position 0.
-const compareItemsInSection = (
-  indexOf: Map<TripItem, number>,
-  unknownIndex: number,
-) => (a: TripItem, b: TripItem): number => {
-  const aisleA = a.storeLocation.aisleNumber;
-  const aisleB = b.storeLocation.aisleNumber;
+const compareItemsInSection =
+  (indexOf: Map<TripItem, number>, unknownIndex: number) =>
+  (a: TripItem, b: TripItem): number => {
+    const aisleA = a.storeLocation.aisleNumber;
+    const aisleB = b.storeLocation.aisleNumber;
 
-  if (aisleA !== null && aisleB !== null && aisleA !== aisleB) {
-    return aisleA - aisleB;
-  }
-  if (aisleA === null && aisleB !== null) return 1;
-  if (aisleA !== null && aisleB === null) return -1;
+    if (aisleA !== null && aisleB !== null && aisleA !== aisleB) {
+      return aisleA - aisleB;
+    }
+    if (aisleA === null && aisleB !== null) return 1;
+    if (aisleA !== null && aisleB === null) return -1;
 
-  // Equal aisle (both numeric-equal or both null): preserve input order.
-  return (indexOf.get(a) ?? unknownIndex) - (indexOf.get(b) ?? unknownIndex);
-};
+    // Equal aisle (both numeric-equal or both null): preserve input order.
+    return (indexOf.get(a) ?? unknownIndex) - (indexOf.get(b) ?? unknownIndex);
+  };
 
-const createSectionGroup = (section: string, items: TripItem[]): SectionGroup => ({
+const createSectionGroup = (
+  section: string,
+  items: TripItem[],
+): SectionGroup => ({
   section,
   items,
   totalCount: items.length,
@@ -173,19 +175,20 @@ export const partitionSectionByAisle = (
 
 const isStaple = (item: TripItem): boolean => item.itemType !== 'one-off';
 
-export const groupByArea = (items: TripItem[], areas: readonly string[]): AreaGroup[] => {
+export const groupByArea = (
+  items: TripItem[],
+  areas: readonly string[],
+): AreaGroup[] => {
   const stapleItems = items.filter(isStaple);
   const itemsByArea = stapleItems.reduce<Record<string, TripItem[]>>(
     (groups, item) => ({
       ...groups,
       [item.houseArea]: [...(groups[item.houseArea] ?? []), item],
     }),
-    {}
+    {},
   );
 
-  return areas.map((area) =>
-    createAreaGroup(area, itemsByArea[area] ?? [])
-  );
+  return areas.map((area) => createAreaGroup(area, itemsByArea[area] ?? []));
 };
 
 export const getOneOffItems = (items: TripItem[]): TripItem[] =>

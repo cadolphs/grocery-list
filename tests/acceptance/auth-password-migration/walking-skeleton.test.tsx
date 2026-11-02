@@ -19,25 +19,37 @@
  * - WS-3: Login screen displays password fields, not email-link (US-01 + US-04)
  */
 
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
-import { createNullAuthService, AuthService } from '../../../src/auth/AuthService';
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+} from '@testing-library/react-native';
+import {
+  createNullAuthService,
+  AuthService,
+} from '../../../src/auth/AuthService';
 import { LoginScreen } from '../../../src/ui/LoginScreen';
 
 // =============================================================================
 // Shared test setup
 // =============================================================================
 
-function createTestAuthService(options?: { existingUser?: boolean }): AuthService {
+function createTestAuthService(options?: {
+  existingUser?: boolean;
+}): AuthService {
   return createNullAuthService(options?.existingUser ? null : null);
 }
 
 // Helper: wraps signIn/signUp calls to match the post-migration LoginScreen props
 function createSignInProp(authService: AuthService) {
-  return (email: string, password: string) => authService.signIn(email, password);
+  return (email: string, password: string) =>
+    authService.signIn(email, password);
 }
 
 function createSignUpProp(authService: AuthService) {
-  return (email: string, password: string) => authService.signUp(email, password);
+  return (email: string, password: string) =>
+    authService.signUp(email, password);
 }
 
 // =============================================================================
@@ -58,12 +70,18 @@ describe('WS-1: Returning user signs in and reaches the grocery list', () => {
       <LoginScreen
         signIn={createSignInProp(authService)}
         signUp={createSignUpProp(authService)}
-      />
+      />,
     );
 
     // When Maria enters "maria.santos@email.com" as email and "SecureGrocery42!" as password
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'maria.santos@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'SecureGrocery42!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'maria.santos@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'SecureGrocery42!',
+    );
 
     // And Maria taps "Sign In"
     fireEvent.press(screen.getByText('Sign In'));
@@ -95,15 +113,21 @@ describe('WS-2: New user signs up and reaches the grocery list', () => {
       <LoginScreen
         signIn={createSignInProp(authService)}
         signUp={createSignUpProp(authService)}
-      />
+      />,
     );
 
     // Switch to Sign Up mode
     fireEvent.press(screen.getByText(/Sign Up/i));
 
     // When Ana enters "ana.kowalski@email.com" as email and "FreshVeggies2024!" as password
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'ana.kowalski@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'FreshVeggies2024!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'ana.kowalski@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'FreshVeggies2024!',
+    );
 
     // And Ana taps "Sign Up"
     fireEvent.press(screen.getByText('Sign Up'));
@@ -135,7 +159,7 @@ describe('WS-3: Login screen displays email and password fields', () => {
       <LoginScreen
         signIn={createSignInProp(authService)}
         signUp={createSignUpProp(authService)}
-      />
+      />,
     );
 
     // Then the user sees an email field

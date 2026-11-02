@@ -51,9 +51,15 @@ describe('GroceryList', () => {
     fireEvent.press(getByText('Milk'));
     fireEvent.press(getByText('Bread'));
 
-    expect(getByText('Milk')).toHaveStyle({ textDecorationLine: 'line-through' });
-    expect(getByText('Eggs')).not.toHaveStyle({ textDecorationLine: 'line-through' });
-    expect(getByText('Bread')).toHaveStyle({ textDecorationLine: 'line-through' });
+    expect(getByText('Milk')).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
+    expect(getByText('Eggs')).not.toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
+    expect(getByText('Bread')).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
   });
 
   test('saves checked state to storage', async () => {
@@ -79,10 +85,16 @@ describe('GroceryList', () => {
     const { getByText } = render(<GroceryList storage={storage} />);
 
     await waitFor(() => {
-      expect(getByText('Eggs')).toHaveStyle({ textDecorationLine: 'line-through' });
-      expect(getByText('Bread')).toHaveStyle({ textDecorationLine: 'line-through' });
+      expect(getByText('Eggs')).toHaveStyle({
+        textDecorationLine: 'line-through',
+      });
+      expect(getByText('Bread')).toHaveStyle({
+        textDecorationLine: 'line-through',
+      });
     });
-    expect(getByText('Milk')).not.toHaveStyle({ textDecorationLine: 'line-through' });
+    expect(getByText('Milk')).not.toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
   });
 
   test('shows empty checkbox for unchecked items', () => {

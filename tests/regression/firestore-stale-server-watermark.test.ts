@@ -40,8 +40,9 @@ import {
 
 // --- Firestore mock infrastructure (shared harness) ---
 
-jest.mock('firebase/firestore', () =>
-  require('./helpers/offline-firestore-harness').firestoreModule
+jest.mock(
+  'firebase/firestore',
+  () => require('./helpers/offline-firestore-harness').firestoreModule,
 );
 
 // --- Row table ---
@@ -83,8 +84,9 @@ type AnyWatermarkRow = WatermarkRow<WatermarkAdapter, unknown>;
 // Erases the row's generics for describe.each. Sound because every adapter
 // handed to a row's write/read is the one produced by that same row's
 // createAdapter, and every value is one of that row's own values.
-const defineRow = <A extends WatermarkAdapter, T>(row: WatermarkRow<A, T>): AnyWatermarkRow =>
-  row as unknown as AnyWatermarkRow;
+const defineRow = <A extends WatermarkAdapter, T>(
+  row: WatermarkRow<A, T>,
+): AnyWatermarkRow => row as unknown as AnyWatermarkRow;
 
 const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   id: 'trip-item-1',
@@ -108,8 +110,14 @@ const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
   ...overrides,
 });
 
-const createTripAdapter = (db: unknown, uid: string, onChange: () => void): FirestoreTripStorage => {
-  const { createFirestoreTripStorage } = require('../../src/adapters/firestore/firestore-trip-storage');
+const createTripAdapter = (
+  db: unknown,
+  uid: string,
+  onChange: () => void,
+): FirestoreTripStorage => {
+  const {
+    createFirestoreTripStorage,
+  } = require('../../src/adapters/firestore/firestore-trip-storage');
   return createFirestoreTripStorage(db, uid, { onChange });
 };
 
@@ -123,9 +131,14 @@ const tripRow = defineRow<FirestoreTripStorage, Trip>({
     makeTrip({ id: 'trip-v0' }),
     makeTrip({
       id: 'trip-v1',
-      items: [makeTripItem({ checked: true, checkedAt: '2026-04-13T10:05:00.000Z' })],
+      items: [
+        makeTripItem({ checked: true, checkedAt: '2026-04-13T10:05:00.000Z' }),
+      ],
     }),
-    makeTrip({ id: 'trip-v2', items: [makeTripItem({ id: 'trip-item-2', name: 'Bread' })] }),
+    makeTrip({
+      id: 'trip-v2',
+      items: [makeTripItem({ id: 'trip-item-2', name: 'Bread' })],
+    }),
   ],
   write: (adapter, trip) => adapter.saveTrip(trip),
   read: (adapter) => adapter.loadTrip(),
@@ -142,7 +155,10 @@ const carryoverRow = defineRow<FirestoreTripStorage, readonly TripItem[]>({
   createAdapter: createTripAdapter,
   values: [
     [makeTripItem({ id: 'carry-1', name: 'Olive Oil' })],
-    [makeTripItem({ id: 'carry-1', name: 'Olive Oil' }), makeTripItem({ id: 'carry-2', name: 'Rice' })],
+    [
+      makeTripItem({ id: 'carry-1', name: 'Olive Oil' }),
+      makeTripItem({ id: 'carry-2', name: 'Rice' }),
+    ],
     [makeTripItem({ id: 'carry-3', name: 'Bread' })],
   ],
   write: (adapter, items) => adapter.saveCarryover(items),
@@ -162,8 +178,14 @@ const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
   ...overrides,
 });
 
-const createStapleAdapter = (db: unknown, uid: string, onChange: () => void): FirestoreStapleStorage => {
-  const { createFirestoreStapleStorage } = require('../../src/adapters/firestore/firestore-staple-storage');
+const createStapleAdapter = (
+  db: unknown,
+  uid: string,
+  onChange: () => void,
+): FirestoreStapleStorage => {
+  const {
+    createFirestoreStapleStorage,
+  } = require('../../src/adapters/firestore/firestore-staple-storage');
   return createFirestoreStapleStorage(db, uid, { onChange });
 };
 
@@ -182,7 +204,9 @@ const stapleRow = defineRow<FirestoreStapleStorage, StapleItem[]>({
   ],
   write: (adapter, items) => {
     const knownIds = new Set(adapter.loadAll().map((item) => item.id));
-    items.forEach((item) => (knownIds.has(item.id) ? adapter.update(item) : adapter.save(item)));
+    items.forEach((item) =>
+      knownIds.has(item.id) ? adapter.update(item) : adapter.save(item),
+    );
   },
   read: (adapter) => adapter.loadAll(),
   silence: [],
@@ -190,8 +214,14 @@ const stapleRow = defineRow<FirestoreStapleStorage, StapleItem[]>({
   assertsOnChange: true,
 });
 
-const createAreaAdapter = (db: unknown, uid: string, onChange: () => void): FirestoreAreaStorage => {
-  const { createFirestoreAreaStorage } = require('../../src/adapters/firestore/firestore-area-storage');
+const createAreaAdapter = (
+  db: unknown,
+  uid: string,
+  onChange: () => void,
+): FirestoreAreaStorage => {
+  const {
+    createFirestoreAreaStorage,
+  } = require('../../src/adapters/firestore/firestore-area-storage');
   return createFirestoreAreaStorage(db, uid, { onChange });
 };
 
@@ -218,9 +248,11 @@ const areaRow = defineRow<FirestoreAreaStorage, string[]>({
 const createSectionOrderAdapter = (
   db: unknown,
   uid: string,
-  onChange: () => void
+  onChange: () => void,
 ): FirestoreSectionOrderStorage => {
-  const { createFirestoreSectionOrderStorage } = require('../../src/adapters/firestore/firestore-section-order-storage');
+  const {
+    createFirestoreSectionOrderStorage,
+  } = require('../../src/adapters/firestore/firestore-section-order-storage');
   return createFirestoreSectionOrderStorage(db, uid, { onChange });
 };
 
@@ -244,7 +276,13 @@ const sectionOrderRow = defineRow<FirestoreSectionOrderStorage, string[]>({
   assertsOnChange: true,
 });
 
-const rows: readonly AnyWatermarkRow[] = [tripRow, carryoverRow, stapleRow, areaRow, sectionOrderRow];
+const rows: readonly AnyWatermarkRow[] = [
+  tripRow,
+  carryoverRow,
+  stapleRow,
+  areaRow,
+  sectionOrderRow,
+];
 
 // --- Harness helpers ---
 
@@ -272,7 +310,10 @@ const editOfflineThenKill = async (row: AnyWatermarkRow): Promise<unknown> => {
 };
 
 // Adapter B, cold start with the mirror hydrated and the first snapshot delayed.
-const coldStartAwaitingSnapshot = async (row: AnyWatermarkRow, onChange: () => void) => {
+const coldStartAwaitingSnapshot = async (
+  row: AnyWatermarkRow,
+  onChange: () => void,
+) => {
   setSnapshotMode('delayed');
   const adapterB = row.createAdapter(mockDb, TEST_UID, onChange);
   void adapterB.initialize();
@@ -289,7 +330,11 @@ const coldStartWithRemoteForgotten = async (row: AnyWatermarkRow) => {
   return adapterC;
 };
 
-const expectOnChangeCalls = (row: AnyWatermarkRow, onChange: jest.Mock, count: number): void => {
+const expectOnChangeCalls = (
+  row: AnyWatermarkRow,
+  onChange: jest.Mock,
+  count: number,
+): void => {
   if (row.assertsOnChange) {
     expect(onChange).toHaveBeenCalledTimes(count);
   }
@@ -333,7 +378,10 @@ describe.each(rows)(
       const adapterB = await coldStartAwaitingSnapshot(row, onChange);
       const setDocCountBefore = setDocCallsFor(row.docPath).length;
 
-      deliverSnapshot(row.docPath, { [row.serverField]: V2, writtenAt: Date.now() + 1e6 });
+      deliverSnapshot(row.docPath, {
+        [row.serverField]: V2,
+        writtenAt: Date.now() + 1e6,
+      });
 
       expect(row.read(adapterB)).toEqual(V2);
       expectOnChangeCalls(row, onChange, 1);
@@ -372,7 +420,7 @@ describe.each(rows)(
 
         await settlePendingReads();
         expect(await AsyncStorage.getItem(v1MirrorKey(row))).toBeNull();
-      }
+      },
     );
 
     it('(d) the re-push echo, delivered twice, issues no further setDoc and no onChange, and an absent snapshot afterwards is honoured', async () => {
@@ -399,7 +447,7 @@ describe.each(rows)(
 
       expect(row.read(adapterB)).toEqual(row.silence);
     });
-  }
+  },
 );
 
 // --- Section order only: a mirrored clear is a stamped decision ---
@@ -442,7 +490,9 @@ describe('Stale server after process restart — section order document: a mirro
 
     expect(adapterB.loadOrder()).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
-    const rePushes = setDocCallsFor(sectionOrderRow.docPath).slice(setDocCountBefore);
+    const rePushes = setDocCallsFor(sectionOrderRow.docPath).slice(
+      setDocCountBefore,
+    );
     expect(rePushes).toHaveLength(1);
     expect(rePushes[0][1]).toEqual({ order: null, writtenAt: W });
   });

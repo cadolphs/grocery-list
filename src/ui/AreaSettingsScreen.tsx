@@ -2,7 +2,16 @@
 // Shows list of configured areas with Add/Edit/Delete functionality
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { theme } from './theme';
@@ -10,7 +19,12 @@ import { theme } from './theme';
 type DeleteState =
   | { readonly kind: 'idle' }
   | { readonly kind: 'confirm-empty'; readonly areaName: string }
-  | { readonly kind: 'reassign'; readonly areaName: string; readonly stapleCount: number; readonly selectedTarget: string | null }
+  | {
+      readonly kind: 'reassign';
+      readonly areaName: string;
+      readonly stapleCount: number;
+      readonly selectedTarget: string | null;
+    }
   | { readonly kind: 'blocked'; readonly message: string };
 
 export const AreaSettingsScreen = (): React.JSX.Element => {
@@ -74,14 +88,22 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
   const handleDeletePress = (area: string) => {
     // Check if last area
     if (areas.length <= 1) {
-      setDeleteState({ kind: 'blocked', message: 'Cannot delete: at least one area must remain' });
+      setDeleteState({
+        kind: 'blocked',
+        message: 'Cannot delete: at least one area must remain',
+      });
       return;
     }
 
     // Check staple count
     const staplesInArea = stapleLibrary.listByArea(area);
     if (staplesInArea.length > 0) {
-      setDeleteState({ kind: 'reassign', areaName: area, stapleCount: staplesInArea.length, selectedTarget: null });
+      setDeleteState({
+        kind: 'reassign',
+        areaName: area,
+        stapleCount: staplesInArea.length,
+        selectedTarget: null,
+      });
     } else {
       setDeleteState({ kind: 'confirm-empty', areaName: area });
     }
@@ -102,7 +124,9 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
 
   const handleConfirmDeleteAndMove = () => {
     if (deleteState.kind === 'reassign' && deleteState.selectedTarget) {
-      deleteArea(deleteState.areaName, { reassignTo: deleteState.selectedTarget });
+      deleteArea(deleteState.areaName, {
+        reassignTo: deleteState.selectedTarget,
+      });
       setDeleteState({ kind: 'idle' });
     }
   };
@@ -141,10 +165,16 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
       <View key={area} style={styles.areaCard}>
         <Text style={styles.areaName}>{area}</Text>
         <View style={styles.rowActions}>
-          <Pressable testID={`edit-area-${area}`} onPress={() => handleEditPress(area)}>
+          <Pressable
+            testID={`edit-area-${area}`}
+            onPress={() => handleEditPress(area)}
+          >
             <Text style={styles.actionText}>Edit</Text>
           </Pressable>
-          <Pressable testID={`delete-area-${area}`} onPress={() => handleDeletePress(area)}>
+          <Pressable
+            testID={`delete-area-${area}`}
+            onPress={() => handleDeletePress(area)}
+          >
             <Text style={styles.deleteActionText}>Delete</Text>
           </Pressable>
         </View>
@@ -169,12 +199,21 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
     if (deleteState.kind === 'confirm-empty') {
       return (
         <View style={styles.deleteDialog}>
-          <Text style={styles.deleteDialogText}>Delete {deleteState.areaName}?</Text>
+          <Text style={styles.deleteDialogText}>
+            Delete {deleteState.areaName}?
+          </Text>
           <View style={styles.formButtons}>
-            <Pressable style={styles.deleteConfirmButton} testID="confirm-delete-button" onPress={handleConfirmDelete}>
+            <Pressable
+              style={styles.deleteConfirmButton}
+              testID="confirm-delete-button"
+              onPress={handleConfirmDelete}
+            >
               <Text style={styles.saveButtonText}>Delete</Text>
             </Pressable>
-            <Pressable style={styles.cancelButton} onPress={handleDismissDelete}>
+            <Pressable
+              style={styles.cancelButton}
+              onPress={handleDismissDelete}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </Pressable>
           </View>
@@ -183,19 +222,21 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
     }
 
     if (deleteState.kind === 'reassign') {
-      const otherAreas = areas.filter(a => a !== deleteState.areaName);
+      const otherAreas = areas.filter((a) => a !== deleteState.areaName);
       return (
         <View style={styles.deleteDialog}>
           <Text style={styles.deleteDialogText}>
-            {deleteState.stapleCount} staples in {deleteState.areaName}. Move to:
+            {deleteState.stapleCount} staples in {deleteState.areaName}. Move
+            to:
           </Text>
-          {otherAreas.map(target => (
+          {otherAreas.map((target) => (
             <Pressable
               key={target}
               testID={`reassign-to-${target}`}
               style={[
                 styles.reassignOption,
-                deleteState.selectedTarget === target && styles.reassignOptionSelected,
+                deleteState.selectedTarget === target &&
+                  styles.reassignOptionSelected,
               ]}
               onPress={() => handleSelectReassignTarget(target)}
             >
@@ -204,13 +245,19 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
           ))}
           <View style={styles.formButtons}>
             <Pressable
-              style={[styles.deleteConfirmButton, !deleteState.selectedTarget && styles.disabledButton]}
+              style={[
+                styles.deleteConfirmButton,
+                !deleteState.selectedTarget && styles.disabledButton,
+              ]}
               testID="confirm-delete-and-move-button"
               onPress={handleConfirmDeleteAndMove}
             >
               <Text style={styles.saveButtonText}>Delete and Move</Text>
             </Pressable>
-            <Pressable style={styles.cancelButton} onPress={handleDismissDelete}>
+            <Pressable
+              style={styles.cancelButton}
+              onPress={handleDismissDelete}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </Pressable>
           </View>
@@ -256,7 +303,11 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
             </View>
           </View>
         ) : (
-          <Pressable style={styles.addButton} testID="add-area-button" onPress={handleAddPress}>
+          <Pressable
+            style={styles.addButton}
+            testID="add-area-button"
+            onPress={handleAddPress}
+          >
             <Text style={styles.addButtonText}>Add Area</Text>
           </Pressable>
         )}

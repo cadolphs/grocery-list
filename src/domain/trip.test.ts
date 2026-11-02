@@ -5,12 +5,18 @@
 import { createTrip, StapleInput, TripService } from './trip';
 import { Trip, TripItem } from './types';
 import { TripStorage } from '../ports/trip-storage';
-import { createNullTripStorage, NullTripStorageWithSync } from '../adapters/null/null-trip-storage';
+import {
+  createNullTripStorage,
+  NullTripStorageWithSync,
+} from '../adapters/null/null-trip-storage';
 
 const createTestTripService = (): TripService =>
   createTrip(createNullTripStorage(), () => ['Fridge', 'Kitchen Cabinets']);
 
-const createTestTripServiceWithStorage = (): { tripService: TripService; storage: NullTripStorageWithSync } => {
+const createTestTripServiceWithStorage = (): {
+  tripService: TripService;
+  storage: NullTripStorageWithSync;
+} => {
   const storage = createNullTripStorage();
   const tripService = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
   return { tripService, storage };
@@ -105,7 +111,9 @@ describe('TripService.subscribe', () => {
     });
 
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
-    const savedTrip = saveTripSpy.mock.calls[0][0] as { items: Array<{ name: string }> };
+    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+      items: Array<{ name: string }>;
+    };
     expect(savedTrip.items).toHaveLength(1);
     expect(savedTrip.items[0].name).toBe('Bread');
   });
@@ -113,7 +121,11 @@ describe('TripService.subscribe', () => {
   test('subscriber is notified when loadFromStorage updates state', () => {
     const { tripService, storage } = createTestTripServiceWithStorage();
     tripService.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      },
     ]);
     // Persist initial state
     tripService.checkOff('Milk');
@@ -126,21 +138,29 @@ describe('TripService.subscribe', () => {
     const savedTrip = storage.loadTrip()!;
     storage.saveTrip({
       ...savedTrip,
-      items: savedTrip.items.map(i =>
-        i.name === 'Milk' ? { ...i, checked: true, checkedAt: '2026-04-13T10:00:00Z' } : i
+      items: savedTrip.items.map((i) =>
+        i.name === 'Milk'
+          ? { ...i, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+          : i,
       ),
     });
 
     tripService.loadFromStorage();
 
     expect(notifications).toHaveLength(1);
-    expect(tripService.getItems().find(i => i.name === 'Milk')?.checked).toBe(true);
+    expect(tripService.getItems().find((i) => i.name === 'Milk')?.checked).toBe(
+      true,
+    );
   });
 
   test('loadFromStorage does not notify when state is identical', () => {
     const { tripService, storage } = createTestTripServiceWithStorage();
     tripService.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      },
     ]);
     // Persist current state
     tripService.checkOff('Milk');
@@ -159,15 +179,25 @@ describe('TripService.subscribe', () => {
     const { tripService, storage } = createTestTripServiceWithStorage();
 
     tripService.initializeFromStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 }, id: 'staple-milk' },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 }, id: 'staple-bread' },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 2 },
+        id: 'staple-milk',
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+        id: 'staple-bread',
+      },
     ]);
 
     // Storage should contain the persisted trip with both items
     const savedTrip = storage.loadTrip();
     expect(savedTrip).not.toBeNull();
     expect(savedTrip!.items).toHaveLength(2);
-    expect(savedTrip!.items.map(i => i.name)).toEqual(['Milk', 'Bread']);
+    expect(savedTrip!.items.map((i) => i.name)).toEqual(['Milk', 'Bread']);
     expect(savedTrip!.status).toBe('active');
   });
 
@@ -178,7 +208,18 @@ describe('TripService.subscribe', () => {
     storage.saveTrip({
       id: 'old-trip',
       items: [
-        { id: 'item-1', name: 'OldItem', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 1 }, itemType: 'staple', stapleId: null, source: 'preloaded', needed: true, checked: true, checkedAt: '2026-04-12T10:00:00Z' },
+        {
+          id: 'item-1',
+          name: 'OldItem',
+          houseArea: 'Fridge',
+          storeLocation: { section: 'Dairy', aisleNumber: 1 },
+          itemType: 'staple',
+          stapleId: null,
+          source: 'preloaded',
+          needed: true,
+          checked: true,
+          checkedAt: '2026-04-12T10:00:00Z',
+        },
       ],
       status: 'completed',
       createdAt: '2026-04-12T09:00:00Z',
@@ -187,11 +228,27 @@ describe('TripService.subscribe', () => {
 
     // Set up carryover items
     storage.saveCarryover([
-      { id: 'carry-1', name: 'Leftover', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 1 }, itemType: 'one-off', stapleId: null, source: 'carryover', needed: true, checked: false, checkedAt: null },
+      {
+        id: 'carry-1',
+        name: 'Leftover',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 1 },
+        itemType: 'one-off',
+        stapleId: null,
+        source: 'carryover',
+        needed: true,
+        checked: false,
+        checkedAt: null,
+      },
     ]);
 
     tripService.initializeFromStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 }, id: 'staple-milk' },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 2 },
+        id: 'staple-milk',
+      },
     ]);
 
     // Storage should contain the new trip (not the completed one)
@@ -200,8 +257,8 @@ describe('TripService.subscribe', () => {
     expect(savedTrip!.status).toBe('active');
     // Should have staple + carryover items
     expect(savedTrip!.items).toHaveLength(2);
-    expect(savedTrip!.items.map(i => i.name)).toContain('Milk');
-    expect(savedTrip!.items.map(i => i.name)).toContain('Leftover');
+    expect(savedTrip!.items.map((i) => i.name)).toContain('Milk');
+    expect(savedTrip!.items.map((i) => i.name)).toContain('Leftover');
   });
 
   test('addItem rejects duplicate stapleId to prevent duplicate items', () => {
@@ -284,7 +341,10 @@ describe('TripService.subscribe', () => {
       // intentionally NO stapleId — the fallback guard must still catch this
     });
 
-    expect(duplicateResult).toEqual({ success: false, error: 'staple already in trip' });
+    expect(duplicateResult).toEqual({
+      success: false,
+      error: 'staple already in trip',
+    });
     expect(tripService.getItems()).toHaveLength(1);
   });
 
@@ -613,12 +673,19 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     // Assert — storage received the updated trip
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
     const savedTrip = saveTripSpy.mock.calls[0][0] as {
-      items: ReadonlyArray<{ stapleId: string | null; houseArea: string; storeLocation: { section: string; aisleNumber: number } }>;
+      items: ReadonlyArray<{
+        stapleId: string | null;
+        houseArea: string;
+        storeLocation: { section: string; aisleNumber: number };
+      }>;
     };
     const milk = savedTrip.items.find((i) => i.stapleId === 'staple-milk');
     expect(milk).toBeDefined();
     expect(milk!.houseArea).toBe('Garage Pantry');
-    expect(milk!.storeLocation).toEqual({ section: 'Dry Goods', aisleNumber: 5 });
+    expect(milk!.storeLocation).toEqual({
+      section: 'Dry Goods',
+      aisleNumber: 5,
+    });
   });
 
   test('syncStapleUpdate is idempotent: no notify/persist when changes match current item', () => {
@@ -674,10 +741,16 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     expect(notifications).toHaveLength(1);
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
     const savedTrip = saveTripSpy.mock.calls[0][0] as {
-      items: ReadonlyArray<{ stapleId: string | null; storeLocation: { section: string; aisleNumber: number } }>;
+      items: ReadonlyArray<{
+        stapleId: string | null;
+        storeLocation: { section: string; aisleNumber: number };
+      }>;
     };
     const milk = savedTrip.items.find((i) => i.stapleId === 'staple-milk');
-    expect(milk!.storeLocation).toEqual({ section: 'Cold Storage', aisleNumber: 2 });
+    expect(milk!.storeLocation).toEqual({
+      section: 'Cold Storage',
+      aisleNumber: 2,
+    });
   });
 
   test('syncStapleUpdate persists when only aisleNumber changes (section unchanged)', () => {
@@ -706,7 +779,10 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     expect(notifications).toHaveLength(1);
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
     const savedTrip = saveTripSpy.mock.calls[0][0] as {
-      items: ReadonlyArray<{ stapleId: string | null; storeLocation: { section: string; aisleNumber: number } }>;
+      items: ReadonlyArray<{
+        stapleId: string | null;
+        storeLocation: { section: string; aisleNumber: number };
+      }>;
     };
     const milk = savedTrip.items.find((i) => i.stapleId === 'staple-milk');
     expect(milk!.storeLocation).toEqual({ section: 'Dairy', aisleNumber: 7 });
@@ -759,10 +835,15 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     tripService.loadFromStorage();
 
     // Assert — the updated values survive the round-trip (were persisted)
-    const milk = tripService.getItems().find((i) => i.stapleId === 'staple-milk');
+    const milk = tripService
+      .getItems()
+      .find((i) => i.stapleId === 'staple-milk');
     expect(milk).toBeDefined();
     expect(milk!.houseArea).toBe('Garage Pantry');
-    expect(milk!.storeLocation).toEqual({ section: 'Dry Goods', aisleNumber: 5 });
+    expect(milk!.storeLocation).toEqual({
+      section: 'Dry Goods',
+      aisleNumber: 5,
+    });
   });
 });
 
@@ -810,7 +891,8 @@ const breadStaple: StapleInput = {
   storeLocation: { section: 'Bakery', aisleNumber: 2 },
 };
 
-type StoredTripState = 'absent' | 'completed-with-items' | 'completed-empty' | 'active';
+type StoredTripState =
+  'absent' | 'completed-with-items' | 'completed-empty' | 'active';
 type ListState = 'empty' | 'non-empty';
 
 const storedTripFor = (state: StoredTripState): Trip | null => {
@@ -881,13 +963,18 @@ const runInitializeFromStorage = (
     },
   };
 
-  const tripService = createTrip(countingStorage, () => ['Fridge', 'Kitchen Cabinets']);
+  const tripService = createTrip(countingStorage, () => [
+    'Fridge',
+    'Kitchen Cabinets',
+  ]);
   tripService.initializeFromStorage(staples);
 
   const persisted = mirror.loadTrip();
   const identity = (): InitializeOutcome['storedTripIdentity'] => {
     if (persisted === null) return 'none';
-    return persisted.id === STORED_TRIP_ID ? 'same-as-stored' : 'newly-generated';
+    return persisted.id === STORED_TRIP_ID
+      ? 'same-as-stored'
+      : 'newly-generated';
   };
 
   return {
@@ -897,7 +984,8 @@ const runInitializeFromStorage = (
     clearCarryoverCalls,
     storedTripIdentity: identity(),
     storedTripStatus: persisted === null ? 'none' : persisted.status,
-    storedTripItemNames: persisted === null ? [] : persisted.items.map((item) => item.name),
+    storedTripItemNames:
+      persisted === null ? [] : persisted.items.map((item) => item.name),
     remainingCarryoverNames: mirror.loadCarryover().map((item) => item.name),
   };
 };
@@ -946,52 +1034,126 @@ type InitializeCase = {
 
 const initializeCases: readonly InitializeCase[] = [
   // No stored trip: fresh-start rebuild, carryover untouched by this branch.
-  { storedTrip: 'absent', staples: 'empty', carryover: 'empty', expected: rebuiltTrip([], 0, []) },
-  { storedTrip: 'absent', staples: 'empty', carryover: 'non-empty', expected: rebuiltTrip([], 0, ['Leftover']) },
-  { storedTrip: 'absent', staples: 'non-empty', carryover: 'empty', expected: rebuiltTrip(['Bread'], 0, []) },
-  { storedTrip: 'absent', staples: 'non-empty', carryover: 'non-empty', expected: rebuiltTrip(['Bread'], 0, ['Leftover']) },
+  {
+    storedTrip: 'absent',
+    staples: 'empty',
+    carryover: 'empty',
+    expected: rebuiltTrip([], 0, []),
+  },
+  {
+    storedTrip: 'absent',
+    staples: 'empty',
+    carryover: 'non-empty',
+    expected: rebuiltTrip([], 0, ['Leftover']),
+  },
+  {
+    storedTrip: 'absent',
+    staples: 'non-empty',
+    carryover: 'empty',
+    expected: rebuiltTrip(['Bread'], 0, []),
+  },
+  {
+    storedTrip: 'absent',
+    staples: 'non-empty',
+    carryover: 'non-empty',
+    expected: rebuiltTrip(['Bread'], 0, ['Leftover']),
+  },
 
   // Completed trip that still holds items: the single refused combination.
   {
     storedTrip: 'completed-with-items',
     staples: 'empty',
     carryover: 'empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'completed', []),
+    expected: storedTripAdoptedUntouched(
+      ['StoredMilk'],
+      ['Fridge'],
+      'completed',
+      [],
+    ),
   },
-  { storedTrip: 'completed-with-items', staples: 'empty', carryover: 'non-empty', expected: rebuiltTrip(['Leftover'], 1, []) },
-  { storedTrip: 'completed-with-items', staples: 'non-empty', carryover: 'empty', expected: rebuiltTrip(['Bread'], 1, []) },
-  { storedTrip: 'completed-with-items', staples: 'non-empty', carryover: 'non-empty', expected: rebuiltTrip(['Bread', 'Leftover'], 1, []) },
+  {
+    storedTrip: 'completed-with-items',
+    staples: 'empty',
+    carryover: 'non-empty',
+    expected: rebuiltTrip(['Leftover'], 1, []),
+  },
+  {
+    storedTrip: 'completed-with-items',
+    staples: 'non-empty',
+    carryover: 'empty',
+    expected: rebuiltTrip(['Bread'], 1, []),
+  },
+  {
+    storedTrip: 'completed-with-items',
+    staples: 'non-empty',
+    carryover: 'non-empty',
+    expected: rebuiltTrip(['Bread', 'Leftover'], 1, []),
+  },
 
   // Completed trip with nothing to lose: a genuine new user is never refused.
-  { storedTrip: 'completed-empty', staples: 'empty', carryover: 'empty', expected: rebuiltTrip([], 1, []) },
-  { storedTrip: 'completed-empty', staples: 'empty', carryover: 'non-empty', expected: rebuiltTrip(['Leftover'], 1, []) },
-  { storedTrip: 'completed-empty', staples: 'non-empty', carryover: 'empty', expected: rebuiltTrip(['Bread'], 1, []) },
-  { storedTrip: 'completed-empty', staples: 'non-empty', carryover: 'non-empty', expected: rebuiltTrip(['Bread', 'Leftover'], 1, []) },
+  {
+    storedTrip: 'completed-empty',
+    staples: 'empty',
+    carryover: 'empty',
+    expected: rebuiltTrip([], 1, []),
+  },
+  {
+    storedTrip: 'completed-empty',
+    staples: 'empty',
+    carryover: 'non-empty',
+    expected: rebuiltTrip(['Leftover'], 1, []),
+  },
+  {
+    storedTrip: 'completed-empty',
+    staples: 'non-empty',
+    carryover: 'empty',
+    expected: rebuiltTrip(['Bread'], 1, []),
+  },
+  {
+    storedTrip: 'completed-empty',
+    staples: 'non-empty',
+    carryover: 'non-empty',
+    expected: rebuiltTrip(['Bread', 'Leftover'], 1, []),
+  },
 
   // Active trip: always adopted, never rebuilt, for every input combination.
   {
     storedTrip: 'active',
     staples: 'empty',
     carryover: 'empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', []),
+    expected: storedTripAdoptedUntouched(
+      ['StoredMilk'],
+      ['Fridge'],
+      'active',
+      [],
+    ),
   },
   {
     storedTrip: 'active',
     staples: 'empty',
     carryover: 'non-empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', ['Leftover']),
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', [
+      'Leftover',
+    ]),
   },
   {
     storedTrip: 'active',
     staples: 'non-empty',
     carryover: 'empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', []),
+    expected: storedTripAdoptedUntouched(
+      ['StoredMilk'],
+      ['Fridge'],
+      'active',
+      [],
+    ),
   },
   {
     storedTrip: 'active',
     staples: 'non-empty',
     carryover: 'non-empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', ['Leftover']),
+    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', [
+      'Leftover',
+    ]),
   },
 ];
 

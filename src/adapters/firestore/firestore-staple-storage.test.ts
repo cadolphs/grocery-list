@@ -23,20 +23,25 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
-type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+type SnapshotCallback = (snapshot: {
+  exists: () => boolean;
+  data: () => MockDocData;
+}) => void;
 let capturedSnapshotCallback: SnapshotCallback | null = null;
 const mockUnsubscribe = jest.fn();
 
-const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
-  // Immediately fire with current data (simulates initial snapshot)
-  const data = mockStore[docRef.path];
-  callback({
-    exists: () => data !== undefined,
-    data: () => data,
-  });
-  capturedSnapshotCallback = callback;
-  return mockUnsubscribe;
-});
+const mockOnSnapshot = jest.fn(
+  (docRef: { path: string }, callback: SnapshotCallback) => {
+    // Immediately fire with current data (simulates initial snapshot)
+    const data = mockStore[docRef.path];
+    callback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+    capturedSnapshotCallback = callback;
+    return mockUnsubscribe;
+  },
+);
 
 // Helper to simulate a remote snapshot arriving
 const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
@@ -72,7 +77,9 @@ const makeStapleItem = (overrides: Partial<StapleItem> = {}): StapleItem => ({
 });
 
 const createFreshStorage = async () => {
-  const { createFirestoreStapleStorage } = require('./firestore-staple-storage');
+  const {
+    createFirestoreStapleStorage,
+  } = require('./firestore-staple-storage');
   const mockDb = { type: 'firestore' };
   const storage = createFirestoreStapleStorage(mockDb, TEST_UID);
   await storage.initialize();
@@ -126,7 +133,7 @@ describe('firestore staple storage implements staple storage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: STAPLES_DOC_PATH }),
-      { items: [item], writtenAt: expect.any(Number) }
+      { items: [item], writtenAt: expect.any(Number) },
     );
   });
 
@@ -140,7 +147,7 @@ describe('firestore staple storage implements staple storage port', () => {
     expect(storage.loadAll()).toEqual([]);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: STAPLES_DOC_PATH }),
-      { items: [], writtenAt: expect.any(Number) }
+      { items: [], writtenAt: expect.any(Number) },
     );
   });
 
@@ -165,7 +172,7 @@ describe('firestore staple storage implements staple storage port', () => {
     expect(storage.loadAll()).toEqual([updated]);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: STAPLES_DOC_PATH }),
-      { items: [updated], writtenAt: expect.any(Number) }
+      { items: [updated], writtenAt: expect.any(Number) },
     );
   });
 
@@ -189,9 +196,21 @@ describe('firestore staple storage implements staple storage port', () => {
   });
 
   test('updateArea renames area for all matching items', async () => {
-    const kitchen1 = makeStapleItem({ id: '1', name: 'Milk', houseArea: 'Kitchen' });
-    const bathroom = makeStapleItem({ id: '2', name: 'Soap', houseArea: 'Bathroom' });
-    const kitchen2 = makeStapleItem({ id: '3', name: 'Bread', houseArea: 'Kitchen' });
+    const kitchen1 = makeStapleItem({
+      id: '1',
+      name: 'Milk',
+      houseArea: 'Kitchen',
+    });
+    const bathroom = makeStapleItem({
+      id: '2',
+      name: 'Soap',
+      houseArea: 'Bathroom',
+    });
+    const kitchen2 = makeStapleItem({
+      id: '3',
+      name: 'Bread',
+      houseArea: 'Kitchen',
+    });
     mockStore[STAPLES_DOC_PATH] = { items: [kitchen1, bathroom, kitchen2] };
     const storage = await createFreshStorage();
 
@@ -207,11 +226,16 @@ describe('firestore staple storage implements staple storage port', () => {
 // --- onChange callback and echo detection tests ---
 
 const createFreshStorageWithOnChange = async (onChange?: () => void) => {
-  const { createFirestoreStapleStorage } = require('./firestore-staple-storage');
+  const {
+    createFirestoreStapleStorage,
+  } = require('./firestore-staple-storage');
   const mockDb = { type: 'firestore' };
   const result = createFirestoreStapleStorage(mockDb, TEST_UID, { onChange });
   await result.initialize();
-  return result as StapleStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+  return result as StapleStorage & {
+    initialize: () => Promise<void>;
+    unsubscribe: () => void;
+  };
 };
 
 describe('firestore staple storage onChange callback', () => {
@@ -220,7 +244,9 @@ describe('firestore staple storage onChange callback', () => {
     mockStore[STAPLES_DOC_PATH] = { items: [milk] };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
     expect(storage.loadAll()).toEqual([milk]);
@@ -238,7 +264,9 @@ describe('firestore staple storage onChange callback', () => {
     mockStore[STAPLES_DOC_PATH] = { items: [milk] };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
 
@@ -259,7 +287,9 @@ describe('firestore staple storage onChange callback', () => {
     mockStore[STAPLES_DOC_PATH] = { items: [milk, eggs] };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
     expect(storage.loadAll()).toHaveLength(2);

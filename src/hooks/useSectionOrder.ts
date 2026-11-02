@@ -23,9 +23,10 @@ export const hasLegacyCompositeKeys = (order: string[] | null): boolean => {
   return order.some((entry) => entry.includes('::'));
 };
 
-const loadAndMigrate = (
-  storage: { loadOrder: () => string[] | null; clearOrder: () => void }
-): string[] | null => {
+const loadAndMigrate = (storage: {
+  loadOrder: () => string[] | null;
+  clearOrder: () => void;
+}): string[] | null => {
   const loaded = storage.loadOrder();
   if (hasLegacyCompositeKeys(loaded)) {
     storage.clearOrder();
@@ -37,7 +38,7 @@ const loadAndMigrate = (
 export const useSectionOrder = (): UseSectionOrderResult => {
   const { sectionOrderStorage } = useServices();
   const [order, setOrder] = useState<string[] | null>(() =>
-    loadAndMigrate(sectionOrderStorage)
+    loadAndMigrate(sectionOrderStorage),
   );
 
   // Re-sync React state when the storage emits change (local writes from other

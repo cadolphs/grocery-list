@@ -35,7 +35,11 @@ describe('WS-ES-1: Edit Staple House Area', () => {
   it('moves a staple to a different house area', () => {
     // Given "Whole milk" is a staple in "Fridge"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
@@ -45,7 +49,7 @@ describe('WS-ES-1: Edit Staple House Area', () => {
 
     // Then "Whole milk" is now in "Freezer"
     expect(result.success).toBe(true);
-    const updated = library.listAll().find(s => s.name === 'Whole milk');
+    const updated = library.listAll().find((s) => s.name === 'Whole milk');
     expect(updated?.houseArea).toBe('Freezer');
 
     // And "Whole milk" no longer appears in "Fridge"
@@ -66,7 +70,11 @@ describe('WS-ES-2: Edit Staple Store Location', () => {
   it('changes store section and aisle on a staple', () => {
     // Given "Canned beans" is in "Canned Goods" section, aisle 5
     const stapleStorage = createNullStapleStorage([
-      { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
+      {
+        name: 'Canned beans',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
@@ -78,7 +86,7 @@ describe('WS-ES-2: Edit Staple Store Location', () => {
 
     // Then "Canned beans" now shows "International" section, aisle 9
     expect(result.success).toBe(true);
-    const updated = library.listAll().find(s => s.name === 'Canned beans');
+    const updated = library.listAll().find((s) => s.name === 'Canned beans');
     expect(updated?.storeLocation.section).toBe('International');
     expect(updated?.storeLocation.aisleNumber).toBe(9);
   });
@@ -96,19 +104,31 @@ describe('WS-ES-3: Duplicate Detection on Edit', () => {
   it('blocks move when same name already exists in target area', () => {
     // Given "Whole milk" exists in both "Fridge" and "Freezer"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Whole milk', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: 10 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Whole milk',
+        houseArea: 'Freezer',
+        storeLocation: { section: 'Frozen', aisleNumber: 10 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const fridgeMilk = library.listByArea('Fridge')[0];
 
     // When Carlos tries to move the Fridge "Whole milk" to "Freezer"
-    const result = library.updateStaple(fridgeMilk.id, { houseArea: 'Freezer' });
+    const result = library.updateStaple(fridgeMilk.id, {
+      houseArea: 'Freezer',
+    });
 
     // Then the edit is rejected because "Whole milk" already exists in "Freezer"
     expect(result.success).toBe(false);
     expect(result).toEqual(
-      expect.objectContaining({ error: expect.stringContaining('already exists in Freezer') })
+      expect.objectContaining({
+        error: expect.stringContaining('already exists in Freezer'),
+      }),
     );
 
     // And the original staple remains unchanged in "Fridge"
@@ -130,7 +150,11 @@ describe('WS-ES-4: Self-Update Allowed', () => {
   it('allows updating store location on same staple without duplicate error', () => {
     // Given "Whole milk" is in "Fridge", "Dairy" section, aisle 3
     const stapleStorage = createNullStapleStorage([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
@@ -142,7 +166,7 @@ describe('WS-ES-4: Self-Update Allowed', () => {
 
     // Then the update succeeds without duplicate error
     expect(result.success).toBe(true);
-    const updated = library.listAll().find(s => s.name === 'Whole milk');
+    const updated = library.listAll().find((s) => s.name === 'Whole milk');
     expect(updated?.storeLocation.aisleNumber).toBe(4);
   });
 });

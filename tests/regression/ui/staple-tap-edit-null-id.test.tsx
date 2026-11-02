@@ -21,17 +21,29 @@ const AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 function renderAppWithNullStapleId() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(AREAS);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   const tripService = createTrip(tripStorage, AREAS);
 
   // Start trip WITHOUT passing staple ids -- stapleId will be null on trip items
   tripService.start([
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
 
   // Verify the trip item has stapleId=null (the bug condition)
@@ -45,7 +57,7 @@ function renderAppWithNullStapleId() {
       areaManagement={areaManagement}
     >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 

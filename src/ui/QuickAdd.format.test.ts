@@ -21,7 +21,9 @@ describe('formatSuggestion', () => {
       storeLocation: { section: 'International', aisleNumber: 7 },
     });
 
-    expect(formatSuggestion(oneOff)).toBe('Tahini - International / Aisle 7 (one-off)');
+    expect(formatSuggestion(oneOff)).toBe(
+      'Tahini - International / Aisle 7 (one-off)',
+    );
   });
 
   it('does not append a type label for staple items', () => {

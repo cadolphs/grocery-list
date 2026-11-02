@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { AuthResult } from '../auth/AuthService';
 import { theme } from './theme';
 
@@ -27,20 +34,31 @@ const toggleLabel = (mode: AuthMode): string =>
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const validateFormInput = (email: string, password: string, mode: AuthMode): string | null => {
+const validateFormInput = (
+  email: string,
+  password: string,
+  mode: AuthMode,
+): string | null => {
   if (!email.trim()) return 'Please enter your email address';
-  if (!EMAIL_PATTERN.test(email.trim())) return 'Please enter a valid email address.';
-  if (mode === 'signUp' && password.length < 8) return 'Password must be at least 8 characters.';
+  if (!EMAIL_PATTERN.test(email.trim()))
+    return 'Please enter a valid email address.';
+  if (mode === 'signUp' && password.length < 8)
+    return 'Password must be at least 8 characters.';
   return null;
 };
 
 const fallbackErrorMessage = (mode: AuthMode): string =>
   mode === 'signUp' ? 'Failed to sign up' : 'Failed to sign in';
 
-export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Element => {
+export const LoginScreen = ({
+  signIn,
+  signUp,
+}: LoginScreenProps): React.JSX.Element => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [screenState, setScreenState] = useState<ScreenState>({ kind: 'initial' });
+  const [screenState, setScreenState] = useState<ScreenState>({
+    kind: 'initial',
+  });
   const [mode, setMode] = useState<AuthMode>('signIn');
 
   const handleSubmit = async () => {
@@ -57,12 +75,15 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
     if (result.success) {
       setScreenState({ kind: 'initial' });
     } else {
-      setScreenState({ kind: 'error', message: result.error || fallbackErrorMessage(mode) });
+      setScreenState({
+        kind: 'error',
+        message: result.error || fallbackErrorMessage(mode),
+      });
     }
   };
 
   const toggleMode = () => {
-    setMode(current => (current === 'signIn' ? 'signUp' : 'signIn'));
+    setMode((current) => (current === 'signIn' ? 'signUp' : 'signIn'));
     setScreenState({ kind: 'initial' });
   };
 
@@ -98,9 +119,7 @@ export const LoginScreen = ({ signIn, signUp }: LoginScreenProps): React.JSX.Ele
         onPress={handleSubmit}
         disabled={isSubmitting}
       >
-        <Text style={styles.buttonText}>
-          {submitLabel(mode, isSubmitting)}
-        </Text>
+        <Text style={styles.buttonText}>{submitLabel(mode, isSubmitting)}</Text>
       </Pressable>
       <Pressable onPress={toggleMode} disabled={isSubmitting}>
         <Text style={styles.toggleText}>{toggleLabel(mode)}</Text>

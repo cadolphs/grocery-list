@@ -44,7 +44,10 @@ export type FirestoreTripStorage = TripStorage & {
 };
 
 type TripDocumentData = { readonly trip?: Trip; readonly writtenAt?: number };
-type CarryoverDocumentData = { readonly items?: TripItem[]; readonly writtenAt?: number };
+type CarryoverDocumentData = {
+  readonly items?: TripItem[];
+  readonly writtenAt?: number;
+};
 
 type DocumentSnapshot<Data> = {
   exists: () => boolean;
@@ -63,7 +66,7 @@ const persistTripInBackground = (
   db: Firestore,
   uid: string,
   trip: Trip,
-  writtenAt: number
+  writtenAt: number,
 ): void => {
   setDoc(buildTripDocRef(db, uid), { trip, writtenAt });
 };
@@ -72,7 +75,7 @@ const persistCarryoverInBackground = (
   db: Firestore,
   uid: string,
   items: readonly TripItem[],
-  writtenAt: number
+  writtenAt: number,
 ): void => {
   setDoc(buildCarryoverDocRef(db, uid), { items: [...items], writtenAt });
 };
@@ -93,18 +96,22 @@ const readTripMirror = (uid: string) =>
   readMirrorEnvelope<Trip>(uid, 'trip', buildRawJsonV1Parser(isTrip), isTrip);
 
 const readCarryoverMirror = (uid: string) =>
-  readMirrorEnvelope<readonly TripItem[]>(uid, 'carryover', buildRawJsonV1Parser(isTripItemList), isTripItemList);
+  readMirrorEnvelope<readonly TripItem[]>(
+    uid,
+    'carryover',
+    buildRawJsonV1Parser(isTripItemList),
+    isTripItemList,
+  );
 
 // --- Domain helpers ---
 
-const serializeTrip = (trip: Trip | null): string =>
-  JSON.stringify(trip);
+const serializeTrip = (trip: Trip | null): string => JSON.stringify(trip);
 
 const serializeItems = (items: readonly TripItem[]): string =>
   JSON.stringify(items);
 
 const deriveCheckoffsFromItems = (
-  items: readonly TripItem[]
+  items: readonly TripItem[],
 ): ReadonlyMap<string, string> => {
   const checkoffs = new Map<string, string>();
   for (const item of items) {
@@ -117,7 +124,7 @@ const deriveCheckoffsFromItems = (
 
 const applyCheckoffsToItems = (
   items: TripItem[],
-  checkoffs: ReadonlyMap<string, string>
+  checkoffs: ReadonlyMap<string, string>,
 ): TripItem[] =>
   items.map((item) => {
     const checkedAt = checkoffs.get(item.name);
@@ -130,7 +137,7 @@ const applyCheckoffsToItems = (
 export const createFirestoreTripStorage = (
   db: Firestore,
   uid: string,
-  options: FirestoreTripStorageOptions = {}
+  options: FirestoreTripStorageOptions = {},
 ): FirestoreTripStorage => {
   let cachedTrip: Trip | null = null;
   let cachedCarryover: readonly TripItem[] = [];
@@ -159,7 +166,9 @@ export const createFirestoreTripStorage = (
     writeMirrorEnvelope(uid, 'trip', updatedTrip, writtenAt);
   };
 
-  const commitLocalCarryoverChange = (updatedItems: readonly TripItem[]): void => {
+  const commitLocalCarryoverChange = (
+    updatedItems: readonly TripItem[],
+  ): void => {
     const writtenAt = mintLocalStamp(carryoverWatermark);
     cachedCarryover = updatedItems;
     carryoverWatermark = observeStamp(carryoverWatermark, writtenAt);
@@ -167,7 +176,9 @@ export const createFirestoreTripStorage = (
     writeMirrorEnvelope(uid, 'carryover', updatedItems, writtenAt);
   };
 
-  const handleTripSnapshot = (snapshot: DocumentSnapshot<TripDocumentData>): void => {
+  const handleTripSnapshot = (
+    snapshot: DocumentSnapshot<TripDocumentData>,
+  ): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
     const incomingTrip: Trip | null = data?.trip ?? null;
     const serverWrittenAt = extractWrittenAt(data);
@@ -211,16 +222,22 @@ export const createFirestoreTripStorage = (
     onChange?.();
   };
 
-  const handleCarryoverSnapshot = (snapshot: DocumentSnapshot<CarryoverDocumentData>): void => {
+  const handleCarryoverSnapshot = (
+    snapshot: DocumentSnapshot<CarryoverDocumentData>,
+  ): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
     const incomingItems: readonly TripItem[] | null = snapshot.exists()
-      ? data?.items ?? []
+      ? (data?.items ?? [])
       : null;
     const serverWrittenAt = extractWrittenAt(data);
 
     // Preserve AsyncStorage hydration for carryover on empty snapshot — same
     // rationale as the trip path above.
-    if (incomingItems === null && carryoverHydratedFromLocal && cachedCarryover.length > 0) {
+    if (
+      incomingItems === null &&
+      carryoverHydratedFromLocal &&
+      cachedCarryover.length > 0
+    ) {
       return;
     }
 
@@ -268,7 +285,10 @@ export const createFirestoreTripStorage = (
       }
       if (carryoverMirror !== null) {
         cachedCarryover = carryoverMirror.value;
-        carryoverWatermark = observeStamp(carryoverWatermark, carryoverMirror.writtenAt);
+        carryoverWatermark = observeStamp(
+          carryoverWatermark,
+          carryoverMirror.writtenAt,
+        );
         carryoverHydratedFromLocal = true;
       }
 
@@ -281,7 +301,8 @@ export const createFirestoreTripStorage = (
       // (first install / new uid) the first snapshots remain the only source
       // of truth, so initialize() awaits them. The subscriptions are registered
       // in both cases; only the await is skipped.
-      const hydratedFromMirror = tripMirror !== null && carryoverMirror !== null;
+      const hydratedFromMirror =
+        tripMirror !== null && carryoverMirror !== null;
 
       // Settles once both documents have delivered their first snapshot; later
       // resolve() calls are no-ops.
@@ -301,11 +322,16 @@ export const createFirestoreTripStorage = (
           resolveOnceBothArrived();
         });
 
-        unsubscribeCarryoverFn = onSnapshot(buildCarryoverDocRef(db, uid), (snapshot) => {
-          handleCarryoverSnapshot(snapshot as DocumentSnapshot<CarryoverDocumentData>);
-          carryoverSnapshotArrived = true;
-          resolveOnceBothArrived();
-        });
+        unsubscribeCarryoverFn = onSnapshot(
+          buildCarryoverDocRef(db, uid),
+          (snapshot) => {
+            handleCarryoverSnapshot(
+              snapshot as DocumentSnapshot<CarryoverDocumentData>,
+            );
+            carryoverSnapshotArrived = true;
+            resolveOnceBothArrived();
+          },
+        );
       });
 
       return hydratedFromMirror ? undefined : firstSnapshots;
@@ -316,7 +342,8 @@ export const createFirestoreTripStorage = (
       unsubscribeCarryoverFn();
     },
 
-    loadTrip: (): Trip | null => cachedTrip ? { ...cachedTrip, items: [...cachedTrip.items] } : null,
+    loadTrip: (): Trip | null =>
+      cachedTrip ? { ...cachedTrip, items: [...cachedTrip.items] } : null,
 
     saveTrip: (trip: Trip): void => {
       commitLocalTripChange(trip);
@@ -338,9 +365,7 @@ export const createFirestoreTripStorage = (
       commitLocalTripChange({
         ...cachedTrip,
         items: cachedTrip.items.map((item) =>
-          item.houseArea === oldName
-            ? { ...item, houseArea: newName }
-            : item
+          item.houseArea === oldName ? { ...item, houseArea: newName } : item,
         ),
       });
     },

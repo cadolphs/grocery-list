@@ -1,9 +1,9 @@
-const mockApp = { name: "[DEFAULT]" };
-const mockAuthInstance = { type: "auth-instance" };
-const mockDbInstance = { type: "firestore-instance" };
-const mockCache = { kind: "persistent-local-cache" };
-const mockReactNativePersistence = { type: "rn-persistence" };
-const mockAsyncStorage = { type: "async-storage" };
+const mockApp = { name: '[DEFAULT]' };
+const mockAuthInstance = { type: 'auth-instance' };
+const mockDbInstance = { type: 'firestore-instance' };
+const mockCache = { kind: 'persistent-local-cache' };
+const mockReactNativePersistence = { type: 'rn-persistence' };
+const mockAsyncStorage = { type: 'async-storage' };
 
 const mockInitializeApp = jest.fn(() => mockApp);
 const mockGetApps = jest.fn(() => [] as any[]);
@@ -13,12 +13,12 @@ const mockGetReactNativePersistence = jest.fn(() => mockReactNativePersistence);
 const mockInitializeFirestore = jest.fn(() => mockDbInstance);
 const mockPersistentLocalCache = jest.fn(() => mockCache);
 
-jest.mock("firebase/app", () => ({
+jest.mock('firebase/app', () => ({
   initializeApp: mockInitializeApp,
   getApps: mockGetApps,
 }));
 
-jest.mock("firebase/auth", () => ({
+jest.mock('firebase/auth', () => ({
   getAuth: mockGetAuth,
   initializeAuth: mockInitializeAuth,
   getReactNativePersistence: mockGetReactNativePersistence,
@@ -28,15 +28,15 @@ jest.mock("firebase/auth", () => ({
   onAuthStateChanged: jest.fn(),
 }));
 
-jest.mock("firebase/firestore", () => ({
+jest.mock('firebase/firestore', () => ({
   initializeFirestore: mockInitializeFirestore,
   persistentLocalCache: mockPersistentLocalCache,
 }));
 
-jest.mock("@react-native-async-storage/async-storage", () => mockAsyncStorage);
+jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
-let mockPlatformOS = "ios";
-jest.mock("react-native", () => ({
+let mockPlatformOS = 'ios';
+jest.mock('react-native', () => ({
   Platform: {
     get OS() {
       return mockPlatformOS;
@@ -47,9 +47,9 @@ jest.mock("react-native", () => ({
 const requireFreshConfig = () => {
   let config: any;
   jest.isolateModules(() => {
-    config = require("./firebase-config");
+    config = require('./firebase-config');
   });
-  return config as typeof import("./firebase-config");
+  return config as typeof import('./firebase-config');
 };
 
 const requireFreshConfigWithPlatform = (platform: string) => {
@@ -62,8 +62,8 @@ beforeEach(() => {
   mockGetApps.mockReturnValue([]);
 });
 
-describe("firebase config", () => {
-  test("exports valid firestore and auth instances", () => {
+describe('firebase config', () => {
+  test('exports valid firestore and auth instances', () => {
     const { getFirebaseApp, getFirebaseAuth, getFirebaseDb } =
       requireFreshConfig();
 
@@ -72,7 +72,7 @@ describe("firebase config", () => {
     expect(getFirebaseDb()).toBeDefined();
   });
 
-  test("calling accessors twice returns the same instance (singleton)", () => {
+  test('calling accessors twice returns the same instance (singleton)', () => {
     const { getFirebaseApp, getFirebaseAuth, getFirebaseDb } =
       requireFreshConfig();
 
@@ -81,8 +81,8 @@ describe("firebase config", () => {
     expect(getFirebaseDb()).toBe(getFirebaseDb());
   });
 
-  test("reuses existing firebase app when already initialized", () => {
-    const existingApp = { name: "[DEFAULT]" };
+  test('reuses existing firebase app when already initialized', () => {
+    const existingApp = { name: '[DEFAULT]' };
     mockGetApps.mockReturnValue([existingApp]);
 
     const { getFirebaseApp } = requireFreshConfig();
@@ -93,20 +93,20 @@ describe("firebase config", () => {
     expect(mockInitializeApp).not.toHaveBeenCalled();
   });
 
-  test("initializes firestore without long polling on native", () => {
+  test('initializes firestore without long polling on native', () => {
     const { getFirebaseDb } = requireFreshConfig();
 
     getFirebaseDb();
 
     const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
-    expect(firestoreConfig).not.toHaveProperty("experimentalForceLongPolling");
+    expect(firestoreConfig).not.toHaveProperty('experimentalForceLongPolling');
   });
 });
 
-describe("platform-specific initialization", () => {
-  describe("on native platform (android)", () => {
-    test("uses initializeAuth with AsyncStorage persistence", () => {
-      const { getFirebaseAuth } = requireFreshConfigWithPlatform("android");
+describe('platform-specific initialization', () => {
+  describe('on native platform (android)', () => {
+    test('uses initializeAuth with AsyncStorage persistence', () => {
+      const { getFirebaseAuth } = requireFreshConfigWithPlatform('android');
 
       getFirebaseAuth();
 
@@ -119,39 +119,43 @@ describe("platform-specific initialization", () => {
       expect(mockGetAuth).not.toHaveBeenCalled();
     });
 
-    test("initializes Firestore without persistentLocalCache", () => {
-      const { getFirebaseDb } = requireFreshConfigWithPlatform("android");
+    test('initializes Firestore without persistentLocalCache', () => {
+      const { getFirebaseDb } = requireFreshConfigWithPlatform('android');
 
       getFirebaseDb();
 
       const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
-      expect(firestoreConfig).not.toHaveProperty("localCache");
+      expect(firestoreConfig).not.toHaveProperty('localCache');
     });
 
-    test("omits experimentalForceLongPolling on native (android)", () => {
-      const { getFirebaseDb } = requireFreshConfigWithPlatform("android");
+    test('omits experimentalForceLongPolling on native (android)', () => {
+      const { getFirebaseDb } = requireFreshConfigWithPlatform('android');
 
       getFirebaseDb();
 
       const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
-      expect(firestoreConfig).not.toHaveProperty("experimentalForceLongPolling");
-    });
-  });
-
-  describe("on native platform (ios)", () => {
-    test("omits experimentalForceLongPolling on native (ios)", () => {
-      const { getFirebaseDb } = requireFreshConfigWithPlatform("ios");
-
-      getFirebaseDb();
-
-      const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
-      expect(firestoreConfig).not.toHaveProperty("experimentalForceLongPolling");
+      expect(firestoreConfig).not.toHaveProperty(
+        'experimentalForceLongPolling',
+      );
     });
   });
 
-  describe("on web platform", () => {
-    test("uses getAuth for authentication", () => {
-      const { getFirebaseAuth } = requireFreshConfigWithPlatform("web");
+  describe('on native platform (ios)', () => {
+    test('omits experimentalForceLongPolling on native (ios)', () => {
+      const { getFirebaseDb } = requireFreshConfigWithPlatform('ios');
+
+      getFirebaseDb();
+
+      const firestoreConfig = (mockInitializeFirestore.mock.calls as any)[0][1];
+      expect(firestoreConfig).not.toHaveProperty(
+        'experimentalForceLongPolling',
+      );
+    });
+  });
+
+  describe('on web platform', () => {
+    test('uses getAuth for authentication', () => {
+      const { getFirebaseAuth } = requireFreshConfigWithPlatform('web');
 
       getFirebaseAuth();
 
@@ -159,8 +163,8 @@ describe("platform-specific initialization", () => {
       expect(mockInitializeAuth).not.toHaveBeenCalled();
     });
 
-    test("initializes Firestore with persistentLocalCache", () => {
-      const { getFirebaseDb } = requireFreshConfigWithPlatform("web");
+    test('initializes Firestore with persistentLocalCache', () => {
+      const { getFirebaseDb } = requireFreshConfigWithPlatform('web');
 
       getFirebaseDb();
 

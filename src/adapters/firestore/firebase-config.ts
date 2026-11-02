@@ -26,10 +26,7 @@ let db: Firestore | null = null;
 const getOrInitializeApp = (): FirebaseApp => {
   if (app) return app;
 
-  app =
-    getApps().length > 0
-      ? getApps()[0]
-      : initializeApp(firebaseConfig);
+  app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
 
   return app;
 };

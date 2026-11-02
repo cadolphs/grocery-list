@@ -12,9 +12,7 @@ interface GroceryListProps {
   storage?: CheckedItemsStorage;
 }
 
-export function GroceryList({
-  storage = defaultStorage,
-}: GroceryListProps) {
+export function GroceryList({ storage = defaultStorage }: GroceryListProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {

@@ -1,13 +1,23 @@
 // Unit tests for item grouping pure functions
 
-import { groupByArea, AreaGroup, groupBySection, SectionGroup } from '../../../src/domain/item-grouping';
+import {
+  groupByArea,
+  AreaGroup,
+  groupBySection,
+  SectionGroup,
+} from '../../../src/domain/item-grouping';
 import { TripItem, HouseArea } from '../../../src/domain/types';
 
-const makeTripItem = (overrides: Partial<TripItem> & { name: string; houseArea: HouseArea }): TripItem => ({
+const makeTripItem = (
+  overrides: Partial<TripItem> & { name: string; houseArea: HouseArea },
+): TripItem => ({
   id: `trip-item-${overrides.name}`,
   name: overrides.name,
   houseArea: overrides.houseArea,
-  storeLocation: overrides.storeLocation ?? { section: 'General', aisleNumber: null },
+  storeLocation: overrides.storeLocation ?? {
+    section: 'General',
+    aisleNumber: null,
+  },
   itemType: overrides.itemType ?? 'staple',
   stapleId: overrides.stapleId ?? null,
   source: overrides.source ?? 'preloaded',
@@ -16,14 +26,20 @@ const makeTripItem = (overrides: Partial<TripItem> & { name: string; houseArea: 
   checkedAt: overrides.checkedAt ?? null,
 });
 
-const ALL_HOUSE_AREAS: HouseArea[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+const ALL_HOUSE_AREAS: HouseArea[] = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
 
 describe('groupByArea', () => {
   it('returns all 5 house areas even when given empty items', () => {
     const result = groupByArea([], ALL_HOUSE_AREAS);
 
     expect(result).toHaveLength(5);
-    const areas = result.map(g => g.area);
+    const areas = result.map((g) => g.area);
     expect(areas).toEqual(expect.arrayContaining(ALL_HOUSE_AREAS));
   });
 
@@ -36,11 +52,13 @@ describe('groupByArea', () => {
 
     const result = groupByArea(items, ALL_HOUSE_AREAS);
 
-    const fridgeGroup = result.find(g => g.area === 'Fridge')!;
+    const fridgeGroup = result.find((g) => g.area === 'Fridge')!;
     expect(fridgeGroup.items).toHaveLength(2);
-    expect(fridgeGroup.items.map(i => i.name)).toEqual(expect.arrayContaining(['Whole milk', 'Butter']));
+    expect(fridgeGroup.items.map((i) => i.name)).toEqual(
+      expect.arrayContaining(['Whole milk', 'Butter']),
+    );
 
-    const bathroomGroup = result.find(g => g.area === 'Bathroom')!;
+    const bathroomGroup = result.find((g) => g.area === 'Bathroom')!;
     expect(bathroomGroup.items).toHaveLength(1);
     expect(bathroomGroup.items[0].name).toBe('Shampoo');
   });
@@ -54,9 +72,9 @@ describe('groupByArea', () => {
 
     const result = groupByArea(items, ALL_HOUSE_AREAS);
 
-    expect(result.find(g => g.area === 'Fridge')!.totalCount).toBe(2);
-    expect(result.find(g => g.area === 'Freezer')!.totalCount).toBe(1);
-    expect(result.find(g => g.area === 'Bathroom')!.totalCount).toBe(0);
+    expect(result.find((g) => g.area === 'Fridge')!.totalCount).toBe(2);
+    expect(result.find((g) => g.area === 'Freezer')!.totalCount).toBe(1);
+    expect(result.find((g) => g.area === 'Bathroom')!.totalCount).toBe(0);
   });
 
   it('computes neededCount as number of items with needed=true', () => {
@@ -68,7 +86,7 @@ describe('groupByArea', () => {
 
     const result = groupByArea(items, ALL_HOUSE_AREAS);
 
-    const fridgeGroup = result.find(g => g.area === 'Fridge')!;
+    const fridgeGroup = result.find((g) => g.area === 'Fridge')!;
     expect(fridgeGroup.neededCount).toBe(2);
     expect(fridgeGroup.totalCount).toBe(3);
   });
@@ -109,7 +127,9 @@ describe('groupBySection', () => {
 
     expect(result).toHaveLength(2);
     const sections = result.map((g) => g.section);
-    expect(sections).toEqual(expect.arrayContaining(['Inner Aisles', 'Produce']));
+    expect(sections).toEqual(
+      expect.arrayContaining(['Inner Aisles', 'Produce']),
+    );
 
     const innerAisles = result.find((g) => g.section === 'Inner Aisles')!;
     expect(innerAisles.items).toHaveLength(3);
@@ -141,7 +161,11 @@ describe('groupBySection', () => {
     const result = groupBySection(items);
 
     expect(result).toHaveLength(1);
-    expect(result[0].items.map((i) => i.name)).toEqual(['Bread', 'Pasta', 'Soap']);
+    expect(result[0].items.map((i) => i.name)).toEqual([
+      'Bread',
+      'Pasta',
+      'Soap',
+    ]);
   });
 
   it('orders items with null aisleNumber after numbered aisles within the same section', () => {
@@ -165,7 +189,11 @@ describe('groupBySection', () => {
 
     const result = groupBySection(items);
 
-    expect(result[0].items.map((i) => i.name)).toEqual(['Bread', 'Pasta', 'Bulk Bin Oats']);
+    expect(result[0].items.map((i) => i.name)).toEqual([
+      'Bread',
+      'Pasta',
+      'Bulk Bin Oats',
+    ]);
   });
 
   it('preserves input order as a stable secondary order for items with the same aisleNumber', () => {
@@ -189,7 +217,11 @@ describe('groupBySection', () => {
 
     const result = groupBySection(items);
 
-    expect(result[0].items.map((i) => i.name)).toEqual(['Pasta', 'Rice', 'Beans']);
+    expect(result[0].items.map((i) => i.name)).toEqual([
+      'Pasta',
+      'Rice',
+      'Beans',
+    ]);
   });
 
   it('preserves every input item in the resulting groups (no silent loss)', () => {

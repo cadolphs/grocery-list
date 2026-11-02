@@ -20,7 +20,10 @@ import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { diffStaples, applyAddedStaplesToTrip } from '../../../src/hooks/useAppInitialization';
+import {
+  diffStaples,
+  applyAddedStaplesToTrip,
+} from '../../../src/hooks/useAppInitialization';
 
 // UI-level imports:
 import { render, fireEvent, screen } from '@testing-library/react-native';
@@ -31,15 +34,28 @@ import { AppShell } from '../../../src/ui/AppShell';
 // Test Setup Helper
 // =============================================================================
 
-function createTestServices(preloadedStaples?: Array<{
-  name: string;
-  houseArea: 'Bathroom' | 'Garage Pantry' | 'Kitchen Cabinets' | 'Fridge' | 'Freezer';
-  storeLocation: { section: string; aisleNumber: number | null };
-}>) {
-  const stapleStorage = createNullStapleStorage(preloadedStaples ?? [
-    { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-  ]);
+function createTestServices(
+  preloadedStaples?: Array<{
+    name: string;
+    houseArea:
+      'Bathroom' | 'Garage Pantry' | 'Kitchen Cabinets' | 'Fridge' | 'Freezer';
+    storeLocation: { section: string; aisleNumber: number | null };
+  }>,
+) {
+  const stapleStorage = createNullStapleStorage(
+    preloadedStaples ?? [
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
+    ],
+  );
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
@@ -60,18 +76,23 @@ function createTestServices(preloadedStaples?: Array<{
   return { library, tripService, stapleStorage, tripStorage };
 }
 
-function renderApp(library: ReturnType<typeof createStapleLibrary>, tripService: ReturnType<typeof createTrip>) {
+function renderApp(
+  library: ReturnType<typeof createStapleLibrary>,
+  tripService: ReturnType<typeof createTrip>,
+) {
   return render(
     <ServiceProvider stapleLibrary={library} tripService={tripService}>
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 
 function openMetadataSheet(itemName: string): void {
   const quickAddInput = screen.getByPlaceholderText('Add an item...');
   fireEvent.changeText(quickAddInput, itemName);
-  fireEvent.press(screen.getByText(new RegExp(`Add '${itemName}' as new item`)));
+  fireEvent.press(
+    screen.getByText(new RegExp(`Add '${itemName}' as new item`)),
+  );
 }
 
 function tapAreaSection(areaName: string): void {
@@ -80,7 +101,13 @@ function tapAreaSection(areaName: string): void {
 }
 
 function completeAllAreas(tripService: ReturnType<typeof createTrip>): void {
-  const allAreas = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'] as const;
+  const allAreas = [
+    'Bathroom',
+    'Garage Pantry',
+    'Kitchen Cabinets',
+    'Fridge',
+    'Freezer',
+  ] as const;
   for (const area of allAreas) {
     tripService.completeArea(area);
   }
@@ -161,7 +188,10 @@ describe('US-AIF-02: Context-Aware Smart Defaults', () => {
     fireEvent.press(screen.getByText('One-off'));
 
     // And fills in store location and taps "Add Item"
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Frozen Treats');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'Frozen Treats',
+    );
     fireEvent.press(screen.getByText('Add Item'));
 
     // Then the item is saved as one-off with the store location
@@ -171,7 +201,7 @@ describe('US-AIF-02: Context-Aware Smart Defaults', () => {
         name: 'Dog treats',
         itemType: 'one-off',
         storeLocation: expect.objectContaining({ section: 'Frozen Treats' }),
-      })
+      }),
     );
   });
 });
@@ -202,7 +232,7 @@ describe('US-AIF-03: Skip Metadata Shortcut', () => {
 
     // Then "Sriracha" is added as one-off in the Fridge area
     const tripItems = tripService.getItems();
-    const sriracha = tripItems.find(i => i.name === 'Sriracha');
+    const sriracha = tripItems.find((i) => i.name === 'Sriracha');
     expect(sriracha).toBeDefined();
     expect(sriracha?.itemType).toBe('one-off');
     expect(sriracha?.houseArea).toBe('Fridge');
@@ -228,7 +258,9 @@ describe('US-AIF-03: Skip Metadata Shortcut', () => {
     fireEvent.press(screen.getByText('Skip, add with defaults'));
 
     // Then "Fancy mustard" is added as one-off in Kitchen Cabinets
-    const mustard = tripService.getItems().find(i => i.name === 'Fancy mustard');
+    const mustard = tripService
+      .getItems()
+      .find((i) => i.name === 'Fancy mustard');
     expect(mustard).toBeDefined();
     expect(mustard?.houseArea).toBe('Kitchen Cabinets');
     expect(mustard?.storeLocation.section).toBe('Uncategorized');
@@ -251,7 +283,7 @@ describe('US-AIF-03: Skip Metadata Shortcut', () => {
     // (superseded by persist-one-offs/US-01 — skipped one-offs are now persisted
     // to the library so they can be re-added from QuickAdd suggestions)
     expect(library.listAll()).toContainEqual(
-      expect.objectContaining({ name: 'Sriracha', type: 'one-off' })
+      expect.objectContaining({ name: 'Sriracha', type: 'one-off' }),
     );
   });
 });
@@ -270,9 +302,21 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
   it('previously used section appears as suggestion on prefix match', () => {
     // Given Carlos has staples in sections "Dairy", "Produce", and "Deli"
     const { library, tripService } = createTestServices([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Apples', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null } },
-      { name: 'Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Apples',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Produce', aisleNumber: null },
+      },
+      {
+        name: 'Turkey',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Deli', aisleNumber: null },
+      },
     ]);
     renderApp(library, tripService);
 
@@ -296,9 +340,21 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
   it('non-matching sections are filtered out', () => {
     // Given Carlos has staples in sections "Dairy", "Produce", and "Deli"
     const { library, tripService } = createTestServices([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Apples', houseArea: 'Fridge', storeLocation: { section: 'Produce', aisleNumber: null } },
-      { name: 'Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Apples',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Produce', aisleNumber: null },
+      },
+      {
+        name: 'Turkey',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Deli', aisleNumber: null },
+      },
     ]);
     renderApp(library, tripService);
 
@@ -319,7 +375,11 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
   it('tapping a section suggestion fills the field', () => {
     // Given Carlos has staples in section "Dairy"
     const { library, tripService } = createTestServices([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     renderApp(library, tripService);
 
@@ -331,7 +391,10 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
     fireEvent.press(screen.getByText('Dairy'));
 
     // Then the section field is filled with "Dairy"
-    expect(screen.getByPlaceholderText('Store section...')).toHaveProp('value', 'Dairy');
+    expect(screen.getByPlaceholderText('Store section...')).toHaveProp(
+      'value',
+      'Dairy',
+    );
 
     // And the suggestion list dismisses (no more suggestion text visible)
     // "Dairy" as a standalone suggestion should not be visible; only the input value
@@ -340,7 +403,11 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
   it('new section name is accepted without restriction', () => {
     // Given Carlos has no staples in section "International Foods"
     const { library, tripService } = createTestServices([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     renderApp(library, tripService);
 
@@ -348,12 +415,15 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
     openMetadataSheet('Kimchi');
 
     // When Carlos types "International Foods" in the section field and taps "Add Item"
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'International Foods');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'International Foods',
+    );
     fireEvent.press(screen.getByText('Add Item'));
 
     // Then the item is created with section "International Foods"
     const tripItems = tripService.getItems();
-    const kimchi = tripItems.find(i => i.name === 'Kimchi');
+    const kimchi = tripItems.find((i) => i.name === 'Kimchi');
     expect(kimchi).toBeDefined();
     expect(kimchi?.storeLocation.section).toBe('International Foods');
   });
@@ -361,7 +431,11 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
   it('section suggestions are case-insensitive', () => {
     // Given Carlos has staples in section "Dairy"
     const { library, tripService } = createTestServices([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     renderApp(library, tripService);
 
@@ -369,7 +443,10 @@ describe('US-AIF-04: Section Auto-Suggest', () => {
     openMetadataSheet('Oat milk');
 
     // When Carlos types "dai" (lowercase) in the section field
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'dai');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'dai',
+    );
 
     // Then "Dairy" appears as a suggestion
     expect(screen.getByText('Dairy')).toBeTruthy();
@@ -393,11 +470,8 @@ describe('US-AIF-05: Duplicate Staple Detection', () => {
     // const { library } = createTestServices();
     // const existing = library.search('Whole milk').find(s => s.houseArea === 'Fridge');
     // expect(existing).toBeDefined();
-
     // And Carlos has opened the metadata bottom sheet for "Whole milk" with area Fridge
-
     // When Carlos taps "Add Item"
-
     // Then the bottom sheet shows "Whole milk already exists in Fridge"
     // And displays the existing metadata "Dairy / Aisle 3"
     // (UI: expect(screen.getByText(/already exists in Fridge/)).toBeTruthy())
@@ -409,43 +483,33 @@ describe('US-AIF-05: Duplicate Staple Detection', () => {
     // const { library } = createTestServices([
     //   { name: 'Trash bags', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Cleaning', aisleNumber: 9 } },
     // ]);
-
     // And Carlos has opened the metadata bottom sheet for "Trash bags" with area Bathroom
-
     // When Carlos taps "Add Item"
-
     // Then "Trash bags" is saved as a new staple in Bathroom
     // const trashBags = library.listAll().filter(s => s.name === 'Trash bags');
     // expect(trashBags).toHaveLength(2);
-
     // And no duplicate warning is shown
   });
 
   it.skip('"Add to trip instead" uses existing staple metadata', () => {
     // Given the duplicate warning is showing for "Whole milk" in Fridge
     // const { library, tripService } = createTestServices();
-
     // When Carlos taps "Add to trip instead"
     // (UI: fireEvent.press(screen.getByText('Add to trip instead')))
-
     // Then "Whole milk" is added to the trip with area Fridge, section Dairy, aisle 3
     // const milk = tripService.getItems().find(i => i.name === 'Whole milk');
     // expect(milk?.houseArea).toBe('Fridge');
     // expect(milk?.storeLocation.section).toBe('Dairy');
     // expect(milk?.storeLocation.aisleNumber).toBe(3);
-
     // And the bottom sheet dismisses
   });
 
   it.skip('cancel from duplicate warning returns to form', () => {
     // Given the duplicate warning is showing for "Whole milk" in Fridge
-
     // When Carlos taps "Cancel"
     // (UI: fireEvent.press(screen.getByText('Cancel')))
-
     // Then the bottom sheet returns to the metadata form
     // (UI: expect(screen.getByText('Add Item')).toBeTruthy())
-
     // And Carlos can change the area or name
   });
 });
@@ -460,9 +524,7 @@ describe('Error and Edge Cases', () => {
   it.skip('submit blocked when area is not selected', () => {
     // Given Carlos has opened the metadata bottom sheet for "Oat milk"
     // And Carlos has not selected an area
-
     // When Carlos taps "Add Item"
-
     // Then the item is not added
     // And Carlos sees a message that area is required
     // (UI: expect(screen.getByText(/area is required/i)).toBeTruthy())
@@ -471,9 +533,7 @@ describe('Error and Edge Cases', () => {
   it.skip('submit blocked when section is empty', () => {
     // Given Carlos has opened the metadata bottom sheet for "Oat milk"
     // And Carlos selects area "Fridge" but leaves section empty
-
     // When Carlos taps "Add Item"
-
     // Then the item is not added
     // And Carlos sees a message that section is required
   });
@@ -482,9 +542,7 @@ describe('Error and Edge Cases', () => {
     // Given Carlos has opened the metadata bottom sheet for "Rotisserie chicken"
     // And Carlos selects type "Staple", area "Fridge", section "Deli"
     // And Carlos leaves the aisle field blank
-
     // When Carlos taps "Add Item"
-
     // Then "Rotisserie chicken" is saved with no aisle number
     // const chicken = library.listAll().find(s => s.name === 'Rotisserie chicken');
     // expect(chicken?.storeLocation.aisleNumber).toBeNull();
@@ -495,19 +553,15 @@ describe('Error and Edge Cases', () => {
     // const { library, tripService } = createTestServices();
     // const initialStapleCount = library.listAll().length;
     // const initialTripCount = tripService.getItems().length;
-
     // When Carlos dismisses the bottom sheet without submitting
-
     // Then no item is added to the trip
     // expect(tripService.getItems()).toHaveLength(initialTripCount);
-
     // And no staple is added to the library
     // expect(library.listAll()).toHaveLength(initialStapleCount);
   });
 
   it.skip('QuickAdd input clears after successful submission', () => {
     // Given Carlos has submitted an item through the metadata bottom sheet
-
     // Then the QuickAdd input is cleared
     // (UI: expect(screen.getByPlaceholderText('Add an item...')).toHaveProp('value', ''))
   });

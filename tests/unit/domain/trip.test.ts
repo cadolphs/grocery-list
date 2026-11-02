@@ -30,7 +30,7 @@ describe('Trip: addItem', () => {
         source: 'quick-add',
         needed: true,
         checked: false,
-      })
+      }),
     );
     expect(items[0].id).toBeDefined();
   });
@@ -95,14 +95,18 @@ describe('Trip: checkOff persistence', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     trip.checkOff('Whole milk');
 
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();
-    const loadedMilk = loadedTrip?.items.find(i => i.name === 'Whole milk');
+    const loadedMilk = loadedTrip?.items.find((i) => i.name === 'Whole milk');
     expect(loadedMilk?.checked).toBe(true);
   });
 
@@ -110,14 +114,22 @@ describe('Trip: checkOff persistence', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     trip.checkOff('Whole milk');
 
     const loadedTrip = tripStorage.loadTrip();
-    const loadedButter = loadedTrip?.items.find(i => i.name === 'Butter');
+    const loadedButter = loadedTrip?.items.find((i) => i.name === 'Butter');
     expect(loadedButter?.checked).toBe(false);
   });
 });
@@ -127,8 +139,16 @@ describe('Trip: loadFromStorage', () => {
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
     trip1.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: null },
+      },
     ]);
     trip1.checkOff('Milk');
 
@@ -137,8 +157,8 @@ describe('Trip: loadFromStorage', () => {
 
     const items = trip2.getItems();
     expect(items).toHaveLength(2);
-    expect(items.find(i => i.name === 'Milk')?.checked).toBe(true);
-    expect(items.find(i => i.name === 'Bread')?.checked).toBe(false);
+    expect(items.find((i) => i.name === 'Milk')?.checked).toBe(true);
+    expect(items.find((i) => i.name === 'Bread')?.checked).toBe(false);
   });
 
   it('returns empty items when no trip in storage', () => {
@@ -155,15 +175,23 @@ describe('Trip: skipItem', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-      { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
+      {
+        name: 'Soap',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
     ]);
 
     trip.skipItem('Shampoo');
 
     const items = trip.getItems();
-    const shampoo = items.find(i => i.name === 'Shampoo');
-    const soap = items.find(i => i.name === 'Soap');
+    const shampoo = items.find((i) => i.name === 'Shampoo');
+    const soap = items.find((i) => i.name === 'Soap');
     expect(shampoo?.needed).toBe(false);
     expect(soap?.needed).toBe(true);
   });
@@ -172,7 +200,11 @@ describe('Trip: skipItem', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     trip.skipItem('Butter');
@@ -187,7 +219,11 @@ describe('Trip: completeArea and getSweepProgress', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
     ]);
 
     trip.completeArea('Bathroom');
@@ -217,9 +253,13 @@ describe('Trip: completeArea and getSweepProgress', () => {
     const trip = createTrip(tripStorage);
     trip.start([]);
 
-    ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'].forEach(
-      (area) => trip.completeArea(area as any)
-    );
+    [
+      'Bathroom',
+      'Garage Pantry',
+      'Kitchen Cabinets',
+      'Fridge',
+      'Freezer',
+    ].forEach((area) => trip.completeArea(area as any));
 
     const progress = trip.getSweepProgress();
     expect(progress.completedCount).toBe(5);
@@ -258,8 +298,16 @@ describe('Trip: getSummary', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     trip.skipItem('Butter');
 
@@ -273,17 +321,25 @@ describe('Trip: getSummary', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     trip.addItem({
-      name: 'Candles', houseArea: 'Kitchen Cabinets',
+      name: 'Candles',
+      houseArea: 'Kitchen Cabinets',
       storeLocation: { section: 'Baking', aisleNumber: 12 },
-      itemType: 'one-off', source: 'quick-add',
+      itemType: 'one-off',
+      source: 'quick-add',
     });
     trip.addItem({
-      name: 'Wine', houseArea: 'Kitchen Cabinets',
+      name: 'Wine',
+      houseArea: 'Kitchen Cabinets',
       storeLocation: { section: 'Alcohol', aisleNumber: 10 },
-      itemType: 'one-off', source: 'whiteboard',
+      itemType: 'one-off',
+      source: 'whiteboard',
     });
 
     const summary = trip.getSummary();
@@ -328,8 +384,16 @@ describe('Trip: resetSweep', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const staples = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
     trip.start(staples);
     trip.checkOff('Milk');
@@ -339,8 +403,8 @@ describe('Trip: resetSweep', () => {
 
     const items = trip.getItems();
     expect(items).toHaveLength(2);
-    const milk = items.find(i => i.name === 'Milk');
-    const butter = items.find(i => i.name === 'Butter');
+    const milk = items.find((i) => i.name === 'Milk');
+    const butter = items.find((i) => i.name === 'Butter');
     expect(milk?.needed).toBe(true);
     expect(milk?.checked).toBe(false);
     expect(milk?.checkedAt).toBeNull();
@@ -352,7 +416,11 @@ describe('Trip: resetSweep', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const staples = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
     trip.start(staples);
     trip.addItem({
@@ -374,7 +442,11 @@ describe('Trip: resetSweep', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const staples = [
-      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
     ];
     trip.start(staples);
     trip.completeArea('Bathroom');
@@ -391,7 +463,11 @@ describe('Trip: resetSweep', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const staples = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
     trip.start(staples);
     trip.checkOff('Milk');
@@ -471,10 +547,10 @@ describe('completeTrip', () => {
 
     expect(result.unboughtItems).toHaveLength(2);
     expect(result.unboughtItems).toContainEqual(
-      expect.objectContaining({ name: 'Milk' })
+      expect.objectContaining({ name: 'Milk' }),
     );
     expect(result.unboughtItems).toContainEqual(
-      expect.objectContaining({ name: 'Avocados' })
+      expect.objectContaining({ name: 'Avocados' }),
     );
   });
 

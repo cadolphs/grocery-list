@@ -35,7 +35,13 @@
  */
 
 import React, { useMemo } from 'react';
-import { render, fireEvent, waitFor, screen, act } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+  act,
+} from '@testing-library/react-native';
 
 import {
   createNullAuthService,
@@ -223,8 +229,12 @@ describe('WS-1: Maria signs out and returns to the login screen', () => {
       expect(screen.getByPlaceholderText('Email')).toBeTruthy();
       expect(screen.getByPlaceholderText('Password')).toBeTruthy();
     });
-    expect((screen.getByPlaceholderText('Email') as any).props.value ?? '').toBe('');
-    expect((screen.getByPlaceholderText('Password') as any).props.value ?? '').toBe('');
+    expect(
+      (screen.getByPlaceholderText('Email') as any).props.value ?? '',
+    ).toBe('');
+    expect(
+      (screen.getByPlaceholderText('Password') as any).props.value ?? '',
+    ).toBe('');
 
     // And no authenticated content remains visible to Maria
     expect(screen.queryByText('Home')).toBeNull();
@@ -327,9 +337,12 @@ describe('UAT-3: Signing out releases all per-user data subscriptions', () => {
     await waitFor(() => {
       expect(unsubscribeCalls).toHaveLength(4);
     });
-    expect(unsubscribeCalls.sort()).toEqual(
-      ['areas', 'sectionOrder', 'staples', 'trip'],
-    );
+    expect(unsubscribeCalls.sort()).toEqual([
+      'areas',
+      'sectionOrder',
+      'staples',
+      'trip',
+    ]);
 
     // And no additional unsubscribe fires afterwards (no stale subscription)
     const after = unsubscribeCalls.length;

@@ -12,14 +12,22 @@ describe('resetSweep re-populates from library', () => {
     const trip = createTrip(tripStorage);
 
     const initialStaples: StapleInput[] = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
     trip.start(initialStaples);
 
     // Simulate a staple added to the library AFTER the trip started
     const updatedStaples: StapleInput[] = [
       ...initialStaples,
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
 
     // resetSweep should accept current staples and rebuild from them
@@ -37,14 +45,26 @@ describe('resetSweep re-populates from library', () => {
     const trip = createTrip(tripStorage);
 
     const initialStaples: StapleInput[] = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
     trip.start(initialStaples);
 
     // Library no longer has Butter
     const updatedStaples: StapleInput[] = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ];
 
     trip.resetSweep(updatedStaples);

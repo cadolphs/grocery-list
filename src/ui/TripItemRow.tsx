@@ -17,10 +17,20 @@ type TripItemRowProps = {
   readonly onLongPress?: (name: string, area: string) => void;
 };
 
-export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongPress }: TripItemRowProps): React.JSX.Element => {
+export const TripItemRow = ({
+  item,
+  mode,
+  onPress,
+  onSkip,
+  onEditStaple,
+  onLongPress,
+}: TripItemRowProps): React.JSX.Element => {
   const isWeb = useIsWeb();
 
-  const canEdit = (mode === 'store' || mode === 'home') && item.itemType === 'staple' && !!onLongPress;
+  const canEdit =
+    (mode === 'store' || mode === 'home') &&
+    item.itemType === 'staple' &&
+    !!onLongPress;
 
   const handleLongPress = (): void => {
     if (canEdit && onLongPress) {
@@ -41,36 +51,44 @@ export const TripItemRow = ({ item, mode, onPress, onSkip, onEditStaple, onLongP
   };
 
   return (
-  <View style={styles.row}>
-    <Pressable
-      style={styles.itemPressable}
-      onPress={handlePress}
-      onLongPress={handleLongPress}
-      testID={item.checked ? `checked-${item.name}` : undefined}
-    >
-      <Text style={[
-        styles.itemName,
-        item.checked && mode === 'store' && styles.checkedText,
-        mode === 'home' && item.needed && styles.neededText,
-        mode === 'home' && !item.needed && styles.skippedText,
-      ]}>{item.name}</Text>
-    </Pressable>
-    {mode === 'store' && onSkip && (
-      <Pressable style={styles.skipButton} onPress={onSkip} testID={`skip-${item.name}`}>
-        <Text style={styles.skipText}>Skip</Text>
-      </Pressable>
-    )}
-    {isWeb && canEdit && (
+    <View style={styles.row}>
       <Pressable
-        style={styles.editButton}
-        onPress={handleEditPress}
-        testID={`edit-button-${item.name}`}
-        accessibilityLabel={`Edit ${item.name}`}
+        style={styles.itemPressable}
+        onPress={handlePress}
+        onLongPress={handleLongPress}
+        testID={item.checked ? `checked-${item.name}` : undefined}
       >
-        <Text style={styles.editIcon}>{'\u270E'}</Text>
+        <Text
+          style={[
+            styles.itemName,
+            item.checked && mode === 'store' && styles.checkedText,
+            mode === 'home' && item.needed && styles.neededText,
+            mode === 'home' && !item.needed && styles.skippedText,
+          ]}
+        >
+          {item.name}
+        </Text>
       </Pressable>
-    )}
-  </View>
+      {mode === 'store' && onSkip && (
+        <Pressable
+          style={styles.skipButton}
+          onPress={onSkip}
+          testID={`skip-${item.name}`}
+        >
+          <Text style={styles.skipText}>Skip</Text>
+        </Pressable>
+      )}
+      {isWeb && canEdit && (
+        <Pressable
+          style={styles.editButton}
+          onPress={handleEditPress}
+          testID={`edit-button-${item.name}`}
+          accessibilityLabel={`Edit ${item.name}`}
+        >
+          <Text style={styles.editIcon}>{'\u270E'}</Text>
+        </Pressable>
+      )}
+    </View>
   );
 };
 

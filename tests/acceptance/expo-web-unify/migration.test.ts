@@ -78,7 +78,7 @@ describe('expo-web-unify migration', () => {
     test('firebase.json SPA rewrite is preserved', () => {
       const cfg = readJson<FirebaseHostingConfig>('firebase.json');
       const spa = (cfg.hosting?.rewrites ?? []).find(
-        (r) => r.source === '**' && r.destination === '/index.html'
+        (r) => r.source === '**' && r.destination === '/index.html',
       );
       expect(spa).toBeDefined();
     });
@@ -95,7 +95,10 @@ describe('expo-web-unify migration', () => {
       const steps = workflowSteps(wf);
       const exportStep = steps.find((s) => {
         const runCmd = typeof s.run === 'string' ? (s.run as string) : '';
-        return /expo\s+export/.test(runCmd) && /-p\s+web|--platform\s+web/.test(runCmd);
+        return (
+          /expo\s+export/.test(runCmd) &&
+          /-p\s+web|--platform\s+web/.test(runCmd)
+        );
       });
       expect(exportStep).toBeDefined();
       // MUST NOT be scoped to the old /web directory.
@@ -120,7 +123,10 @@ describe('expo-web-unify migration', () => {
       const forbidden = steps.find((s) => {
         const runCmd = typeof s.run === 'string' ? (s.run as string) : '';
         const wd = (s as { 'working-directory'?: string })['working-directory'];
-        return wd === 'web' && (/npm ci/.test(runCmd) || /npm run build/.test(runCmd));
+        return (
+          wd === 'web' &&
+          (/npm ci/.test(runCmd) || /npm run build/.test(runCmd))
+        );
       });
       expect(forbidden).toBeUndefined();
     });
@@ -139,12 +145,14 @@ describe('expo-web-unify migration', () => {
       const deploy = steps.find(
         (s) =>
           typeof s.uses === 'string' &&
-          (s.uses as string).includes('FirebaseExtended/action-hosting-deploy')
+          (s.uses as string).includes('FirebaseExtended/action-hosting-deploy'),
       );
       expect(deploy).toBeDefined();
       const withBlock =
         (deploy as { with?: Record<string, string> } | undefined)?.with ?? {};
-      expect(withBlock.firebaseServiceAccount).toMatch(/FIREBASE_SERVICE_ACCOUNT/);
+      expect(withBlock.firebaseServiceAccount).toMatch(
+        /FIREBASE_SERVICE_ACCOUNT/,
+      );
       expect(withBlock.projectId).toBe('grocery-list-cad');
       expect(withBlock.channelId).toBe('live');
     });
@@ -166,7 +174,11 @@ describe('expo-web-unify migration', () => {
         '.yml',
         '.yaml',
       ]);
-      const forbiddenPatterns = [/\bweb\/src\b/, /\bweb\/package\b/, /\bweb\/dist\b/];
+      const forbiddenPatterns = [
+        /\bweb\/src\b/,
+        /\bweb\/package\b/,
+        /\bweb\/dist\b/,
+      ];
 
       const offenders: Array<{ file: string; pattern: string }> = [];
 
@@ -177,7 +189,8 @@ describe('expo-web-unify migration', () => {
         for (const entry of entries) {
           const relPath = path.join(dir, entry.name);
           if (entry.isDirectory()) {
-            if (entry.name === 'node_modules' || entry.name === '.git') continue;
+            if (entry.name === 'node_modules' || entry.name === '.git')
+              continue;
             walk(relPath);
           } else if (referenceExtensions.has(path.extname(entry.name))) {
             const body = fs.readFileSync(path.join(repoRoot, relPath), 'utf8');

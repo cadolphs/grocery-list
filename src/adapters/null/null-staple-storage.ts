@@ -11,7 +11,7 @@ type NullStapleStorageOptions = {
 
 export const createNullStapleStorage = (
   initialItems: NullStapleInput[] = [],
-  options: NullStapleStorageOptions = {}
+  options: NullStapleStorageOptions = {},
 ): StapleStorage & { readonly unsubscribe: () => void } => {
   const items: StapleItem[] = initialItems.map((input, index) => ({
     id: `staple-init-${index}`,
@@ -41,7 +41,7 @@ export const createNullStapleStorage = (
     },
     search: (query: string) =>
       items.filter((item) =>
-        item.name.toLowerCase().includes(query.toLowerCase())
+        item.name.toLowerCase().includes(query.toLowerCase()),
       ),
     updateArea: (oldName: string, newName: string) => {
       for (let i = 0; i < items.length; i++) {

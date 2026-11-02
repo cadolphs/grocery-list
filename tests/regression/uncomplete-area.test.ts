@@ -64,9 +64,17 @@ describe('useTrip exposes uncompleteArea', () => {
     // We create a conformance check: an object missing uncompleteArea
     // cannot satisfy the full UseTripResult interface
     const requiredKeys: (keyof UseTripResult)[] = [
-      'items', 'addItem', 'checkOff', 'toggleCheckOff',
-      'skipItem', 'unskipItem', 'completeArea', 'uncompleteArea',
-      'resetSweep', 'syncStapleUpdate', 'sweepProgress',
+      'items',
+      'addItem',
+      'checkOff',
+      'toggleCheckOff',
+      'skipItem',
+      'unskipItem',
+      'completeArea',
+      'uncompleteArea',
+      'resetSweep',
+      'syncStapleUpdate',
+      'sweepProgress',
     ];
     // This test fails if 'uncompleteArea' is not a key of UseTripResult
     expect(requiredKeys).toContain('uncompleteArea');
@@ -78,7 +86,11 @@ describe('useTrip exposes uncompleteArea', () => {
     const tripService = createTrip(storage);
 
     tripService.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     tripService.completeArea('Fridge');

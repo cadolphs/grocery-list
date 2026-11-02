@@ -50,8 +50,8 @@ export const createAsyncStapleStorage = (): AsyncStapleStorage => {
     },
 
     update: (updatedItem: StapleItem): void => {
-      cache = cache.map(item =>
-        item.id === updatedItem.id ? updatedItem : item
+      cache = cache.map((item) =>
+        item.id === updatedItem.id ? updatedItem : item,
       );
       persistInBackground(cache);
     },
@@ -60,15 +60,13 @@ export const createAsyncStapleStorage = (): AsyncStapleStorage => {
       if (query.trim() === '') return [];
       const lowerQuery = query.toLowerCase();
       return cache.filter((item) =>
-        item.name.toLowerCase().includes(lowerQuery)
+        item.name.toLowerCase().includes(lowerQuery),
       );
     },
 
     updateArea: (oldName: string, newName: string): void => {
-      cache = cache.map(item =>
-        item.houseArea === oldName
-          ? { ...item, houseArea: newName }
-          : item
+      cache = cache.map((item) =>
+        item.houseArea === oldName ? { ...item, houseArea: newName } : item,
       );
       persistInBackground(cache);
     },

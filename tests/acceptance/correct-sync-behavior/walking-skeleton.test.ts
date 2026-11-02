@@ -34,15 +34,25 @@ describe('WS-1: Staple sync across devices via real-time listener', () => {
   it('staple added on one device appears on the other without restart', () => {
     // Given Clemens has a staple library with "Milk" and "Eggs"
     const storage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(storage);
     expect(library.listAll()).toHaveLength(2);
 
     // And a real-time listener is active on the staple library
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     // When "Olive Oil" is added to the staple library from a remote device
     // (Simulated: adapter receives remote update, updates cache, calls onChange)
@@ -65,7 +75,7 @@ describe('WS-1: Staple sync across devices via real-time listener', () => {
     // Then the staple library contains "Milk", "Eggs", and "Olive Oil"
     const allStaples = library.listAll();
     expect(allStaples).toHaveLength(3);
-    expect(allStaples.map(s => s.name)).toContain('Olive Oil');
+    expect(allStaples.map((s) => s.name)).toContain('Olive Oil');
 
     // And the onChange callback fires to signal the update
     expect(onChangeCallCount).toBe(1);
@@ -83,9 +93,21 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: null },
+      },
     ]);
 
     // And the trip is stored in cloud storage
@@ -97,7 +119,7 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     // Then the trip in cloud storage shows "Milk" as checked with a timestamp
     const savedTrip = tripStorage.loadTrip();
     expect(savedTrip).not.toBeNull();
-    const milkInStorage = savedTrip!.items.find(i => i.name === 'Milk');
+    const milkInStorage = savedTrip!.items.find((i) => i.name === 'Milk');
     expect(milkInStorage?.checked).toBe(true);
     expect(milkInStorage?.checkedAt).not.toBeNull();
 
@@ -107,7 +129,9 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     otherDeviceTrip.loadFromStorage();
 
     // Then "Milk" appears as checked on the other device
-    const milkOnOther = otherDeviceTrip.getItems().find(i => i.name === 'Milk');
+    const milkOnOther = otherDeviceTrip
+      .getItems()
+      .find((i) => i.name === 'Milk');
     expect(milkOnOther?.checked).toBe(true);
     expect(milkOnOther?.checkedAt).not.toBeNull();
   });
@@ -122,8 +146,16 @@ describe('WS-3: New staple auto-adds to active trip', () => {
   it('new staple appears in active trip without resetting sweep', () => {
     // Given Clemens has an active trip started with "Milk" and "Eggs"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -144,7 +176,7 @@ describe('WS-3: New staple auto-adds to active trip', () => {
 
     // And the orchestration layer detects the new staple
     // (Simulated: hook layer compares old vs new staple list, finds "Paper Towels" is new)
-    const newStaple = library.listAll().find(s => s.name === 'Paper Towels')!;
+    const newStaple = library.listAll().find((s) => s.name === 'Paper Towels')!;
     trip.addItem({
       name: newStaple.name,
       houseArea: newStaple.houseArea,
@@ -155,7 +187,7 @@ describe('WS-3: New staple auto-adds to active trip', () => {
 
     // Then "Paper Towels" appears in the active trip
     const tripItems = trip.getItems();
-    expect(tripItems.map(i => i.name)).toContain('Paper Towels');
+    expect(tripItems.map((i) => i.name)).toContain('Paper Towels');
 
     // And the "Bathroom" area sweep progress is preserved
     expect(trip.getSweepProgress().completedAreas).toContain('Bathroom');

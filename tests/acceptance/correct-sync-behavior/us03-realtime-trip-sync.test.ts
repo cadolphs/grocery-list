@@ -21,14 +21,20 @@ describe('US-03: Real-time listeners on trip data', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
-    const butter = trip.getItems().find(i => i.name === 'Butter');
+    const butter = trip.getItems().find((i) => i.name === 'Butter');
     expect(butter?.needed).toBe(true);
 
     // And a real-time listener is active on the trip
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     // When "Butter" is marked as skipped from a remote device
     // (Simulated: remote device skips Butter, trip is persisted, arrives via onSnapshot)
@@ -36,7 +42,7 @@ describe('US-03: Real-time listeners on trip data', () => {
     onChange();
 
     // Then the local trip shows "Butter" as not needed
-    const updatedButter = trip.getItems().find(i => i.name === 'Butter');
+    const updatedButter = trip.getItems().find((i) => i.name === 'Butter');
     expect(updatedButter?.needed).toBe(false);
 
     // And the onChange callback fires
@@ -52,13 +58,23 @@ describe('US-03: Real-time listeners on trip data', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     // And a real-time listener is active on the trip
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     // When "Birthday Candles" is quick-added to the trip from a remote device
     // (Simulated: remote device adds item, trip update arrives via onSnapshot)
@@ -74,8 +90,8 @@ describe('US-03: Real-time listeners on trip data', () => {
     // Then the local trip contains "Milk", "Eggs", and "Birthday Candles"
     const items = trip.getItems();
     expect(items).toHaveLength(3);
-    expect(items.map(i => i.name)).toEqual(
-      expect.arrayContaining(['Milk', 'Eggs', 'Birthday Candles'])
+    expect(items.map((i) => i.name)).toEqual(
+      expect.arrayContaining(['Milk', 'Eggs', 'Birthday Candles']),
     );
 
     // And the onChange callback fires

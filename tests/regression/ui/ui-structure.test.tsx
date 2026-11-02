@@ -17,7 +17,11 @@ import { createTrip } from '../../../src/domain/trip';
 
 function renderApp() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -27,7 +31,7 @@ function renderApp() {
   return render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 

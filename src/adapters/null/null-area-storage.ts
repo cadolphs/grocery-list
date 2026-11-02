@@ -16,8 +16,10 @@ type NullAreaStorageOptions = {
 
 export const createNullAreaStorage = (
   initialAreas?: string[],
-  options: NullAreaStorageOptions = {}
-): AreaStorage & { readonly simulateRemoteChange: (areas: string[]) => void } => {
+  options: NullAreaStorageOptions = {},
+): AreaStorage & {
+  readonly simulateRemoteChange: (areas: string[]) => void;
+} => {
   let areas: string[] = [...(initialAreas ?? DEFAULT_AREAS)];
   const { onChange } = options;
   const listeners = new Set<() => void>();

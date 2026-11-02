@@ -50,7 +50,10 @@ export type FirestoreAreaStorage = AreaStorage & {
   readonly unsubscribe: () => void;
 };
 
-type AreaDocumentData = { readonly items?: string[]; readonly writtenAt?: number };
+type AreaDocumentData = {
+  readonly items?: string[];
+  readonly writtenAt?: number;
+};
 
 type DocumentSnapshot = {
   exists: () => boolean;
@@ -64,7 +67,7 @@ const persistInBackground = (
   db: Firestore,
   uid: string,
   areas: string[],
-  writtenAt: number
+  writtenAt: number,
 ): void => {
   setDoc(buildDocRef(db, uid), { items: areas, writtenAt });
 };
@@ -79,22 +82,28 @@ const isUsableAreaList = (candidate: unknown): candidate is string[] =>
 
 // Pre-upgrade v1 mirrors hold the raw JSON array under the v1 key.
 const readAreaMirror = (uid: string) =>
-  readMirrorEnvelope<string[]>(uid, 'areas', buildRawJsonV1Parser(isUsableAreaList), isUsableAreaList);
+  readMirrorEnvelope<string[]>(
+    uid,
+    'areas',
+    buildRawJsonV1Parser(isUsableAreaList),
+    isUsableAreaList,
+  );
 
 // null means "the server has nothing to say" — an absent document, a missing
 // field, or an empty list. It is deliberately NOT read as "the user has no areas".
-const extractIncomingAreas = (data: AreaDocumentData | undefined): string[] | null => {
+const extractIncomingAreas = (
+  data: AreaDocumentData | undefined,
+): string[] | null => {
   const items = data?.items;
   return isUsableAreaList(items) ? items : null;
 };
 
-const serializeAreas = (areas: string[]): string =>
-  JSON.stringify(areas);
+const serializeAreas = (areas: string[]): string => JSON.stringify(areas);
 
 export const createFirestoreAreaStorage = (
   db: Firestore,
   uid: string,
-  options: FirestoreAreaStorageOptions = {}
+  options: FirestoreAreaStorageOptions = {},
 ): FirestoreAreaStorage => {
   let cache: string[] = [];
   let watermark: DocumentWatermark = UNSTAMPED;
@@ -153,7 +162,9 @@ export const createFirestoreAreaStorage = (
 
     // Server data has arrived — it is authoritative for the rest of this
     // session, so the empty-snapshot guard stands down on both branches below.
-    const rePushWrittenAt = serverHasAreas ? rePushStamp(watermark, serverWrittenAt) : null;
+    const rePushWrittenAt = serverHasAreas
+      ? rePushStamp(watermark, serverWrittenAt)
+      : null;
     if (rePushWrittenAt !== null) {
       // The server holds an older document than the edit in cache: push the
       // edit back with its own stamp. The echo carries that stamp and equal

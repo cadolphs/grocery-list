@@ -32,31 +32,47 @@ import { createNullAreaStorage } from '../../../src/adapters/null/null-area-stor
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
 
-function createTestServices(preloadedStaples?: Array<{
-  name: string;
-  houseArea: string;
-  storeLocation: { section: string; aisleNumber: number | null };
-}>) {
-  const stapleStorage = createNullStapleStorage(preloadedStaples ?? [
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-  ]);
+function createTestServices(
+  preloadedStaples?: Array<{
+    name: string;
+    houseArea: string;
+    storeLocation: { section: string; aisleNumber: number | null };
+  }>,
+) {
+  const stapleStorage = createNullStapleStorage(
+    preloadedStaples ?? [
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ],
+  );
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripAreas = ['Fridge', 'Kitchen Cabinets'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+  tripService.start(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
 
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
 
   return { stapleLibrary, tripService, areaManagement, stapleStorage };
 }
 
 function renderApp(services: ReturnType<typeof createTestServices>) {
   render(
-    <ServiceProvider stapleLibrary={services.stapleLibrary} tripService={services.tripService} areaManagement={services.areaManagement}>
+    <ServiceProvider
+      stapleLibrary={services.stapleLibrary}
+      tripService={services.tripService}
+      areaManagement={services.areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 
@@ -69,7 +85,10 @@ function addOneOffViaSheet(name: string, section?: string, aisle?: string) {
   fireEvent.press(screen.getByText('One-off'));
   // Fill store location if provided
   if (section) {
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), section);
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      section,
+    );
   }
   if (aisle) {
     fireEvent.changeText(screen.getByPlaceholderText('Aisle number'), aisle);
@@ -96,15 +115,18 @@ describe('WS-1: One-off saved to library on first add', () => {
 
     // Then "Tahini" is saved to the library with type "one-off"
     const libraryItems = services.stapleLibrary.listAll();
-    const tahini = libraryItems.find(i => i.name === 'Tahini');
+    const tahini = libraryItems.find((i) => i.name === 'Tahini');
     expect(tahini).toBeDefined();
     expect(tahini!.type).toBe('one-off');
-    expect(tahini!.storeLocation).toEqual({ section: 'International', aisleNumber: 7 });
+    expect(tahini!.storeLocation).toEqual({
+      section: 'International',
+      aisleNumber: 7,
+    });
 
     // And "Tahini" is also in the current trip as a one-off
     const tripItems = services.tripService.getItems();
     expect(tripItems).toContainEqual(
-      expect.objectContaining({ name: 'Tahini', itemType: 'one-off' })
+      expect.objectContaining({ name: 'Tahini', itemType: 'one-off' }),
     );
   });
 });
@@ -123,14 +145,17 @@ describe('WS-2: One-off with skipped metadata still persisted', () => {
     renderApp(services);
 
     // When Elena adds "Birthday Candles" using "Skip, add with defaults"
-    fireEvent.changeText(screen.getByPlaceholderText('Add an item...'), 'Birthday Candles');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Add an item...'),
+      'Birthday Candles',
+    );
     fireEvent.press(screen.getByText(/Add 'Birthday Candles' as new item/));
     fireEvent.press(screen.getByText('One-off'));
     fireEvent.press(screen.getByText('Skip, add with defaults'));
 
     // Then "Birthday Candles" is saved to the library with type "one-off"
     const libraryItems = services.stapleLibrary.listAll();
-    const candles = libraryItems.find(i => i.name === 'Birthday Candles');
+    const candles = libraryItems.find((i) => i.name === 'Birthday Candles');
     expect(candles).toBeDefined();
     expect(candles!.type).toBe('one-off');
   });
@@ -150,14 +175,18 @@ describe('WS-3: Duplicate one-off does not create duplicate library entry', () =
     renderApp(services);
     addOneOffViaSheet('Tahini', 'International', '7');
 
-    const countBefore = services.stapleLibrary.listAll().filter(i => i.name === 'Tahini').length;
+    const countBefore = services.stapleLibrary
+      .listAll()
+      .filter((i) => i.name === 'Tahini').length;
     expect(countBefore).toBe(1);
 
     // When Elena adds "Tahini" as a one-off again
     addOneOffViaSheet('Tahini', 'International', '7');
 
     // Then only one "Tahini" entry exists in the library
-    const countAfter = services.stapleLibrary.listAll().filter(i => i.name === 'Tahini').length;
+    const countAfter = services.stapleLibrary
+      .listAll()
+      .filter((i) => i.name === 'Tahini').length;
     expect(countAfter).toBe(1);
   });
 });
@@ -208,15 +237,18 @@ describe('WS-5: Selecting one-off suggestion adds to trip as one-off', () => {
 
     // Then "Tahini" is in the trip as a one-off with the saved store location
     const tripItems = services.tripService.getItems();
-    const tahiniItems = tripItems.filter(i => i.name === 'Tahini');
+    const tahiniItems = tripItems.filter((i) => i.name === 'Tahini');
     // There should be 2: one from the original add, one from the suggestion re-add
     // But the first was already added. Let's check the latest one has correct type
     expect(tahiniItems.length).toBeGreaterThanOrEqual(1);
-    expect(tahiniItems.some(i =>
-      i.itemType === 'one-off' &&
-      i.storeLocation.section === 'International' &&
-      i.storeLocation.aisleNumber === 7
-    )).toBe(true);
+    expect(
+      tahiniItems.some(
+        (i) =>
+          i.itemType === 'one-off' &&
+          i.storeLocation.section === 'International' &&
+          i.storeLocation.aisleNumber === 7,
+      ),
+    ).toBe(true);
   });
 });
 
@@ -234,7 +266,9 @@ describe('WS-6: One-off suggestion not re-added if already in trip', () => {
     renderApp(services);
     addOneOffViaSheet('Tahini', 'International', '7');
 
-    const countBefore = services.tripService.getItems().filter(i => i.name === 'Tahini').length;
+    const countBefore = services.tripService
+      .getItems()
+      .filter((i) => i.name === 'Tahini').length;
 
     // When Elena types "Tah" and taps the suggestion again
     fireEvent.changeText(screen.getByPlaceholderText('Add an item...'), 'Tah');
@@ -242,7 +276,9 @@ describe('WS-6: One-off suggestion not re-added if already in trip', () => {
     fireEvent.press(suggestion);
 
     // Then no duplicate "Tahini" is added
-    const countAfter = services.tripService.getItems().filter(i => i.name === 'Tahini').length;
+    const countAfter = services.tripService
+      .getItems()
+      .filter((i) => i.name === 'Tahini').length;
     expect(countAfter).toBe(countBefore);
   });
 });

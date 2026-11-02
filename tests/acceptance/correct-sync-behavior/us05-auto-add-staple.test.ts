@@ -20,8 +20,16 @@ describe('US-05: New staple auto-adds to active trip', () => {
   it('S-15: new staple added on remote device appears in trip via sync', () => {
     // Given Clemens has an active trip with "Milk" and "Eggs"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -29,7 +37,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
     trip.start(library.listAll());
 
     // And a real-time listener is active on the staple library
-    const oldStapleIds = new Set(library.listAll().map(s => s.id));
+    const oldStapleIds = new Set(library.listAll().map((s) => s.id));
 
     // When "Tahini" is added as a staple from a remote device
     // (Simulated: remote write updates storage, onChange fires)
@@ -43,7 +51,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
     });
 
     // And the orchestration layer detects the new staple
-    const newStaples = library.listAll().filter(s => !oldStapleIds.has(s.id));
+    const newStaples = library.listAll().filter((s) => !oldStapleIds.has(s.id));
     expect(newStaples).toHaveLength(1);
 
     // Orchestration adds to trip
@@ -57,7 +65,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
     });
 
     // Then "Tahini" appears in the active trip
-    expect(trip.getItems().map(i => i.name)).toContain('Tahini');
+    expect(trip.getItems().map((i) => i.name)).toContain('Tahini');
 
     // And the trip item has a stapleId linking to the "Tahini" staple
     // NOTE: The current addItem does not set stapleId. The DELIVER wave
@@ -73,8 +81,16 @@ describe('US-05: New staple auto-adds to active trip', () => {
   it('S-16: removing a staple also removes it from the active trip', () => {
     // Given Clemens has an active trip containing "Soda" (stapleId: "staple-soda-123")
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Soda', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Beverages', aisleNumber: 6 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Soda',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Beverages', aisleNumber: 6 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -82,23 +98,23 @@ describe('US-05: New staple auto-adds to active trip', () => {
     trip.start(library.listAll());
 
     // Verify Soda is in the trip with its stapleId
-    const sodaInTrip = trip.getItems().find(i => i.name === 'Soda');
+    const sodaInTrip = trip.getItems().find((i) => i.name === 'Soda');
     expect(sodaInTrip).toBeDefined();
     const sodaStapleId = sodaInTrip!.stapleId;
     expect(sodaStapleId).not.toBeNull();
 
     // And "Soda" is in the staple library
-    expect(library.listAll().map(s => s.name)).toContain('Soda');
+    expect(library.listAll().map((s) => s.name)).toContain('Soda');
 
     // When Clemens removes "Soda" from the staple library
-    const sodaStaple = library.listAll().find(s => s.name === 'Soda')!;
+    const sodaStaple = library.listAll().find((s) => s.name === 'Soda')!;
     library.remove(sodaStaple.id);
 
     // And the orchestration layer detects the removed staple
     trip.removeItemByStapleId(sodaStapleId!);
 
     // Then "Soda" is no longer in the active trip
-    expect(trip.getItems().map(i => i.name)).not.toContain('Soda');
+    expect(trip.getItems().map((i) => i.name)).not.toContain('Soda');
     expect(trip.getItems()).toHaveLength(1);
   });
 
@@ -110,7 +126,11 @@ describe('US-05: New staple auto-adds to active trip', () => {
     // Given Clemens has an active trip and cloud storage is failing for trip writes
     // (The fire-and-forget pattern means the persist failure is silent)
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -126,11 +146,11 @@ describe('US-05: New staple auto-adds to active trip', () => {
 
     // Then "Paper Towels" is saved to the staple library
     expect(result.success).toBe(true);
-    expect(library.listAll().map(s => s.name)).toContain('Paper Towels');
+    expect(library.listAll().map((s) => s.name)).toContain('Paper Towels');
 
     // And "Paper Towels" is added to the local trip view
     // (Even if trip persist fails, the in-memory state is updated)
-    const newStaple = library.listAll().find(s => s.name === 'Paper Towels')!;
+    const newStaple = library.listAll().find((s) => s.name === 'Paper Towels')!;
     trip.addItem({
       name: newStaple.name,
       houseArea: newStaple.houseArea,
@@ -138,6 +158,6 @@ describe('US-05: New staple auto-adds to active trip', () => {
       itemType: 'staple',
       source: 'preloaded',
     });
-    expect(trip.getItems().map(i => i.name)).toContain('Paper Towels');
+    expect(trip.getItems().map((i) => i.name)).toContain('Paper Towels');
   });
 });

@@ -25,7 +25,12 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // UI ports:
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 
@@ -35,12 +40,36 @@ import { AppShell } from '../../../src/ui/AppShell';
 
 function createTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-    { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
+    {
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Eggs',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Toilet paper',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
+    },
+    {
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    },
+    {
+      name: 'Canned beans',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+    },
   ]);
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -65,7 +94,7 @@ describe('US-07: Skip staple from home screen', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     expect(screen.getByText('Shampoo')).toBeTruthy();
 
@@ -87,7 +116,7 @@ describe('US-07: Skip staple from home screen', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByTestId('skip-Shampoo'));
 
@@ -105,7 +134,7 @@ describe('US-07: Skip staple from home screen', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByTestId('skip-Butter'));
 
@@ -136,7 +165,7 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos marks "Bathroom" as done
@@ -155,7 +184,7 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos taps "Freezer" instead
@@ -174,7 +203,7 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos switches to checklist mode
@@ -199,11 +228,14 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
   it('shows matching one-off suggestions when typing a prefix', async () => {
     // Given a one-off "Tahini" was persisted from a previous trip
     const { library, tripService } = createTestServices();
-    library.addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    library.addOneOff({
+      name: 'Tahini',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos types "tah" in the quick-add field
@@ -212,25 +244,32 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
 
     // Then "Tahini" appears as a one-off suggestion below the field
     await waitFor(() => {
-      expect(screen.getByText(/Tahini - International \/ Aisle 7.*\(one-off\)/)).toBeTruthy();
+      expect(
+        screen.getByText(/Tahini - International \/ Aisle 7.*\(one-off\)/),
+      ).toBeTruthy();
     });
   });
 
   it('tapping a one-off suggestion adds it to the trip with saved location', async () => {
     // Given a one-off "Tahini" appears as a suggestion
     const { library, tripService } = createTestServices();
-    library.addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    library.addOneOff({
+      name: 'Tahini',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(quickAddInput, 'tah');
 
     // When Carlos taps the "Tahini" suggestion
     await waitFor(() => {
-      fireEvent.press(screen.getByText(/Tahini - International \/ Aisle 7.*\(one-off\)/));
+      fireEvent.press(
+        screen.getByText(/Tahini - International \/ Aisle 7.*\(one-off\)/),
+      );
     });
 
     // Then "Tahini" is added to the trip as a one-off
@@ -239,8 +278,11 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
       expect.objectContaining({
         name: 'Tahini',
         itemType: 'one-off',
-        storeLocation: expect.objectContaining({ section: 'International', aisleNumber: 7 }),
-      })
+        storeLocation: expect.objectContaining({
+          section: 'International',
+          aisleNumber: 7,
+        }),
+      }),
     );
   });
 
@@ -250,7 +292,7 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos types "who" in the quick-add field
@@ -267,7 +309,7 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos types "birthday" in the quick-add field
@@ -287,7 +329,7 @@ describe('US-09: Type-ahead suggestions in quick-add UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(quickAddInput, 'who');
@@ -317,7 +359,7 @@ describe('US-10: Store section navigation and progress in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
 
@@ -334,7 +376,7 @@ describe('US-10: Store section navigation and progress in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
     fireEvent.press(screen.getByText('Canned beans'));
@@ -352,12 +394,18 @@ describe('US-10: Store section navigation and progress in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
     // Check all items
-    ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Shampoo', 'Canned beans']
-      .forEach(name => fireEvent.press(screen.getByText(name)));
+    [
+      'Whole milk',
+      'Butter',
+      'Eggs',
+      'Toilet paper',
+      'Shampoo',
+      'Canned beans',
+    ].forEach((name) => fireEvent.press(screen.getByText(name)));
 
     // When Carlos views the store view
     // (already viewing)
@@ -382,11 +430,12 @@ describe('US-11: Trip summary screen in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
-    ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans']
-      .forEach(name => fireEvent.press(screen.getByText(name)));
+    ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans'].forEach(
+      (name) => fireEvent.press(screen.getByText(name)),
+    );
     tripService.skipItem('Shampoo');
 
     // When the trip summary screen appears
@@ -406,11 +455,11 @@ describe('US-11: Trip summary screen in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     // Complete all items and finish trip
     fireEvent.press(screen.getByText('Store'));
-    tripService.getItems().forEach(i => tripService.checkOff(i.name));
+    tripService.getItems().forEach((i) => tripService.checkOff(i.name));
     fireEvent.press(screen.getByText('Finish Trip'));
 
     // When the trip summary screen appears
@@ -426,10 +475,10 @@ describe('US-11: Trip summary screen in UI', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
-    tripService.getItems().forEach(i => tripService.checkOff(i.name));
+    tripService.getItems().forEach((i) => tripService.checkOff(i.name));
     fireEvent.press(screen.getByText('Finish Trip'));
 
     // When Carlos taps "Switch to Store View"

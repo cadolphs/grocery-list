@@ -10,7 +10,7 @@ import * as path from 'path';
 
 const STAPLE_CHECKLIST_PATH = path.resolve(
   __dirname,
-  '../../../src/ui/StapleChecklist.tsx'
+  '../../../src/ui/StapleChecklist.tsx',
 );
 
 describe('nested VirtualizedList regression', () => {

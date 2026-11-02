@@ -6,7 +6,12 @@
  */
 
 import React from 'react';
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
@@ -37,17 +42,28 @@ function createTestServices(
   const areaStorage = createNullAreaStorage(areas);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripService = createTrip(tripStorage);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   tripService.start(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
 
 function renderApp(areas?: string[], staples: StapleItem[] = []) {
-  const { stapleLibrary, tripService, areaManagement } = createTestServices(areas, staples);
+  const { stapleLibrary, tripService, areaManagement } = createTestServices(
+    areas,
+    staples,
+  );
   return render(
-    <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+    <ServiceProvider
+      stapleLibrary={stapleLibrary}
+      tripService={tripService}
+      areaManagement={areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 
@@ -210,11 +226,16 @@ describe('Area Settings Screen', () => {
       fireEvent.press(screen.getByTestId('settings-button'));
       fireEvent.press(screen.getByTestId('delete-area-Kitchen'));
 
-      expect(screen.getByText('Cannot delete: at least one area must remain')).toBeTruthy();
+      expect(
+        screen.getByText('Cannot delete: at least one area must remain'),
+      ).toBeTruthy();
     });
 
     it('area with staples shows reassignment picker and deletes on confirm', () => {
-      const staples = [makeStaple('Soap', 'Bathroom'), makeStaple('Shampoo', 'Bathroom')];
+      const staples = [
+        makeStaple('Soap', 'Bathroom'),
+        makeStaple('Shampoo', 'Bathroom'),
+      ];
       renderApp(['Bathroom', 'Kitchen', 'Garage'], staples);
 
       fireEvent.press(screen.getByTestId('settings-button'));
@@ -231,7 +252,7 @@ describe('Area Settings Screen', () => {
       expect(screen.queryByText('2 staples in Bathroom. Move to:')).toBeNull();
       // Verify Bathroom is removed from the area list
       const areaNames = screen.getAllByTestId(/^delete-area-/);
-      const areaTestIds = areaNames.map(el => el.props.testID);
+      const areaTestIds = areaNames.map((el) => el.props.testID);
       expect(areaTestIds).not.toContain('delete-area-Bathroom');
     });
   });

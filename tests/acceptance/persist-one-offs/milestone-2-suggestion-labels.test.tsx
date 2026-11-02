@@ -28,19 +28,30 @@ import { createAreaManagement } from '../../../src/domain/area-management';
 
 function createServicesWithOneOff() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   // Add a one-off to the library
-  (stapleLibrary as any).addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+  (stapleLibrary as any).addOneOff({
+    name: 'Tahini',
+    storeLocation: { section: 'International', aisleNumber: 7 },
+  });
 
   const tripAreas = ['Fridge'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+  tripService.start(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
 
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
 
   return { stapleLibrary, tripService, areaManagement };
 }
@@ -57,9 +68,13 @@ describe('M2-1: One-off suggestion shows type label', () => {
     // Given Elena has "Tahini" as a one-off in the library
     const services = createServicesWithOneOff();
     render(
-      <ServiceProvider stapleLibrary={services.stapleLibrary} tripService={services.tripService} areaManagement={services.areaManagement}>
+      <ServiceProvider
+        stapleLibrary={services.stapleLibrary}
+        tripService={services.tripService}
+        areaManagement={services.areaManagement}
+      >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Elena types "Tah" in QuickAdd
@@ -83,9 +98,13 @@ describe('M2-2: Staple suggestions are not shown in QuickAdd', () => {
     // Given Elena has "Milk" as a staple in the library
     const services = createServicesWithOneOff();
     render(
-      <ServiceProvider stapleLibrary={services.stapleLibrary} tripService={services.tripService} areaManagement={services.areaManagement}>
+      <ServiceProvider
+        stapleLibrary={services.stapleLibrary}
+        tripService={services.tripService}
+        areaManagement={services.areaManagement}
+      >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Elena types "Mil" in QuickAdd
@@ -108,27 +127,47 @@ describe('M2-3: Same-name items: only one-off suggestion appears', () => {
   it('shows only the one-off suggestion when a staple and one-off share a name', () => {
     // Given Elena has "Butter" as a staple and "Butter" as a one-off
     const stapleStorage = createNullStapleStorage([
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
-    (stapleLibrary as any).addOneOff({ name: 'Butter', storeLocation: { section: 'International', aisleNumber: 7 } });
+    (stapleLibrary as any).addOneOff({
+      name: 'Butter',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
 
     const tripAreas = ['Fridge'];
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage, tripAreas);
-    tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+    tripService.start(
+      stapleLibrary.listAll().filter((s) => s.type === 'staple'),
+    );
 
     const areaStorage = createNullAreaStorage(tripAreas);
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     render(
-      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+      <ServiceProvider
+        stapleLibrary={stapleLibrary}
+        tripService={tripService}
+        areaManagement={areaManagement}
+      >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Elena types "Butter" in QuickAdd
-    fireEvent.changeText(screen.getByPlaceholderText('Add an item...'), 'Butter');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Add an item...'),
+      'Butter',
+    );
 
     // Then only the one-off suggestion appears
     expect(screen.queryByText(/Butter - Dairy/)).toBeNull();

@@ -20,8 +20,18 @@
  * - MS1-6: Loading indicator during sign-up (US-02)
  */
 
-import { render, fireEvent, waitFor, screen, act } from '@testing-library/react-native';
-import { createNullAuthService, AuthService, AuthResult } from '../../../src/auth/AuthService';
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+  act,
+} from '@testing-library/react-native';
+import {
+  createNullAuthService,
+  AuthService,
+  AuthResult,
+} from '../../../src/auth/AuthService';
 import { LoginScreen } from '../../../src/ui/LoginScreen';
 
 // =============================================================================
@@ -33,11 +43,13 @@ function createTestAuthService(): AuthService {
 }
 
 function createSignInProp(authService: AuthService) {
-  return (email: string, password: string) => authService.signIn(email, password);
+  return (email: string, password: string) =>
+    authService.signIn(email, password);
 }
 
 function createSignUpProp(authService: AuthService) {
-  return (email: string, password: string) => authService.signUp(email, password);
+  return (email: string, password: string) =>
+    authService.signUp(email, password);
 }
 
 function renderLoginScreen(authService?: AuthService) {
@@ -46,7 +58,7 @@ function renderLoginScreen(authService?: AuthService) {
     <LoginScreen
       signIn={createSignInProp(service)}
       signUp={createSignUpProp(service)}
-    />
+    />,
   );
 }
 
@@ -65,20 +77,28 @@ describe('MS1-1: New user creates account successfully', () => {
       <LoginScreen
         signIn={createSignInProp(authService)}
         signUp={createSignUpProp(authService)}
-      />
+      />,
     );
     fireEvent.press(screen.getByText(/Sign Up/i));
 
     // When Ana enters "ana.kowalski@email.com" as email and "FreshVeggies2024!" as password
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'ana.kowalski@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'FreshVeggies2024!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'ana.kowalski@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'FreshVeggies2024!',
+    );
 
     // And Ana taps "Sign Up"
     fireEvent.press(screen.getByText('Sign Up'));
 
     // Then Ana is taken to the grocery list screen (verified via auth state)
     await waitFor(() => {
-      expect(authService.getCurrentUser()?.email).toBe('ana.kowalski@email.com');
+      expect(authService.getCurrentUser()?.email).toBe(
+        'ana.kowalski@email.com',
+      );
     });
   });
 });
@@ -140,13 +160,18 @@ describe('MS1-4: Email field value persists when switching modes', () => {
     renderLoginScreen();
 
     // And the user has entered "carlos@email.com" as email
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'carlos@email.com');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'carlos@email.com',
+    );
 
     // When the user taps "Don't have an account? Sign Up"
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
 
     // Then the email field still contains "carlos@email.com"
-    expect(screen.getByPlaceholderText('Email').props.value).toBe('carlos@email.com');
+    expect(screen.getByPlaceholderText('Email').props.value).toBe(
+      'carlos@email.com',
+    );
   });
 });
 
@@ -169,23 +194,33 @@ describe('MS1-5: Error message clears when switching modes', () => {
       <LoginScreen
         signIn={failingSignIn}
         signUp={createSignUpProp(authService)}
-      />
+      />,
     );
 
     // Trigger the error
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'carlos@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'WrongPass1!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'carlos@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'WrongPass1!',
+    );
     fireEvent.press(screen.getByText('Sign In'));
 
     await waitFor(() => {
-      expect(screen.getByText('Incorrect password. Please try again.')).toBeTruthy();
+      expect(
+        screen.getByText('Incorrect password. Please try again.'),
+      ).toBeTruthy();
     });
 
     // When the user taps "Don't have an account? Sign Up"
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
 
     // Then no error message is displayed
-    expect(screen.queryByText('Incorrect password. Please try again.')).toBeNull();
+    expect(
+      screen.queryByText('Incorrect password. Please try again.'),
+    ).toBeNull();
   });
 });
 
@@ -202,20 +237,26 @@ describe('MS1-6: Loading indicator shown during sign-up', () => {
     // Given Ana is on the login screen in "Sign Up" mode
     let resolveSignUp: (value: AuthResult) => void;
     const pendingSignUp = jest.fn().mockImplementation(
-      () => new Promise<AuthResult>((resolve) => { resolveSignUp = resolve; })
+      () =>
+        new Promise<AuthResult>((resolve) => {
+          resolveSignUp = resolve;
+        }),
     );
     const authService = createNullAuthService();
     render(
       <LoginScreen
         signIn={createSignInProp(authService)}
         signUp={pendingSignUp}
-      />
+      />,
     );
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
 
     // When Ana enters valid credentials and taps "Sign Up"
     fireEvent.changeText(screen.getByPlaceholderText('Email'), 'ana@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'FreshVeggies2024!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'FreshVeggies2024!',
+    );
     fireEvent.press(screen.getByText('Sign Up'));
 
     // Then Ana sees a loading indicator while account creation is in progress
@@ -225,7 +266,10 @@ describe('MS1-6: Loading indicator shown during sign-up', () => {
 
     // Complete the sign-up
     await act(async () => {
-      resolveSignUp!({ success: true, user: { uid: 'user-1', email: 'ana@email.com' } });
+      resolveSignUp!({
+        success: true,
+        user: { uid: 'user-1', email: 'ana@email.com' },
+      });
     });
 
     expect(screen.queryByText(/Signing/i)).toBeNull();

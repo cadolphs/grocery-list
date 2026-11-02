@@ -20,7 +20,11 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../../src/ui/MetadataBottomSheet';
 import { HouseArea } from '../../../src/domain/types';
 
-const AREAS: readonly HouseArea[] = ['Fridge', 'Kitchen Cabinets', 'Garage Pantry'];
+const AREAS: readonly HouseArea[] = [
+  'Fridge',
+  'Kitchen Cabinets',
+  'Garage Pantry',
+];
 
 const renderSheet = (
   overrides: Partial<React.ComponentProps<typeof MetadataBottomSheet>> = {},
@@ -57,7 +61,14 @@ const renderSheet = (
       {...overrides}
     />,
   );
-  return { ...utils, onSubmitStaple, onSubmitTripItem, onSaveEdit, onDismiss, onFindDuplicate };
+  return {
+    ...utils,
+    onSubmitStaple,
+    onSubmitTripItem,
+    onSaveEdit,
+    onDismiss,
+    onFindDuplicate,
+  };
 };
 
 // =============================================================================
@@ -71,7 +82,8 @@ describe('WS-RS-1: Renaming a staple persists the new name and dismisses the she
 
   it('pre-fills the Name field with the current name, accepts a rename, and saves through onSaveEdit', () => {
     // Given Clemens opens the edit sheet for "Milkk" in "Fridge"
-    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } = renderSheet();
+    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } =
+      renderSheet();
 
     // Then the Name field is pre-filled with "Milkk"
     const nameField = getByDisplayValue('Milkk');
@@ -89,7 +101,10 @@ describe('WS-RS-1: Renaming a staple persists the new name and dismisses the she
       expect.objectContaining({
         name: 'Milk',
         houseArea: 'Fridge',
-        storeLocation: expect.objectContaining({ section: 'Dairy', aisleNumber: 3 }),
+        storeLocation: expect.objectContaining({
+          section: 'Dairy',
+          aisleNumber: 3,
+        }),
       }),
     );
 

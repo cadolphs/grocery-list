@@ -15,9 +15,15 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../../src/ui/MetadataBottomSheet';
 import { HouseArea } from '../../../src/domain/types';
 
-const AREAS: readonly HouseArea[] = ['Fridge', 'Kitchen Cabinets', 'Garage Pantry'];
+const AREAS: readonly HouseArea[] = [
+  'Fridge',
+  'Kitchen Cabinets',
+  'Garage Pantry',
+];
 
-const renderSheet = (overrides: Partial<React.ComponentProps<typeof MetadataBottomSheet>> = {}) => {
+const renderSheet = (
+  overrides: Partial<React.ComponentProps<typeof MetadataBottomSheet>> = {},
+) => {
   const onSubmitStaple = jest.fn();
   const onSubmitTripItem = jest.fn();
   const onDismiss = jest.fn();
@@ -68,13 +74,17 @@ describe('M1-SC-2: Free-text new section is persisted', () => {
   // Trace: US-SC-01 AC4
 
   it('saves a brand-new section that is not in existingSections', () => {
-    const { getByPlaceholderText, getByText, getByTestId, onSubmitStaple } = renderSheet();
+    const { getByPlaceholderText, getByText, getByTestId, onSubmitStaple } =
+      renderSheet();
 
     // Given Clemens picks a house area
     fireEvent.press(getByTestId('area-button-Fridge'));
 
     // When Clemens types a new section name
-    fireEvent.changeText(getByPlaceholderText('Store section...'), 'Frozen Foods');
+    fireEvent.changeText(
+      getByPlaceholderText('Store section...'),
+      'Frozen Foods',
+    );
 
     // And taps "Add Item"
     fireEvent.press(getByText('Add Item'));
@@ -97,9 +107,10 @@ describe('M1-SC-3: Empty library shows hint, field stays editable', () => {
   // Trace: US-SC-01 AC5
 
   it('shows empty-state hint and lets user type a new section', () => {
-    const { getByText, getByPlaceholderText, onSubmitStaple, getByTestId } = renderSheet({
-      existingSections: [],
-    });
+    const { getByText, getByPlaceholderText, onSubmitStaple, getByTestId } =
+      renderSheet({
+        existingSections: [],
+      });
 
     // Then the dropdown area shows the empty-state hint
     expect(getByText(/No saved sections yet/i)).toBeTruthy();
@@ -131,7 +142,9 @@ describe('M1-SC-4: Dropdown rows are alphabetical', () => {
     });
 
     // Then dropdown row labels are alphabetical
-    const rows = getAllByTestId(/^section-suggestion-/).map((node) => node.props.testID);
+    const rows = getAllByTestId(/^section-suggestion-/).map(
+      (node) => node.props.testID,
+    );
     expect(rows).toEqual([
       'section-suggestion-Bakery',
       'section-suggestion-Dairy',

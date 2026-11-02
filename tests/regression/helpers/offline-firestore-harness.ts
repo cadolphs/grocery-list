@@ -41,7 +41,9 @@ const mockDoc = jest.fn((_db: unknown, ...pathSegments: string[]) => ({
 
 // Offline Firestore: the write is queued locally and never reaches the backing
 // store that future subscribers read. A process restart loses it.
-const mockSetDoc = jest.fn(async (_docRef: { path: string }, _data: unknown) => {});
+const mockSetDoc = jest.fn(
+  async (_docRef: { path: string }, _data: unknown) => {},
+);
 
 export const mockOnSnapshot = jest.fn(
   (docRef: { path: string }, callback: SnapshotCallback) => {
@@ -50,7 +52,7 @@ export const mockOnSnapshot = jest.fn(
       callback(buildSnapshot(mockStore[docRef.path]));
     }
     return jest.fn();
-  }
+  },
 );
 
 export const firestoreModule = {
@@ -83,5 +85,7 @@ export const settlePendingReads = (): Promise<void> =>
 export const resetOfflineFirestore = (): void => {
   snapshotMode = 'immediate';
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
-  Object.keys(capturedCallbacks).forEach((key) => delete capturedCallbacks[key]);
+  Object.keys(capturedCallbacks).forEach(
+    (key) => delete capturedCallbacks[key],
+  );
 };

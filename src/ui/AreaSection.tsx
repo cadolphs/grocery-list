@@ -24,17 +24,39 @@ type AreaSectionProps = {
 const formatAreaHeading = (area: string, neededCount: number): string =>
   `${area} (${neededCount})`;
 
-export const AreaSection = ({ areaGroup, onCompleteArea, onUncompleteArea, onSelectArea, onItemPress, onItemLongPress, isCompleted, isActive }: AreaSectionProps): React.JSX.Element => {
+export const AreaSection = ({
+  areaGroup,
+  onCompleteArea,
+  onUncompleteArea,
+  onSelectArea,
+  onItemPress,
+  onItemLongPress,
+  isCompleted,
+  isActive,
+}: AreaSectionProps): React.JSX.Element => {
   const neededCount = areaGroup.items.filter((item) => item.needed).length;
 
   return (
-    <View style={styles.card} testID={isActive ? `active-area-${areaGroup.area}` : undefined}>
+    <View
+      style={styles.card}
+      testID={isActive ? `active-area-${areaGroup.area}` : undefined}
+    >
       <View style={styles.header}>
-        <Pressable onPress={onSelectArea ? () => onSelectArea(areaGroup.area) : undefined}>
-          <Text style={styles.heading}>{formatAreaHeading(areaGroup.area, neededCount)}</Text>
+        <Pressable
+          onPress={
+            onSelectArea ? () => onSelectArea(areaGroup.area) : undefined
+          }
+        >
+          <Text style={styles.heading}>
+            {formatAreaHeading(areaGroup.area, neededCount)}
+          </Text>
         </Pressable>
         {isCompleted && onUncompleteArea && (
-          <Pressable style={styles.badge} testID={`badge-${areaGroup.area}`} onPress={() => onUncompleteArea(areaGroup.area)}>
+          <Pressable
+            style={styles.badge}
+            testID={`badge-${areaGroup.area}`}
+            onPress={() => onUncompleteArea(areaGroup.area)}
+          >
             <Text style={styles.badgeText}>Undo</Text>
           </Pressable>
         )}

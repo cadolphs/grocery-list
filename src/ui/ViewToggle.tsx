@@ -11,19 +11,30 @@ type ViewToggleProps = {
   readonly onToggle: (mode: ViewMode) => void;
 };
 
-export const ViewToggle = ({ viewMode, onToggle }: ViewToggleProps): React.JSX.Element => (
+export const ViewToggle = ({
+  viewMode,
+  onToggle,
+}: ViewToggleProps): React.JSX.Element => (
   <View style={styles.container}>
     <TouchableOpacity
       style={[styles.tab, viewMode === 'home' && styles.activeTab]}
       onPress={() => onToggle('home')}
     >
-      <Text style={[styles.tabText, viewMode === 'home' && styles.activeTabText]}>Home</Text>
+      <Text
+        style={[styles.tabText, viewMode === 'home' && styles.activeTabText]}
+      >
+        Home
+      </Text>
     </TouchableOpacity>
     <TouchableOpacity
       style={[styles.tab, viewMode === 'store' && styles.activeTab]}
       onPress={() => onToggle('store')}
     >
-      <Text style={[styles.tabText, viewMode === 'store' && styles.activeTabText]}>Store</Text>
+      <Text
+        style={[styles.tabText, viewMode === 'store' && styles.activeTabText]}
+      >
+        Store
+      </Text>
     </TouchableOpacity>
   </View>
 );

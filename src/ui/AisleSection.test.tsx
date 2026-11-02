@@ -311,7 +311,9 @@ describe('AisleSection — slice 02 per-aisle progress + checkmark (US-02)', () 
     const noAisle = tree.getByTestId('aisle-subgroup-no-aisle');
     expect(within(noAisle).queryByText('1 of 1')).not.toBeNull();
     // AND the no-aisle completion checkmark is shown
-    expect(tree.queryByTestId('aisle-subgroup-complete-no-aisle')).not.toBeNull();
+    expect(
+      tree.queryByTestId('aisle-subgroup-complete-no-aisle'),
+    ).not.toBeNull();
     // AND the aisle-4 sub-group shows "0 of 1"
     const aisle4 = tree.getByTestId('aisle-subgroup-4');
     expect(within(aisle4).queryByText('0 of 1')).not.toBeNull();

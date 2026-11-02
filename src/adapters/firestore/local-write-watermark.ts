@@ -31,7 +31,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- Types ---
 
-export type MirrorDocName = 'trip' | 'carryover' | 'staples' | 'areas' | 'sectionOrder';
+export type MirrorDocName =
+  'trip' | 'carryover' | 'staples' | 'areas' | 'sectionOrder';
 
 export type AdoptionDecision = 'adopt' | 'repush';
 
@@ -75,16 +76,20 @@ export const nextWrittenAt = (now: number, lastSeen: number | null): number =>
 // last-writer-wins.
 export const resolveAdoption = (
   serverWrittenAt: number | null,
-  mirrorWrittenAt: number | null
+  mirrorWrittenAt: number | null,
 ): AdoptionDecision =>
-  serverWrittenAt !== null && mirrorWrittenAt !== null && serverWrittenAt < mirrorWrittenAt
+  serverWrittenAt !== null &&
+  mirrorWrittenAt !== null &&
+  serverWrittenAt < mirrorWrittenAt
     ? 'repush'
     : 'adopt';
 
 const isFiniteNumber = (candidate: unknown): candidate is number =>
   typeof candidate === 'number' && Number.isFinite(candidate);
 
-export const extractWrittenAt = (data: Record<string, unknown> | undefined): number | null => {
+export const extractWrittenAt = (
+  data: Record<string, unknown> | undefined,
+): number | null => {
   const candidate = data?.writtenAt;
   return isFiniteNumber(candidate) ? candidate : null;
 };
@@ -112,15 +117,24 @@ const laterOf = (left: number | null, right: number | null): number | null =>
 
 // The cached value now carries `writtenAt`; the floor only ever rises. One
 // transition serves hydration, local writes and adoption alike.
-export const observeStamp = (watermark: DocumentWatermark, writtenAt: number | null): DocumentWatermark => ({
+export const observeStamp = (
+  watermark: DocumentWatermark,
+  writtenAt: number | null,
+): DocumentWatermark => ({
   cachedValueWrittenAt: writtenAt,
-  highestObservedWrittenAt: laterOf(watermark.highestObservedWrittenAt, writtenAt),
+  highestObservedWrittenAt: laterOf(
+    watermark.highestObservedWrittenAt,
+    writtenAt,
+  ),
 });
 
 // The stamp a REPUSH re-sends the cached value with (the cached value's own,
 // not bumped, so a second re-push writes identical bytes), or null when the
 // incoming document is to be adopted.
-export const rePushStamp = (watermark: DocumentWatermark, serverWrittenAt: number | null): number | null =>
+export const rePushStamp = (
+  watermark: DocumentWatermark,
+  serverWrittenAt: number | null,
+): number | null =>
   watermark.cachedValueWrittenAt !== null &&
   resolveAdoption(serverWrittenAt, watermark.cachedValueWrittenAt) === 'repush'
     ? watermark.cachedValueWrittenAt
@@ -146,7 +160,10 @@ const tryParseJson = (raw: string): { readonly parsed: unknown } | null => {
   }
 };
 
-const decodeV2Envelope = <T>(raw: string, validateV2: ValidateV2<T>): MirrorEnvelope<T> | null => {
+const decodeV2Envelope = <T>(
+  raw: string,
+  validateV2: ValidateV2<T>,
+): MirrorEnvelope<T> | null => {
   const json = tryParseJson(raw);
   if (json === null || !isRecord(json.parsed)) return null;
   const envelope = json.parsed;
@@ -163,7 +180,9 @@ export const buildRawJsonV1Parser =
   <T>(isValue: (candidate: unknown) => candidate is T): ParseV1<T> =>
   (raw) => {
     const json = tryParseJson(raw);
-    return json !== null && isValue(json.parsed) ? { value: json.parsed } : null;
+    return json !== null && isValue(json.parsed)
+      ? { value: json.parsed }
+      : null;
   };
 
 // --- AsyncStorage wrappers ---
@@ -171,7 +190,7 @@ export const buildRawJsonV1Parser =
 const readV2Envelope = async <T>(
   uid: string,
   doc: MirrorDocName,
-  validateV2: ValidateV2<T>
+  validateV2: ValidateV2<T>,
 ): Promise<MirrorEnvelope<T> | null> => {
   const raw = await AsyncStorage.getItem(buildV2MirrorKey(uid, doc));
   return raw === null ? null : decodeV2Envelope(raw, validateV2);
@@ -180,7 +199,7 @@ const readV2Envelope = async <T>(
 const readV1AsEnvelope = async <T>(
   uid: string,
   doc: MirrorDocName,
-  parseV1: ParseV1<T>
+  parseV1: ParseV1<T>,
 ): Promise<MirrorEnvelope<T> | null> => {
   const raw = await AsyncStorage.getItem(buildV1MirrorKey(uid, doc));
   if (raw === null) return null;
@@ -194,7 +213,7 @@ export const readMirrorEnvelope = async <T>(
   uid: string,
   doc: MirrorDocName,
   parseV1: ParseV1<T>,
-  validateV2: ValidateV2<T>
+  validateV2: ValidateV2<T>,
 ): Promise<MirrorEnvelope<T> | null> => {
   const v2 = await readV2Envelope(uid, doc, validateV2);
   return v2 !== null ? v2 : readV1AsEnvelope(uid, doc, parseV1);
@@ -207,7 +226,7 @@ export const writeMirrorEnvelope = <T>(
   uid: string,
   doc: MirrorDocName,
   value: T,
-  writtenAt: number | null
+  writtenAt: number | null,
 ): void => {
   const envelope: MirrorEnvelope<T> = { value, writtenAt };
   AsyncStorage.setItem(buildV2MirrorKey(uid, doc), JSON.stringify(envelope));

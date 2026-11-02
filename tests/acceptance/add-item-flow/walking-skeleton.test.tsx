@@ -24,7 +24,10 @@ import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { diffStaples, applyAddedStaplesToTrip } from '../../../src/hooks/useAppInitialization';
+import {
+  diffStaples,
+  applyAddedStaplesToTrip,
+} from '../../../src/hooks/useAppInitialization';
 
 // UI-level imports:
 import { render, fireEvent, screen } from '@testing-library/react-native';
@@ -35,14 +38,23 @@ import { AppShell } from '../../../src/ui/AppShell';
 // Test Setup Helper
 // =============================================================================
 
-function createTestServices(preloadedStaples?: Array<{
-  name: string;
-  houseArea: 'Bathroom' | 'Garage Pantry' | 'Kitchen Cabinets' | 'Fridge' | 'Freezer';
-  storeLocation: { section: string; aisleNumber: number | null };
-}>) {
-  const stapleStorage = createNullStapleStorage(preloadedStaples ?? [
-    { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-  ]);
+function createTestServices(
+  preloadedStaples?: Array<{
+    name: string;
+    houseArea:
+      'Bathroom' | 'Garage Pantry' | 'Kitchen Cabinets' | 'Fridge' | 'Freezer';
+    storeLocation: { section: string; aisleNumber: number | null };
+  }>,
+) {
+  const stapleStorage = createNullStapleStorage(
+    preloadedStaples ?? [
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ],
+  );
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
@@ -94,7 +106,7 @@ describe('WS-AIF-1: New item prompt appears when no staple matches', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(quickAddInput, 'milk');
@@ -122,7 +134,7 @@ describe('WS-AIF-2: Bottom sheet opens with metadata form', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     const quickAddInput = screen.getByPlaceholderText('Add an item...');
@@ -170,7 +182,7 @@ describe('WS-AIF-3: Submitting as staple saves to library and adds to trip', () 
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Carlos types "Oat milk" and taps "Add as new item"
@@ -181,7 +193,10 @@ describe('WS-AIF-3: Submitting as staple saves to library and adds to trip', () 
     // And Carlos selects type "Staple" (default), area "Fridge", section "Dairy", aisle 3
     fireEvent.press(screen.getByText('Staple'));
     fireEvent.press(screen.getByText('Fridge'));
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Dairy');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'Dairy',
+    );
     fireEvent.changeText(screen.getByPlaceholderText('Aisle number'), '3');
 
     // When Carlos taps "Add Item"
@@ -190,15 +205,23 @@ describe('WS-AIF-3: Submitting as staple saves to library and adds to trip', () 
     // Then "Oat milk" is saved to the staple library
     const allStaples = library.listAll();
     expect(allStaples).toContainEqual(
-      expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge' })
+      expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge' }),
     );
-    expect(allStaples.find(s => s.name === 'Oat milk')?.storeLocation.section).toBe('Dairy');
-    expect(allStaples.find(s => s.name === 'Oat milk')?.storeLocation.aisleNumber).toBe(3);
+    expect(
+      allStaples.find((s) => s.name === 'Oat milk')?.storeLocation.section,
+    ).toBe('Dairy');
+    expect(
+      allStaples.find((s) => s.name === 'Oat milk')?.storeLocation.aisleNumber,
+    ).toBe(3);
 
     // And "Oat milk" appears on the current trip
     const tripItems = tripService.getItems();
     expect(tripItems).toContainEqual(
-      expect.objectContaining({ name: 'Oat milk', houseArea: 'Fridge', itemType: 'staple' })
+      expect.objectContaining({
+        name: 'Oat milk',
+        houseArea: 'Fridge',
+        itemType: 'staple',
+      }),
     );
 
     // And the sheet is dismissed
@@ -221,7 +244,7 @@ describe('WS-AIF-4: Submitting as one-off adds to trip without saving to library
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Carlos types "Birthday candles" and taps "Add as new item"
@@ -231,7 +254,10 @@ describe('WS-AIF-4: Submitting as one-off adds to trip without saving to library
 
     // And Carlos selects type "One-off" and fills in store location (no house area for one-offs)
     fireEvent.press(screen.getByText('One-off'));
-    fireEvent.changeText(screen.getByPlaceholderText('Store section...'), 'Baking');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Store section...'),
+      'Baking',
+    );
     fireEvent.changeText(screen.getByPlaceholderText('Aisle number'), '12');
 
     // When Carlos taps "Add Item"
@@ -240,14 +266,17 @@ describe('WS-AIF-4: Submitting as one-off adds to trip without saving to library
     // Then "Birthday candles" appears on the current trip as one-off
     const tripItems = tripService.getItems();
     expect(tripItems).toContainEqual(
-      expect.objectContaining({ name: 'Birthday candles', itemType: 'one-off' })
+      expect.objectContaining({
+        name: 'Birthday candles',
+        itemType: 'one-off',
+      }),
     );
 
     // And "Birthday candles" IS persisted in the staple library as a one-off
     // (superseded by persist-one-offs/US-01 — one-offs are now saved to the library
     // so they can be re-added from QuickAdd suggestions on future trips)
     expect(library.listAll()).toContainEqual(
-      expect.objectContaining({ name: 'Birthday candles', type: 'one-off' })
+      expect.objectContaining({ name: 'Birthday candles', type: 'one-off' }),
     );
 
     // And the sheet is dismissed

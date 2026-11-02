@@ -22,7 +22,13 @@ import { groupByArea } from '../../../src/domain/item-grouping';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
-const DEFAULT_AREAS: readonly string[] = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+const DEFAULT_AREAS: readonly string[] = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
 
 // =============================================================================
 // US-ES-01/02: Edit Validation and Error Paths
@@ -34,7 +40,11 @@ describe('US-ES-01/02: Edit Validation', () => {
   it('rejects edit with empty house area', () => {
     // Given "Butter" is a staple in "Fridge"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
@@ -45,18 +55,22 @@ describe('US-ES-01/02: Edit Validation', () => {
     // Then the edit is rejected with a validation message
     expect(result.success).toBe(false);
     expect(result).toEqual(
-      expect.objectContaining({ error: expect.stringContaining('area') })
+      expect.objectContaining({ error: expect.stringContaining('area') }),
     );
 
     // And the original staple remains unchanged
-    const butter = library.listAll().find(s => s.name === 'Butter');
+    const butter = library.listAll().find((s) => s.name === 'Butter');
     expect(butter?.houseArea).toBe('Fridge');
   });
 
   it('rejects edit with empty store section', () => {
     // Given "Shampoo" is a staple in "Bathroom"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
@@ -69,18 +83,22 @@ describe('US-ES-01/02: Edit Validation', () => {
     // Then the edit is rejected with a validation message
     expect(result.success).toBe(false);
     expect(result).toEqual(
-      expect.objectContaining({ error: expect.stringContaining('section') })
+      expect.objectContaining({ error: expect.stringContaining('section') }),
     );
 
     // And the original staple remains unchanged
-    const shampoo = library.listAll().find(s => s.name === 'Shampoo');
+    const shampoo = library.listAll().find((s) => s.name === 'Shampoo');
     expect(shampoo?.storeLocation.section).toBe('Personal Care');
   });
 
   it('rejects edit on a staple that no longer exists', () => {
     // Given "Oat milk" was removed from the library
     const stapleStorage = createNullStapleStorage([
-      { name: 'Oat milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Oat milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
@@ -92,14 +110,18 @@ describe('US-ES-01/02: Edit Validation', () => {
     // Then the edit is rejected because the staple no longer exists
     expect(result.success).toBe(false);
     expect(result).toEqual(
-      expect.objectContaining({ error: expect.stringContaining('not found') })
+      expect.objectContaining({ error: expect.stringContaining('not found') }),
     );
   });
 
   it('preserves original values when edit is cancelled', () => {
     // Given "Eggs" is a staple in "Fridge", "Dairy" section, aisle 3
     const stapleStorage = createNullStapleStorage([
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
 
@@ -107,7 +129,7 @@ describe('US-ES-01/02: Edit Validation', () => {
     // (No update call -- simulating cancel at domain level)
 
     // Then "Eggs" retains its original values
-    const eggs = library.listAll().find(s => s.name === 'Eggs');
+    const eggs = library.listAll().find((s) => s.name === 'Eggs');
     expect(eggs?.houseArea).toBe('Fridge');
     expect(eggs?.storeLocation.section).toBe('Dairy');
     expect(eggs?.storeLocation.aisleNumber).toBe(3);
@@ -127,11 +149,19 @@ describe('US-ES-03: Remove Staple from Edit Sheet', () => {
   it('removes a staple from the library', () => {
     // Given "Toilet paper" and "Shampoo" are staples in "Bathroom"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+      {
+        name: 'Toilet paper',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
+      },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
-    const tp = library.listAll().find(s => s.name === 'Toilet paper')!;
+    const tp = library.listAll().find((s) => s.name === 'Toilet paper')!;
 
     // When Carlos removes "Toilet paper" from the library
     library.remove(tp.id);
@@ -146,7 +176,7 @@ describe('US-ES-03: Remove Staple from Edit Sheet', () => {
     trip.start(library.listAll());
     const tripItems = trip.getItems();
     expect(tripItems).not.toContainEqual(
-      expect.objectContaining({ name: 'Toilet paper' })
+      expect.objectContaining({ name: 'Toilet paper' }),
     );
   });
 });
@@ -164,14 +194,22 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
   it('trip item moves to new area when staple area is edited', () => {
     // Given Carlos has an active trip with "Whole milk" in "Fridge"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start(library.listAll());
-    const staple = library.listAll().find(s => s.name === 'Whole milk')!;
+    const staple = library.listAll().find((s) => s.name === 'Whole milk')!;
 
     // When Carlos edits "Whole milk" to move to "Freezer"
     library.updateStaple(staple.id, { houseArea: 'Freezer' });
@@ -179,13 +217,13 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
 
     // Then "Whole milk" appears in "Freezer" on the trip
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
-    const freezerItems = grouped.find(g => g.area === 'Freezer')?.items ?? [];
+    const freezerItems = grouped.find((g) => g.area === 'Freezer')?.items ?? [];
     expect(freezerItems).toContainEqual(
-      expect.objectContaining({ name: 'Whole milk' })
+      expect.objectContaining({ name: 'Whole milk' }),
     );
 
     // And "Fridge" only has "Butter"
-    const fridgeItems = grouped.find(g => g.area === 'Fridge')?.items ?? [];
+    const fridgeItems = grouped.find((g) => g.area === 'Fridge')?.items ?? [];
     expect(fridgeItems).toHaveLength(1);
     expect(fridgeItems[0].name).toBe('Butter');
   });
@@ -193,13 +231,17 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
   it('trip item updates store section when staple section is edited', () => {
     // Given Carlos has an active trip with "Canned beans" in "Canned Goods", aisle 5
     const stapleStorage = createNullStapleStorage([
-      { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
+      {
+        name: 'Canned beans',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start(library.listAll());
-    const staple = library.listAll().find(s => s.name === 'Canned beans')!;
+    const staple = library.listAll().find((s) => s.name === 'Canned beans')!;
 
     // When Carlos changes "Canned beans" to "International" section, aisle 9
     library.updateStaple(staple.id, {
@@ -210,7 +252,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     });
 
     // Then "Canned beans" on the trip shows "International" section, aisle 9
-    const beans = trip.getItems().find(i => i.name === 'Canned beans');
+    const beans = trip.getItems().find((i) => i.name === 'Canned beans');
     expect(beans?.storeLocation.section).toBe('International');
     expect(beans?.storeLocation.aisleNumber).toBe(9);
   });
@@ -218,7 +260,11 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
   it('editing a staple does not affect one-off items on the trip', () => {
     // Given the trip has staple "Whole milk" and one-off "Birthday cake"
     const stapleStorage = createNullStapleStorage([
-      { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -231,14 +277,14 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
       itemType: 'one-off',
       source: 'quick-add',
     });
-    const staple = library.listAll().find(s => s.name === 'Whole milk')!;
+    const staple = library.listAll().find((s) => s.name === 'Whole milk')!;
 
     // When Carlos edits "Whole milk" area to "Freezer"
     library.updateStaple(staple.id, { houseArea: 'Freezer' });
     trip.syncStapleUpdate(staple.id, { houseArea: 'Freezer' });
 
     // Then "Birthday cake" remains unchanged in "Fridge"
-    const cake = trip.getItems().find(i => i.name === 'Birthday cake');
+    const cake = trip.getItems().find((i) => i.name === 'Birthday cake');
     expect(cake?.houseArea).toBe('Fridge');
     expect(cake?.storeLocation.section).toBe('Bakery');
   });

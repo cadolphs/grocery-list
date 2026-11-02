@@ -85,10 +85,8 @@ export const createAsyncTripStorage = (): AsyncTripStorage => {
       if (cachedTrip) {
         cachedTrip = {
           ...cachedTrip,
-          items: cachedTrip.items.map(item =>
-            item.houseArea === oldName
-              ? { ...item, houseArea: newName }
-              : item
+          items: cachedTrip.items.map((item) =>
+            item.houseArea === oldName ? { ...item, houseArea: newName } : item,
           ),
         };
         AsyncStorage.setItem(TRIP_KEY, JSON.stringify(cachedTrip));

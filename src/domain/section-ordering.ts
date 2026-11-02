@@ -7,21 +7,21 @@
 
 import { SectionGroup } from './item-grouping';
 
-const compareByCustomOrder = (
-  sectionOrder: string[],
-) => (a: SectionGroup, b: SectionGroup): number => {
-  const indexA = sectionOrder.indexOf(a.section);
-  const indexB = sectionOrder.indexOf(b.section);
+const compareByCustomOrder =
+  (sectionOrder: string[]) =>
+  (a: SectionGroup, b: SectionGroup): number => {
+    const indexA = sectionOrder.indexOf(a.section);
+    const indexB = sectionOrder.indexOf(b.section);
 
-  // Both in custom order: sort by position
-  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-  // Only a in custom order: a comes first
-  if (indexA !== -1) return -1;
-  // Only b in custom order: b comes first
-  if (indexB !== -1) return 1;
-  // Neither in custom order: preserve original relative order
-  return 0;
-};
+    // Both in custom order: sort by position
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    // Only a in custom order: a comes first
+    if (indexA !== -1) return -1;
+    // Only b in custom order: b comes first
+    if (indexB !== -1) return 1;
+    // Neither in custom order: preserve original relative order
+    return 0;
+  };
 
 export const appendNewSections = (
   currentOrder: string[],
@@ -29,7 +29,9 @@ export const appendNewSections = (
 ): string[] => {
   const existingSet = new Set(currentOrder);
   const newSections = knownSectionKeys.filter((key) => !existingSet.has(key));
-  return newSections.length === 0 ? currentOrder : [...currentOrder, ...newSections];
+  return newSections.length === 0
+    ? currentOrder
+    : [...currentOrder, ...newSections];
 };
 
 const compareBySectionName = (a: SectionGroup, b: SectionGroup): number =>

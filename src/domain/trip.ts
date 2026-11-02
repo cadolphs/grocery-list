@@ -17,7 +17,9 @@ import { UpdateStapleChanges } from './staple-library';
 export type StapleInput = AddStapleRequest & { readonly id?: string };
 
 // Extended request for auto-add: includes stapleId for duplicate prevention
-export type AddTripItemWithStapleId = AddTripItemRequest & { readonly stapleId?: string };
+export type AddTripItemWithStapleId = AddTripItemRequest & {
+  readonly stapleId?: string;
+};
 
 export type TripSummary = {
   readonly totalItems: number;
@@ -44,7 +46,10 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 ];
 
 export type TripService = {
-  readonly start: (staples: ReadonlyArray<StapleInput>, carryover?: readonly TripItem[]) => void;
+  readonly start: (
+    staples: ReadonlyArray<StapleInput>,
+    carryover?: readonly TripItem[],
+  ) => void;
   readonly startWithCarryover: (staples: ReadonlyArray<StapleInput>) => void;
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly getItems: () => TripItem[];
@@ -61,7 +66,10 @@ export type TripService = {
   readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
   readonly complete: () => CompleteTripResult;
   readonly initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => void;
-  readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
+  readonly syncStapleUpdate: (
+    stapleId: string,
+    changes: UpdateStapleChanges,
+  ) => void;
   readonly removeItemByStapleId: (stapleId: string) => void;
   readonly removeItemsByStaple: (staple: StapleIdentity) => void;
   readonly subscribe: (listener: () => void) => () => void;
@@ -79,11 +87,13 @@ const generateTripItemId = (): string =>
 // Predicate factory: returns the matching rule shared by removeItemsByStaple.
 // Resolution: prefer stapleId equality; fall back to (name, houseArea) only
 // for staple-typed items (one-offs that share a name+area must NOT be removed).
-const matchesStapleIdentity = (staple: StapleIdentity) => (item: TripItem): boolean => {
-  if (item.stapleId != null) return item.stapleId === staple.id;
-  if (item.itemType !== 'staple') return false;
-  return item.name === staple.name && item.houseArea === staple.houseArea;
-};
+const matchesStapleIdentity =
+  (staple: StapleIdentity) =>
+  (item: TripItem): boolean => {
+    if (item.stapleId != null) return item.stapleId === staple.id;
+    if (item.itemType !== 'staple') return false;
+    return item.name === staple.name && item.houseArea === staple.houseArea;
+  };
 
 const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   id: generateTripItemId(),
@@ -101,7 +111,12 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
 const generateTripId = (): string =>
   `trip-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-const buildTrip = (tripId: string, items: TripItem[], createdAt: string, completed: ReadonlySet<HouseArea>): Trip => ({
+const buildTrip = (
+  tripId: string,
+  items: TripItem[],
+  createdAt: string,
+  completed: ReadonlySet<HouseArea>,
+): Trip => ({
   id: tripId,
   items: [...items],
   status: 'active',
@@ -133,7 +148,7 @@ export const createTrip = (
   let createdAt: string = new Date().toISOString();
   const completedAreas = new Set<HouseArea>();
   const listeners = new Set<() => void>();
-  const notify = (): void => listeners.forEach(l => l());
+  const notify = (): void => listeners.forEach((l) => l());
 
   const persistTrip = (): void => {
     storage.saveTrip(buildTrip(tripId, items, createdAt, completedAreas));
@@ -142,7 +157,9 @@ export const createTrip = (
   // Apply a partial patch to every item matching `name`, then persist.
   // Used by check/uncheck/skip/unskip — all share this shape.
   const updateItemByName = (name: string, patch: Partial<TripItem>): void => {
-    items = items.map((item) => (item.name === name ? { ...item, ...patch } : item));
+    items = items.map((item) =>
+      item.name === name ? { ...item, ...patch } : item,
+    );
     persistTrip();
   };
 
@@ -159,7 +176,10 @@ export const createTrip = (
   };
 
   return {
-    start: (staples: ReadonlyArray<StapleInput>, carryover: readonly TripItem[] = []) => {
+    start: (
+      staples: ReadonlyArray<StapleInput>,
+      carryover: readonly TripItem[] = [],
+    ) => {
       const stapleItems = staples.map(stapleInputToTripItem);
       items = [...stapleItems, ...carryover];
     },
@@ -175,7 +195,10 @@ export const createTrip = (
       if (!request.houseArea || request.houseArea.trim() === '') {
         return { success: false, error: 'area is required' };
       }
-      if (request.stapleId && items.some(i => i.stapleId === request.stapleId)) {
+      if (
+        request.stapleId &&
+        items.some((i) => i.stapleId === request.stapleId)
+      ) {
         return { success: false, error: 'staple already in trip' };
       }
       // Defense-in-depth fallback: callers passing itemType='staple' without
@@ -215,7 +238,10 @@ export const createTrip = (
     getItems: () => [...items],
 
     checkOff: (name: string) => {
-      updateItemByName(name, { checked: true, checkedAt: new Date().toISOString() });
+      updateItemByName(name, {
+        checked: true,
+        checkedAt: new Date().toISOString(),
+      });
     },
 
     uncheckItem: (name: string) => {
@@ -257,10 +283,15 @@ export const createTrip = (
       const prepTimeMinutes = Math.round(elapsedMs / 60000);
       return {
         totalItems: neededItems.length,
-        stapleCount: neededItems.filter((item) => item.itemType === 'staple').length,
-        oneOffCount: neededItems.filter((item) => item.itemType === 'one-off').length,
-        sweepCount: neededItems.filter((item) => item.source !== 'whiteboard').length,
-        whiteboardCount: neededItems.filter((item) => item.source === 'whiteboard').length,
+        stapleCount: neededItems.filter((item) => item.itemType === 'staple')
+          .length,
+        oneOffCount: neededItems.filter((item) => item.itemType === 'one-off')
+          .length,
+        sweepCount: neededItems.filter((item) => item.source !== 'whiteboard')
+          .length,
+        whiteboardCount: neededItems.filter(
+          (item) => item.source === 'whiteboard',
+        ).length,
         prepTimeMinutes,
       };
     },
@@ -278,11 +309,12 @@ export const createTrip = (
         createdAt = savedTrip.createdAt;
         items = [...savedTrip.items];
         completedAreas.clear();
-        (savedTrip.completedAreas ?? []).forEach(a => completedAreas.add(a));
+        (savedTrip.completedAreas ?? []).forEach((a) => completedAreas.add(a));
 
         const stateChanged =
           JSON.stringify(previousItems) !== JSON.stringify(items) ||
-          JSON.stringify(previousCompleted) !== JSON.stringify([...completedAreas]);
+          JSON.stringify(previousCompleted) !==
+            JSON.stringify([...completedAreas]);
         if (stateChanged) {
           notify();
         }
@@ -307,7 +339,11 @@ export const createTrip = (
           item.storeLocation.aisleNumber === nextStoreLocation.aisleNumber;
         if (item.houseArea === nextHouseArea && storeLocationEqual) return item;
         changed = true;
-        return { ...item, houseArea: nextHouseArea, storeLocation: nextStoreLocation };
+        return {
+          ...item,
+          houseArea: nextHouseArea,
+          storeLocation: nextStoreLocation,
+        };
       });
       if (!changed) return;
       items = nextItems;
@@ -340,7 +376,9 @@ export const createTrip = (
         // rebuilding would replace a real list with an empty one and persist
         // that loss. Refuse it and fall through to adopting the stored trip.
         const rebuildWouldEraseStoredItems =
-          savedTrip.items.length > 0 && staples.length === 0 && carryover.length === 0;
+          savedTrip.items.length > 0 &&
+          staples.length === 0 &&
+          carryover.length === 0;
         if (!rebuildWouldEraseStoredItems) {
           // Completed trip: start new trip with carryover
           const stapleItems = staples.map(stapleInputToTripItem);
@@ -358,12 +396,14 @@ export const createTrip = (
       createdAt = savedTrip.createdAt;
       items = [...savedTrip.items];
       completedAreas.clear();
-      (savedTrip.completedAreas ?? []).forEach(a => completedAreas.add(a));
+      (savedTrip.completedAreas ?? []).forEach((a) => completedAreas.add(a));
     },
 
     subscribe: (listener: () => void): (() => void) => {
       listeners.add(listener);
-      return () => { listeners.delete(listener); };
+      return () => {
+        listeners.delete(listener);
+      };
     },
 
     complete: (): CompleteTripResult => {
@@ -417,5 +457,5 @@ const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
 
 export const completeTrip = (
   trip: TripService,
-  _library: StapleLibrary
+  _library: StapleLibrary,
 ): CompleteTripResult => categorizeItems(trip.getItems());

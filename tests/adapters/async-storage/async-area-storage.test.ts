@@ -4,7 +4,13 @@ import { createAsyncAreaStorage } from '../../../src/adapters/async-storage/asyn
 
 const STORAGE_KEY = '@grocery/house_areas';
 
-const DEFAULT_AREAS = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+const DEFAULT_AREAS = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
 
 beforeEach(() => {
   (AsyncStorage.clear as jest.Mock).mockClear();
@@ -18,7 +24,9 @@ describe('createAsyncAreaStorage', () => {
   describe('initialize', () => {
     it('loads areas from AsyncStorage into cache', async () => {
       const areas = ['Kitchen', 'Bathroom', 'Garage'];
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(areas));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify(areas),
+      );
 
       const storage = createAsyncAreaStorage();
       await storage.initialize();
@@ -34,7 +42,7 @@ describe('createAsyncAreaStorage', () => {
       expect(storage.loadAll()).toEqual(DEFAULT_AREAS);
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         STORAGE_KEY,
-        JSON.stringify(DEFAULT_AREAS)
+        JSON.stringify(DEFAULT_AREAS),
       );
     });
 
@@ -51,7 +59,9 @@ describe('createAsyncAreaStorage', () => {
   describe('loadAll', () => {
     it('returns a defensive copy of cached areas', async () => {
       const areas = ['Kitchen', 'Bathroom'];
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(areas));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify(areas),
+      );
 
       const storage = createAsyncAreaStorage();
       await storage.initialize();
@@ -88,7 +98,7 @@ describe('createAsyncAreaStorage', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         STORAGE_KEY,
-        JSON.stringify(newAreas)
+        JSON.stringify(newAreas),
       );
     });
   });
