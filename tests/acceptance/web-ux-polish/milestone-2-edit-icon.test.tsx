@@ -26,19 +26,31 @@ const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
 
 function renderApp() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripAreas = ['Fridge'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+  tripService.start(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   render(
-    <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+    <ServiceProvider
+      stapleLibrary={stapleLibrary}
+      tripService={tripService}
+      areaManagement={areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 

@@ -168,12 +168,20 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(trip2Items).toHaveLength(4);
 
     // The 3 staples should appear as preloaded
-    const preloadedItems = trip2Items.filter((item) => item.source === 'preloaded');
+    const preloadedItems = trip2Items.filter(
+      (item) => item.source === 'preloaded',
+    );
     expect(preloadedItems).toHaveLength(3);
-    expect(preloadedItems.map((i) => i.name).sort()).toEqual(['Bread', 'Eggs', 'Milk']);
+    expect(preloadedItems.map((i) => i.name).sort()).toEqual([
+      'Bread',
+      'Eggs',
+      'Milk',
+    ]);
 
     // The 1 carryover item (Eggs) should have source 'carryover'
-    const carryoverItems = trip2Items.filter((item) => item.source === 'carryover');
+    const carryoverItems = trip2Items.filter(
+      (item) => item.source === 'carryover',
+    );
     expect(carryoverItems).toHaveLength(1);
     expect(carryoverItems[0].name).toBe('Eggs');
     expect(carryoverItems[0].source).toBe('carryover');
@@ -250,7 +258,11 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const carryoverItems = items.filter((item) => item.source === 'carryover');
 
     expect(preloadedItems).toHaveLength(3);
-    expect(preloadedItems.map((i) => i.name).sort()).toEqual(['Bread', 'Eggs', 'Milk']);
+    expect(preloadedItems.map((i) => i.name).sort()).toEqual([
+      'Bread',
+      'Eggs',
+      'Milk',
+    ]);
 
     expect(carryoverItems).toHaveLength(1);
     expect(carryoverItems[0].name).toBe('Bread');

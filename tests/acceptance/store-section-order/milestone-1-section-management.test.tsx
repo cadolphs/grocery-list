@@ -23,7 +23,10 @@
 // Domain ports:
 import { groupBySection } from '../../../src/domain/item-grouping';
 import { TripItem } from '../../../src/domain/types';
-import { sortByCustomOrder, appendNewSections } from '../../../src/domain/section-ordering';
+import {
+  sortByCustomOrder,
+  appendNewSections,
+} from '../../../src/domain/section-ordering';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 
 // --- Test helpers ---
@@ -108,7 +111,7 @@ describe('US-SSO-04: New Section Auto-Appends to Custom Order', () => {
     const updated = appendNewSections(currentOrder, knownKeys);
 
     // Then the order has exactly one Dairy entry
-    const dairyCount = updated.filter(k => k === 'Dairy').length;
+    const dairyCount = updated.filter((k) => k === 'Dairy').length;
     expect(dairyCount).toBe(1);
     expect(updated).toHaveLength(3);
   });
@@ -126,7 +129,11 @@ describe('US-SSO-05: Reset Section Order to Default', () => {
 
   it('clears custom order and reverts to default sort', () => {
     // Given Carlos has a custom order
-    const storage = createNullSectionOrderStorage(['Deli', 'Dairy', 'Canned Goods']);
+    const storage = createNullSectionOrderStorage([
+      'Deli',
+      'Dairy',
+      'Canned Goods',
+    ]);
 
     // When Carlos resets the section order to default
     storage.clearOrder();
@@ -193,15 +200,12 @@ describe('US-SSO-03: Section Navigation Follows Custom Order', () => {
     //   tripItem('Canned beans', 'Canned Goods', 5),
     //   tripItem('Apples', 'Produce', null),
     // ];
-
     // And the sorted store sections are in custom order
     // const groups = groupBySection(items);
     // const sorted = sortByCustomOrder(groups, customOrder);
-
     // When Carlos finishes the Deli section (index 0)
     // const currentIndex = 0;
     // const nextIndex = currentIndex + 1;
-
     // Then the next section is Dairy
     // expect(sorted[nextIndex].section).toBe('Dairy');
   });
@@ -214,15 +218,12 @@ describe('US-SSO-03: Section Navigation Follows Custom Order', () => {
     //   tripItem('Canned beans', 'Canned Goods', 5),
     //   tripItem('Apples', 'Produce', null),
     // ];
-
     // And the sorted store sections are in custom order (Dairy excluded by groupBySection)
     // const groups = groupBySection(items);
     // const sorted = sortByCustomOrder(groups, customOrder);
-
     // When Carlos finishes the Deli section (index 0)
     // const currentIndex = 0;
     // const nextIndex = currentIndex + 1;
-
     // Then the next section is Canned Goods (Dairy skipped - no items)
     // expect(sorted[nextIndex].section).toBe('Canned Goods');
   });
@@ -235,15 +236,12 @@ describe('US-SSO-03: Section Navigation Follows Custom Order', () => {
     //   tripItem('Whole milk', 'Dairy', 3),
     //   tripItem('Apples', 'Produce', null),
     // ];
-
     // And the sorted store sections are in custom order
     // const groups = groupBySection(items);
     // const sorted = sortByCustomOrder(groups, customOrder);
-
     // When Carlos finishes the Produce section (last, index 2)
     // const currentIndex = 2;
     // const nextIndex = currentIndex + 1;
-
     // Then there is no next section
     // expect(sorted[nextIndex]).toBeUndefined();
   });
@@ -260,10 +258,8 @@ describe('Edge: Auto-append with null order', () => {
   it.skip('auto-append with null order returns null (no-op)', () => {
     // Given no custom section order has been set
     // const currentOrder = null;
-
     // When the app detects new sections from trip items
     // const knownKeys = ['Deli', 'Dairy'];
-
     // Then no auto-append occurs (can't append to null)
     // This behavior is for the hook/caller to handle:
     // if order is null, don't call appendNewSections

@@ -18,7 +18,7 @@ type TestSectionOrderStorage = SectionOrderStorage & {
 };
 
 const createTestSectionOrderStorage = (
-  initial: string[] | null = null
+  initial: string[] | null = null,
 ): TestSectionOrderStorage => {
   let cached: string[] | null = initial === null ? null : [...initial];
   const listeners = new Set<() => void>();
@@ -52,10 +52,12 @@ const createTestWrapper = (sectionOrderStorage: SectionOrderStorage) => {
   const tripService = createTrip(tripStorage);
 
   const wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(
-      ServiceProvider,
-      { stapleLibrary: library, tripService, sectionOrderStorage, children }
-    );
+    React.createElement(ServiceProvider, {
+      stapleLibrary: library,
+      tripService,
+      sectionOrderStorage,
+      children,
+    });
 
   return { wrapper };
 };
@@ -80,7 +82,10 @@ describe('useSectionOrder reactivity', () => {
   });
 
   it('re-renders with updated order when storage emits change', () => {
-    const sectionOrderStorage = createTestSectionOrderStorage(['Dairy', 'Produce']);
+    const sectionOrderStorage = createTestSectionOrderStorage([
+      'Dairy',
+      'Produce',
+    ]);
     const { wrapper } = createTestWrapper(sectionOrderStorage);
 
     const { result } = renderHook(() => useSectionOrder(), { wrapper });
@@ -123,7 +128,10 @@ describe('useSectionOrder legacy composite migration (ADR-004)', () => {
   });
 
   it('preserves storage and surfaces order verbatim when no entry contains "::"', () => {
-    const sectionOrderStorage = createTestSectionOrderStorage(['Inner Aisles', 'Deli']);
+    const sectionOrderStorage = createTestSectionOrderStorage([
+      'Inner Aisles',
+      'Deli',
+    ]);
     const { wrapper } = createTestWrapper(sectionOrderStorage);
 
     const { result } = renderHook(() => useSectionOrder(), { wrapper });

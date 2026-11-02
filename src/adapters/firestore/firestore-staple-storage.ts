@@ -45,7 +45,10 @@ export type FirestoreStapleStorage = StapleStorage & {
   readonly unsubscribe: () => void;
 };
 
-type StapleDocumentData = { readonly items?: StapleItem[]; readonly writtenAt?: number };
+type StapleDocumentData = {
+  readonly items?: StapleItem[];
+  readonly writtenAt?: number;
+};
 
 type DocumentSnapshot = {
   exists: () => boolean;
@@ -59,7 +62,7 @@ const persistInBackground = (
   db: Firestore,
   uid: string,
   items: StapleItem[],
-  writtenAt: number
+  writtenAt: number,
 ): void => {
   setDoc(buildDocRef(db, uid), { items, writtenAt });
 };
@@ -71,15 +74,19 @@ const isStapleItemList = (candidate: unknown): candidate is StapleItem[] =>
 
 // Pre-upgrade v1 mirrors hold the raw JSON array under the v1 key.
 const readStapleMirror = (uid: string) =>
-  readMirrorEnvelope<StapleItem[]>(uid, 'staples', buildRawJsonV1Parser(isStapleItemList), isStapleItemList);
+  readMirrorEnvelope<StapleItem[]>(
+    uid,
+    'staples',
+    buildRawJsonV1Parser(isStapleItemList),
+    isStapleItemList,
+  );
 
-const serializeItems = (items: StapleItem[]): string =>
-  JSON.stringify(items);
+const serializeItems = (items: StapleItem[]): string => JSON.stringify(items);
 
 export const createFirestoreStapleStorage = (
   db: Firestore,
   uid: string,
-  options: FirestoreStapleStorageOptions = {}
+  options: FirestoreStapleStorageOptions = {},
 ): FirestoreStapleStorage => {
   let cache: StapleItem[] = [];
   let watermark: DocumentWatermark = UNSTAMPED;
@@ -132,7 +139,9 @@ export const createFirestoreStapleStorage = (
 
     // Server data has arrived — it is authoritative for the rest of this
     // session, so the empty-snapshot guard stands down on both branches below.
-    const rePushWrittenAt = serverHasStaples ? rePushStamp(watermark, serverWrittenAt) : null;
+    const rePushWrittenAt = serverHasStaples
+      ? rePushStamp(watermark, serverWrittenAt)
+      : null;
     if (rePushWrittenAt !== null) {
       // The server holds an older document than the edit in cache: push the
       // edit back with its own stamp. The echo carries that stamp and equal
@@ -204,7 +213,7 @@ export const createFirestoreStapleStorage = (
 
     update: (updatedItem: StapleItem): void => {
       commitLocalChange(
-        cache.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+        cache.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
       );
     },
 
@@ -212,15 +221,15 @@ export const createFirestoreStapleStorage = (
       if (query.trim() === '') return [];
       const lowerQuery = query.toLowerCase();
       return cache.filter((item) =>
-        item.name.toLowerCase().includes(lowerQuery)
+        item.name.toLowerCase().includes(lowerQuery),
       );
     },
 
     updateArea: (oldName: string, newName: string): void => {
       commitLocalChange(
         cache.map((item) =>
-          item.houseArea === oldName ? { ...item, houseArea: newName } : item
-        )
+          item.houseArea === oldName ? { ...item, houseArea: newName } : item,
+        ),
       );
     },
   };

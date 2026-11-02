@@ -1,13 +1,25 @@
 // HomeView - displays trip items grouped by house area
 // Composes useTrip hook with groupByArea pure function
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { groupByArea, getOneOffItems } from '../domain/item-grouping';
-import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
+import {
+  HouseArea,
+  StapleItem,
+  AddStapleRequest,
+  AddOneOffRequest,
+  AddTripItemRequest,
+} from '../domain/types';
 import { AreaSection } from './AreaSection';
 import { TripItemRow } from './TripItemRow';
 import { QuickAdd } from './QuickAdd';
@@ -20,12 +32,24 @@ import { theme } from './theme';
 type SettingsView = 'menu' | 'areas' | 'section-order';
 type HomeMode = 'sweep' | 'checklist';
 
-const formatSweepProgress = (completedCount: number, totalAreas: number): string =>
-  `${completedCount} of ${totalAreas} areas complete`;
+const formatSweepProgress = (
+  completedCount: number,
+  totalAreas: number,
+): string => `${completedCount} of ${totalAreas} areas complete`;
 
 export const HomeView = (): React.JSX.Element => {
   const { areas } = useAreas();
-  const { items, addItem, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, sweepProgress } = useTrip();
+  const {
+    items,
+    addItem,
+    skipItem,
+    unskipItem,
+    completeArea,
+    uncompleteArea,
+    resetSweep,
+    syncStapleUpdate,
+    sweepProgress,
+  } = useTrip();
   const [homeMode, setHomeMode] = useState<HomeMode>('sweep');
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const { stapleLibrary } = useServices();
@@ -43,7 +67,10 @@ export const HomeView = (): React.JSX.Element => {
     return unsubscribe;
   }, [stapleLibrary]);
 
-  const allStaples = useMemo(() => stapleLibrary.listAll(), [stapleLibrary, stapleRevision]);
+  const allStaples = useMemo(
+    () => stapleLibrary.listAll(),
+    [stapleLibrary, stapleRevision],
+  );
   const checklistStaples = useMemo(
     () => allStaples.filter((s) => s.type === 'staple'),
     [allStaples],
@@ -60,7 +87,11 @@ export const HomeView = (): React.JSX.Element => {
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
   const [editStapleId, setEditStapleId] = useState<string | null>(null);
-  const [editInitialValues, setEditInitialValues] = useState<{ houseArea: HouseArea; section: string; aisleNumber: number | null } | null>(null);
+  const [editInitialValues, setEditInitialValues] = useState<{
+    houseArea: HouseArea;
+    section: string;
+    aisleNumber: number | null;
+  } | null>(null);
   const [settingsView, setSettingsView] = useState<SettingsView | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -77,18 +108,23 @@ export const HomeView = (): React.JSX.Element => {
     setMetadataSheetVisible(true);
   }, []);
 
-  const handleEditStaple = useCallback((name: string, area: string) => {
-    const staple = stapleLibrary.listAll().find((s) => s.name === name && s.houseArea === area);
-    if (!staple) return;
-    setEditStapleId(staple.id);
-    setEditInitialValues({
-      houseArea: staple.houseArea,
-      section: staple.storeLocation.section,
-      aisleNumber: staple.storeLocation.aisleNumber,
-    });
-    setMetadataSheetItemName(staple.name);
-    setMetadataSheetVisible(true);
-  }, [stapleLibrary]);
+  const handleEditStaple = useCallback(
+    (name: string, area: string) => {
+      const staple = stapleLibrary
+        .listAll()
+        .find((s) => s.name === name && s.houseArea === area);
+      if (!staple) return;
+      setEditStapleId(staple.id);
+      setEditInitialValues({
+        houseArea: staple.houseArea,
+        section: staple.storeLocation.section,
+        aisleNumber: staple.storeLocation.aisleNumber,
+      });
+      setMetadataSheetItemName(staple.name);
+      setMetadataSheetVisible(true);
+    },
+    [stapleLibrary],
+  );
 
   const handleDismissMetadataSheet = useCallback(() => {
     setMetadataSheetVisible(false);
@@ -97,93 +133,143 @@ export const HomeView = (): React.JSX.Element => {
     setEditInitialValues(null);
   }, []);
 
-  const handleSubmitStaple = useCallback((request: AddStapleRequest): void => {
-    stapleLibrary.addStaple(request);
-  }, [stapleLibrary]);
+  const handleSubmitStaple = useCallback(
+    (request: AddStapleRequest): void => {
+      stapleLibrary.addStaple(request);
+    },
+    [stapleLibrary],
+  );
 
-  const handleSubmitOneOff = useCallback((request: AddOneOffRequest): void => {
-    stapleLibrary.addOneOff(request);
-  }, [stapleLibrary]);
+  const handleSubmitOneOff = useCallback(
+    (request: AddOneOffRequest): void => {
+      stapleLibrary.addOneOff(request);
+    },
+    [stapleLibrary],
+  );
 
-  const handleSubmitTripItem = useCallback((request: AddTripItemRequest): void => {
-    addItem(request);
-  }, [addItem]);
+  const handleSubmitTripItem = useCallback(
+    (request: AddTripItemRequest): void => {
+      addItem(request);
+    },
+    [addItem],
+  );
 
-  const handleSaveEdit = useCallback((stapleId: string, changes: { houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => {
-    stapleLibrary.updateStaple(stapleId, changes);
-    syncStapleUpdate(stapleId, changes);
-  }, [stapleLibrary, syncStapleUpdate]);
+  const handleSaveEdit = useCallback(
+    (
+      stapleId: string,
+      changes: {
+        houseArea?: HouseArea;
+        storeLocation?: { section: string; aisleNumber: number | null };
+      },
+    ) => {
+      stapleLibrary.updateStaple(stapleId, changes);
+      syncStapleUpdate(stapleId, changes);
+    },
+    [stapleLibrary, syncStapleUpdate],
+  );
 
-  const handleDeleteStaple = useCallback((stapleId: string) => {
-    // Trip cleanup flows through stapleLibrary.subscribe -> handleStapleChange
-    // (wired in useAppInitialization, step 01-02). Removing the dual-write
-    // here is intentional — it was redundant and masked the stapleId-null
-    // fallback path delivered in step 01-01.
-    stapleLibrary.remove(stapleId);
-  }, [stapleLibrary]);
+  const handleDeleteStaple = useCallback(
+    (stapleId: string) => {
+      // Trip cleanup flows through stapleLibrary.subscribe -> handleStapleChange
+      // (wired in useAppInitialization, step 01-02). Removing the dual-write
+      // here is intentional — it was redundant and masked the stapleId-null
+      // fallback path delivered in step 01-01.
+      stapleLibrary.remove(stapleId);
+    },
+    [stapleLibrary],
+  );
 
-  const handleQuickAddSearch = useCallback((query: string): StapleItem[] => {
-    return stapleLibrary.search(query).filter((s) => s.type === 'one-off');
-  }, [stapleLibrary]);
+  const handleQuickAddSearch = useCallback(
+    (query: string): StapleItem[] => {
+      return stapleLibrary.search(query).filter((s) => s.type === 'one-off');
+    },
+    [stapleLibrary],
+  );
 
-  const handleFindDuplicate = useCallback((name: string, area: HouseArea) => {
-    return stapleLibrary.listAll().find(
-      (s) => s.name === name && s.houseArea === area,
-    );
-  }, [stapleLibrary]);
+  const handleFindDuplicate = useCallback(
+    (name: string, area: HouseArea) => {
+      return stapleLibrary
+        .listAll()
+        .find((s) => s.name === name && s.houseArea === area);
+    },
+    [stapleLibrary],
+  );
 
-  const handleAddFromChecklist = useCallback((staple: StapleItem): void => {
-    const existingItem = items.find(
-      (i) => i.stapleId === staple.id || (i.name === staple.name && i.houseArea === staple.houseArea)
-    );
-    if (existingItem && !existingItem.needed) {
-      unskipItem(existingItem.name);
-    } else if (!existingItem) {
-      addItem({
-        name: staple.name,
-        houseArea: staple.houseArea,
-        storeLocation: staple.storeLocation,
-        itemType: 'staple',
-        source: 'whiteboard',
-        stapleId: staple.id,
-      });
-    }
-  }, [items, addItem, unskipItem]);
+  const handleAddFromChecklist = useCallback(
+    (staple: StapleItem): void => {
+      const existingItem = items.find(
+        (i) =>
+          i.stapleId === staple.id ||
+          (i.name === staple.name && i.houseArea === staple.houseArea),
+      );
+      if (existingItem && !existingItem.needed) {
+        unskipItem(existingItem.name);
+      } else if (!existingItem) {
+        addItem({
+          name: staple.name,
+          houseArea: staple.houseArea,
+          storeLocation: staple.storeLocation,
+          itemType: 'staple',
+          source: 'whiteboard',
+          stapleId: staple.id,
+        });
+      }
+    },
+    [items, addItem, unskipItem],
+  );
 
-  const handleRemoveFromChecklist = useCallback((name: string): void => {
-    skipItem(name);
-  }, [skipItem]);
+  const handleRemoveFromChecklist = useCallback(
+    (name: string): void => {
+      skipItem(name);
+    },
+    [skipItem],
+  );
 
   // Single source of truth for "tap toggles needed" used by sweep tiles
   // and one-off rows. Both paths previously inlined the same if/else.
-  const toggleItemNeeded = useCallback((name: string, currentlyNeeded: boolean): void => {
-    if (currentlyNeeded) skipItem(name);
-    else unskipItem(name);
-  }, [skipItem, unskipItem]);
+  const toggleItemNeeded = useCallback(
+    (name: string, currentlyNeeded: boolean): void => {
+      if (currentlyNeeded) skipItem(name);
+      else unskipItem(name);
+    },
+    [skipItem, unskipItem],
+  );
 
-  const handleSelectSuggestion = useCallback((staple: StapleItem): void => {
-    const isOneOff = staple.type === 'one-off';
-    const alreadyInTrip = isOneOff
-      ? items.some((item) => item.name === staple.name && item.itemType === 'one-off')
-      : items.some((item) => item.name === staple.name && item.houseArea === staple.houseArea);
-    if (!alreadyInTrip) {
-      const houseArea = isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
-      addItem({
-        name: staple.name,
-        houseArea,
-        storeLocation: staple.storeLocation,
-        itemType: isOneOff ? 'one-off' : 'staple',
-        source: 'quick-add',
-        stapleId: staple.id,
-      });
-    }
-  }, [items, addItem]);
+  const handleSelectSuggestion = useCallback(
+    (staple: StapleItem): void => {
+      const isOneOff = staple.type === 'one-off';
+      const alreadyInTrip = isOneOff
+        ? items.some(
+            (item) => item.name === staple.name && item.itemType === 'one-off',
+          )
+        : items.some(
+            (item) =>
+              item.name === staple.name && item.houseArea === staple.houseArea,
+          );
+      if (!alreadyInTrip) {
+        const houseArea =
+          isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
+        addItem({
+          name: staple.name,
+          houseArea,
+          storeLocation: staple.storeLocation,
+          itemType: isOneOff ? 'one-off' : 'staple',
+          source: 'quick-add',
+          stapleId: staple.id,
+        });
+      }
+    },
+    [items, addItem],
+  );
 
   if (settingsView === 'section-order') {
     return (
       <View style={styles.settingsContainer}>
         <View style={styles.settingsHeader}>
-          <Pressable testID="settings-back-button" onPress={() => setSettingsView('menu')}>
+          <Pressable
+            testID="settings-back-button"
+            onPress={() => setSettingsView('menu')}
+          >
             <Text style={styles.backButtonText}>Back</Text>
           </Pressable>
         </View>
@@ -196,13 +282,19 @@ export const HomeView = (): React.JSX.Element => {
     return (
       <View style={styles.settingsContainer}>
         <View style={styles.settingsHeader}>
-          <Pressable testID="settings-back-button" onPress={handleToggleSettings}>
+          <Pressable
+            testID="settings-back-button"
+            onPress={handleToggleSettings}
+          >
             <Text style={styles.backButtonText}>Back</Text>
           </Pressable>
         </View>
         <AreaSettingsScreen />
         <View style={styles.settingsMenuContainer}>
-          <Pressable style={styles.settingsMenuItem} onPress={() => setSettingsView('section-order')}>
+          <Pressable
+            style={styles.settingsMenuItem}
+            onPress={() => setSettingsView('section-order')}
+          >
             <Text style={styles.settingsMenuItemText}>Section Order</Text>
           </Pressable>
         </View>
@@ -211,9 +303,18 @@ export const HomeView = (): React.JSX.Element => {
   }
 
   return (
-    <ScrollView ref={scrollViewRef} testID="home-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      ref={scrollViewRef}
+      testID="home-scroll"
+      style={styles.scrollView}
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.headerRow}>
-        <Pressable testID="settings-button" onPress={handleToggleSettings} style={styles.settingsButton}>
+        <Pressable
+          testID="settings-button"
+          onPress={handleToggleSettings}
+          style={styles.settingsButton}
+        >
           <Text style={styles.settingsButtonText}>Settings</Text>
         </Pressable>
       </View>
@@ -221,19 +322,44 @@ export const HomeView = (): React.JSX.Element => {
         <Pressable
           testID="home-mode-sweep"
           onPress={() => setHomeMode('sweep')}
-          style={[styles.modeToggleButton, homeMode === 'sweep' && styles.modeToggleButtonActive]}
+          style={[
+            styles.modeToggleButton,
+            homeMode === 'sweep' && styles.modeToggleButtonActive,
+          ]}
         >
-          <Text style={[styles.modeToggleText, homeMode === 'sweep' && styles.modeToggleTextActive]}>Sweep</Text>
+          <Text
+            style={[
+              styles.modeToggleText,
+              homeMode === 'sweep' && styles.modeToggleTextActive,
+            ]}
+          >
+            Sweep
+          </Text>
         </Pressable>
         <Pressable
           testID="home-mode-checklist"
           onPress={() => setHomeMode('checklist')}
-          style={[styles.modeToggleButton, homeMode === 'checklist' && styles.modeToggleButtonActive]}
+          style={[
+            styles.modeToggleButton,
+            homeMode === 'checklist' && styles.modeToggleButtonActive,
+          ]}
         >
-          <Text style={[styles.modeToggleText, homeMode === 'checklist' && styles.modeToggleTextActive]}>Checklist</Text>
+          <Text
+            style={[
+              styles.modeToggleText,
+              homeMode === 'checklist' && styles.modeToggleTextActive,
+            ]}
+          >
+            Checklist
+          </Text>
         </Pressable>
       </View>
-      <QuickAdd onAddItem={addItem} onSearch={handleQuickAddSearch} onSelectSuggestion={handleSelectSuggestion} onOpenMetadataSheet={handleOpenMetadataSheet} />
+      <QuickAdd
+        onAddItem={addItem}
+        onSearch={handleQuickAddSearch}
+        onSelectSuggestion={handleSelectSuggestion}
+        onOpenMetadataSheet={handleOpenMetadataSheet}
+      />
       {homeMode === 'checklist' && (
         <StapleChecklist
           staples={checklistStaples}
@@ -245,7 +371,12 @@ export const HomeView = (): React.JSX.Element => {
       )}
       {homeMode === 'sweep' && (
         <>
-          <Text style={styles.sweepProgress}>{formatSweepProgress(sweepProgress.completedCount, sweepProgress.totalAreas)}</Text>
+          <Text style={styles.sweepProgress}>
+            {formatSweepProgress(
+              sweepProgress.completedCount,
+              sweepProgress.totalAreas,
+            )}
+          </Text>
           {areaGroups.map((areaGroup) => (
             <AreaSection
               key={areaGroup.area}
@@ -258,13 +389,17 @@ export const HomeView = (): React.JSX.Element => {
               onCompleteArea={completeArea}
               onUncompleteArea={uncompleteArea}
               onSelectArea={handleSelectArea}
-              isCompleted={sweepProgress.completedAreas.includes(areaGroup.area)}
+              isCompleted={sweepProgress.completedAreas.includes(
+                areaGroup.area,
+              )}
               isActive={activeArea === areaGroup.area}
             />
           ))}
           {oneOffItems.length > 0 && (
             <View style={styles.oneOffsSection}>
-              <Text style={styles.oneOffsHeading}>One-offs ({oneOffItems.length})</Text>
+              <Text style={styles.oneOffsHeading}>
+                One-offs ({oneOffItems.length})
+              </Text>
               {oneOffItems.map((item) => (
                 <TripItemRow
                   key={item.id}
@@ -279,7 +414,10 @@ export const HomeView = (): React.JSX.Element => {
             testID="reset-sweep-button"
             onPress={() => {
               setShowResetConfirmation(true);
-              setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+              setTimeout(
+                () => scrollViewRef.current?.scrollToEnd({ animated: true }),
+                100,
+              );
             }}
             style={styles.resetSweepButton}
           >
@@ -320,7 +458,9 @@ export const HomeView = (): React.JSX.Element => {
         editStapleId={editStapleId}
         initialValues={editInitialValues}
         defaultItemType={sweepProgress.allAreasComplete ? 'One-off' : 'Staple'}
-        defaultArea={sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)}
+        defaultArea={
+          sweepProgress.allAreasComplete ? null : (activeArea ?? undefined)
+        }
         areas={areas as HouseArea[]}
         existingSections={existingSections}
         onFindDuplicate={handleFindDuplicate}

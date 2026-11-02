@@ -4,11 +4,12 @@
 const MAX_AREA_NAME_LENGTH = 40;
 
 export type ValidationResult =
-  | { readonly valid: true }
-  | { readonly valid: false; readonly error: string };
+  { readonly valid: true } | { readonly valid: false; readonly error: string };
 
 const isDuplicateArea = (name: string, existingNames: string[]): boolean =>
-  existingNames.some(existing => existing.toLowerCase() === name.toLowerCase());
+  existingNames.some(
+    (existing) => existing.toLowerCase() === name.toLowerCase(),
+  );
 
 export const validateAreaName = (
   name: string,
@@ -21,7 +22,10 @@ export const validateAreaName = (
   }
 
   if (trimmedName.length > MAX_AREA_NAME_LENGTH) {
-    return { valid: false, error: `Area name must be at most ${MAX_AREA_NAME_LENGTH} characters` };
+    return {
+      valid: false,
+      error: `Area name must be at most ${MAX_AREA_NAME_LENGTH} characters`,
+    };
   }
 
   if (isDuplicateArea(trimmedName, existingNames)) {

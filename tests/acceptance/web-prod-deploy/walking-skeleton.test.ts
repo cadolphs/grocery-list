@@ -94,7 +94,7 @@ describe('web-prod-deploy walking skeleton', () => {
       const cfg = readJson<FirebaseHostingConfig>('firebase.json');
       const rewrites = cfg.hosting?.rewrites ?? [];
       const spaRule = rewrites.find(
-        (r) => r.source === '**' && r.destination === '/index.html'
+        (r) => r.source === '**' && r.destination === '/index.html',
       );
       expect(spaRule).toBeDefined();
     });
@@ -130,10 +130,13 @@ describe('web-prod-deploy walking skeleton', () => {
       const job = Object.values(wf.jobs ?? {})[0];
       const steps = job?.steps ?? [];
       const checkout = steps.find(
-        (s) => typeof s.uses === 'string' && (s.uses as string).startsWith('actions/checkout@')
+        (s) =>
+          typeof s.uses === 'string' &&
+          (s.uses as string).startsWith('actions/checkout@'),
       );
       expect(checkout).toBeDefined();
-      const withBlock = (checkout as { with?: { ref?: string } } | undefined)?.with;
+      const withBlock = (checkout as { with?: { ref?: string } } | undefined)
+        ?.with;
       expect(withBlock?.ref).toMatch(/workflow_run\.head_sha/);
     });
 
@@ -144,11 +147,15 @@ describe('web-prod-deploy walking skeleton', () => {
       const deployStep = steps.find(
         (s) =>
           typeof s.uses === 'string' &&
-          (s.uses as string).includes('FirebaseExtended/action-hosting-deploy')
+          (s.uses as string).includes('FirebaseExtended/action-hosting-deploy'),
       );
       expect(deployStep).toBeDefined();
-      const withBlock = (deployStep as { with?: Record<string, string> } | undefined)?.with ?? {};
-      expect(withBlock.firebaseServiceAccount).toMatch(/FIREBASE_SERVICE_ACCOUNT/);
+      const withBlock =
+        (deployStep as { with?: Record<string, string> } | undefined)?.with ??
+        {};
+      expect(withBlock.firebaseServiceAccount).toMatch(
+        /FIREBASE_SERVICE_ACCOUNT/,
+      );
       expect(withBlock.projectId).toBe('grocery-list-cad');
       expect(withBlock.channelId).toBe('live');
     });
@@ -163,12 +170,15 @@ describe('web-prod-deploy walking skeleton', () => {
 
       const exportIdx = findIdx((s) => {
         const runCmd = typeof s.run === 'string' ? (s.run as string) : '';
-        return /expo\s+export/.test(runCmd) && /-p\s+web|--platform\s+web/.test(runCmd);
+        return (
+          /expo\s+export/.test(runCmd) &&
+          /-p\s+web|--platform\s+web/.test(runCmd)
+        );
       });
       const deployIdx = findIdx(
         (s) =>
           typeof s.uses === 'string' &&
-          (s.uses as string).includes('FirebaseExtended/action-hosting-deploy')
+          (s.uses as string).includes('FirebaseExtended/action-hosting-deploy'),
       );
 
       expect(exportIdx).toBeGreaterThanOrEqual(0);

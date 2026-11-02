@@ -36,7 +36,7 @@ describe('Regression: staple ID preserved on trip preload', () => {
 
     for (const tripItem of tripItems) {
       expect(tripItem.stapleId).not.toBeNull();
-      const matchingStaple = allStaples.find(s => s.name === tripItem.name);
+      const matchingStaple = allStaples.find((s) => s.name === tripItem.name);
       expect(matchingStaple).toBeDefined();
       expect(tripItem.stapleId).toBe(matchingStaple!.id);
     }

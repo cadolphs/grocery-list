@@ -22,19 +22,24 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
-type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+type SnapshotCallback = (snapshot: {
+  exists: () => boolean;
+  data: () => MockDocData;
+}) => void;
 let capturedSnapshotCallback: SnapshotCallback | null = null;
 const mockUnsubscribe = jest.fn();
 
-const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
-  const data = mockStore[docRef.path];
-  callback({
-    exists: () => data !== undefined,
-    data: () => data,
-  });
-  capturedSnapshotCallback = callback;
-  return mockUnsubscribe;
-});
+const mockOnSnapshot = jest.fn(
+  (docRef: { path: string }, callback: SnapshotCallback) => {
+    const data = mockStore[docRef.path];
+    callback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+    capturedSnapshotCallback = callback;
+    return mockUnsubscribe;
+  },
+);
 
 const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
   mockStore[path] = data;
@@ -59,11 +64,16 @@ const TEST_UID = 'user-123';
 const SECTION_ORDER_DOC_PATH = `users/${TEST_UID}/data/sectionOrder`;
 
 const createFreshStorage = async () => {
-  const { createFirestoreSectionOrderStorage } = require('./firestore-section-order-storage');
+  const {
+    createFirestoreSectionOrderStorage,
+  } = require('./firestore-section-order-storage');
   const mockDb = { type: 'firestore' };
   const storage = createFirestoreSectionOrderStorage(mockDb, TEST_UID);
   await storage.initialize();
-  return storage as SectionOrderStorage & { initialize: () => Promise<void>; subscribe: (l: () => void) => () => void };
+  return storage as SectionOrderStorage & {
+    initialize: () => Promise<void>;
+    subscribe: (l: () => void) => () => void;
+  };
 };
 
 beforeEach(async () => {
@@ -120,7 +130,7 @@ describe('firestore section order storage implements section order storage port'
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: SECTION_ORDER_DOC_PATH }),
-      { order, writtenAt: expect.any(Number) }
+      { order, writtenAt: expect.any(Number) },
     );
   });
 
@@ -132,7 +142,7 @@ describe('firestore section order storage implements section order storage port'
 
     expect(mockSetDoc).toHaveBeenLastCalledWith(
       expect.objectContaining({ path: SECTION_ORDER_DOC_PATH }),
-      { order: null, writtenAt: expect.any(Number) }
+      { order: null, writtenAt: expect.any(Number) },
     );
   });
 
@@ -152,25 +162,39 @@ describe('firestore section order storage implements section order storage port'
 // --- onChange callback and echo detection tests ---
 
 const createFreshStorageWithOnChange = async (onChange?: () => void) => {
-  const { createFirestoreSectionOrderStorage } = require('./firestore-section-order-storage');
+  const {
+    createFirestoreSectionOrderStorage,
+  } = require('./firestore-section-order-storage');
   const mockDb = { type: 'firestore' };
-  const storage = createFirestoreSectionOrderStorage(mockDb, TEST_UID, { onChange });
+  const storage = createFirestoreSectionOrderStorage(mockDb, TEST_UID, {
+    onChange,
+  });
   await storage.initialize();
-  return storage as SectionOrderStorage & { initialize: () => Promise<void>; unsubscribe: () => void; subscribe: (l: () => void) => () => void };
+  return storage as SectionOrderStorage & {
+    initialize: () => Promise<void>;
+    unsubscribe: () => void;
+    subscribe: (l: () => void) => () => void;
+  };
 };
 
 describe('firestore section order storage onChange callback', () => {
   test('calls onChange when remote snapshot contains different order', async () => {
-    mockStore[SECTION_ORDER_DOC_PATH] = { order: ['Dairy', 'Produce', 'Bakery'] };
+    mockStore[SECTION_ORDER_DOC_PATH] = {
+      order: ['Dairy', 'Produce', 'Bakery'],
+    };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
     expect(storage.loadOrder()).toEqual(['Dairy', 'Produce', 'Bakery']);
 
     // Simulate remote reorder
-    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Produce', 'Dairy', 'Bakery'] });
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, {
+      order: ['Produce', 'Dairy', 'Bakery'],
+    });
 
     expect(onChangeCallCount).toBe(1);
     expect(storage.loadOrder()).toEqual(['Produce', 'Dairy', 'Bakery']);
@@ -180,7 +204,9 @@ describe('firestore section order storage onChange callback', () => {
     mockStore[SECTION_ORDER_DOC_PATH] = { order: ['Dairy', 'Produce'] };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
 
@@ -188,7 +214,9 @@ describe('firestore section order storage onChange callback', () => {
     storage.saveOrder(['Dairy', 'Produce', 'Bakery']);
 
     // Simulate snapshot echo with identical data
-    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Dairy', 'Produce', 'Bakery'] });
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, {
+      order: ['Dairy', 'Produce', 'Bakery'],
+    });
 
     expect(onChangeCallCount).toBe(0);
   });
@@ -208,7 +236,9 @@ describe('firestore section order storage onChange callback', () => {
     const storage = await createFreshStorageWithOnChange();
     expect(storage.loadOrder()).toEqual(['Dairy']);
 
-    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Dairy', 'Produce'] });
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, {
+      order: ['Dairy', 'Produce'],
+    });
 
     expect(storage.loadOrder()).toEqual(['Dairy', 'Produce']);
   });
@@ -220,7 +250,9 @@ describe('firestore section order storage subscribe fan-out', () => {
   test('subscribe fires on local saveOrder', async () => {
     const storage = await createFreshStorage();
     let callCount = 0;
-    storage.subscribe(() => { callCount++; });
+    storage.subscribe(() => {
+      callCount++;
+    });
 
     storage.saveOrder(['Bakery::1', 'Produce::3']);
 
@@ -231,7 +263,9 @@ describe('firestore section order storage subscribe fan-out', () => {
     const storage = await createFreshStorage();
     storage.saveOrder(['Bakery::1']);
     let callCount = 0;
-    storage.subscribe(() => { callCount++; });
+    storage.subscribe(() => {
+      callCount++;
+    });
 
     storage.clearOrder();
 
@@ -243,9 +277,13 @@ describe('firestore section order storage subscribe fan-out', () => {
     const storage = await createFreshStorage();
 
     let callCount = 0;
-    storage.subscribe(() => { callCount++; });
+    storage.subscribe(() => {
+      callCount++;
+    });
 
-    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Produce', 'Dairy', 'Bakery'] });
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, {
+      order: ['Produce', 'Dairy', 'Bakery'],
+    });
 
     expect(callCount).toBe(1);
   });
@@ -253,13 +291,17 @@ describe('firestore section order storage subscribe fan-out', () => {
   test('subscribe does NOT fire on echo (serialized-equal snapshot after local save)', async () => {
     const storage = await createFreshStorage();
     let callCount = 0;
-    storage.subscribe(() => { callCount++; });
+    storage.subscribe(() => {
+      callCount++;
+    });
 
     storage.saveOrder(['Dairy', 'Produce', 'Bakery']);
     expect(callCount).toBe(1); // local save fires once
 
     // Echo: snapshot delivers the same value we just wrote.
-    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Dairy', 'Produce', 'Bakery'] });
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, {
+      order: ['Dairy', 'Produce', 'Bakery'],
+    });
 
     expect(callCount).toBe(1); // unchanged - no echo notification
   });
@@ -267,7 +309,9 @@ describe('firestore section order storage subscribe fan-out', () => {
   test('unsubscribe stops listener from receiving notifications', async () => {
     const storage = await createFreshStorage();
     let callCount = 0;
-    const unsubscribe = storage.subscribe(() => { callCount++; });
+    const unsubscribe = storage.subscribe(() => {
+      callCount++;
+    });
 
     unsubscribe();
     storage.saveOrder(['Bakery::1']);
@@ -278,12 +322,18 @@ describe('firestore section order storage subscribe fan-out', () => {
   test('subscribe and external onChange both fire on remote delta (coexistence)', async () => {
     mockStore[SECTION_ORDER_DOC_PATH] = { order: ['Dairy'] };
     let onChangeCount = 0;
-    const storage = await createFreshStorageWithOnChange(() => { onChangeCount++; });
+    const storage = await createFreshStorageWithOnChange(() => {
+      onChangeCount++;
+    });
 
     let subscribeCount = 0;
-    storage.subscribe(() => { subscribeCount++; });
+    storage.subscribe(() => {
+      subscribeCount++;
+    });
 
-    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, { order: ['Dairy', 'Produce'] });
+    simulateRemoteSnapshot(SECTION_ORDER_DOC_PATH, {
+      order: ['Dairy', 'Produce'],
+    });
 
     expect(onChangeCount).toBe(1);
     expect(subscribeCount).toBe(1);

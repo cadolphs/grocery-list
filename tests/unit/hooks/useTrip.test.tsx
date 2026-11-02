@@ -9,7 +9,11 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 
 const createTestWrapper = () => {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();

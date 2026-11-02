@@ -15,7 +15,8 @@ jest.mock('./src/auth/AuthService', () => ({
 // Mock useAppInitialization to avoid Firestore dependency in tests
 const mockUseAppInitialization = jest.fn();
 jest.mock('./src/hooks/useAppInitialization', () => ({
-  useAppInitialization: (...args: unknown[]) => mockUseAppInitialization(...args),
+  useAppInitialization: (...args: unknown[]) =>
+    mockUseAppInitialization(...args),
 }));
 
 // Mock AppShell to avoid deep rendering of the full app tree

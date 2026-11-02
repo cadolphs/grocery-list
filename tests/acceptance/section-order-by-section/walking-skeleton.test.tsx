@@ -20,7 +20,10 @@ import {
   groupBySection,
   SectionGroup,
 } from '../../../src/domain/item-grouping';
-import { sortByCustomOrder, appendNewSections } from '../../../src/domain/section-ordering';
+import {
+  sortByCustomOrder,
+  appendNewSections,
+} from '../../../src/domain/section-ordering';
 import { TripItem } from '../../../src/domain/types';
 
 // --- Test helpers ---

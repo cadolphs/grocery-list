@@ -4,7 +4,10 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { StapleLibrary } from '../domain/staple-library';
 import { TripService } from '../domain/trip';
-import { AreaManagement, createAreaManagement } from '../domain/area-management';
+import {
+  AreaManagement,
+  createAreaManagement,
+} from '../domain/area-management';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { createNullAreaStorage } from '../adapters/null/null-area-storage';
 import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
@@ -61,7 +64,14 @@ export const ServiceProvider = ({
   );
 
   return (
-    <ServiceContext.Provider value={{ stapleLibrary, tripService, areaManagement: resolvedAreaManagement, sectionOrderStorage: resolvedSectionOrderStorage }}>
+    <ServiceContext.Provider
+      value={{
+        stapleLibrary,
+        tripService,
+        areaManagement: resolvedAreaManagement,
+        sectionOrderStorage: resolvedSectionOrderStorage,
+      }}
+    >
       {children}
     </ServiceContext.Provider>
   );

@@ -12,7 +12,11 @@ type TripSummaryViewProps = {
   readonly onSwitchToStoreView?: () => void;
 };
 
-export const TripSummaryView = ({ result, prepTimeMinutes, onSwitchToStoreView }: TripSummaryViewProps): React.JSX.Element => {
+export const TripSummaryView = ({
+  result,
+  prepTimeMinutes,
+  onSwitchToStoreView,
+}: TripSummaryViewProps): React.JSX.Element => {
   const stapleCount = result.purchasedStaples.length;
   const oneOffCount = result.purchasedOneOffs.length;
   const purchasedCount = stapleCount + oneOffCount;
@@ -23,16 +27,22 @@ export const TripSummaryView = ({ result, prepTimeMinutes, onSwitchToStoreView }
       <View style={styles.card}>
         <Text style={styles.heading}>{purchasedCount} items purchased</Text>
         <Text style={styles.breakdown}>{stapleCount} staples</Text>
-        {oneOffCount > 0 && <Text style={styles.breakdown}>{oneOffCount} one-offs</Text>}
+        {oneOffCount > 0 && (
+          <Text style={styles.breakdown}>{oneOffCount} one-offs</Text>
+        )}
         {prepTimeMinutes !== undefined && (
           <Text style={styles.breakdown}>{prepTimeMinutes} min</Text>
         )}
         {carryoverItems.length > 0 && (
           <View style={styles.carryoverSection}>
             <View style={styles.separator} />
-            <Text style={styles.carryoverHeading}>Items that will carry over</Text>
+            <Text style={styles.carryoverHeading}>
+              Items that will carry over
+            </Text>
             {carryoverItems.map((item) => (
-              <Text key={item.id} style={styles.carryoverItem}>{item.name}</Text>
+              <Text key={item.id} style={styles.carryoverItem}>
+                {item.name}
+              </Text>
             ))}
           </View>
         )}

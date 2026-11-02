@@ -35,10 +35,13 @@ function toAuthUser(user: User): AuthUser {
 
 const successResult = (user: AuthUser): AuthResult => ({ success: true, user });
 
-const failureResult = (error: string): AuthResult => ({ success: false, error });
+const failureResult = (error: string): AuthResult => ({
+  success: false,
+  error,
+});
 
 const attemptAuth = async (
-  action: () => Promise<{ user: User }>
+  action: () => Promise<{ user: User }>,
 ): Promise<AuthResult> => {
   try {
     const credential = await action();
@@ -53,11 +56,15 @@ export function createAuthService(): AuthService {
 
   return {
     async signUp(email: string, password: string): Promise<AuthResult> {
-      return attemptAuth(() => createUserWithEmailAndPassword(auth, email, password));
+      return attemptAuth(() =>
+        createUserWithEmailAndPassword(auth, email, password),
+      );
     },
 
     async signIn(email: string, password: string): Promise<AuthResult> {
-      return attemptAuth(() => signInWithEmailAndPassword(auth, email, password));
+      return attemptAuth(() =>
+        signInWithEmailAndPassword(auth, email, password),
+      );
     },
 
     async signOut(): Promise<void> {
@@ -86,7 +93,9 @@ const validateEmail = (email: string): string | null =>
 const validatePasswordLength = (password: string): string | null =>
   password.length < 8 ? 'Password must be at least 8 characters' : null;
 
-export function createNullAuthService(initialUser: AuthUser | null = null): AuthService {
+export function createNullAuthService(
+  initialUser: AuthUser | null = null,
+): AuthService {
   let currentUser: AuthUser | null = initialUser;
   const listeners: Set<(user: AuthUser | null) => void> = new Set();
 

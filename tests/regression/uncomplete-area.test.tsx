@@ -37,7 +37,7 @@ describe('completed area shows undo button', () => {
         areaGroup={createTestAreaGroup()}
         isCompleted={true}
         onUncompleteArea={onUncompleteArea}
-      />
+      />,
     );
 
     expect(screen.getByText('Undo')).toBeTruthy();
@@ -51,7 +51,7 @@ describe('completed area shows undo button', () => {
         areaGroup={createTestAreaGroup()}
         isCompleted={true}
         onUncompleteArea={onUncompleteArea}
-      />
+      />,
     );
 
     fireEvent.press(screen.getByText('Undo'));
@@ -68,7 +68,7 @@ describe('completed area shows undo button', () => {
         areaGroup={createTestAreaGroup()}
         isCompleted={false}
         onUncompleteArea={onUncompleteArea}
-      />
+      />,
     );
 
     expect(screen.queryByText('Undo')).toBeNull();

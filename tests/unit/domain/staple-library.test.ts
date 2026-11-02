@@ -130,7 +130,10 @@ describe('staple library', () => {
       expect(updated).toBeDefined();
       expect(updated!.name).toBe('Milk');
       expect(updated!.houseArea).toBe('Fridge');
-      expect(updated!.storeLocation).toEqual({ section: 'Dairy', aisleNumber: 3 });
+      expect(updated!.storeLocation).toEqual({
+        section: 'Dairy',
+        aisleNumber: 3,
+      });
     });
 
     it('rejects rename when post-merge name duplicates another staple in same area', () => {
@@ -197,7 +200,7 @@ describe('staple library', () => {
         storeLocation: { section: 'International', aisleNumber: 7 },
       });
 
-      const tahiniItems = library.listAll().filter(i => i.name === 'Tahini');
+      const tahiniItems = library.listAll().filter((i) => i.name === 'Tahini');
       expect(tahiniItems).toHaveLength(1);
     });
 
@@ -218,8 +221,8 @@ describe('staple library', () => {
 
       const allItems = library.listAll();
       expect(allItems).toHaveLength(2);
-      expect(allItems.filter(i => i.type === 'staple')).toHaveLength(1);
-      expect(allItems.filter(i => i.type === 'one-off')).toHaveLength(1);
+      expect(allItems.filter((i) => i.type === 'staple')).toHaveLength(1);
+      expect(allItems.filter((i) => i.type === 'one-off')).toHaveLength(1);
     });
   });
 });

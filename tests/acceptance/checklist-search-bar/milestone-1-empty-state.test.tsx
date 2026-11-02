@@ -29,8 +29,16 @@ import { createAreaManagement } from '../../../src/domain/area-management';
 
 function renderInChecklistMode() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Cheddar Cheese', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+    {
+      name: 'Cheddar Cheese',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripAreas = ['Fridge'];
@@ -39,12 +47,20 @@ function renderInChecklistMode() {
   tripService.start(stapleLibrary.listAll());
 
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
 
   render(
-    <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+    <ServiceProvider
+      stapleLibrary={stapleLibrary}
+      tripService={tripService}
+      areaManagement={areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
   fireEvent.press(screen.getByTestId('home-mode-checklist'));
 }
@@ -64,7 +80,10 @@ describe('M1-1: Empty state message when no staples match', () => {
     renderInChecklistMode();
 
     // When he types "zzz" which matches no staples
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'zzz');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'zzz',
+    );
 
     // Then the empty state message is shown with the query
     expect(screen.getByText("No staples match 'zzz'")).toBeTruthy();
@@ -86,11 +105,17 @@ describe('M1-2: Empty state disappears when query matches', () => {
   it('hides empty state when query is corrected to match a staple', () => {
     // Given Clemens sees "No staples match 'chedr'" (typo)
     renderInChecklistMode();
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'chedr');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'chedr',
+    );
     expect(screen.getByText("No staples match 'chedr'")).toBeTruthy();
 
     // When he corrects the query to "ched"
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'ched');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'ched',
+    );
 
     // Then the empty state message is gone
     expect(screen.queryByText(/No staples match/)).toBeNull();
@@ -111,7 +136,10 @@ describe('M1-3: Empty state disappears when search is cleared', () => {
   it('hides empty state and restores full list when search is cleared', () => {
     // Given Clemens sees "No staples match 'zzz'"
     renderInChecklistMode();
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'zzz');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'zzz',
+    );
     expect(screen.getByText("No staples match 'zzz'")).toBeTruthy();
 
     // When he taps the clear button

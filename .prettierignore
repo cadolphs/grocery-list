@@ -1,0 +1,13 @@
+# Prose and generated artifacts stay as written; prettier covers code + config.
+docs/
+*.md
+.nwave/
+.autopilot/
+.claude/
+reports/
+coverage/
+dist/
+.expo/
+.stryker-tmp/
+package-lock.json
+design.pen

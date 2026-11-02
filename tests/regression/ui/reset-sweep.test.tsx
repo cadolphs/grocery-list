@@ -16,8 +16,16 @@ import { createTrip } from '../../../src/domain/trip';
 
 function renderAppWithItems() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Soap',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -40,7 +48,7 @@ function renderAppWithItems() {
   render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 
   return { tripService };
@@ -56,7 +64,11 @@ describe('Reset Sweep button', () => {
   it('tapping Reset Sweep shows a confirmation prompt', () => {
     renderAppWithItems();
     fireEvent.press(screen.getByTestId('reset-sweep-button'));
-    expect(screen.getByText('Are you sure? This will reset all items and remove one-offs.')).toBeTruthy();
+    expect(
+      screen.getByText(
+        'Are you sure? This will reset all items and remove one-offs.',
+      ),
+    ).toBeTruthy();
   });
 
   it('confirming Reset Sweep resets the trip and refreshes the view', () => {
@@ -84,6 +96,10 @@ describe('Reset Sweep button', () => {
     // One-off should still be present
     expect(screen.getByText('Birthday candles')).toBeTruthy();
     // Confirmation should be dismissed
-    expect(screen.queryByText('Are you sure? This will reset all items and remove one-offs.')).toBeNull();
+    expect(
+      screen.queryByText(
+        'Are you sure? This will reset all items and remove one-offs.',
+      ),
+    ).toBeNull();
   });
 });

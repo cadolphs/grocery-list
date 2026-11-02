@@ -1,9 +1,6 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
-  mutate: [
-    'src/domain/**/*.ts',
-    'src/ports/**/*.ts',
-  ],
+  mutate: ['src/domain/**/*.ts', 'src/ports/**/*.ts'],
   testRunner: 'jest',
   jest: {
     projectType: 'custom',

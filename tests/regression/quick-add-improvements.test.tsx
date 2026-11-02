@@ -20,7 +20,11 @@ import { AddTripItemResult } from '../../src/domain/types';
 describe('store view has quick add bar', () => {
   it('renders QuickAdd component at the top of StoreView', () => {
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -30,7 +34,7 @@ describe('store view has quick add bar', () => {
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Switch to Store view
@@ -43,14 +47,16 @@ describe('store view has quick add bar', () => {
 
 describe('bare add opens metadata sheet', () => {
   it('calls onOpenMetadataSheet with input text instead of onAddItem when Add is tapped', () => {
-    const mockOnAddItem = jest.fn<AddTripItemResult, [any]>().mockReturnValue({ success: true });
+    const mockOnAddItem = jest
+      .fn<AddTripItemResult, [any]>()
+      .mockReturnValue({ success: true });
     const mockOnOpenMetadataSheet = jest.fn();
 
     render(
       <QuickAdd
         onAddItem={mockOnAddItem}
         onOpenMetadataSheet={mockOnOpenMetadataSheet}
-      />
+      />,
     );
 
     const input = screen.getByPlaceholderText('Add an item...');
@@ -64,13 +70,11 @@ describe('bare add opens metadata sheet', () => {
   });
 
   it('add button requires metadata sheet handler', () => {
-    const mockOnAddItem = jest.fn<AddTripItemResult, [any]>().mockReturnValue({ success: true });
+    const mockOnAddItem = jest
+      .fn<AddTripItemResult, [any]>()
+      .mockReturnValue({ success: true });
 
-    render(
-      <QuickAdd
-        onAddItem={mockOnAddItem}
-      />
-    );
+    render(<QuickAdd onAddItem={mockOnAddItem} />);
 
     const input = screen.getByPlaceholderText('Add an item...');
     fireEvent.changeText(input, 'Gift Wrap');
@@ -80,14 +84,16 @@ describe('bare add opens metadata sheet', () => {
   });
 
   it('clears input text after opening metadata sheet', () => {
-    const mockOnAddItem = jest.fn<AddTripItemResult, [any]>().mockReturnValue({ success: true });
+    const mockOnAddItem = jest
+      .fn<AddTripItemResult, [any]>()
+      .mockReturnValue({ success: true });
     const mockOnOpenMetadataSheet = jest.fn();
 
     render(
       <QuickAdd
         onAddItem={mockOnAddItem}
         onOpenMetadataSheet={mockOnOpenMetadataSheet}
-      />
+      />,
     );
 
     const input = screen.getByPlaceholderText('Add an item...');
@@ -103,7 +109,11 @@ describe('bare add opens metadata sheet', () => {
 describe('store view metadata sheet uses store context', () => {
   it('defaults to One-off item type when metadata sheet opens from store view', () => {
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -113,7 +123,7 @@ describe('store view metadata sheet uses store context', () => {
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Switch to Store view

@@ -13,13 +13,9 @@ import { LoginScreen } from './src/ui/LoginScreen';
 
 export default function App() {
   const authService = useMemo(() => createAuthService(), []);
-  const { user, loading, signIn, signUp, signOut } = useAuth(
-    authService,
-  );
+  const { user, loading, signIn, signUp, signOut } = useAuth(authService);
 
-  const { isReady, services } = useAppInitialization(
-    user ? user : undefined,
-  );
+  const { isReady, services } = useAppInitialization(user ? user : undefined);
 
   if (loading) {
     return (

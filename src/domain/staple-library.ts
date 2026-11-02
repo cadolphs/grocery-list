@@ -1,7 +1,14 @@
 // Staple Library - driving port implementation
 // Pure domain logic, no IO imports
 
-import { StapleItem, AddStapleRequest, AddOneOffRequest, AddStapleResult, HouseArea, StoreLocation } from './types';
+import {
+  StapleItem,
+  AddStapleRequest,
+  AddOneOffRequest,
+  AddStapleResult,
+  HouseArea,
+  StoreLocation,
+} from './types';
 import { StapleStorage } from '../ports/staple-storage';
 
 export type UpdateStapleChanges = {
@@ -13,7 +20,10 @@ export type UpdateStapleChanges = {
 export type StapleLibrary = {
   readonly addStaple: (request: AddStapleRequest) => AddStapleResult;
   readonly addOneOff: (request: AddOneOffRequest) => AddStapleResult;
-  readonly updateStaple: (id: string, changes: UpdateStapleChanges) => AddStapleResult;
+  readonly updateStaple: (
+    id: string,
+    changes: UpdateStapleChanges,
+  ) => AddStapleResult;
   readonly listAll: () => StapleItem[];
   readonly listByArea: (area: HouseArea) => StapleItem[];
   readonly search: (query: string) => StapleItem[];
@@ -30,28 +40,22 @@ const generateId = (): string =>
 const isDuplicate = (
   existing: StapleItem[],
   name: string,
-  houseArea: HouseArea
+  houseArea: HouseArea,
 ): boolean =>
-  existing.some(
-    (item) => item.name === name && item.houseArea === houseArea
-  );
+  existing.some((item) => item.name === name && item.houseArea === houseArea);
 
-const isDuplicateOneOff = (
-  existing: StapleItem[],
-  name: string,
-): boolean =>
-  existing.some(
-    (item) => item.name === name && item.type === 'one-off'
-  );
+const isDuplicateOneOff = (existing: StapleItem[], name: string): boolean =>
+  existing.some((item) => item.name === name && item.type === 'one-off');
 
 const isDuplicateExcludingSelf = (
   existing: StapleItem[],
   selfId: string,
   name: string,
-  houseArea: HouseArea
+  houseArea: HouseArea,
 ): boolean =>
   existing.some(
-    (item) => item.id !== selfId && item.name === name && item.houseArea === houseArea
+    (item) =>
+      item.id !== selfId && item.name === name && item.houseArea === houseArea,
   );
 
 export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
@@ -104,7 +108,10 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       return { success: true };
     },
 
-    updateStaple: (id: string, changes: UpdateStapleChanges): AddStapleResult => {
+    updateStaple: (
+      id: string,
+      changes: UpdateStapleChanges,
+    ): AddStapleResult => {
       const existing = storage.loadAll();
       const staple = existing.find((item) => item.id === id);
 
@@ -118,7 +125,8 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
 
       const updatedName = changes.name?.trim() ?? staple.name;
       const updatedHouseArea = changes.houseArea ?? staple.houseArea;
-      const updatedStoreLocation = changes.storeLocation ?? staple.storeLocation;
+      const updatedStoreLocation =
+        changes.storeLocation ?? staple.storeLocation;
 
       if (updatedHouseArea.trim() === '') {
         return { success: false, error: 'house area is required' };
@@ -128,7 +136,9 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
         return { success: false, error: 'store section is required' };
       }
 
-      if (isDuplicateExcludingSelf(existing, id, updatedName, updatedHouseArea)) {
+      if (
+        isDuplicateExcludingSelf(existing, id, updatedName, updatedHouseArea)
+      ) {
         return {
           success: false,
           error: `"${updatedName}" already exists in ${updatedHouseArea}`,

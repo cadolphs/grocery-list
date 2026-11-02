@@ -8,7 +8,11 @@ import { useSectionOrder } from '../hooks/useSectionOrder';
 import { appendNewSections } from '../domain/section-ordering';
 import { theme } from './theme';
 
-const moveItem = <T,>(items: readonly T[], fromIndex: number, toIndex: number): T[] => {
+const moveItem = <T,>(
+  items: readonly T[],
+  fromIndex: number,
+  toIndex: number,
+): T[] => {
   const result = [...items];
   const [moved] = result.splice(fromIndex, 1);
   result.splice(toIndex, 0, moved);
@@ -44,7 +48,10 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
   }, [stapleLibrary]);
 
   const knownSectionNames = useMemo(
-    () => dedupeInOrder(stapleLibrary.listAll().map((staple) => staple.storeLocation.section)),
+    () =>
+      dedupeInOrder(
+        stapleLibrary.listAll().map((staple) => staple.storeLocation.section),
+      ),
     // stapleRevision participates in the dep list so mutations invalidate this memo.
     [stapleLibrary, stapleRevision],
   );
@@ -85,36 +92,62 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
   }, [reset]);
 
   return (
-    <ScrollView testID="section-order-settings-scroll" style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      testID="section-order-settings-scroll"
+      style={styles.scrollView}
+      contentContainerStyle={styles.contentContainer}
+    >
       <Text style={styles.header}>Store Section Order</Text>
       {orderedSectionNames.map((sectionName, index) => (
-        <View key={sectionName} testID={`section-row-${sectionName}`} style={styles.sectionCard}>
+        <View
+          key={sectionName}
+          testID={`section-row-${sectionName}`}
+          style={styles.sectionCard}
+        >
           <Text style={styles.sectionName}>{sectionName}</Text>
           <View style={styles.rowActions}>
             {index > 0 && (
-              <Pressable testID={`move-up-${sectionName}`} onPress={() => handleMoveUp(index)}>
+              <Pressable
+                testID={`move-up-${sectionName}`}
+                onPress={() => handleMoveUp(index)}
+              >
                 <Text style={styles.actionText}>Up</Text>
               </Pressable>
             )}
             {index < orderedSectionNames.length - 1 && (
-              <Pressable testID={`move-down-${sectionName}`} onPress={() => handleMoveDown(index)}>
+              <Pressable
+                testID={`move-down-${sectionName}`}
+                onPress={() => handleMoveDown(index)}
+              >
                 <Text style={styles.actionText}>Down</Text>
               </Pressable>
             )}
           </View>
         </View>
       ))}
-      <Pressable style={styles.resetButton} onPress={() => setShowResetConfirmation(true)}>
+      <Pressable
+        style={styles.resetButton}
+        onPress={() => setShowResetConfirmation(true)}
+      >
         <Text style={styles.resetButtonText}>Reset to Default Order</Text>
       </Pressable>
       {showResetConfirmation && (
         <View style={styles.confirmationDialog}>
-          <Text style={styles.confirmationText}>Reset sections to default order?</Text>
+          <Text style={styles.confirmationText}>
+            Reset sections to default order?
+          </Text>
           <View style={styles.confirmationButtons}>
-            <Pressable testID="confirm-reset-section-order" style={styles.confirmButton} onPress={handleReset}>
+            <Pressable
+              testID="confirm-reset-section-order"
+              style={styles.confirmButton}
+              onPress={handleReset}
+            >
               <Text style={styles.confirmButtonText}>Confirm</Text>
             </Pressable>
-            <Pressable style={styles.cancelButton} onPress={() => setShowResetConfirmation(false)}>
+            <Pressable
+              style={styles.cancelButton}
+              onPress={() => setShowResetConfirmation(false)}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </Pressable>
           </View>

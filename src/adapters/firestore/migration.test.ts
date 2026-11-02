@@ -2,7 +2,11 @@ import { createNullStapleStorage } from '../null/null-staple-storage';
 import { createNullAreaStorage } from '../null/null-area-storage';
 import { createNullSectionOrderStorage } from '../null/null-section-order-storage';
 import { createNullTripStorage } from '../null/null-trip-storage';
-import { migrationNeeded, migrateToFirestore, migrateTripIfNeeded } from './migration';
+import {
+  migrationNeeded,
+  migrateToFirestore,
+  migrateTripIfNeeded,
+} from './migration';
 import { StapleItem, Trip, TripItem } from '../../domain/types';
 
 const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
@@ -19,12 +23,24 @@ describe('migration service', () => {
   describe('migrateToFirestore', () => {
     it('transfers all data from source to destination adapters', () => {
       const staple1 = makeStaple({ id: 'staple-1', name: 'Milk' });
-      const staple2 = makeStaple({ id: 'staple-2', name: 'Eggs', houseArea: 'Kitchen Cabinets' });
+      const staple2 = makeStaple({
+        id: 'staple-2',
+        name: 'Eggs',
+        houseArea: 'Kitchen Cabinets',
+      });
 
       const source = {
         staples: createNullStapleStorage(),
-        areas: createNullAreaStorage(['Fridge', 'Kitchen Cabinets', 'Bathroom']),
-        sectionOrder: createNullSectionOrderStorage(['Dairy', 'Bakery', 'Produce']),
+        areas: createNullAreaStorage([
+          'Fridge',
+          'Kitchen Cabinets',
+          'Bathroom',
+        ]),
+        sectionOrder: createNullSectionOrderStorage([
+          'Dairy',
+          'Bakery',
+          'Produce',
+        ]),
       };
       // Pre-populate source staples via save
       source.staples.save(staple1);
@@ -44,10 +60,18 @@ describe('migration service', () => {
       expect(destStaples).toEqual(expect.arrayContaining([staple1, staple2]));
 
       // All areas copied
-      expect(destination.areas.loadAll()).toEqual(['Fridge', 'Kitchen Cabinets', 'Bathroom']);
+      expect(destination.areas.loadAll()).toEqual([
+        'Fridge',
+        'Kitchen Cabinets',
+        'Bathroom',
+      ]);
 
       // Section order copied
-      expect(destination.sectionOrder.loadOrder()).toEqual(['Dairy', 'Bakery', 'Produce']);
+      expect(destination.sectionOrder.loadOrder()).toEqual([
+        'Dairy',
+        'Bakery',
+        'Produce',
+      ]);
     });
   });
 
@@ -143,7 +167,9 @@ describe('migration service', () => {
       const cloudStorage = createNullTripStorage();
 
       localStorage.saveTrip(makeTrip([makeTripItem('Local Item')]));
-      cloudStorage.saveTrip(makeTrip([makeTripItem('Cloud Item 1'), makeTripItem('Cloud Item 2')]));
+      cloudStorage.saveTrip(
+        makeTrip([makeTripItem('Cloud Item 1'), makeTripItem('Cloud Item 2')]),
+      );
 
       migrateTripIfNeeded(localStorage, cloudStorage);
 

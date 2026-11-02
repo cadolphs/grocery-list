@@ -31,11 +31,31 @@ import { createAreaManagement } from '../../../src/domain/area-management';
 
 function createTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Cheddar Cheese', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Chicken Breast', houseArea: 'Freezer', storeLocation: { section: 'Meat', aisleNumber: 5 } },
-    { name: 'Chocolate Chips', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Baking', aisleNumber: 7 } },
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Peanut Butter', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Spreads', aisleNumber: 4 } },
+    {
+      name: 'Cheddar Cheese',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Chicken Breast',
+      houseArea: 'Freezer',
+      storeLocation: { section: 'Meat', aisleNumber: 5 },
+    },
+    {
+      name: 'Chocolate Chips',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Baking', aisleNumber: 7 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Peanut Butter',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Spreads', aisleNumber: 4 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripAreas = ['Fridge', 'Freezer', 'Kitchen Cabinets'];
@@ -44,7 +64,11 @@ function createTestServices() {
   tripService.start(stapleLibrary.listAll());
 
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
 
   return { stapleLibrary, tripService, areaManagement };
 }
@@ -52,9 +76,13 @@ function createTestServices() {
 function renderInChecklistMode() {
   const services = createTestServices();
   render(
-    <ServiceProvider stapleLibrary={services.stapleLibrary} tripService={services.tripService} areaManagement={services.areaManagement}>
+    <ServiceProvider
+      stapleLibrary={services.stapleLibrary}
+      tripService={services.tripService}
+      areaManagement={services.areaManagement}
+    >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
   fireEvent.press(screen.getByTestId('home-mode-checklist'));
   return services;
@@ -98,7 +126,10 @@ describe('WS-2: Typing filters staples by name', () => {
     renderInChecklistMode();
 
     // When he types "ch" in the search bar
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'ch');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'ch',
+    );
 
     // Then only staples containing "ch" are shown
     expect(screen.getByText('Cheddar Cheese')).toBeTruthy();
@@ -115,7 +146,10 @@ describe('WS-2: Typing filters staples by name', () => {
     renderInChecklistMode();
 
     // When he types "peanut" (all lowercase)
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'peanut');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'peanut',
+    );
 
     // Then "Peanut Butter" appears (case-insensitive match)
     expect(screen.getByText('Peanut Butter')).toBeTruthy();
@@ -130,7 +164,10 @@ describe('WS-2: Typing filters staples by name', () => {
     renderInChecklistMode();
 
     // When he types "butter" which appears in "Butter" and "Peanut Butter"
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'butter');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'butter',
+    );
 
     // Then both matching staples are shown
     expect(screen.getByText('Butter')).toBeTruthy();
@@ -153,16 +190,24 @@ describe('WS-3: Toggle staple from filtered results', () => {
   it('toggles a staple off the trip from filtered results and shows strikethrough', () => {
     // Given Clemens has filtered the checklist by typing "ched"
     renderInChecklistMode();
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'ched');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'ched',
+    );
 
     // And "Cheddar Cheese" is on the trip (green text)
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
+      color: '#1A1A1A',
+    });
 
     // When he taps "Cheddar Cheese" to skip it
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
 
     // Then it shows strikethrough (removed from trip)
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#6B6B6B', textDecorationLine: 'line-through' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
+      color: '#6B6B6B',
+      textDecorationLine: 'line-through',
+    });
   });
 
   it('toggles a staple back onto the trip from filtered results', () => {
@@ -171,16 +216,23 @@ describe('WS-3: Toggle staple from filtered results', () => {
 
     // First skip it
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ textDecorationLine: 'line-through' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
+      textDecorationLine: 'line-through',
+    });
 
     // Then filter to show it
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'ched');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'ched',
+    );
 
     // When he taps to re-add it
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
 
     // Then it shows green (back on trip)
-    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
+      color: '#1A1A1A',
+    });
   });
 });
 
@@ -196,7 +248,10 @@ describe('WS-4: Clear search restores full list', () => {
   it('shows clear button when search has text and restores full list on tap', () => {
     // Given Clemens has typed "ch" and sees 3 filtered results
     renderInChecklistMode();
-    fireEvent.changeText(screen.getByPlaceholderText('Search staples...'), 'ch');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Search staples...'),
+      'ch',
+    );
     expect(screen.queryByText('Butter')).toBeNull();
 
     // When he taps the clear button

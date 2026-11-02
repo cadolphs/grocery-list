@@ -88,10 +88,7 @@ describe('StoreView section ordering at the call site', () => {
     // GIVEN no custom order persisted
     const sectionOrderStorage = createNullSectionOrderStorage(null);
     const { element } = renderStoreViewWithGroups(
-      [
-        makeStaple('Bread', 'Bakery', 1),
-        makeStaple('Apple', 'Produce', 3),
-      ],
+      [makeStaple('Bread', 'Bakery', 1), makeStaple('Apple', 'Produce', 3)],
       sectionOrderStorage,
     );
 

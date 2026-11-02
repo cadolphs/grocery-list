@@ -20,7 +20,11 @@ const createManagement = (
   const areaStorage = createNullAreaStorage(areas);
   const stapleStorage = createNullStapleStorage(staples);
   const tripStorage = createNullTripStorage();
-  const management = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const management = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   return { management, areaStorage, stapleStorage, tripStorage };
 };
 
@@ -31,7 +35,10 @@ describe('area management', () => {
 
       const result = management.add('');
 
-      expect(result).toEqual({ success: false, error: 'Area name is required' });
+      expect(result).toEqual({
+        success: false,
+        error: 'Area name is required',
+      });
     });
 
     it('rejects whitespace-only name', () => {
@@ -39,7 +46,10 @@ describe('area management', () => {
 
       const result = management.add('   ');
 
-      expect(result).toEqual({ success: false, error: 'Area name is required' });
+      expect(result).toEqual({
+        success: false,
+        error: 'Area name is required',
+      });
     });
 
     it('rejects duplicate name case-insensitively', () => {
@@ -69,7 +79,10 @@ describe('area management', () => {
 
       const result = management.rename('Kitchen', '');
 
-      expect(result).toEqual({ success: false, error: 'Area name is required' });
+      expect(result).toEqual({
+        success: false,
+        error: 'Area name is required',
+      });
     });
 
     it('rejects when old name not found', () => {
@@ -77,7 +90,10 @@ describe('area management', () => {
 
       const result = management.rename('NonExistent', 'NewName');
 
-      expect(result).toEqual({ success: false, error: '"NonExistent" not found' });
+      expect(result).toEqual({
+        success: false,
+        error: '"NonExistent" not found',
+      });
     });
 
     it('rejects duplicate new name', () => {
@@ -93,7 +109,10 @@ describe('area management', () => {
 
     it('renames area and propagates to staples and trip items', () => {
       const staples = [makeStaple('Soap', 'Kitchen')];
-      const { management, stapleStorage } = createManagement(['Kitchen', 'Bathroom'], staples);
+      const { management, stapleStorage } = createManagement(
+        ['Kitchen', 'Bathroom'],
+        staples,
+      );
 
       const result = management.rename('Kitchen', 'Pantry');
 
@@ -120,7 +139,10 @@ describe('area management', () => {
 
       const result = management.delete('NonExistent');
 
-      expect(result).toEqual({ success: false, error: '"NonExistent" not found' });
+      expect(result).toEqual({
+        success: false,
+        error: '"NonExistent" not found',
+      });
     });
 
     it('rejects when area has staples but no reassignment target', () => {
@@ -147,7 +169,9 @@ describe('area management', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe('Duplicate conflict on reassignment');
-        expect(result.conflicts).toEqual([{ name: 'Soap', existsIn: 'Bathroom' }]);
+        expect(result.conflicts).toEqual([
+          { name: 'Soap', existsIn: 'Bathroom' },
+        ]);
       }
     });
 

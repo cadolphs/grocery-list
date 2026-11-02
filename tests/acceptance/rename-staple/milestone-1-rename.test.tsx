@@ -23,7 +23,11 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../../src/ui/MetadataBottomSheet';
 import { HouseArea, StapleItem } from '../../../src/domain/types';
 
-const AREAS: readonly HouseArea[] = ['Fridge', 'Kitchen Cabinets', 'Garage Pantry'];
+const AREAS: readonly HouseArea[] = [
+  'Fridge',
+  'Kitchen Cabinets',
+  'Garage Pantry',
+];
 
 const renderSheet = (
   overrides: Partial<React.ComponentProps<typeof MetadataBottomSheet>> = {},
@@ -57,7 +61,14 @@ const renderSheet = (
       {...overrides}
     />,
   );
-  return { ...utils, onSubmitStaple, onSubmitTripItem, onSaveEdit, onDismiss, onFindDuplicate };
+  return {
+    ...utils,
+    onSubmitStaple,
+    onSubmitTripItem,
+    onSaveEdit,
+    onDismiss,
+    onFindDuplicate,
+  };
 };
 
 // =============================================================================
@@ -71,7 +82,8 @@ describe('M1-RS-1: Empty name is rejected with inline error', () => {
 
   it('shows "Name is required" and does not save when the Name field is empty', () => {
     // Given Clemens is editing "Milkk" in "Fridge"
-    const { getByDisplayValue, getByText, queryByText, onSaveEdit, onDismiss } = renderSheet();
+    const { getByDisplayValue, getByText, queryByText, onSaveEdit, onDismiss } =
+      renderSheet();
     const nameField = getByDisplayValue('Milkk');
 
     // When Clemens clears the Name field
@@ -105,7 +117,8 @@ describe('M1-RS-2: Whitespace-only name is rejected with inline error', () => {
 
   it('treats whitespace-only as empty and shows "Name is required"', () => {
     // Given Clemens is editing "Milkk" in "Fridge"
-    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } = renderSheet();
+    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } =
+      renderSheet();
     const nameField = getByDisplayValue('Milkk');
 
     // When Clemens replaces the Name with "   "
@@ -151,9 +164,11 @@ describe('M1-RS-3: Duplicate name in same area is rejected with inline error', (
       name === 'Milk' && area === 'Fridge' ? existingMilk : undefined,
     );
 
-    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } = renderSheet({
-      onFindDuplicate,
-    });
+    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } = renderSheet(
+      {
+        onFindDuplicate,
+      },
+    );
     const nameField = getByDisplayValue('Milkk');
 
     // When Clemens changes the Name to "Milk" and taps Save Changes
@@ -186,17 +201,19 @@ describe('M1-RS-4: Same name in a different area is allowed', () => {
     // because "Milk" only exists in "Fridge", not in "Garage Pantry".
     const onFindDuplicate = jest.fn(() => undefined);
 
-    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } = renderSheet({
-      itemName: 'Milkk',
-      editStapleId: 'staple-milkk-pantry',
-      initialValues: {
-        name: 'Milkk',
-        houseArea: 'Garage Pantry',
-        section: 'Pantry Shelf',
-        aisleNumber: null,
-      } as React.ComponentProps<typeof MetadataBottomSheet>['initialValues'],
-      onFindDuplicate,
-    });
+    const { getByDisplayValue, getByText, onSaveEdit, onDismiss } = renderSheet(
+      {
+        itemName: 'Milkk',
+        editStapleId: 'staple-milkk-pantry',
+        initialValues: {
+          name: 'Milkk',
+          houseArea: 'Garage Pantry',
+          section: 'Pantry Shelf',
+          aisleNumber: null,
+        } as React.ComponentProps<typeof MetadataBottomSheet>['initialValues'],
+        onFindDuplicate,
+      },
+    );
     const nameField = getByDisplayValue('Milkk');
 
     // When Clemens changes the Name to "Milk" and taps Save Changes

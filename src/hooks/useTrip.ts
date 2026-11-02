@@ -2,7 +2,12 @@
 // Reads items from context and exposes them as reactive state
 
 import { useState, useCallback, useEffect } from 'react';
-import { TripItem, AddTripItemResult, HouseArea, StoreLocation } from '../domain/types';
+import {
+  TripItem,
+  AddTripItemResult,
+  HouseArea,
+  StoreLocation,
+} from '../domain/types';
 import { SweepProgress, AddTripItemWithStapleId } from '../domain/trip';
 import { UpdateStapleChanges } from '../domain/staple-library';
 import { useServices } from '../ui/ServiceProvider';
@@ -17,7 +22,10 @@ export type UseTripResult = {
   readonly completeArea: (area: HouseArea) => void;
   readonly uncompleteArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
-  readonly syncStapleUpdate: (stapleId: string, changes: UpdateStapleChanges) => void;
+  readonly syncStapleUpdate: (
+    stapleId: string,
+    changes: UpdateStapleChanges,
+  ) => void;
   readonly removeItemByStapleId: (stapleId: string) => void;
   readonly sweepProgress: SweepProgress;
 };
@@ -25,7 +33,9 @@ export type UseTripResult = {
 export const useTrip = (): UseTripResult => {
   const { tripService, stapleLibrary } = useServices();
   const [items, setItems] = useState<TripItem[]>(() => tripService.getItems());
-  const [sweepProgress, setSweepProgress] = useState<SweepProgress>(() => tripService.getSweepProgress());
+  const [sweepProgress, setSweepProgress] = useState<SweepProgress>(() =>
+    tripService.getSweepProgress(),
+  );
 
   // Re-sync React state when tripService changes (e.g. reload swaps legacy -> production)
   // and when tripService is mutated externally (e.g. Firestore sync handler)
@@ -46,7 +56,7 @@ export const useTrip = (): UseTripResult => {
       }
       return result;
     },
-    [tripService]
+    [tripService],
   );
 
   const checkOff = useCallback(
@@ -54,7 +64,7 @@ export const useTrip = (): UseTripResult => {
       tripService.checkOff(name);
       setItems(tripService.getItems());
     },
-    [tripService]
+    [tripService],
   );
 
   const toggleCheckOff = useCallback(
@@ -67,7 +77,7 @@ export const useTrip = (): UseTripResult => {
       }
       setItems(tripService.getItems());
     },
-    [tripService]
+    [tripService],
   );
 
   const skipItem = useCallback(
@@ -75,7 +85,7 @@ export const useTrip = (): UseTripResult => {
       tripService.skipItem(name);
       setItems(tripService.getItems());
     },
-    [tripService]
+    [tripService],
   );
 
   const unskipItem = useCallback(
@@ -83,7 +93,7 @@ export const useTrip = (): UseTripResult => {
       tripService.unskipItem(name);
       setItems(tripService.getItems());
     },
-    [tripService]
+    [tripService],
   );
 
   const completeArea = useCallback(
@@ -91,7 +101,7 @@ export const useTrip = (): UseTripResult => {
       tripService.completeArea(area);
       setSweepProgress(tripService.getSweepProgress());
     },
-    [tripService]
+    [tripService],
   );
 
   const uncompleteArea = useCallback(
@@ -99,11 +109,13 @@ export const useTrip = (): UseTripResult => {
       tripService.uncompleteArea(area);
       setSweepProgress(tripService.getSweepProgress());
     },
-    [tripService]
+    [tripService],
   );
 
   const resetSweep = useCallback((): void => {
-    const currentStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
+    const currentStaples = stapleLibrary
+      .listAll()
+      .filter((s) => s.type === 'staple');
     tripService.resetSweep(currentStaples);
     setItems(tripService.getItems());
     setSweepProgress(tripService.getSweepProgress());
@@ -114,7 +126,7 @@ export const useTrip = (): UseTripResult => {
       tripService.syncStapleUpdate(stapleId, changes);
       setItems(tripService.getItems());
     },
-    [tripService]
+    [tripService],
   );
 
   const removeItemByStapleId = useCallback(
@@ -122,8 +134,21 @@ export const useTrip = (): UseTripResult => {
       tripService.removeItemByStapleId(stapleId);
       setItems(tripService.getItems());
     },
-    [tripService]
+    [tripService],
   );
 
-  return { items, addItem, checkOff, toggleCheckOff, skipItem, unskipItem, completeArea, uncompleteArea, resetSweep, syncStapleUpdate, removeItemByStapleId, sweepProgress };
+  return {
+    items,
+    addItem,
+    checkOff,
+    toggleCheckOff,
+    skipItem,
+    unskipItem,
+    completeArea,
+    uncompleteArea,
+    resetSweep,
+    syncStapleUpdate,
+    removeItemByStapleId,
+    sweepProgress,
+  };
 };

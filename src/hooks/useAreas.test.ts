@@ -46,13 +46,19 @@ const createTestWrapper = (areaStorage: TestAreaStorage) => {
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
 
   const wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(
-      ServiceProvider,
-      { stapleLibrary: library, tripService, areaManagement, children }
-    );
+    React.createElement(ServiceProvider, {
+      stapleLibrary: library,
+      tripService,
+      areaManagement,
+      children,
+    });
 
   return { wrapper };
 };

@@ -20,7 +20,7 @@ export function createCheckedItemsStorage(): CheckedItemsStorage {
 }
 
 export function createNullCheckedItemsStorage(
-  initialItems: string[] = []
+  initialItems: string[] = [],
 ): CheckedItemsStorage {
   let storedItems = [...initialItems];
   return {

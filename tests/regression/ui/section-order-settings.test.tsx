@@ -10,7 +10,10 @@ import React from 'react';
 import { act, render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
-import { createStapleLibrary, StapleLibrary } from '../../../src/domain/staple-library';
+import {
+  createStapleLibrary,
+  StapleLibrary,
+} from '../../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
@@ -24,9 +27,21 @@ type StapleSeed = {
 };
 
 const defaultStapleSeeds: readonly StapleSeed[] = [
-  { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
-  { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-  { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+  {
+    name: 'Deli Turkey',
+    houseArea: 'Fridge',
+    storeLocation: { section: 'Deli', aisleNumber: null },
+  },
+  {
+    name: 'Milk',
+    houseArea: 'Fridge',
+    storeLocation: { section: 'Dairy', aisleNumber: 3 },
+  },
+  {
+    name: 'Bread',
+    houseArea: 'Kitchen Cabinets',
+    storeLocation: { section: 'Bakery', aisleNumber: 1 },
+  },
 ];
 
 function renderAppWithSections(
@@ -48,7 +63,7 @@ function renderAppWithSections(
       sectionOrderStorage={storage}
     >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 
   return { storage, stapleLibrary };
@@ -131,10 +146,26 @@ describe('SectionOrderSettingsScreen', () => {
     const savedOrder = ['Deli', 'Dairy', 'Bakery'];
     // Staple library includes a staple whose storeLocation introduces a brand-new section key
     const stapleSeeds: readonly StapleSeed[] = [
-      { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
-      { name: 'California Roll', houseArea: 'Fridge', storeLocation: { section: 'Sushi Bar', aisleNumber: null } },
+      {
+        name: 'Deli Turkey',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Deli', aisleNumber: null },
+      },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
+      {
+        name: 'California Roll',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Sushi Bar', aisleNumber: null },
+      },
     ];
 
     const { storage } = renderAppWithSections(savedOrder, stapleSeeds);

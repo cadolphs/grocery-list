@@ -21,7 +21,11 @@ describe('US-07: Prevent duplicate trip items', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     // Simulate auto-add of Tahini with stapleId
     trip.addItem({
@@ -31,7 +35,7 @@ describe('US-07: Prevent duplicate trip items', () => {
       itemType: 'staple',
       source: 'preloaded',
     });
-    expect(trip.getItems().filter(i => i.name === 'Tahini')).toHaveLength(1);
+    expect(trip.getItems().filter((i) => i.name === 'Tahini')).toHaveLength(1);
 
     // When the trip listener receives an update also containing "Tahini" (same stapleId)
     // (The onSnapshot approach replaces the entire trip state from the remote document.
@@ -40,14 +44,17 @@ describe('US-07: Prevent duplicate trip items', () => {
     // Alternative: if merging, guard with stapleId check before adding.
     // The duplicate prevention guard:
     const existingStapleIds = new Set(
-      trip.getItems().filter(i => i.stapleId !== null).map(i => i.stapleId)
+      trip
+        .getItems()
+        .filter((i) => i.stapleId !== null)
+        .map((i) => i.stapleId),
     );
     const remoteTahiniStapleId = 'staple-tahini-abc';
     const wouldBeDuplicate = existingStapleIds.has(remoteTahiniStapleId);
 
     // Then the trip contains exactly one "Tahini" item
     // (Either by whole-state replacement or by duplicate guard)
-    expect(trip.getItems().filter(i => i.name === 'Tahini')).toHaveLength(1);
+    expect(trip.getItems().filter((i) => i.name === 'Tahini')).toHaveLength(1);
   });
 
   // =============================================================================
@@ -59,7 +66,12 @@ describe('US-07: Prevent duplicate trip items', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { id: 'staple-milk-1', name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        id: 'staple-milk-1',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     // When Clemens quick-adds a one-off "Milk" (stapleId: null)
@@ -72,12 +84,12 @@ describe('US-07: Prevent duplicate trip items', () => {
     });
 
     // Then the trip contains two "Milk" items
-    const milkItems = trip.getItems().filter(i => i.name === 'Milk');
+    const milkItems = trip.getItems().filter((i) => i.name === 'Milk');
     expect(milkItems).toHaveLength(2);
 
     // And one is a staple and one is a one-off
-    expect(milkItems.filter(i => i.itemType === 'staple')).toHaveLength(1);
-    expect(milkItems.filter(i => i.itemType === 'one-off')).toHaveLength(1);
+    expect(milkItems.filter((i) => i.itemType === 'staple')).toHaveLength(1);
+    expect(milkItems.filter((i) => i.itemType === 'one-off')).toHaveLength(1);
   });
 
   // =============================================================================
@@ -89,11 +101,16 @@ describe('US-07: Prevent duplicate trip items', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { id: 'staple-tahini-old', name: 'Tahini', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'International', aisleNumber: 4 } },
+      {
+        id: 'staple-tahini-old',
+        name: 'Tahini',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'International', aisleNumber: 4 },
+      },
     ]);
-    const oldItem = trip.getItems().find(i => i.name === 'Tahini')!;
+    const oldItem = trip.getItems().find((i) => i.name === 'Tahini')!;
     trip.removeItemByStapleId(oldItem.stapleId!);
-    expect(trip.getItems().filter(i => i.name === 'Tahini')).toHaveLength(0);
+    expect(trip.getItems().filter((i) => i.name === 'Tahini')).toHaveLength(0);
 
     // When Clemens re-adds "Tahini" as a staple (with a new stapleId)
     // (Simulated: new staple has a different ID)
@@ -107,7 +124,7 @@ describe('US-07: Prevent duplicate trip items', () => {
 
     // Then a new trip item for "Tahini" is created with the new stapleId
     // And the trip contains exactly one "Tahini"
-    const tahiniItems = trip.getItems().filter(i => i.name === 'Tahini');
+    const tahiniItems = trip.getItems().filter((i) => i.name === 'Tahini');
     expect(tahiniItems).toHaveLength(1);
   });
 });

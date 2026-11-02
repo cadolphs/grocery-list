@@ -19,9 +19,15 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../../src/ui/MetadataBottomSheet';
 import { HouseArea } from '../../../src/domain/types';
 
-const AREAS: readonly HouseArea[] = ['Fridge', 'Kitchen Cabinets', 'Garage Pantry'];
+const AREAS: readonly HouseArea[] = [
+  'Fridge',
+  'Kitchen Cabinets',
+  'Garage Pantry',
+];
 
-const renderSheet = (overrides: Partial<React.ComponentProps<typeof MetadataBottomSheet>> = {}) => {
+const renderSheet = (
+  overrides: Partial<React.ComponentProps<typeof MetadataBottomSheet>> = {},
+) => {
   const onSubmitStaple = jest.fn();
   const onSubmitTripItem = jest.fn();
   const onDismiss = jest.fn();

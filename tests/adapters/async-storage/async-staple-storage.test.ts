@@ -27,7 +27,9 @@ describe('createAsyncStapleStorage', () => {
   describe('initialize', () => {
     it('loads items from AsyncStorage into cache', async () => {
       const items = [makeStaple()];
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(items));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify(items),
+      );
 
       const storage = createAsyncStapleStorage();
       await storage.initialize();
@@ -56,7 +58,9 @@ describe('createAsyncStapleStorage', () => {
   describe('loadAll', () => {
     it('returns a defensive copy of cached items', async () => {
       const items = [makeStaple()];
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify(items));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify(items),
+      );
 
       const storage = createAsyncStapleStorage();
       await storage.initialize();
@@ -91,7 +95,7 @@ describe('createAsyncStapleStorage', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         STORAGE_KEY,
-        JSON.stringify([item])
+        JSON.stringify([item]),
       );
     });
   });
@@ -99,7 +103,9 @@ describe('createAsyncStapleStorage', () => {
   describe('remove', () => {
     it('removes item from cache immediately', async () => {
       const item = makeStaple();
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify([item]));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify([item]),
+      );
 
       const storage = createAsyncStapleStorage();
       await storage.initialize();
@@ -111,7 +117,9 @@ describe('createAsyncStapleStorage', () => {
 
     it('persists removal to AsyncStorage in background', async () => {
       const item = makeStaple();
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify([item]));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify([item]),
+      );
 
       const storage = createAsyncStapleStorage();
       await storage.initialize();
@@ -121,13 +129,15 @@ describe('createAsyncStapleStorage', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         STORAGE_KEY,
-        JSON.stringify([])
+        JSON.stringify([]),
       );
     });
 
     it('does nothing when removing non-existent id', async () => {
       const item = makeStaple();
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify([item]));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify([item]),
+      );
 
       const storage = createAsyncStapleStorage();
       await storage.initialize();
@@ -144,7 +154,7 @@ describe('createAsyncStapleStorage', () => {
       const plates = makeStaple({ id: '2', name: 'Paper Plates' });
       const milk = makeStaple({ id: '3', name: 'Milk' });
       (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
-        JSON.stringify([towels, plates, milk])
+        JSON.stringify([towels, plates, milk]),
       );
 
       const storage = createAsyncStapleStorage();
@@ -156,7 +166,9 @@ describe('createAsyncStapleStorage', () => {
 
     it('returns empty array for blank query', async () => {
       const item = makeStaple();
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(JSON.stringify([item]));
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(
+        JSON.stringify([item]),
+      );
 
       const storage = createAsyncStapleStorage();
       await storage.initialize();

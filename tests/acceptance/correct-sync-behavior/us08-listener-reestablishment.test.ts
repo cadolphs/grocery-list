@@ -7,7 +7,10 @@
  * All tests marked .skip -- enable one at a time during DELIVER.
  */
 
-import { initializeApp, AdapterFactories } from '../../../src/hooks/useAppInitialization';
+import {
+  initializeApp,
+  AdapterFactories,
+} from '../../../src/hooks/useAppInitialization';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
@@ -90,10 +93,18 @@ describe('US-08: Listener re-establishment after re-login', () => {
   it('S-26: different user sees their own data after login', async () => {
     // Given Clemens logged out on his phone
     const clemensStaples = createNullStapleStorage([
-      { name: 'Clemens Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Clemens Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const partnerStaples = createNullStapleStorage([
-      { name: 'Partner Yogurt', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Partner Yogurt',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     // Create factories that return different data per user
@@ -142,9 +153,9 @@ describe('US-08: Listener re-establishment after re-login', () => {
     // Then the partner sees their own staple library and trip
     expect(result.isReady).toBe(true);
     const partnerStapleList = result.services!.stapleLibrary.listAll();
-    expect(partnerStapleList.map(s => s.name)).toContain('Partner Yogurt');
+    expect(partnerStapleList.map((s) => s.name)).toContain('Partner Yogurt');
 
     // And no data from Clemens is visible
-    expect(partnerStapleList.map(s => s.name)).not.toContain('Clemens Milk');
+    expect(partnerStapleList.map((s) => s.name)).not.toContain('Clemens Milk');
   });
 });

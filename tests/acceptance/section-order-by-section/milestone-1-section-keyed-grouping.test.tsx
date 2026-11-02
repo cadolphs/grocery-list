@@ -18,7 +18,10 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { groupBySection, SectionGroup } from '../../../src/domain/item-grouping';
+import {
+  groupBySection,
+  SectionGroup,
+} from '../../../src/domain/item-grouping';
 import { sortByCustomOrder } from '../../../src/domain/section-ordering';
 import { TripItem, AddStapleRequest } from '../../../src/domain/types';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
@@ -69,7 +72,11 @@ const renderSettingsScreenWithStaples = (staples: AddStapleRequest[]) => {
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
   const areaStorage = createNullAreaStorage(tripAreas);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   const sectionOrderStorage = createNullSectionOrderStorage();
   return render(
     <ServiceProvider
@@ -159,7 +166,11 @@ describe('US-02: No custom order falls back to alphabetical sections', () => {
     const sorted = sortByCustomOrder(groups, customOrder);
 
     // Then sections appear alphabetically: Bakery, Inner Aisles, Produce
-    expect(sorted.map((g) => g.section)).toEqual(['Bakery', 'Inner Aisles', 'Produce']);
+    expect(sorted.map((g) => g.section)).toEqual([
+      'Bakery',
+      'Inner Aisles',
+      'Produce',
+    ]);
   });
 });
 
@@ -201,6 +212,10 @@ describe('Edge: All-null aisle items render in a single section card', () => {
     expect(groups[0].section).toBe('Deli');
 
     // And the Deli card contains every Deli item
-    expect(groups[0].items.map((i) => i.name).sort()).toEqual(['Cheese', 'Olives', 'Turkey']);
+    expect(groups[0].items.map((i) => i.name).sort()).toEqual([
+      'Cheese',
+      'Olives',
+      'Turkey',
+    ]);
   });
 });

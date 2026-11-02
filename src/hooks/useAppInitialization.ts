@@ -18,10 +18,17 @@ import { createFirestoreAreaStorage } from '../adapters/firestore/firestore-area
 import { createFirestoreSectionOrderStorage } from '../adapters/firestore/firestore-section-order-storage';
 import { createFirestoreTripStorage } from '../adapters/firestore/firestore-trip-storage';
 import { getFirebaseDb } from '../adapters/firestore/firebase-config';
-import { migrationNeeded, migrateToFirestore, migrateTripIfNeeded } from '../adapters/firestore/migration';
+import {
+  migrationNeeded,
+  migrateToFirestore,
+  migrateTripIfNeeded,
+} from '../adapters/firestore/migration';
 import { createStapleLibrary, StapleLibrary } from '../domain/staple-library';
 import { createTrip, TripService } from '../domain/trip';
-import { createAreaManagement, AreaManagement } from '../domain/area-management';
+import {
+  createAreaManagement,
+  AreaManagement,
+} from '../domain/area-management';
 import { StapleStorage } from '../ports/staple-storage';
 import { AreaStorage } from '../ports/area-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
@@ -51,20 +58,42 @@ type InitializableStorage<T> = T & {
 };
 
 export type AdapterFactories = {
-  readonly createStapleStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<StapleStorage>;
-  readonly createAreaStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<AreaStorage>;
-  readonly createSectionOrderStorage: (uid: string) => InitializableStorage<SectionOrderStorage>;
-  readonly createTripStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStorage<TripStorage>;
+  readonly createStapleStorage: (
+    uid: string,
+    options?: { onChange?: () => void },
+  ) => InitializableStorage<StapleStorage>;
+  readonly createAreaStorage: (
+    uid: string,
+    options?: { onChange?: () => void },
+  ) => InitializableStorage<AreaStorage>;
+  readonly createSectionOrderStorage: (
+    uid: string,
+  ) => InitializableStorage<SectionOrderStorage>;
+  readonly createTripStorage: (
+    uid: string,
+    options?: { onChange?: () => void },
+  ) => InitializableStorage<TripStorage>;
   readonly checkMigrationNeeded: (firestoreStaples: StapleStorage) => boolean;
   readonly migrateToFirestore: (
-    from: { staples: StapleStorage; areas: AreaStorage; sectionOrder: SectionOrderStorage },
-    to: { staples: StapleStorage; areas: AreaStorage; sectionOrder: SectionOrderStorage },
+    from: {
+      staples: StapleStorage;
+      areas: AreaStorage;
+      sectionOrder: SectionOrderStorage;
+    },
+    to: {
+      staples: StapleStorage;
+      areas: AreaStorage;
+      sectionOrder: SectionOrderStorage;
+    },
   ) => void;
   readonly createAsyncStapleStorage: () => InitializableStorage<StapleStorage>;
   readonly createAsyncAreaStorage: () => InitializableStorage<AreaStorage>;
   readonly createAsyncSectionOrderStorage: () => InitializableStorage<SectionOrderStorage>;
   readonly createAsyncTripStorage: () => InitializableStorage<TripStorage>;
-  readonly migrateTripIfNeeded: (localTrip: TripStorage, cloudTrip: TripStorage) => void;
+  readonly migrateTripIfNeeded: (
+    localTrip: TripStorage,
+    cloudTrip: TripStorage,
+  ) => void;
 };
 
 const notAuthenticated: AppInitializationResult = {
@@ -107,8 +136,16 @@ const runMigrationIfNeeded = async (
   ]);
 
   factories.migrateToFirestore(
-    { staples: asyncStaples, areas: asyncAreas, sectionOrder: asyncSectionOrder },
-    { staples: firestoreStaples, areas: firestoreAreas, sectionOrder: firestoreSectionOrder },
+    {
+      staples: asyncStaples,
+      areas: asyncAreas,
+      sectionOrder: asyncSectionOrder,
+    },
+    {
+      staples: firestoreStaples,
+      areas: firestoreAreas,
+      sectionOrder: firestoreSectionOrder,
+    },
   );
 };
 
@@ -122,7 +159,10 @@ export type StapleDiff = {
   readonly updated: readonly StapleItem[];
 };
 
-const hasRelevantChange = (previous: StapleItem, current: StapleItem): boolean =>
+const hasRelevantChange = (
+  previous: StapleItem,
+  current: StapleItem,
+): boolean =>
   previous.houseArea !== current.houseArea ||
   previous.storeLocation.section !== current.storeLocation.section ||
   previous.storeLocation.aisleNumber !== current.storeLocation.aisleNumber;
@@ -131,12 +171,12 @@ export const diffStaples = (
   previousStaples: readonly StapleItem[],
   currentStaples: readonly StapleItem[],
 ): StapleDiff => {
-  const previousById = new Map(previousStaples.map(s => [s.id, s]));
-  const currentIds = new Set(currentStaples.map(s => s.id));
+  const previousById = new Map(previousStaples.map((s) => [s.id, s]));
+  const currentIds = new Set(currentStaples.map((s) => s.id));
 
-  const added = currentStaples.filter(s => !previousById.has(s.id));
-  const removed = previousStaples.filter(s => !currentIds.has(s.id));
-  const updated = currentStaples.filter(s => {
+  const added = currentStaples.filter((s) => !previousById.has(s.id));
+  const removed = previousStaples.filter((s) => !currentIds.has(s.id));
+  const updated = currentStaples.filter((s) => {
     const previous = previousById.get(s.id);
     if (previous === undefined) return false;
     return hasRelevantChange(previous, s);
@@ -154,7 +194,9 @@ export const applyAddedStaplesToTrip = (
 ): void => {
   for (const staple of added) {
     // Duplicate guard: skip if trip already has an item with this stapleId
-    const alreadyInTrip = tripService.getItems().some(item => item.stapleId === staple.id);
+    const alreadyInTrip = tripService
+      .getItems()
+      .some((item) => item.stapleId === staple.id);
     if (alreadyInTrip) continue;
 
     tripService.addItem({
@@ -211,10 +253,16 @@ export const initializeApp = async (
     let handleAreaChange: (() => void) | undefined;
     const onAreaChange = () => handleAreaChange?.();
 
-    const stapleStorage = factories.createStapleStorage(uid, { onChange: onStapleChange });
-    const areaStorage = factories.createAreaStorage(uid, { onChange: onAreaChange });
+    const stapleStorage = factories.createStapleStorage(uid, {
+      onChange: onStapleChange,
+    });
+    const areaStorage = factories.createAreaStorage(uid, {
+      onChange: onAreaChange,
+    });
     const sectionOrderStorage = factories.createSectionOrderStorage(uid);
-    const tripStorage = factories.createTripStorage(uid, { onChange: onTripChange });
+    const tripStorage = factories.createTripStorage(uid, {
+      onChange: onTripChange,
+    });
 
     await Promise.all([
       stapleStorage.initialize(),
@@ -223,16 +271,28 @@ export const initializeApp = async (
       tripStorage.initialize(),
     ]);
 
-    await runMigrationIfNeeded(factories, stapleStorage, areaStorage, sectionOrderStorage, tripStorage);
+    await runMigrationIfNeeded(
+      factories,
+      stapleStorage,
+      areaStorage,
+      sectionOrderStorage,
+      tripStorage,
+    );
 
     const stapleLibrary = createStapleLibrary(stapleStorage);
     // Pass a live-read getter so getSweepProgress().totalAreas reflects the
     // current area list even when areas are added/removed without recreating
     // the trip service (RCA: frozen tripAreas snapshot, trip.ts:96-97,201).
     const tripService = createTrip(tripStorage, () => areaStorage.loadAll());
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
-    tripService.initializeFromStorage(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
+    tripService.initializeFromStorage(
+      stapleLibrary.listAll().filter((s) => s.type === 'staple'),
+    );
 
     // Wire trip onChange: reload from storage when remote changes arrive
     handleTripChange = () => {
@@ -252,10 +312,17 @@ export const initializeApp = async (
     };
 
     // Wire auto-add/remove: track previous staples, diff on change
-    let previousStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
+    let previousStaples = stapleLibrary
+      .listAll()
+      .filter((s) => s.type === 'staple');
     handleStapleChange = () => {
-      const currentStaples = stapleLibrary.listAll().filter((s) => s.type === 'staple');
-      const { added, removed, updated } = diffStaples(previousStaples, currentStaples);
+      const currentStaples = stapleLibrary
+        .listAll()
+        .filter((s) => s.type === 'staple');
+      const { added, removed, updated } = diffStaples(
+        previousStaples,
+        currentStaples,
+      );
 
       applyAddedStaplesToTrip(tripService, added);
       applyRemovedStaplesToTrip(tripService, removed);
@@ -286,7 +353,12 @@ export const initializeApp = async (
 
     return {
       isReady: true,
-      services: { stapleLibrary, tripService, areaManagement, sectionOrderStorage },
+      services: {
+        stapleLibrary,
+        tripService,
+        areaManagement,
+        sectionOrderStorage,
+      },
       error: null,
       needsAuth: false,
       unsubscribeAll,
@@ -303,10 +375,14 @@ export const initializeApp = async (
 const createProductionFactories = (): AdapterFactories => {
   const db = getFirebaseDb();
   return {
-    createStapleStorage: (uid, options) => createFirestoreStapleStorage(db, uid, options),
-    createAreaStorage: (uid, options) => createFirestoreAreaStorage(db, uid, options),
-    createSectionOrderStorage: (uid) => createFirestoreSectionOrderStorage(db, uid),
-    createTripStorage: (uid, options) => createFirestoreTripStorage(db, uid, options),
+    createStapleStorage: (uid, options) =>
+      createFirestoreStapleStorage(db, uid, options),
+    createAreaStorage: (uid, options) =>
+      createFirestoreAreaStorage(db, uid, options),
+    createSectionOrderStorage: (uid) =>
+      createFirestoreSectionOrderStorage(db, uid),
+    createTripStorage: (uid, options) =>
+      createFirestoreTripStorage(db, uid, options),
     checkMigrationNeeded: migrationNeeded,
     migrateToFirestore,
     createAsyncStapleStorage: () => createAsyncStapleStorage(),
@@ -348,8 +424,12 @@ export const useAppInitialization = (
 
     // If no auth user provided, use legacy behavior (all AsyncStorage, no auth check)
     const isLegacyMode = authUser === undefined;
-    const resolvedUser = isLegacyMode ? { uid: 'local', email: null } : authUser;
-    const resolvedFactories = factories ?? (isLegacyMode ? createLegacyFactories() : createProductionFactories());
+    const resolvedUser = isLegacyMode
+      ? { uid: 'local', email: null }
+      : authUser;
+    const resolvedFactories =
+      factories ??
+      (isLegacyMode ? createLegacyFactories() : createProductionFactories());
 
     let unsubscribeAll: (() => void) | undefined;
 

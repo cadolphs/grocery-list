@@ -50,13 +50,21 @@ type ItemHandlers = {
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
-const renderItemRow = (item: TripItem, index: number, handlers: ItemHandlers): React.JSX.Element => (
+const renderItemRow = (
+  item: TripItem,
+  index: number,
+  handlers: ItemHandlers,
+): React.JSX.Element => (
   <View key={item.id}>
     {index > 0 && <View style={styles.separator} />}
     <TripItemRow
       item={item}
       mode="store"
-      onPress={handlers.onItemPress ? () => handlers.onItemPress!(item.name) : undefined}
+      onPress={
+        handlers.onItemPress
+          ? () => handlers.onItemPress!(item.name)
+          : undefined
+      }
       onLongPress={
         handlers.onItemLongPress
           ? () => handlers.onItemLongPress!(item.name, item.houseArea)
@@ -75,7 +83,9 @@ const AisleSubGroupBlock = ({
 }): React.JSX.Element => (
   <View testID={`aisle-subgroup-${aisleKeySlug(subGroup.aisleKey)}`}>
     <View style={styles.aisleDivider}>
-      <Text style={styles.aisleBadge}>{aisleBadgeLabel(subGroup.aisleKey)}</Text>
+      <Text style={styles.aisleBadge}>
+        {aisleBadgeLabel(subGroup.aisleKey)}
+      </Text>
       <View style={styles.aisleDividerRight}>
         <Text style={styles.aisleProgress}>{formatProgress(subGroup)}</Text>
         {isComplete(subGroup) && (
@@ -92,7 +102,11 @@ const AisleSubGroupBlock = ({
   </View>
 );
 
-export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: AisleSectionProps): React.JSX.Element => {
+export const AisleSection = ({
+  sectionGroup,
+  onItemPress,
+  onItemLongPress,
+}: AisleSectionProps): React.JSX.Element => {
   const partition = partitionSectionByAisle(sectionGroup);
   const handlers: ItemHandlers = { onItemPress, onItemLongPress };
 
@@ -121,7 +135,9 @@ export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: Ais
             handlers={handlers}
           />
         ))
-      : sectionGroup.items.map((item, index) => renderItemRow(item, index, handlers));
+      : sectionGroup.items.map((item, index) =>
+          renderItemRow(item, index, handlers),
+        );
 
   return (
     <View style={styles.card} testID={`aisle-section-${sectionGroup.section}`}>
@@ -131,7 +147,12 @@ export const AisleSection = ({ sectionGroup, onItemPress, onItemLongPress }: Ais
           {headerBadge}
           <Text style={styles.progress}>{formatProgress(sectionGroup)}</Text>
           {isComplete(sectionGroup) && (
-            <Text style={styles.checkmark} testID={`section-complete-${sectionGroup.section}`}>✓</Text>
+            <Text
+              style={styles.checkmark}
+              testID={`section-complete-${sectionGroup.section}`}
+            >
+              ✓
+            </Text>
           )}
         </View>
       </View>

@@ -41,8 +41,9 @@ import {
 
 // --- Firestore mock infrastructure (shared harness) ---
 
-jest.mock('firebase/firestore', () =>
-  require('./helpers/offline-firestore-harness').firestoreModule
+jest.mock(
+  'firebase/firestore',
+  () => require('./helpers/offline-firestore-harness').firestoreModule,
 );
 
 // --- Test helpers ---
@@ -70,11 +71,14 @@ const createAdapter = (uid: string = TEST_UID): StapleAdapter => {
   const {
     createFirestoreStapleStorage,
   } = require('../../src/adapters/firestore/firestore-staple-storage');
-  return createFirestoreStapleStorage({ type: 'firestore' }, uid) as StapleAdapter;
+  return createFirestoreStapleStorage(
+    { type: 'firestore' },
+    uid,
+  ) as StapleAdapter;
 };
 
 const createInitializedAdapter = async (
-  uid: string = TEST_UID
+  uid: string = TEST_UID,
 ): Promise<StapleAdapter> => {
   const adapter = createAdapter(uid);
   await adapter.initialize();
@@ -121,7 +125,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     expect(adapterB.loadAll()).toEqual([milk]);
     expect(mockOnSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ path: staplesDocPath(TEST_UID) }),
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -156,7 +160,7 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
     expect(initializeResolved).toBe(false);
     expect(mockOnSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ path: staplesDocPath(TEST_UID) }),
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -216,13 +220,15 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
   test.each([
     [
       'save',
-      (adapter: StapleAdapter) => adapter.save(makeStaple({ id: 'staple-2', name: 'Bread' })),
+      (adapter: StapleAdapter) =>
+        adapter.save(makeStaple({ id: 'staple-2', name: 'Bread' })),
       [makeStaple(), makeStaple({ id: 'staple-2', name: 'Bread' })],
     ],
     ['remove', (adapter: StapleAdapter) => adapter.remove('staple-1'), []],
     [
       'update',
-      (adapter: StapleAdapter) => adapter.update(makeStaple({ name: 'Oat Milk' })),
+      (adapter: StapleAdapter) =>
+        adapter.update(makeStaple({ name: 'Oat Milk' })),
       [makeStaple({ name: 'Oat Milk' })],
     ],
     [
@@ -230,15 +236,18 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
       (adapter: StapleAdapter) => adapter.updateArea('Kitchen', 'Cocina'),
       [makeStaple({ houseArea: 'Cocina' })],
     ],
-  ])('%s survives a cold start', async (_operation, applyOperation, expected) => {
-    const adapterA = await createInitializedAdapter();
-    adapterA.save(makeStaple());
-    applyOperation(adapterA as StapleAdapter);
+  ])(
+    '%s survives a cold start',
+    async (_operation, applyOperation, expected) => {
+      const adapterA = await createInitializedAdapter();
+      adapterA.save(makeStaple());
+      applyOperation(adapterA as StapleAdapter);
 
-    const adapterB = await createInitializedAdapter();
+      const adapterB = await createInitializedAdapter();
 
-    expect(adapterB.loadAll()).toEqual(expected);
-  });
+      expect(adapterB.loadAll()).toEqual(expected);
+    },
+  );
 
   test('a uid with no mirror entry and an absent snapshot reports an empty staple list', async () => {
     const adapter = await createInitializedAdapter();
@@ -261,7 +270,9 @@ describe('Firestore staple adapter — offline cold-start mirror regression', ()
 
     const adapterB = await createInitializedAdapter();
 
-    const { migrationNeeded } = require('../../src/adapters/firestore/migration');
+    const {
+      migrationNeeded,
+    } = require('../../src/adapters/firestore/migration');
     expect(migrationNeeded(adapterB)).toBe(false);
   });
 });
@@ -291,7 +302,7 @@ const createAreaAdapter = (uid: string = AREAS_UID): AreaAdapter => {
 };
 
 const createInitializedAreaAdapter = async (
-  uid: string = AREAS_UID
+  uid: string = AREAS_UID,
 ): Promise<AreaAdapter> => {
   const adapter = createAreaAdapter(uid);
   await adapter.initialize();
@@ -348,7 +359,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     expect(adapterB.loadAll()).toEqual(CUSTOM_AREAS);
     expect(mockOnSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ path: areasDocPath(AREAS_UID) }),
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -365,7 +376,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     expect(initializeResolved).toBe(false);
     expect(mockOnSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ path: areasDocPath(AREAS_UID) }),
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -386,7 +397,7 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
       deliverSnapshot(areasDocPath(AREAS_UID), payload);
 
       expect(adapterB.loadAll()).toEqual(CUSTOM_AREAS);
-    }
+    },
   );
 
   test('a snapshot carrying areas replaces the mirrored areas and is re-mirrored', async () => {
@@ -419,7 +430,11 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
 
     const tripItems = [
       makeTripItem(),
-      makeTripItem({ id: 'trip-2', name: 'Detergent', houseArea: 'Utility Room' }),
+      makeTripItem({
+        id: 'trip-2',
+        name: 'Detergent',
+        houseArea: 'Utility Room',
+      }),
     ];
 
     const groups = groupByArea(tripItems, adapterB.loadAll()) as AreaGroup[];
@@ -449,7 +464,9 @@ describe('Firestore area adapter — offline cold-start mirror regression', () =
     const adapterA = await createInitializedAreaAdapter(AREAS_UID);
     adapterA.saveAll(CUSTOM_AREAS);
 
-    const otherUserAdapter = await createInitializedAreaAdapter('area-coldstart-other-uid');
+    const otherUserAdapter = await createInitializedAreaAdapter(
+      'area-coldstart-other-uid',
+    );
 
     expect(otherUserAdapter.loadAll()).toEqual([...DEFAULT_HOUSE_AREAS]);
   });
@@ -472,18 +489,20 @@ type SectionOrderAdapter = SectionOrderStorage & {
   unsubscribe: () => void;
 };
 
-const createSectionOrderAdapter = (uid: string = ORDER_UID): SectionOrderAdapter => {
+const createSectionOrderAdapter = (
+  uid: string = ORDER_UID,
+): SectionOrderAdapter => {
   const {
     createFirestoreSectionOrderStorage,
   } = require('../../src/adapters/firestore/firestore-section-order-storage');
   return createFirestoreSectionOrderStorage(
     { type: 'firestore' },
-    uid
+    uid,
   ) as SectionOrderAdapter;
 };
 
 const createInitializedSectionOrderAdapter = async (
-  uid: string = ORDER_UID
+  uid: string = ORDER_UID,
 ): Promise<SectionOrderAdapter> => {
   const adapter = createSectionOrderAdapter(uid);
   await adapter.initialize();
@@ -527,7 +546,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     expect(adapterB.loadOrder()).toEqual(SAVED_ORDER);
     expect(mockOnSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ path: sectionOrderDocPath(ORDER_UID) }),
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
@@ -562,26 +581,29 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     expect(initializeResolved).toBe(false);
     expect(mockOnSnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ path: sectionOrderDocPath(ORDER_UID) }),
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 
   test.each([
     ['absent', undefined],
     ['empty', { order: null }],
-  ])('a late %s snapshot does not reset the mirrored order', async (_regime, payload) => {
-    const adapterA = await createInitializedSectionOrderAdapter();
-    adapterA.saveOrder(SAVED_ORDER);
+  ])(
+    'a late %s snapshot does not reset the mirrored order',
+    async (_regime, payload) => {
+      const adapterA = await createInitializedSectionOrderAdapter();
+      adapterA.saveOrder(SAVED_ORDER);
 
-    setSnapshotMode('delayed');
-    const adapterB = createSectionOrderAdapter();
-    void adapterB.initialize();
-    await settlePendingReads();
+      setSnapshotMode('delayed');
+      const adapterB = createSectionOrderAdapter();
+      void adapterB.initialize();
+      await settlePendingReads();
 
-    deliverSnapshot(sectionOrderDocPath(ORDER_UID), payload);
+      deliverSnapshot(sectionOrderDocPath(ORDER_UID), payload);
 
-    expect(adapterB.loadOrder()).toEqual(SAVED_ORDER);
-  });
+      expect(adapterB.loadOrder()).toEqual(SAVED_ORDER);
+    },
+  );
 
   test('a uid with no mirror entry and an absent snapshot reports no order', async () => {
     const adapter = await createInitializedSectionOrderAdapter();
@@ -635,7 +657,7 @@ describe('Firestore section-order adapter — offline cold-start mirror regressi
     adapterA.saveOrder(SAVED_ORDER);
 
     const otherUserAdapter = await createInitializedSectionOrderAdapter(
-      'section-order-coldstart-other-uid'
+      'section-order-coldstart-other-uid',
     );
 
     expect(otherUserAdapter.loadOrder()).toBeNull();

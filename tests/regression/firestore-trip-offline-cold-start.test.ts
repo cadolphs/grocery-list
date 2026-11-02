@@ -34,8 +34,9 @@ import {
 
 // --- Firestore mock infrastructure (shared harness) ---
 
-jest.mock('firebase/firestore', () =>
-  require('./helpers/offline-firestore-harness').firestoreModule
+jest.mock(
+  'firebase/firestore',
+  () => require('./helpers/offline-firestore-harness').firestoreModule,
 );
 
 // --- Test helpers ---
@@ -69,7 +70,9 @@ const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
 const createAdapter = (onChange?: () => void) => {
   // require() each time so the module picks up the current mocks; matches the
   // convention used in firestore-trip-storage.test.ts.
-  const { createFirestoreTripStorage } = require('../../src/adapters/firestore/firestore-trip-storage');
+  const {
+    createFirestoreTripStorage,
+  } = require('../../src/adapters/firestore/firestore-trip-storage');
   const mockDb = { type: 'firestore' };
   return createFirestoreTripStorage(mockDb, TEST_UID, { onChange });
 };
@@ -134,7 +137,9 @@ describe('Firestore trip adapter — a local edit survives a late empty snapshot
     const adapterB = await createHydratedAdapterAwaitingSnapshot(onChange);
 
     const editedTrip = makeTrip({
-      items: [makeTripItem({ checked: true, checkedAt: '2026-04-13T10:05:00.000Z' })],
+      items: [
+        makeTripItem({ checked: true, checkedAt: '2026-04-13T10:05:00.000Z' }),
+      ],
     });
     adapterB.saveTrip(editedTrip);
 
@@ -146,7 +151,9 @@ describe('Firestore trip adapter — a local edit survives a late empty snapshot
 
   it('a local carryover edit made after mirror hydration survives two consecutive absent snapshots', async () => {
     const adapterA = await createFreshAdapter();
-    adapterA.saveCarryover([makeTripItem({ id: 'carry-1', name: 'Olive Oil' })]);
+    adapterA.saveCarryover([
+      makeTripItem({ id: 'carry-1', name: 'Olive Oil' }),
+    ]);
 
     const adapterB = await createHydratedAdapterAwaitingSnapshot();
 
@@ -165,7 +172,9 @@ describe('Firestore trip adapter — a local edit survives a late empty snapshot
 
   it('an absent carryover snapshot received while the mirror holds an empty carryover does not disarm the guard for a later local edit', async () => {
     const adapterA = await createFreshAdapter();
-    adapterA.saveCarryover([makeTripItem({ id: 'carry-1', name: 'Olive Oil' })]);
+    adapterA.saveCarryover([
+      makeTripItem({ id: 'carry-1', name: 'Olive Oil' }),
+    ]);
     adapterA.clearCarryover();
 
     const adapterB = await createHydratedAdapterAwaitingSnapshot();
@@ -224,7 +233,9 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
   // Observe readiness without awaiting: under 'withheld' the promise may never
   // settle, so a then-flag read after the reads have drained is the only
   // timer-free way to distinguish "resolved" from "pending".
-  const observeInitialize = async (storage: { initialize: () => Promise<void> }) => {
+  const observeInitialize = async (storage: {
+    initialize: () => Promise<void>;
+  }) => {
     let initializeResolved = false;
     void storage.initialize().then(() => {
       initializeResolved = true;
@@ -236,7 +247,9 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
   it('resolves initialize() from the trip and carryover mirrors while the first snapshot is withheld, with both subscriptions registered', async () => {
     const adapterA = await createFreshAdapter();
     const savedTrip = makeTrip();
-    const savedCarryover: readonly TripItem[] = [makeTripItem({ id: 'carry-1', name: 'Olive Oil' })];
+    const savedCarryover: readonly TripItem[] = [
+      makeTripItem({ id: 'carry-1', name: 'Olive Oil' }),
+    ];
     adapterA.saveTrip(savedTrip);
     adapterA.saveCarryover(savedCarryover);
     jest.clearAllMocks();
@@ -249,7 +262,10 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
     expect(adapterB.loadTrip()).toEqual(savedTrip);
     expect(adapterB.loadCarryover()).toEqual(savedCarryover);
     expect(onSnapshotPaths()).toEqual(
-      expect.arrayContaining([tripDocPath(TEST_UID), carryoverDocPath(TEST_UID)])
+      expect.arrayContaining([
+        tripDocPath(TEST_UID),
+        carryoverDocPath(TEST_UID),
+      ]),
     );
   });
 
@@ -275,7 +291,9 @@ describe('Offline cold start renders the mirrored trip before any snapshot fires
   it('a data-bearing trip snapshot arriving after early resolution updates loadTrip() and fires onChange', async () => {
     const adapterA = await createFreshAdapter();
     adapterA.saveTrip(makeTrip());
-    adapterA.saveCarryover([makeTripItem({ id: 'carry-1', name: 'Olive Oil' })]);
+    adapterA.saveCarryover([
+      makeTripItem({ id: 'carry-1', name: 'Olive Oil' }),
+    ]);
 
     const onChange = jest.fn();
     setSnapshotMode('delayed');

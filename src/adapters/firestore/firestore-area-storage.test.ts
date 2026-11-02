@@ -22,19 +22,24 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
-type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+type SnapshotCallback = (snapshot: {
+  exists: () => boolean;
+  data: () => MockDocData;
+}) => void;
 let capturedSnapshotCallback: SnapshotCallback | null = null;
 const mockUnsubscribe = jest.fn();
 
-const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
-  const data = mockStore[docRef.path];
-  callback({
-    exists: () => data !== undefined,
-    data: () => data,
-  });
-  capturedSnapshotCallback = callback;
-  return mockUnsubscribe;
-});
+const mockOnSnapshot = jest.fn(
+  (docRef: { path: string }, callback: SnapshotCallback) => {
+    const data = mockStore[docRef.path];
+    callback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+    capturedSnapshotCallback = callback;
+    return mockUnsubscribe;
+  },
+);
 
 const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
   mockStore[path] = data;
@@ -89,7 +94,9 @@ describe('firestore area storage implements area storage port', () => {
   });
 
   test('loadAll returns DEFAULT_HOUSE_AREAS when no areas exist (fresh user seeding)', async () => {
-    const { DEFAULT_HOUSE_AREAS } = require('../async-storage/async-area-storage');
+    const {
+      DEFAULT_HOUSE_AREAS,
+    } = require('../async-storage/async-area-storage');
     const storage = await createFreshStorage();
 
     expect(storage.loadAll()).toEqual([...DEFAULT_HOUSE_AREAS]);
@@ -112,7 +119,7 @@ describe('firestore area storage implements area storage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: AREAS_DOC_PATH }),
-      { items: areas, writtenAt: expect.any(Number) }
+      { items: areas, writtenAt: expect.any(Number) },
     );
   });
 
@@ -130,7 +137,9 @@ describe('firestore area storage implements area storage port', () => {
 
 describe('firestore area storage seeds DEFAULT_HOUSE_AREAS on empty/missing doc', () => {
   test('loadAll returns DEFAULT_HOUSE_AREAS when Firestore document exists but is empty ({})', async () => {
-    const { DEFAULT_HOUSE_AREAS } = require('../async-storage/async-area-storage');
+    const {
+      DEFAULT_HOUSE_AREAS,
+    } = require('../async-storage/async-area-storage');
     mockStore[AREAS_DOC_PATH] = {};
 
     const storage = await createFreshStorage();
@@ -139,7 +148,9 @@ describe('firestore area storage seeds DEFAULT_HOUSE_AREAS on empty/missing doc'
   });
 
   test('loadAll returns DEFAULT_HOUSE_AREAS when Firestore document is missing (exists: false)', async () => {
-    const { DEFAULT_HOUSE_AREAS } = require('../async-storage/async-area-storage');
+    const {
+      DEFAULT_HOUSE_AREAS,
+    } = require('../async-storage/async-area-storage');
     // No entry in mockStore -> exists() returns false
 
     const storage = await createFreshStorage();
@@ -164,7 +175,10 @@ const createFreshStorageWithOnChange = async (onChange?: () => void) => {
   const mockDb = { type: 'firestore' };
   const storage = createFirestoreAreaStorage(mockDb, TEST_UID, { onChange });
   await storage.initialize();
-  return storage as AreaStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+  return storage as AreaStorage & {
+    initialize: () => Promise<void>;
+    unsubscribe: () => void;
+  };
 };
 
 describe('firestore area storage onChange callback', () => {
@@ -172,7 +186,9 @@ describe('firestore area storage onChange callback', () => {
     mockStore[AREAS_DOC_PATH] = { items: ['Kitchen', 'Bathroom'] };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
     expect(storage.loadAll()).toEqual(['Kitchen', 'Bathroom']);
@@ -188,7 +204,9 @@ describe('firestore area storage onChange callback', () => {
     mockStore[AREAS_DOC_PATH] = { items: ['Kitchen', 'Bathroom'] };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorageWithOnChange(onChange);
 
@@ -196,7 +214,9 @@ describe('firestore area storage onChange callback', () => {
     storage.saveAll(['Kitchen', 'Bathroom', 'Garage']);
 
     // Simulate snapshot echo with identical data
-    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Bathroom', 'Garage'] });
+    simulateRemoteSnapshot(AREAS_DOC_PATH, {
+      items: ['Kitchen', 'Bathroom', 'Garage'],
+    });
 
     expect(onChangeCallCount).toBe(0);
   });
@@ -229,7 +249,10 @@ const createFreshStorageForSubscribe = async () => {
   const mockDb = { type: 'firestore' };
   const storage = createFirestoreAreaStorage(mockDb, TEST_UID);
   await storage.initialize();
-  return storage as AreaStorage & { initialize: () => Promise<void>; unsubscribe: () => void };
+  return storage as AreaStorage & {
+    initialize: () => Promise<void>;
+    unsubscribe: () => void;
+  };
 };
 
 describe('firestore area storage subscribe contract', () => {
@@ -239,7 +262,9 @@ describe('firestore area storage subscribe contract', () => {
     const storage = await createFreshStorageForSubscribe();
 
     let callCount = 0;
-    const unsubscribe = storage.subscribe(() => { callCount++; });
+    const unsubscribe = storage.subscribe(() => {
+      callCount++;
+    });
 
     simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
 
@@ -255,14 +280,18 @@ describe('firestore area storage subscribe contract', () => {
     const storage = await createFreshStorageForSubscribe();
 
     let callCount = 0;
-    const unsubscribe = storage.subscribe(() => { callCount++; });
+    const unsubscribe = storage.subscribe(() => {
+      callCount++;
+    });
 
     simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
     const countAfterFirst = callCount;
 
     unsubscribe();
 
-    simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage', 'Fridge'] });
+    simulateRemoteSnapshot(AREAS_DOC_PATH, {
+      items: ['Kitchen', 'Garage', 'Fridge'],
+    });
 
     expect(callCount).toBe(countAfterFirst);
   });
@@ -283,8 +312,12 @@ describe('firestore area storage subscribe contract', () => {
 
     let a = 0;
     let b = 0;
-    const unsubA = storage.subscribe(() => { a++; });
-    const unsubB = storage.subscribe(() => { b++; });
+    const unsubA = storage.subscribe(() => {
+      a++;
+    });
+    const unsubB = storage.subscribe(() => {
+      b++;
+    });
 
     simulateRemoteSnapshot(AREAS_DOC_PATH, { items: ['Kitchen', 'Garage'] });
 

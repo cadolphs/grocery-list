@@ -11,27 +11,51 @@ import { createNullSectionOrderStorage } from '../adapters/null/null-section-ord
 import { createNullTripStorage } from '../adapters/null/null-trip-storage';
 
 // Types for the initializable storage adapters (Firestore/AsyncStorage adapters have initialize())
-type InitializableStapleStorage = StapleStorage & { initialize: () => Promise<void> };
-type InitializableAreaStorage = AreaStorage & { initialize: () => Promise<void> };
-type InitializableSectionOrderStorage = SectionOrderStorage & { initialize: () => Promise<void> };
-type InitializableTripStorage = TripStorage & { initialize: () => Promise<void> };
+type InitializableStapleStorage = StapleStorage & {
+  initialize: () => Promise<void>;
+};
+type InitializableAreaStorage = AreaStorage & {
+  initialize: () => Promise<void>;
+};
+type InitializableSectionOrderStorage = SectionOrderStorage & {
+  initialize: () => Promise<void>;
+};
+type InitializableTripStorage = TripStorage & {
+  initialize: () => Promise<void>;
+};
 
 // Factory types for dependency injection
 type AdapterFactories = {
-  readonly createStapleStorage: (uid: string, options?: { onChange?: () => void }) => InitializableStapleStorage;
+  readonly createStapleStorage: (
+    uid: string,
+    options?: { onChange?: () => void },
+  ) => InitializableStapleStorage;
   readonly createAreaStorage: (uid: string) => InitializableAreaStorage;
-  readonly createSectionOrderStorage: (uid: string) => InitializableSectionOrderStorage;
+  readonly createSectionOrderStorage: (
+    uid: string,
+  ) => InitializableSectionOrderStorage;
   readonly createTripStorage: () => InitializableTripStorage;
   readonly checkMigrationNeeded: (firestoreStaples: StapleStorage) => boolean;
   readonly migrateToFirestore: (
-    from: { staples: StapleStorage; areas: AreaStorage; sectionOrder: SectionOrderStorage },
-    to: { staples: StapleStorage; areas: AreaStorage; sectionOrder: SectionOrderStorage },
+    from: {
+      staples: StapleStorage;
+      areas: AreaStorage;
+      sectionOrder: SectionOrderStorage;
+    },
+    to: {
+      staples: StapleStorage;
+      areas: AreaStorage;
+      sectionOrder: SectionOrderStorage;
+    },
   ) => void;
   readonly createAsyncStapleStorage: () => InitializableStapleStorage;
   readonly createAsyncAreaStorage: () => InitializableAreaStorage;
   readonly createAsyncSectionOrderStorage: () => InitializableSectionOrderStorage;
   readonly createAsyncTripStorage: () => InitializableTripStorage;
-  readonly migrateTripIfNeeded: (localTrip: TripStorage, cloudTrip: TripStorage) => void;
+  readonly migrateTripIfNeeded: (
+    localTrip: TripStorage,
+    cloudTrip: TripStorage,
+  ) => void;
 };
 
 import { StapleItem, AddStapleRequest } from '../domain/types';
@@ -45,15 +69,18 @@ const createInitializableStapleStorage = (
   initialize: async () => {},
 });
 
-const createInitializableAreaStorage = (areas?: string[]): InitializableAreaStorage => ({
+const createInitializableAreaStorage = (
+  areas?: string[],
+): InitializableAreaStorage => ({
   ...createNullAreaStorage(areas),
   initialize: async () => {},
 });
 
-const createInitializableSectionOrderStorage = (): InitializableSectionOrderStorage => ({
-  ...createNullSectionOrderStorage(),
-  initialize: async () => {},
-});
+const createInitializableSectionOrderStorage =
+  (): InitializableSectionOrderStorage => ({
+    ...createNullSectionOrderStorage(),
+    initialize: async () => {},
+  });
 
 const createInitializableTripStorage = (): InitializableTripStorage => ({
   ...createNullTripStorage(),
@@ -69,7 +96,8 @@ const defaultFactories: AdapterFactories = {
   migrateToFirestore: () => {},
   createAsyncStapleStorage: () => createInitializableStapleStorage(),
   createAsyncAreaStorage: () => createInitializableAreaStorage(),
-  createAsyncSectionOrderStorage: () => createInitializableSectionOrderStorage(),
+  createAsyncSectionOrderStorage: () =>
+    createInitializableSectionOrderStorage(),
   createAsyncTripStorage: () => createInitializableTripStorage(),
   migrateTripIfNeeded: () => {},
 };
@@ -238,15 +266,21 @@ describe('initializeApp', () => {
         checkMigrationNeeded: () => true,
         createAsyncStapleStorage: () => ({
           ...createNullStapleStorage(),
-          initialize: async () => { initOrder.push('async-staple'); },
+          initialize: async () => {
+            initOrder.push('async-staple');
+          },
         }),
         createAsyncAreaStorage: () => ({
           ...createNullAreaStorage(),
-          initialize: async () => { initOrder.push('async-area'); },
+          initialize: async () => {
+            initOrder.push('async-area');
+          },
         }),
         createAsyncSectionOrderStorage: () => ({
           ...createNullSectionOrderStorage(),
-          initialize: async () => { initOrder.push('async-section'); },
+          initialize: async () => {
+            initOrder.push('async-section');
+          },
         }),
       };
 
@@ -266,7 +300,9 @@ describe('initializeApp', () => {
         ...defaultFactories,
         createStapleStorage: () => ({
           ...createNullStapleStorage(),
-          initialize: async () => { throw new Error('Firestore unavailable'); },
+          initialize: async () => {
+            throw new Error('Firestore unavailable');
+          },
         }),
       };
 
@@ -288,11 +324,21 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
           // Create storage with initial staples, wire onChange
-          sharedStorage = createNullStapleStorage([
-            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-          ], { onChange: options?.onChange });
+          sharedStorage = createNullStapleStorage(
+            [
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+            ],
+            { onChange: options?.onChange },
+          );
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -323,7 +369,7 @@ describe('initializeApp', () => {
       // Trip should now have 2 items
       const tripAfter = result.services!.tripService.getItems();
       expect(tripAfter).toHaveLength(2);
-      expect(tripAfter.map(i => i.name)).toContain('Bread');
+      expect(tripAfter.map((i) => i.name)).toContain('Bread');
     });
 
     test('when staple storage onChange fires after a staple is removed, trip loses the item', async () => {
@@ -334,11 +380,25 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
-          sharedStorage = createNullStapleStorage([
-            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-            { name: 'Soda', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Beverages', aisleNumber: 6 } },
-          ], { onChange: options?.onChange });
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
+          sharedStorage = createNullStapleStorage(
+            [
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+              {
+                name: 'Soda',
+                houseArea: 'Kitchen Cabinets',
+                storeLocation: { section: 'Beverages', aisleNumber: 6 },
+              },
+            ],
+            { onChange: options?.onChange },
+          );
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -355,18 +415,20 @@ describe('initializeApp', () => {
       expect(tripBefore).toHaveLength(2);
 
       // Find the stapleId of Soda in the trip
-      const sodaInTrip = tripBefore.find(i => i.name === 'Soda');
+      const sodaInTrip = tripBefore.find((i) => i.name === 'Soda');
       expect(sodaInTrip?.stapleId).not.toBeNull();
 
       // Simulate remote staple removal: remove from storage, then fire onChange
-      const sodaStaple = sharedStorage!.loadAll().find(s => s.name === 'Soda')!;
+      const sodaStaple = sharedStorage!
+        .loadAll()
+        .find((s) => s.name === 'Soda')!;
       sharedStorage!.remove(sodaStaple.id);
       capturedOnChange!();
 
       // Trip should now have 1 item
       const tripAfter = result.services!.tripService.getItems();
       expect(tripAfter).toHaveLength(1);
-      expect(tripAfter.map(i => i.name)).not.toContain('Soda');
+      expect(tripAfter.map((i) => i.name)).not.toContain('Soda');
     });
 
     test('auto-added staple items carry their stapleId on the trip item', async () => {
@@ -377,10 +439,20 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
-          sharedStorage = createNullStapleStorage([
-            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-          ], { onChange: options?.onChange });
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
+          sharedStorage = createNullStapleStorage(
+            [
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+            ],
+            { onChange: options?.onChange },
+          );
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -404,7 +476,9 @@ describe('initializeApp', () => {
       capturedOnChange!();
 
       // The auto-added trip item should carry the stapleId
-      const breadItem = result.services!.tripService.getItems().find(i => i.name === 'Bread');
+      const breadItem = result
+        .services!.tripService.getItems()
+        .find((i) => i.name === 'Bread');
       expect(breadItem).toBeDefined();
       expect(breadItem!.stapleId).toBe(breadStapleId);
     });
@@ -417,10 +491,20 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
-          sharedStorage = createNullStapleStorage([
-            { name: 'Tahini', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'International', aisleNumber: 4 } },
-          ], { onChange: options?.onChange });
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
+          sharedStorage = createNullStapleStorage(
+            [
+              {
+                name: 'Tahini',
+                houseArea: 'Kitchen Cabinets',
+                storeLocation: { section: 'International', aisleNumber: 4 },
+              },
+            ],
+            { onChange: options?.onChange },
+          );
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -456,7 +540,9 @@ describe('initializeApp', () => {
       // Fire onChange AGAIN with same storage state -- should NOT create duplicate
       // This simulates a Firestore snapshot replay
       capturedOnChange!();
-      expect(tripService.getItems().filter(i => i.name === 'Tahini')).toHaveLength(1);
+      expect(
+        tripService.getItems().filter((i) => i.name === 'Tahini'),
+      ).toHaveLength(1);
     });
 
     test('handleStapleChange syncs trip when staple area or location changes', async () => {
@@ -467,10 +553,20 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
-          sharedStorage = createNullStapleStorage([
-            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-          ], { onChange: options?.onChange });
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
+          sharedStorage = createNullStapleStorage(
+            [
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+            ],
+            { onChange: options?.onChange },
+          );
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -487,11 +583,16 @@ describe('initializeApp', () => {
       expect(tripBefore).toHaveLength(1);
       const milkBefore = tripBefore[0];
       expect(milkBefore.houseArea).toBe('Fridge');
-      expect(milkBefore.storeLocation).toEqual({ section: 'Dairy', aisleNumber: 3 });
+      expect(milkBefore.storeLocation).toEqual({
+        section: 'Dairy',
+        aisleNumber: 3,
+      });
 
       // Simulate remote staple edit: change area and storeLocation in the storage,
       // then fire onChange as Firestore onSnapshot would.
-      const milkStaple = sharedStorage!.loadAll().find(s => s.name === 'Milk')!;
+      const milkStaple = sharedStorage!
+        .loadAll()
+        .find((s) => s.name === 'Milk')!;
       sharedStorage!.update({
         ...milkStaple,
         houseArea: 'Kitchen Cabinets',
@@ -506,7 +607,10 @@ describe('initializeApp', () => {
       const milkAfter = tripAfter[0];
       expect(milkAfter.stapleId).toBe(milkStaple.id);
       expect(milkAfter.houseArea).toBe('Kitchen Cabinets');
-      expect(milkAfter.storeLocation).toEqual({ section: 'Bakery', aisleNumber: 1 });
+      expect(milkAfter.storeLocation).toEqual({
+        section: 'Bakery',
+        aisleNumber: 1,
+      });
     });
 
     test('auto-add preserves sweep progress', async () => {
@@ -517,10 +621,20 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
-          sharedStorage = createNullStapleStorage([
-            { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-          ], { onChange: options?.onChange });
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
+          sharedStorage = createNullStapleStorage(
+            [
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+            ],
+            { onChange: options?.onChange },
+          );
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -534,7 +648,9 @@ describe('initializeApp', () => {
 
       // Complete an area
       tripService.completeArea('Bathroom');
-      expect(tripService.getSweepProgress().completedAreas).toContain('Bathroom');
+      expect(tripService.getSweepProgress().completedAreas).toContain(
+        'Bathroom',
+      );
 
       // Simulate remote staple add
       sharedStorage!.save({
@@ -548,9 +664,11 @@ describe('initializeApp', () => {
       capturedOnChange!();
 
       // Sweep progress preserved
-      expect(tripService.getSweepProgress().completedAreas).toContain('Bathroom');
+      expect(tripService.getSweepProgress().completedAreas).toContain(
+        'Bathroom',
+      );
       // New item added
-      expect(tripService.getItems().map(i => i.name)).toContain('Soap');
+      expect(tripService.getItems().map((i) => i.name)).toContain('Soap');
     });
   });
 
@@ -561,16 +679,28 @@ describe('initializeApp', () => {
   // and its onChange is captured but never auto-invoked.
   describe('local stapleLibrary.remove triggers trip cleanup via domain subscription', () => {
     test('local stapleLibrary.remove removes a trip item linked by stapleId', async () => {
-      const authUser: AuthUser = { uid: 'user-local-remove', email: 'lr@l.com' };
+      const authUser: AuthUser = {
+        uid: 'user-local-remove',
+        email: 'lr@l.com',
+      };
 
       let capturedOnChange: (() => void) | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
           // Real seed: one staple, captured onChange that we WILL NOT auto-fire.
           const storage = createNullStapleStorage(
-            [{ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } }],
+            [
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+            ],
             { onChange: options?.onChange },
           );
           capturedOnChange = options?.onChange;
@@ -585,7 +715,9 @@ describe('initializeApp', () => {
       // Trip starts with the seeded staple item linked by stapleId.
       const before = tripService.getItems();
       expect(before).toHaveLength(1);
-      const milkStaple = stapleLibrary.listAll().find(s => s.name === 'Milk')!;
+      const milkStaple = stapleLibrary
+        .listAll()
+        .find((s) => s.name === 'Milk')!;
       expect(before[0].stapleId).toBe(milkStaple.id);
 
       // Drive locally: stapleLibrary.remove (NO storage.onChange invocation).
@@ -609,9 +741,18 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
           const storage = createNullStapleStorage(
-            [{ name: 'Cinnamon', houseArea: 'Pantry', storeLocation: { section: 'Spices', aisleNumber: 5 } }],
+            [
+              {
+                name: 'Cinnamon',
+                houseArea: 'Pantry',
+                storeLocation: { section: 'Spices', aisleNumber: 5 },
+              },
+            ],
             { onChange: options?.onChange },
           );
           return { ...storage, initialize: async () => {} };
@@ -630,7 +771,9 @@ describe('initializeApp', () => {
       // plus one legacy staple-typed item with stapleId=null sharing
       // (name, houseArea). This is exactly the legacy data shape that the
       // remove-side fallback must clean up.
-      const cinnamonStaple = stapleLibrary.listAll().find(s => s.name === 'Cinnamon')!;
+      const cinnamonStaple = stapleLibrary
+        .listAll()
+        .find((s) => s.name === 'Cinnamon')!;
       capturedTripStorage!.saveTrip({
         id: 'trip-fallback-fixture',
         items: [
@@ -667,7 +810,7 @@ describe('initializeApp', () => {
 
       const before = tripService.getItems();
       expect(before).toHaveLength(2);
-      const fallbackItem = before.find(i => i.stapleId === null);
+      const fallbackItem = before.find((i) => i.stapleId === null);
       expect(fallbackItem).toBeDefined();
       expect(fallbackItem!.name).toBe('Cinnamon');
 
@@ -684,9 +827,18 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
           const storage = createNullStapleStorage(
-            [{ name: 'Soda', houseArea: 'Pantry', storeLocation: { section: 'Beverages', aisleNumber: 6 } }],
+            [
+              {
+                name: 'Soda',
+                houseArea: 'Pantry',
+                storeLocation: { section: 'Beverages', aisleNumber: 6 },
+              },
+            ],
             { onChange: options?.onChange },
           );
           return { ...storage, initialize: async () => {} };
@@ -702,7 +854,9 @@ describe('initializeApp', () => {
       result.unsubscribeAll!();
 
       // After teardown, removing a staple should NOT touch the trip.
-      const sodaStaple = stapleLibrary.listAll().find(s => s.name === 'Soda')!;
+      const sodaStaple = stapleLibrary
+        .listAll()
+        .find((s) => s.name === 'Soda')!;
       stapleLibrary.remove(sodaStaple.id);
 
       // Trip is unchanged: subscription was unwired.
@@ -718,11 +872,22 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string, options?: { onChange?: () => void }) => {
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
           const storage = createNullStapleStorage(
             [
-              { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-              { name: 'Bread', houseArea: 'Pantry', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+              {
+                name: 'Milk',
+                houseArea: 'Fridge',
+                storeLocation: { section: 'Dairy', aisleNumber: 3 },
+              },
+              {
+                name: 'Bread',
+                houseArea: 'Pantry',
+                storeLocation: { section: 'Bakery', aisleNumber: 1 },
+              },
             ],
             { onChange: options?.onChange },
           );
@@ -739,7 +904,9 @@ describe('initializeApp', () => {
 
       // First fire: local stapleLibrary.remove drives the domain subscription
       // and removes Milk from the trip.
-      const milkStaple = stapleLibrary.listAll().find(s => s.name === 'Milk')!;
+      const milkStaple = stapleLibrary
+        .listAll()
+        .find((s) => s.name === 'Milk')!;
       stapleLibrary.remove(milkStaple.id);
 
       const afterFirst = tripService.getItems();
@@ -763,7 +930,9 @@ describe('initializeApp', () => {
 });
 
 // Helper: build a StapleItem for diff tests
-const makeStaple = (overrides: Partial<StapleItem> & { id: string }): StapleItem => ({
+const makeStaple = (
+  overrides: Partial<StapleItem> & { id: string },
+): StapleItem => ({
   name: 'Milk',
   houseArea: 'Fridge',
   storeLocation: { section: 'Dairy', aisleNumber: 3 },
@@ -786,10 +955,16 @@ describe('diffStaples', () => {
 
   test('returns updated with staples whose storeLocation.section changed', () => {
     const previous = [
-      makeStaple({ id: 's1', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+      makeStaple({
+        id: 's1',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      }),
     ];
     const current = [
-      makeStaple({ id: 's1', storeLocation: { section: 'Bakery', aisleNumber: 3 } }),
+      makeStaple({
+        id: 's1',
+        storeLocation: { section: 'Bakery', aisleNumber: 3 },
+      }),
     ];
 
     const diff = diffStaples(previous, current);
@@ -800,10 +975,16 @@ describe('diffStaples', () => {
 
   test('returns updated with staples whose storeLocation.aisleNumber changed', () => {
     const previous = [
-      makeStaple({ id: 's1', storeLocation: { section: 'Dairy', aisleNumber: 3 } }),
+      makeStaple({
+        id: 's1',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      }),
     ];
     const current = [
-      makeStaple({ id: 's1', storeLocation: { section: 'Dairy', aisleNumber: 7 } }),
+      makeStaple({
+        id: 's1',
+        storeLocation: { section: 'Dairy', aisleNumber: 7 },
+      }),
     ];
 
     const diff = diffStaples(previous, current);
@@ -844,7 +1025,11 @@ describe('diffStaples', () => {
 
   test('returns empty updated when previous and current are identical', () => {
     const a = makeStaple({ id: 's1' });
-    const b = makeStaple({ id: 's2', name: 'Bread', houseArea: 'Kitchen Cabinets' });
+    const b = makeStaple({
+      id: 's2',
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+    });
 
     const diff = diffStaples([a, b], [a, b]);
 

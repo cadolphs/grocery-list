@@ -52,7 +52,10 @@ describe('useAuth', () => {
 
       let authResult: any;
       await act(async () => {
-        authResult = await result.current.signIn('bob@example.com', 'SecurePass1!');
+        authResult = await result.current.signIn(
+          'bob@example.com',
+          'SecurePass1!',
+        );
       });
 
       expect(authResult.success).toBe(true);
@@ -65,7 +68,10 @@ describe('useAuth', () => {
 
       let authResult: any;
       await act(async () => {
-        authResult = await result.current.signUp('bob@example.com', 'SecurePass1!');
+        authResult = await result.current.signUp(
+          'bob@example.com',
+          'SecurePass1!',
+        );
       });
 
       expect(authResult.success).toBe(true);

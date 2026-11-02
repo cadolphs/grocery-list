@@ -48,7 +48,7 @@ describe('long press on store item triggers edit callback', () => {
         mode="store"
         onPress={onPress}
         onLongPress={onLongPress}
-      />
+      />,
     );
 
     fireEvent(screen.getByText('Butter'), 'longPress');
@@ -68,7 +68,7 @@ describe('long press on store item triggers edit callback', () => {
         mode="store"
         onPress={onPress}
         onLongPress={onLongPress}
-      />
+      />,
     );
 
     fireEvent.press(screen.getByText('Butter'));
@@ -82,14 +82,26 @@ const WIRING_AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 function createStoreEditTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    },
   ]);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(WIRING_AREAS);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripService = createTrip(tripStorage, WIRING_AREAS);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   tripService.start(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
@@ -104,7 +116,7 @@ describe('store view long-press opens edit sheet and saves changes', () => {
         areaManagement={services.areaManagement}
       >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Switch to Store view
@@ -129,7 +141,7 @@ describe('store view long-press opens edit sheet and saves changes', () => {
         areaManagement={services.areaManagement}
       >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Switch to Store view
@@ -151,7 +163,9 @@ describe('store view long-press opens edit sheet and saves changes', () => {
     expect(screen.queryByText("Edit 'Butter'")).toBeNull();
 
     // Staple library should reflect the update
-    const updatedStaple = services.stapleLibrary.listAll().find((s) => s.name === 'Butter');
+    const updatedStaple = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Butter');
     expect(updatedStaple?.houseArea).toBe('Bathroom');
   });
 });

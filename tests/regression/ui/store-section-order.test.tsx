@@ -18,9 +18,21 @@ import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-s
 
 function renderAppWithCustomOrder(customOrder: string[] | null) {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Deli Turkey', houseArea: 'Fridge', storeLocation: { section: 'Deli', aisleNumber: null } },
-    { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+    {
+      name: 'Deli Turkey',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Deli', aisleNumber: null },
+    },
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+    },
   ]);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -36,7 +48,7 @@ function renderAppWithCustomOrder(customOrder: string[] | null) {
       sectionOrderStorage={sectionOrderStorage}
     >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 
   // Switch to Store view

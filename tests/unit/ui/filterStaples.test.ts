@@ -33,13 +33,17 @@ describe('filterStaples', () => {
 
   it('filters by case-insensitive substring match', () => {
     const result = filterStaples(staples, 'ch');
-    const names = result.map(s => s.name);
-    expect(names).toEqual(['Cheddar Cheese', 'Chicken Breast', 'Chocolate Chips']);
+    const names = result.map((s) => s.name);
+    expect(names).toEqual([
+      'Cheddar Cheese',
+      'Chicken Breast',
+      'Chocolate Chips',
+    ]);
   });
 
   it('matches substrings anywhere in the name', () => {
     const result = filterStaples(staples, 'butter');
-    const names = result.map(s => s.name);
+    const names = result.map((s) => s.name);
     expect(names).toEqual(['Butter', 'Peanut Butter']);
   });
 

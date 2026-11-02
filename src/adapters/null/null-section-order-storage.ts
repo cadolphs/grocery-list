@@ -9,8 +9,10 @@ type NullSectionOrderStorageOptions = {
 
 export const createNullSectionOrderStorage = (
   initialOrder: string[] | null = null,
-  options: NullSectionOrderStorageOptions = {}
-): SectionOrderStorage & { readonly simulateRemoteChange: (order: string[] | null) => void } => {
+  options: NullSectionOrderStorageOptions = {},
+): SectionOrderStorage & {
+  readonly simulateRemoteChange: (order: string[] | null) => void;
+} => {
   let cachedOrder: string[] | null = initialOrder;
   const { onChange } = options;
 

@@ -7,7 +7,12 @@
  */
 
 import React from 'react';
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
@@ -21,14 +26,26 @@ const AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 function createTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    },
   ]);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(AREAS);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripService = createTrip(tripStorage);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   tripService.start(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
@@ -42,7 +59,7 @@ function renderApp() {
       areaManagement={services.areaManagement}
     >
       <AppShell />
-    </ServiceProvider>
+    </ServiceProvider>,
   );
 }
 

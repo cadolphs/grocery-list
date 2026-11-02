@@ -23,8 +23,18 @@
  * - MS2-8: Sign In button disabled during auth (US-01)
  */
 
-import { render, fireEvent, waitFor, screen, act } from '@testing-library/react-native';
-import { createNullAuthService, AuthService, AuthResult } from '../../../src/auth/AuthService';
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+  act,
+} from '@testing-library/react-native';
+import {
+  createNullAuthService,
+  AuthService,
+  AuthResult,
+} from '../../../src/auth/AuthService';
 import { LoginScreen } from '../../../src/ui/LoginScreen';
 
 // =============================================================================
@@ -32,11 +42,13 @@ import { LoginScreen } from '../../../src/ui/LoginScreen';
 // =============================================================================
 
 function createSignInProp(authService: AuthService) {
-  return (email: string, password: string) => authService.signIn(email, password);
+  return (email: string, password: string) =>
+    authService.signIn(email, password);
 }
 
 function createSignUpProp(authService: AuthService) {
-  return (email: string, password: string) => authService.signUp(email, password);
+  return (email: string, password: string) =>
+    authService.signUp(email, password);
 }
 
 // Creates a signIn mock that returns a specific error
@@ -64,7 +76,7 @@ function renderLoginScreen(overrides?: {
     <LoginScreen
       signIn={overrides?.signIn ?? createSignInProp(authService)}
       signUp={overrides?.signUp ?? createSignUpProp(authService)}
-    />
+    />,
   );
 }
 
@@ -85,15 +97,23 @@ describe('MS2-1: Wrong password shows actionable error', () => {
     });
 
     // When Carlos enters his email and wrong password
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'carlos.rivera@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'WrongPassword99');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'carlos.rivera@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'WrongPassword99',
+    );
 
     // And Carlos taps "Sign In"
     fireEvent.press(screen.getByText('Sign In'));
 
     // Then Carlos sees "Incorrect password. Please try again."
     await waitFor(() => {
-      expect(screen.getByText('Incorrect password. Please try again.')).toBeTruthy();
+      expect(
+        screen.getByText('Incorrect password. Please try again.'),
+      ).toBeTruthy();
     });
 
     // And Carlos remains on the login screen
@@ -113,17 +133,29 @@ describe('MS2-2: Non-existent account suggests signing up', () => {
   it('displays non-existent account error with sign-up suggestion', async () => {
     // Given no account exists for "new.person@email.com"
     renderLoginScreen({
-      signIn: createFailingSignIn('No account found with this email. Try signing up instead.'),
+      signIn: createFailingSignIn(
+        'No account found with this email. Try signing up instead.',
+      ),
     });
 
     // When the user enters email and password and taps "Sign In"
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'new.person@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'SomePassword1!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'new.person@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'SomePassword1!',
+    );
     fireEvent.press(screen.getByText('Sign In'));
 
     // Then the user sees the suggestion to sign up
     await waitFor(() => {
-      expect(screen.getByText('No account found with this email. Try signing up instead.')).toBeTruthy();
+      expect(
+        screen.getByText(
+          'No account found with this email. Try signing up instead.',
+        ),
+      ).toBeTruthy();
     });
   });
 });
@@ -142,7 +174,10 @@ describe('MS2-3: Password shorter than 8 characters is rejected', () => {
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
 
     // When Tomoko enters a short password
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'tomoko.hayashi@email.com');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'tomoko.hayashi@email.com',
+    );
     fireEvent.changeText(screen.getByPlaceholderText('Password'), 'short');
 
     // And Tomoko taps "Sign Up"
@@ -150,7 +185,9 @@ describe('MS2-3: Password shorter than 8 characters is rejected', () => {
 
     // Then Tomoko sees the minimum length error
     await waitFor(() => {
-      expect(screen.getByText('Password must be at least 8 characters.')).toBeTruthy();
+      expect(
+        screen.getByText('Password must be at least 8 characters.'),
+      ).toBeTruthy();
     });
 
     // And Tomoko remains on the login screen
@@ -170,18 +207,30 @@ describe('MS2-4: Existing email address is rejected on sign-up', () => {
     // Given Maria Santos already has an account
     // And a user is on the login screen in "Sign Up" mode
     renderLoginScreen({
-      signUp: createFailingSignUp('An account with this email already exists. Try signing in instead.'),
+      signUp: createFailingSignUp(
+        'An account with this email already exists. Try signing in instead.',
+      ),
     });
     fireEvent.press(screen.getByText(/Don't have an account\? Sign Up/i));
 
     // When the user tries to sign up with Maria's email
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'maria.santos@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'AnotherPassword1!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'maria.santos@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'AnotherPassword1!',
+    );
     fireEvent.press(screen.getByText('Sign Up'));
 
     // Then the user sees the existing account error
     await waitFor(() => {
-      expect(screen.getByText('An account with this email already exists. Try signing in instead.')).toBeTruthy();
+      expect(
+        screen.getByText(
+          'An account with this email already exists. Try signing in instead.',
+        ),
+      ).toBeTruthy();
     });
   });
 });
@@ -256,12 +305,17 @@ describe('MS2-7: Invalid email format shows validation error', () => {
 
     // When the user enters an invalid email format
     fireEvent.changeText(screen.getByPlaceholderText('Email'), 'not-an-email');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'ValidPassword1!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'ValidPassword1!',
+    );
     fireEvent.press(screen.getByText('Sign In'));
 
     // Then the user sees "Please enter a valid email address."
     await waitFor(() => {
-      expect(screen.getByText('Please enter a valid email address.')).toBeTruthy();
+      expect(
+        screen.getByText('Please enter a valid email address.'),
+      ).toBeTruthy();
     });
 
     // And the auth service was not called
@@ -281,13 +335,22 @@ describe('MS2-8: Sign In button disabled while authentication is in progress', (
     // Given the user is on the login screen in "Sign In" mode
     let resolveSignIn: (value: AuthResult) => void;
     const pendingSignIn = jest.fn().mockImplementation(
-      () => new Promise<AuthResult>((resolve) => { resolveSignIn = resolve; })
+      () =>
+        new Promise<AuthResult>((resolve) => {
+          resolveSignIn = resolve;
+        }),
     );
     renderLoginScreen({ signIn: pendingSignIn });
 
     // When the user submits valid credentials
-    fireEvent.changeText(screen.getByPlaceholderText('Email'), 'maria@email.com');
-    fireEvent.changeText(screen.getByPlaceholderText('Password'), 'SecureGrocery42!');
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Email'),
+      'maria@email.com',
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText('Password'),
+      'SecureGrocery42!',
+    );
     fireEvent.press(screen.getByText('Sign In'));
 
     // Then the "Sign In" button is disabled while authentication is in progress
@@ -298,7 +361,10 @@ describe('MS2-8: Sign In button disabled while authentication is in progress', (
 
     // Complete the auth
     await act(async () => {
-      resolveSignIn!({ success: true, user: { uid: 'user-1', email: 'maria@email.com' } });
+      resolveSignIn!({
+        success: true,
+        user: { uid: 'user-1', email: 'maria@email.com' },
+      });
     });
 
     expect(screen.queryByText(/Signing/i)).toBeNull();

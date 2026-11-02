@@ -29,7 +29,13 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 
-const DEFAULT_AREAS = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+const DEFAULT_AREAS = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
 
 // =============================================================================
 // US-CHA-04: Rename a House Area
@@ -46,12 +52,32 @@ describe('US-CHA-04: Rename a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Canned tomatoes', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned', aisleNumber: 5 } });
-    library.addStaple({ name: 'Rice', houseArea: 'Garage Pantry', storeLocation: { section: 'Grains', aisleNumber: 4 } });
-    library.addStaple({ name: 'Pasta', houseArea: 'Garage Pantry', storeLocation: { section: 'Grains', aisleNumber: 4 } });
-    library.addStaple({ name: 'Beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned', aisleNumber: 5 } });
+    library.addStaple({
+      name: 'Canned tomatoes',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned', aisleNumber: 5 },
+    });
+    library.addStaple({
+      name: 'Rice',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Grains', aisleNumber: 4 },
+    });
+    library.addStaple({
+      name: 'Pasta',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Grains', aisleNumber: 4 },
+    });
+    library.addStaple({
+      name: 'Beans',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned', aisleNumber: 5 },
+    });
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos renames "Garage Pantry" to "Pantry"
     const result = areaManagement.rename('Garage Pantry', 'Pantry');
@@ -63,9 +89,11 @@ describe('US-CHA-04: Rename a House Area', () => {
 
     // And all 4 staples now have area "Pantry"
     const allStaples = library.listAll();
-    const pantryStaples = allStaples.filter(s => s.houseArea === 'Pantry');
+    const pantryStaples = allStaples.filter((s) => s.houseArea === 'Pantry');
     expect(pantryStaples).toHaveLength(4);
-    const garageStaples = allStaples.filter(s => s.houseArea === 'Garage Pantry');
+    const garageStaples = allStaples.filter(
+      (s) => s.houseArea === 'Garage Pantry',
+    );
     expect(garageStaples).toHaveLength(0);
   });
 
@@ -74,24 +102,49 @@ describe('US-CHA-04: Rename a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Cereal', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Breakfast', aisleNumber: 2 } });
-    library.addStaple({ name: 'Pasta', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Grains', aisleNumber: 4 } });
-    library.addStaple({ name: 'Rice', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Grains', aisleNumber: 4 } });
+    library.addStaple({
+      name: 'Cereal',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Breakfast', aisleNumber: 2 },
+    });
+    library.addStaple({
+      name: 'Pasta',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Grains', aisleNumber: 4 },
+    });
+    library.addStaple({
+      name: 'Rice',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Grains', aisleNumber: 4 },
+    });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, DEFAULT_AREAS);
     trip.start(library.listAll());
     // Persist the trip so rename can update items in storage
-    tripStorage.saveTrip({ id: 'test-trip', items: trip.getItems(), status: 'active', createdAt: new Date().toISOString() });
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    tripStorage.saveTrip({
+      id: 'test-trip',
+      items: trip.getItems(),
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    });
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos renames "Kitchen Cabinets" to "Kitchen"
     areaManagement.rename('Kitchen Cabinets', 'Kitchen');
 
     // Then the 3 trip items now show under "Kitchen"
     const loadedTrip = tripStorage.loadTrip();
-    const kitchenItems = loadedTrip?.items.filter(i => i.houseArea === 'Kitchen');
+    const kitchenItems = loadedTrip?.items.filter(
+      (i) => i.houseArea === 'Kitchen',
+    );
     expect(kitchenItems).toHaveLength(3);
-    const cabinetItems = loadedTrip?.items.filter(i => i.houseArea === 'Kitchen Cabinets');
+    const cabinetItems = loadedTrip?.items.filter(
+      (i) => i.houseArea === 'Kitchen Cabinets',
+    );
     expect(cabinetItems).toHaveLength(0);
   });
 
@@ -100,7 +153,11 @@ describe('US-CHA-04: Rename a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos tries to rename "Fridge" to "Bathroom"
     const result = areaManagement.rename('Fridge', 'Bathroom');
@@ -121,7 +178,11 @@ describe('US-CHA-04: Rename a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos tries to rename "Fridge" to "bathroom"
     const result = areaManagement.rename('Fridge', 'bathroom');
@@ -149,7 +210,11 @@ describe('US-CHA-05: Delete a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Ana Lucia deletes "Garage Pantry"
     const result = areaManagement.delete('Garage Pantry');
@@ -166,10 +231,22 @@ describe('US-CHA-05: Delete a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Frozen peas', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    library.addStaple({ name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    library.addStaple({
+      name: 'Frozen peas',
+      houseArea: 'Freezer',
+      storeLocation: { section: 'Frozen', aisleNumber: null },
+    });
+    library.addStaple({
+      name: 'Ice cream',
+      houseArea: 'Freezer',
+      storeLocation: { section: 'Frozen', aisleNumber: null },
+    });
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos deletes "Freezer" and reassigns to "Fridge"
     const result = areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
@@ -180,8 +257,8 @@ describe('US-CHA-05: Delete a House Area', () => {
 
     // And both staples now have area "Fridge"
     const allStaples = library.listAll();
-    expect(allStaples.filter(s => s.houseArea === 'Fridge')).toHaveLength(2);
-    expect(allStaples.filter(s => s.houseArea === 'Freezer')).toHaveLength(0);
+    expect(allStaples.filter((s) => s.houseArea === 'Fridge')).toHaveLength(2);
+    expect(allStaples.filter((s) => s.houseArea === 'Freezer')).toHaveLength(0);
   });
 
   it('delete reassigns trip items too', () => {
@@ -189,23 +266,44 @@ describe('US-CHA-05: Delete a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Frozen peas', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
-    library.addStaple({ name: 'Ice cream', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    library.addStaple({
+      name: 'Frozen peas',
+      houseArea: 'Freezer',
+      storeLocation: { section: 'Frozen', aisleNumber: null },
+    });
+    library.addStaple({
+      name: 'Ice cream',
+      houseArea: 'Freezer',
+      storeLocation: { section: 'Frozen', aisleNumber: null },
+    });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, DEFAULT_AREAS);
     trip.start(library.listAll());
     // Persist the trip so delete can update items in storage
-    tripStorage.saveTrip({ id: 'test-trip', items: trip.getItems(), status: 'active', createdAt: new Date().toISOString() });
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    tripStorage.saveTrip({
+      id: 'test-trip',
+      items: trip.getItems(),
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    });
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos deletes "Freezer" and reassigns to "Fridge"
     areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
 
     // Then trip items and staples all belong to "Fridge"
     const loadedTrip = tripStorage.loadTrip();
-    const freezerItems = loadedTrip?.items.filter(i => i.houseArea === 'Freezer');
+    const freezerItems = loadedTrip?.items.filter(
+      (i) => i.houseArea === 'Freezer',
+    );
     expect(freezerItems).toHaveLength(0);
-    const fridgeItems = loadedTrip?.items.filter(i => i.houseArea === 'Fridge');
+    const fridgeItems = loadedTrip?.items.filter(
+      (i) => i.houseArea === 'Fridge',
+    );
     expect(fridgeItems).toHaveLength(2);
   });
 
@@ -214,7 +312,11 @@ describe('US-CHA-05: Delete a House Area', () => {
     const areaStorage = createNullAreaStorage(['Kitchen']);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Ana Lucia tries to delete "Kitchen"
     const result = areaManagement.delete('Kitchen');
@@ -232,10 +334,22 @@ describe('US-CHA-05: Delete a House Area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
-    library.addStaple({ name: 'Whole milk', houseArea: 'Freezer', storeLocation: { section: 'Frozen', aisleNumber: null } });
+    library.addStaple({
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
+    library.addStaple({
+      name: 'Whole milk',
+      houseArea: 'Freezer',
+      storeLocation: { section: 'Frozen', aisleNumber: null },
+    });
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos tries to delete "Freezer" and reassign to "Fridge"
     const result = areaManagement.delete('Freezer', { reassignTo: 'Fridge' });
@@ -244,7 +358,7 @@ describe('US-CHA-05: Delete a House Area', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.conflicts).toContainEqual(
-        expect.objectContaining({ name: 'Whole milk', existsIn: 'Fridge' })
+        expect.objectContaining({ name: 'Whole milk', existsIn: 'Fridge' }),
       );
     }
   });
@@ -266,10 +380,21 @@ describe('US-CHA-06: Reorder Areas', () => {
     const areaStorage = createNullAreaStorage(areas);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos moves "Laundry Room" from position 6 to position 2
-    const newOrder = ['Bathroom', 'Laundry Room', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+    const newOrder = [
+      'Bathroom',
+      'Laundry Room',
+      'Garage Pantry',
+      'Kitchen Cabinets',
+      'Fridge',
+      'Freezer',
+    ];
     areaManagement.reorder(newOrder);
 
     // Then the area order matches the new arrangement
@@ -278,12 +403,26 @@ describe('US-CHA-06: Reorder Areas', () => {
 
   it('reordered areas produce matching groupByArea order', () => {
     // Given Carlos has reordered areas
-    const newOrder = ['Bathroom', 'Laundry Room', 'Pantry', 'Kitchen Cabinets', 'Fridge'];
+    const newOrder = [
+      'Bathroom',
+      'Laundry Room',
+      'Pantry',
+      'Kitchen Cabinets',
+      'Fridge',
+    ];
     const areaStorage = createNullAreaStorage(newOrder);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    library.addStaple({ name: 'Soap', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } });
-    library.addStaple({ name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } });
+    library.addStaple({
+      name: 'Soap',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    });
+    library.addStaple({
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, newOrder);
     trip.start(library.listAll());
@@ -292,16 +431,26 @@ describe('US-CHA-06: Reorder Areas', () => {
     const grouped = groupByArea(trip.getItems(), newOrder);
 
     // Then area sections appear in the reordered sequence
-    expect(grouped.map(g => g.area)).toEqual(newOrder);
+    expect(grouped.map((g) => g.area)).toEqual(newOrder);
   });
 
   it('reorder persists after simulated restart', () => {
     // Given Carlos has reordered his areas
-    const newOrder = ['Fridge', 'Kitchen Cabinets', 'Bathroom', 'Garage Pantry', 'Freezer'];
+    const newOrder = [
+      'Fridge',
+      'Kitchen Cabinets',
+      'Bathroom',
+      'Garage Pantry',
+      'Freezer',
+    ];
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
     areaManagement.reorder(newOrder);
 
     // When Carlos reopens the app (simulated by re-reading storage)

@@ -9,7 +9,10 @@
  * all Firestore listeners and prevent stale callbacks from corrupting state.
  */
 
-import { initializeApp, AdapterFactories } from '../../../src/hooks/useAppInitialization';
+import {
+  initializeApp,
+  AdapterFactories,
+} from '../../../src/hooks/useAppInitialization';
 import { AuthUser } from '../../../src/auth/AuthService';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
@@ -27,7 +30,9 @@ const createTrackingFactories = () => {
       return {
         ...storage,
         initialize: () => Promise.resolve(),
-        unsubscribe: () => { unsubscribeCalls.push('staples'); },
+        unsubscribe: () => {
+          unsubscribeCalls.push('staples');
+        },
       };
     },
     createAreaStorage: (_uid: string) => {
@@ -35,7 +40,9 @@ const createTrackingFactories = () => {
       return {
         ...storage,
         initialize: () => Promise.resolve(),
-        unsubscribe: () => { unsubscribeCalls.push('areas'); },
+        unsubscribe: () => {
+          unsubscribeCalls.push('areas');
+        },
       };
     },
     createSectionOrderStorage: (_uid: string) => {
@@ -43,7 +50,9 @@ const createTrackingFactories = () => {
       return {
         ...storage,
         initialize: () => Promise.resolve(),
-        unsubscribe: () => { unsubscribeCalls.push('sectionOrder'); },
+        unsubscribe: () => {
+          unsubscribeCalls.push('sectionOrder');
+        },
       };
     },
     createTripStorage: (_uid: string) => {
@@ -51,7 +60,9 @@ const createTrackingFactories = () => {
       return {
         ...storage,
         initialize: () => Promise.resolve(),
-        unsubscribe: () => { unsubscribeCalls.push('trip'); },
+        unsubscribe: () => {
+          unsubscribeCalls.push('trip');
+        },
       };
     },
     checkMigrationNeeded: () => false,
@@ -99,7 +110,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
     // Then all 4 listeners are unsubscribed
     expect(unsubscribeCalls).toHaveLength(4);
     expect(unsubscribeCalls).toEqual(
-      expect.arrayContaining(['staples', 'areas', 'sectionOrder', 'trip'])
+      expect.arrayContaining(['staples', 'areas', 'sectionOrder', 'trip']),
     );
   });
 
@@ -160,7 +171,9 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
           initialize: () => Promise.resolve(),
           unsubscribe: () => {},
           // The onChange is passed to the adapter; capture it so we can fire it later
-          onChange: (cb: () => void) => { capturedOnChange = cb; },
+          onChange: (cb: () => void) => {
+            capturedOnChange = cb;
+          },
         };
       },
       createAreaStorage: (_uid: string) => ({

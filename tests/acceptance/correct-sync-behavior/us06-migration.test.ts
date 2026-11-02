@@ -41,7 +41,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     // Then all 15 items with their checkoff states are written to cloud storage
     const migratedTrip = cloudTripStorage.loadTrip();
     expect(migratedTrip!.items).toHaveLength(15);
-    const checkedCount = migratedTrip!.items.filter(i => i.checked).length;
+    const checkedCount = migratedTrip!.items.filter((i) => i.checked).length;
     expect(checkedCount).toBe(7);
   });
 
@@ -104,8 +104,16 @@ describe('US-06: Migrate local trip to cloud storage', () => {
 
     // And the app initializes from staple library
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(stapleStorage);
     const trip = createTrip(cloudTripStorage);
@@ -113,8 +121,8 @@ describe('US-06: Migrate local trip to cloud storage', () => {
 
     // Then a new trip is created from the staple library
     expect(trip.getItems()).toHaveLength(2);
-    expect(trip.getItems().map(i => i.name)).toEqual(
-      expect.arrayContaining(['Milk', 'Eggs'])
+    expect(trip.getItems().map((i) => i.name)).toEqual(
+      expect.arrayContaining(['Milk', 'Eggs']),
     );
   });
 
@@ -127,16 +135,28 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     const localTripStorage = createNullTripStorage();
     const carryoverItems: TripItem[] = [
       {
-        id: 'carry-1', name: 'Olive Oil', houseArea: 'Kitchen Cabinets',
-        storeLocation: { section: 'Oils', aisleNumber: 7 }, itemType: 'staple',
-        stapleId: 'staple-olive-oil', source: 'carryover', needed: true,
-        checked: false, checkedAt: null,
+        id: 'carry-1',
+        name: 'Olive Oil',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Oils', aisleNumber: 7 },
+        itemType: 'staple',
+        stapleId: 'staple-olive-oil',
+        source: 'carryover',
+        needed: true,
+        checked: false,
+        checkedAt: null,
       },
       {
-        id: 'carry-2', name: 'Sponges', houseArea: 'Kitchen Cabinets',
-        storeLocation: { section: 'Cleaning', aisleNumber: 9 }, itemType: 'staple',
-        stapleId: 'staple-sponges', source: 'carryover', needed: true,
-        checked: false, checkedAt: null,
+        id: 'carry-2',
+        name: 'Sponges',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Cleaning', aisleNumber: 9 },
+        itemType: 'staple',
+        stapleId: 'staple-sponges',
+        source: 'carryover',
+        needed: true,
+        checked: false,
+        checkedAt: null,
       },
     ];
     localTripStorage.saveCarryover(carryoverItems);
@@ -151,8 +171,8 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     // Then "Olive Oil" and "Sponges" are written as carryover to cloud storage
     const migratedCarryover = cloudTripStorage.loadCarryover();
     expect(migratedCarryover).toHaveLength(2);
-    expect(migratedCarryover.map(i => i.name)).toEqual(
-      expect.arrayContaining(['Olive Oil', 'Sponges'])
+    expect(migratedCarryover.map((i) => i.name)).toEqual(
+      expect.arrayContaining(['Olive Oil', 'Sponges']),
     );
   });
 });

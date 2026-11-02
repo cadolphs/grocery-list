@@ -44,14 +44,21 @@ function createTestServices(areas: string[], staples: StapleItem[]) {
   const areaStorage = createNullAreaStorage(areas);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripService = createTrip(tripStorage);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   tripService.start(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
 
 describe('View switch preserves HomeView (regression)', () => {
   it('toggling Home -> Store -> Home keeps the area section visible', () => {
-    const staples = [makeStaple('Milk', 'Fridge'), makeStaple('Bread', 'Pantry')];
+    const staples = [
+      makeStaple('Milk', 'Fridge'),
+      makeStaple('Bread', 'Pantry'),
+    ];
     const { stapleLibrary, tripService, areaManagement } = createTestServices(
       ['Fridge', 'Pantry'],
       staples,
@@ -144,10 +151,14 @@ describe('View switch preserves HomeView (regression)', () => {
     // StoreView is hidden (display:'none') while Home is active but still
     // mounted; includeHiddenElements keeps it discoverable.
     expect(
-      screen.getByTestId('home-view-container', { includeHiddenElements: true }),
+      screen.getByTestId('home-view-container', {
+        includeHiddenElements: true,
+      }),
     ).toBeTruthy();
     expect(
-      screen.getByTestId('store-view-container', { includeHiddenElements: true }),
+      screen.getByTestId('store-view-container', {
+        includeHiddenElements: true,
+      }),
     ).toBeTruthy();
   });
 });

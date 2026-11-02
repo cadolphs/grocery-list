@@ -3,8 +3,19 @@
 // Optionally accepts onSearch for type-ahead suggestions from staple library
 
 import React, { useState } from 'react';
-import { View, TextInput, Pressable, Text, FlatList, StyleSheet } from 'react-native';
-import { AddTripItemRequest, AddTripItemResult, StapleItem } from '../domain/types';
+import {
+  View,
+  TextInput,
+  Pressable,
+  Text,
+  FlatList,
+  StyleSheet,
+} from 'react-native';
+import {
+  AddTripItemRequest,
+  AddTripItemResult,
+  StapleItem,
+} from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
 
@@ -15,7 +26,10 @@ const typeLabel = (type: StapleItem['type']): string =>
   type === 'one-off' ? ' (one-off)' : '';
 
 export const formatSuggestion = (staple: StapleItem): string => {
-  const location = formatLocation(staple.storeLocation.section, staple.storeLocation.aisleNumber);
+  const location = formatLocation(
+    staple.storeLocation.section,
+    staple.storeLocation.aisleNumber,
+  );
   return `${staple.name} - ${location}${typeLabel(staple.type)}`;
 };
 
@@ -26,7 +40,12 @@ type QuickAddProps = {
   readonly onOpenMetadataSheet?: (itemName: string) => void;
 };
 
-export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetadataSheet }: QuickAddProps): React.JSX.Element => {
+export const QuickAdd = ({
+  onAddItem,
+  onSearch,
+  onSelectSuggestion,
+  onOpenMetadataSheet,
+}: QuickAddProps): React.JSX.Element => {
   const [inputText, setInputText] = useState('');
   const [suggestions, setSuggestions] = useState<StapleItem[]>([]);
   const trimmedInput = inputText.trim();
@@ -79,7 +98,11 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
           blurOnSubmit={false}
           autoFocus={isWeb}
         />
-        <Pressable style={styles.addButton} onPress={handleAdd} disabled={!onOpenMetadataSheet}>
+        <Pressable
+          style={styles.addButton}
+          onPress={handleAdd}
+          disabled={!onOpenMetadataSheet}
+        >
           <Text style={styles.addButtonText}>Add</Text>
         </Pressable>
       </View>
@@ -94,7 +117,9 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
               ]}
               onPress={() => handleSelectSuggestion(staple)}
             >
-              <Text style={styles.suggestionText}>{formatSuggestion(staple)}</Text>
+              <Text style={styles.suggestionText}>
+                {formatSuggestion(staple)}
+              </Text>
             </Pressable>
           ))}
           {trimmedInput.length > 0 && (
@@ -105,7 +130,9 @@ export const QuickAdd = ({ onAddItem, onSearch, onSelectSuggestion, onOpenMetada
               ]}
               onPress={() => onOpenMetadataSheet?.(trimmedInput)}
             >
-              <Text style={styles.addNewItemText}>Add &apos;{trimmedInput}&apos; as new item...</Text>
+              <Text style={styles.addNewItemText}>
+                Add &apos;{trimmedInput}&apos; as new item...
+              </Text>
             </Pressable>
           )}
         </View>

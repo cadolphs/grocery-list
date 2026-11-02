@@ -42,13 +42,17 @@ describe('edit mode shows delete button that calls onDeleteStaple', () => {
         itemName="Butter"
         mode="edit"
         editStapleId={STAPLE_ID}
-        initialValues={{ houseArea: 'Fridge', section: 'Dairy', aisleNumber: 3 }}
+        initialValues={{
+          houseArea: 'Fridge',
+          section: 'Dairy',
+          aisleNumber: 3,
+        }}
         areas={AREAS}
         onDismiss={handlers.onDismiss}
         onSubmitStaple={handlers.onSubmitStaple}
         onSubmitTripItem={handlers.onSubmitTripItem}
         onDeleteStaple={handlers.onDeleteStaple}
-      />
+      />,
     );
 
     expect(screen.getByText('Delete Staple')).toBeTruthy();
@@ -63,13 +67,17 @@ describe('edit mode shows delete button that calls onDeleteStaple', () => {
         itemName="Butter"
         mode="edit"
         editStapleId={STAPLE_ID}
-        initialValues={{ houseArea: 'Fridge', section: 'Dairy', aisleNumber: 3 }}
+        initialValues={{
+          houseArea: 'Fridge',
+          section: 'Dairy',
+          aisleNumber: 3,
+        }}
         areas={AREAS}
         onDismiss={handlers.onDismiss}
         onSubmitStaple={handlers.onSubmitStaple}
         onSubmitTripItem={handlers.onSubmitTripItem}
         onDeleteStaple={handlers.onDeleteStaple}
-      />
+      />,
     );
 
     fireEvent.press(screen.getByText('Delete Staple'));
@@ -91,7 +99,7 @@ describe('edit mode shows delete button that calls onDeleteStaple', () => {
         onSubmitStaple={handlers.onSubmitStaple}
         onSubmitTripItem={handlers.onSubmitTripItem}
         onDeleteStaple={handlers.onDeleteStaple}
-      />
+      />,
     );
 
     expect(screen.queryByText('Delete Staple')).toBeNull();
@@ -104,12 +112,16 @@ describe('edit mode shows delete button that calls onDeleteStaple', () => {
         itemName="Butter"
         mode="edit"
         editStapleId={STAPLE_ID}
-        initialValues={{ houseArea: 'Fridge', section: 'Dairy', aisleNumber: 3 }}
+        initialValues={{
+          houseArea: 'Fridge',
+          section: 'Dairy',
+          aisleNumber: 3,
+        }}
         areas={AREAS}
         onDismiss={jest.fn()}
         onSubmitStaple={jest.fn()}
         onSubmitTripItem={jest.fn()}
-      />
+      />,
     );
 
     expect(screen.queryByText('Delete Staple')).toBeNull();
@@ -120,14 +132,26 @@ const WIRING_AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 function createWiringTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    },
   ]);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(WIRING_AREAS);
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripService = createTrip(tripStorage, WIRING_AREAS);
-  const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+  const areaManagement = createAreaManagement(
+    areaStorage,
+    stapleStorage,
+    tripStorage,
+  );
   tripService.start(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
@@ -143,7 +167,7 @@ describe('deleting staple removes from library and trip', () => {
         areaManagement={services.areaManagement}
       >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Both items should be visible initially

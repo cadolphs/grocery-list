@@ -39,9 +39,13 @@ describe('MS3-1: No email-link UI elements on login screen', () => {
     const authService = createNullAuthService();
     render(
       <LoginScreen
-        signIn={(email: string, password: string) => authService.signIn(email, password)}
-        signUp={(email: string, password: string) => authService.signUp(email, password)}
-      />
+        signIn={(email: string, password: string) =>
+          authService.signIn(email, password)
+        }
+        signUp={(email: string, password: string) =>
+          authService.signUp(email, password)
+        }
+      />,
     );
 
     // Then the user does not see a "Send Sign-In Link" button

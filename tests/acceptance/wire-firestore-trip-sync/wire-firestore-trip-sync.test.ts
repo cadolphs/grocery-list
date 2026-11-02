@@ -15,11 +15,17 @@
  * - US-03: TripService notifies subscribers after remote state load
  */
 
-import { initializeApp, AdapterFactories } from '../../../src/hooks/useAppInitialization';
+import {
+  initializeApp,
+  AdapterFactories,
+} from '../../../src/hooks/useAppInitialization';
 import { createTrip } from '../../../src/domain/trip';
 import { AuthUser } from '../../../src/auth/AuthService';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
-import { createNullTripStorage, NullTripStorageWithSync } from '../../../src/adapters/null/null-trip-storage';
+import {
+  createNullTripStorage,
+  NullTripStorageWithSync,
+} from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { Trip, TripItem } from '../../../src/domain/types';
@@ -85,8 +91,12 @@ const createTestFactories = (options?: {
       initialize: () => Promise.resolve(),
       unsubscribe: () => {},
     }),
-    createTripStorage: (_uid: string, tripOptions?: { onChange?: () => void }) => {
-      const storage = options?.tripStorage ?? createNullTripStorage(tripOptions);
+    createTripStorage: (
+      _uid: string,
+      tripOptions?: { onChange?: () => void },
+    ) => {
+      const storage =
+        options?.tripStorage ?? createNullTripStorage(tripOptions);
       // Wire onChange from tripOptions into pre-created storage
       if (options?.tripStorage && tripOptions?.onChange) {
         storage.setOnChange(tripOptions.onChange);
@@ -132,7 +142,10 @@ describe('US-01: AdapterFactories.createTripStorage accepts uid', () => {
     let receivedUid: string | undefined;
     const { factories } = createTestFactories();
     const originalCreateTripStorage = factories.createTripStorage;
-    (factories as any).createTripStorage = (uid: string, opts?: { onChange?: () => void }) => {
+    (factories as any).createTripStorage = (
+      uid: string,
+      opts?: { onChange?: () => void },
+    ) => {
       receivedUid = uid;
       return originalCreateTripStorage(uid, opts);
     };
@@ -170,10 +183,10 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     // (Simulated: remote writes updated trip to storage, then onChange fires)
     const currentTrip = tripStorage.loadTrip();
     if (currentTrip) {
-      const updatedItems = currentTrip.items.map(item =>
+      const updatedItems = currentTrip.items.map((item) =>
         item.name === 'Milk'
           ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
-          : item
+          : item,
       );
       tripStorage.simulateRemoteChange((s) => {
         s.saveTrip({ ...currentTrip, items: updatedItems });
@@ -181,7 +194,7 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     }
 
     // Then the local trip service shows "Milk" as checked
-    const milkItem = tripService.getItems().find(i => i.name === 'Milk');
+    const milkItem = tripService.getItems().find((i) => i.name === 'Milk');
     expect(milkItem?.checked).toBe(true);
     expect(milkItem?.checkedAt).toBe('2026-04-13T10:00:00Z');
   });
@@ -221,7 +234,7 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     // Then "Birthday Candles" appears in the local trip
     const items = tripService.getItems();
     expect(items.length).toBe(itemCountBefore + 1);
-    expect(items.map(i => i.name)).toContain('Birthday Candles');
+    expect(items.map((i) => i.name)).toContain('Birthday Candles');
   });
 });
 
@@ -235,8 +248,16 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     // Persist initial state so loadFromStorage has something to load
@@ -245,14 +266,16 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     tripService.uncheckItem('Milk');
 
     let notifyCount = 0;
-    tripService.subscribe(() => { notifyCount++; });
+    tripService.subscribe(() => {
+      notifyCount++;
+    });
 
     // When remote state is written to storage and loadFromStorage is called
     const currentTrip = tripStorage.loadTrip()!;
-    const updatedItems = currentTrip.items.map(item =>
+    const updatedItems = currentTrip.items.map((item) =>
       item.name === 'Milk'
         ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
-        : item
+        : item,
     );
     tripStorage.saveTrip({ ...currentTrip, items: updatedItems });
     tripService.loadFromStorage();
@@ -261,7 +284,7 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     expect(notifyCount).toBeGreaterThanOrEqual(1);
 
     // And the trip state reflects the remote change
-    const milk = tripService.getItems().find(i => i.name === 'Milk');
+    const milk = tripService.getItems().find((i) => i.name === 'Milk');
     expect(milk?.checked).toBe(true);
   });
 
@@ -277,15 +300,17 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     const tripService = result.services!.tripService;
 
     let renderCount = 0;
-    tripService.subscribe(() => { renderCount++; });
+    tripService.subscribe(() => {
+      renderCount++;
+    });
 
     // When a remote trip change arrives via onChange
     const currentTrip = tripStorage.loadTrip();
     if (currentTrip) {
-      const updatedItems = currentTrip.items.map(item =>
+      const updatedItems = currentTrip.items.map((item) =>
         item.name === 'Milk'
           ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
-          : item
+          : item,
       );
       tripStorage.simulateRemoteChange((s) => {
         s.saveTrip({ ...currentTrip, items: updatedItems });

@@ -15,7 +15,7 @@ describe('LoginScreen', () => {
     const signIn = createMockSignIn();
     const signUp = createMockSignUp();
     const { getByPlaceholderText, getByText } = render(
-      <LoginScreen signIn={signIn} signUp={signUp} />
+      <LoginScreen signIn={signIn} signUp={signUp} />,
     );
 
     expect(getByPlaceholderText('Email')).toBeTruthy();
@@ -27,7 +27,7 @@ describe('LoginScreen', () => {
     const signIn = createMockSignIn();
     const signUp = createMockSignUp();
     const { getByPlaceholderText, getByText } = render(
-      <LoginScreen signIn={signIn} signUp={signUp} />
+      <LoginScreen signIn={signIn} signUp={signUp} />,
     );
 
     fireEvent.changeText(getByPlaceholderText('Email'), 'user@example.com');
@@ -46,7 +46,7 @@ describe('LoginScreen', () => {
     });
     const signUp = createMockSignUp();
     const { getByPlaceholderText, getByText } = render(
-      <LoginScreen signIn={signIn} signUp={signUp} />
+      <LoginScreen signIn={signIn} signUp={signUp} />,
     );
 
     fireEvent.changeText(getByPlaceholderText('Email'), 'user@example.com');
@@ -62,7 +62,7 @@ describe('LoginScreen', () => {
     const signIn = createMockSignIn();
     const signUp = createMockSignUp();
     const { getByText } = render(
-      <LoginScreen signIn={signIn} signUp={signUp} />
+      <LoginScreen signIn={signIn} signUp={signUp} />,
     );
 
     fireEvent.press(getByText('Sign In'));
@@ -76,11 +76,14 @@ describe('LoginScreen', () => {
   test('disables button and shows submitting state while in progress', async () => {
     let resolvePromise: (value: AuthResult) => void;
     const signIn = jest.fn().mockImplementation(
-      () => new Promise<AuthResult>((resolve) => { resolvePromise = resolve; })
+      () =>
+        new Promise<AuthResult>((resolve) => {
+          resolvePromise = resolve;
+        }),
     );
     const signUp = createMockSignUp();
     const { getByPlaceholderText, getByText } = render(
-      <LoginScreen signIn={signIn} signUp={signUp} />
+      <LoginScreen signIn={signIn} signUp={signUp} />,
     );
 
     fireEvent.changeText(getByPlaceholderText('Email'), 'user@example.com');

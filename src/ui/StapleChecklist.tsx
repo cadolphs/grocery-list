@@ -13,7 +13,9 @@ export const filterStaples = (
 ): readonly StapleItem[] => {
   if (query === '') return staples;
   const lowerQuery = query.toLowerCase();
-  return staples.filter((staple) => staple.name.toLowerCase().includes(lowerQuery));
+  return staples.filter((staple) =>
+    staple.name.toLowerCase().includes(lowerQuery),
+  );
 };
 
 type StapleChecklistProps = {
@@ -24,7 +26,9 @@ type StapleChecklistProps = {
   readonly onLongPress?: (name: string, area: string) => void;
 };
 
-const sortAlphabetically = (staples: readonly StapleItem[]): readonly StapleItem[] =>
+const sortAlphabetically = (
+  staples: readonly StapleItem[],
+): readonly StapleItem[] =>
   [...staples].sort((a, b) => a.name.localeCompare(b.name));
 
 type StapleRowProps = {
@@ -34,7 +38,12 @@ type StapleRowProps = {
   readonly onLongPress?: () => void;
 };
 
-const StapleRow = ({ staple, isChecked, onToggle, onLongPress }: StapleRowProps): React.JSX.Element => {
+const StapleRow = ({
+  staple,
+  isChecked,
+  onToggle,
+  onLongPress,
+}: StapleRowProps): React.JSX.Element => {
   const isWeb = useIsWeb();
   const showEditButton = isWeb && !!onLongPress;
   return (
@@ -46,7 +55,12 @@ const StapleRow = ({ staple, isChecked, onToggle, onLongPress }: StapleRowProps)
         onLongPress={onLongPress}
       >
         <View style={styles.textContainer}>
-          <Text style={[styles.stapleName, isChecked ? styles.checkedName : styles.uncheckedName]}>
+          <Text
+            style={[
+              styles.stapleName,
+              isChecked ? styles.checkedName : styles.uncheckedName,
+            ]}
+          >
             {staple.name}
           </Text>
           <Text style={styles.areaLabel}>{staple.houseArea}</Text>
@@ -100,13 +114,19 @@ export const StapleChecklist = ({
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <Pressable testID="search-clear-button" onPress={handleClear} style={styles.clearButton}>
+          <Pressable
+            testID="search-clear-button"
+            onPress={handleClear}
+            style={styles.clearButton}
+          >
             <Text style={styles.clearButtonText}>X</Text>
           </Pressable>
         )}
       </View>
       {visibleStaples.length === 0 && searchQuery.length > 0 && (
-        <Text style={styles.emptyStateMessage}>No staples match &apos;{searchQuery}&apos;</Text>
+        <Text style={styles.emptyStateMessage}>
+          No staples match &apos;{searchQuery}&apos;
+        </Text>
       )}
       {visibleStaples.map((item) => (
         <StapleRow
@@ -114,7 +134,11 @@ export const StapleChecklist = ({
           staple={item}
           isChecked={tripItemNames.has(item.name)}
           onToggle={() => handleToggle(item)}
-          onLongPress={onLongPress ? () => onLongPress(item.name, item.houseArea) : undefined}
+          onLongPress={
+            onLongPress
+              ? () => onLongPress(item.name, item.houseArea)
+              : undefined
+          }
         />
       ))}
     </View>

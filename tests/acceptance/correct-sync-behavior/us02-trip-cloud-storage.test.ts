@@ -20,9 +20,21 @@ describe('US-02: Firestore trip storage adapter', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: null },
+      },
     ]);
 
     // When Clemens checks off "Milk"
@@ -30,7 +42,7 @@ describe('US-02: Firestore trip storage adapter', () => {
 
     // Then the trip in cloud storage contains "Milk" as checked
     const savedTrip = tripStorage.loadTrip();
-    const milkInStorage = savedTrip!.items.find(i => i.name === 'Milk');
+    const milkInStorage = savedTrip!.items.find((i) => i.name === 'Milk');
     expect(milkInStorage?.checked).toBe(true);
 
     // And the checkoff timestamp is recorded
@@ -46,9 +58,21 @@ describe('US-02: Firestore trip storage adapter', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Olive Oil', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Oils', aisleNumber: 7 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Olive Oil',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Oils', aisleNumber: 7 },
+      },
     ]);
 
     // And "Milk" and "Eggs" are checked off
@@ -77,14 +101,46 @@ describe('US-02: Firestore trip storage adapter', () => {
     const tripStorage = createNullTripStorage();
     const setupTrip = createTrip(tripStorage);
     const staples = [
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: null } },
-      { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-      { name: 'Toilet Paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-      { name: 'Canned Beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
-      { name: 'Olive Oil', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Oils', aisleNumber: 7 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: null },
+      },
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
+      {
+        name: 'Toilet Paper',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
+      },
+      {
+        name: 'Canned Beans',
+        houseArea: 'Garage Pantry',
+        storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+      },
+      {
+        name: 'Olive Oil',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Oils', aisleNumber: 7 },
+      },
     ];
     setupTrip.start(staples);
     setupTrip.checkOff('Milk');
@@ -99,9 +155,9 @@ describe('US-02: Firestore trip storage adapter', () => {
     expect(loadedTrip.getItems()).toHaveLength(8);
 
     // And the 3 checked items retain their checked state and timestamps
-    const checkedItems = loadedTrip.getItems().filter(i => i.checked);
+    const checkedItems = loadedTrip.getItems().filter((i) => i.checked);
     expect(checkedItems).toHaveLength(3);
-    expect(checkedItems.every(i => i.checkedAt !== null)).toBe(true);
+    expect(checkedItems.every((i) => i.checkedAt !== null)).toBe(true);
   });
 
   // =============================================================================
@@ -115,7 +171,11 @@ describe('US-02: Firestore trip storage adapter', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.start([
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
 
     // When Clemens checks off "Eggs"
@@ -123,7 +183,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     trip.checkOff('Eggs');
 
     // Then "Eggs" appears checked in the local view immediately
-    const eggs = trip.getItems().find(i => i.name === 'Eggs');
+    const eggs = trip.getItems().find((i) => i.name === 'Eggs');
     expect(eggs?.checked).toBe(true);
 
     // And the app does not show an error or freeze

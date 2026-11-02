@@ -40,7 +40,10 @@ import { AddStapleRequest } from '../domain/types';
 // --- Test infrastructure: initializable storage wrappers (matching the
 // production InitializableStorage<T> shape used by initializeApp). ---
 
-type Initializable<T> = T & { initialize: () => Promise<void>; unsubscribe?: () => void };
+type Initializable<T> = T & {
+  initialize: () => Promise<void>;
+  unsubscribe?: () => void;
+};
 
 const wrapStapleStorage = (
   initial: AddStapleRequest[],
@@ -95,7 +98,12 @@ const initServicesWith = async (
   const areaStorage = wrapAreaStorage(initialAreas);
   const tripStorage = wrapTripStorage();
   const sectionOrderStorage = wrapSectionOrderStorage();
-  const factories = buildFactories(stapleStorage, areaStorage, tripStorage, sectionOrderStorage);
+  const factories = buildFactories(
+    stapleStorage,
+    areaStorage,
+    tripStorage,
+    sectionOrderStorage,
+  );
   const result = await initializeApp({ uid: 'test', email: null }, factories);
   if (!result.isReady || result.services === null) {
     throw new Error(`initializeApp failed: ${result.error ?? 'unknown'}`);
@@ -124,7 +132,11 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     // current trip via initializeFromStorage.
     const services = await initServicesWith(
       [
-        { name: 'Milk', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+        {
+          name: 'Milk',
+          houseArea: 'Kitchen Cabinets',
+          storeLocation: { section: 'Dairy', aisleNumber: 2 },
+        },
       ],
       ['Kitchen Cabinets'],
     );
@@ -134,7 +146,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     expect(tree.queryAllByText('Milk').length).toBeGreaterThan(0);
 
     // Find the Milk staple's id (the public domain facade exposes this).
-    const milk = services.stapleLibrary.listAll().find((s) => s.name === 'Milk');
+    const milk = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Milk');
     if (!milk) throw new Error('Milk staple seed missing');
 
     // WHEN the user invokes the metadata-bottom-sheet delete flow for that
@@ -150,7 +164,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     expect(tree.queryAllByText('Milk').length).toBe(0);
 
     // AND the trip itself (public domain facade) no longer contains Milk.
-    expect(services.tripService.getItems().some((i) => i.name === 'Milk')).toBe(false);
+    expect(services.tripService.getItems().some((i) => i.name === 'Milk')).toBe(
+      false,
+    );
 
     // AND no reset-sweep occurred (the trip was edited in place; reset would
     // have rebuilt items from staples and cleared completedAreas).
@@ -165,7 +181,11 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     // GIVEN HomeView mounted in checklist mode with a staple S.
     const services = await initServicesWith(
       [
-        { name: 'Milk', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Dairy', aisleNumber: 2 } },
+        {
+          name: 'Milk',
+          houseArea: 'Kitchen Cabinets',
+          storeLocation: { section: 'Dairy', aisleNumber: 2 },
+        },
       ],
       ['Kitchen Cabinets'],
     );
@@ -177,7 +197,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     // Sanity: Milk row appears in checklist.
     expect(tree.queryByTestId('staple-row-Milk')).not.toBeNull();
 
-    const milk = services.stapleLibrary.listAll().find((s) => s.name === 'Milk');
+    const milk = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Milk');
     if (!milk) throw new Error('Milk staple seed missing');
 
     // WHEN the staple is removed from the library.
@@ -220,14 +242,18 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     // does not apply) and add a second Bread row carrying the new stapleId.
     // Strip that synthetic row so the test focuses on the fallback-match
     // case: we want exactly one Bread item with stapleId === null.
-    const breadItems = services.tripService.getItems().filter((i) => i.name === 'Bread');
+    const breadItems = services.tripService
+      .getItems()
+      .filter((i) => i.name === 'Bread');
     const stapleIded = breadItems.find((i) => i.stapleId !== null);
     if (stapleIded !== undefined) {
       services.tripService.removeItemByStapleId(stapleIded.stapleId!);
     }
 
     // Sanity: the only remaining Bread row is the free-text one.
-    const remaining = services.tripService.getItems().filter((i) => i.name === 'Bread');
+    const remaining = services.tripService
+      .getItems()
+      .filter((i) => i.name === 'Bread');
     expect(remaining.length).toBe(1);
     expect(remaining[0].stapleId).toBeNull();
 
@@ -235,7 +261,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     expect(tree.queryAllByText('Bread').length).toBeGreaterThan(0);
 
     // WHEN the user deletes the Bread staple.
-    const breadStaple = services.stapleLibrary.listAll().find((s) => s.name === 'Bread');
+    const breadStaple = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Bread');
     if (!breadStaple) throw new Error('Bread staple missing');
     act(() => {
       services.stapleLibrary.remove(breadStaple.id);
@@ -243,7 +271,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
 
     // THEN the trip item is also removed (cross-cutting verification of the
     // name+houseArea fallback delivered in step 01-01).
-    expect(services.tripService.getItems().some((i) => i.name === 'Bread')).toBe(false);
+    expect(
+      services.tripService.getItems().some((i) => i.name === 'Bread'),
+    ).toBe(false);
     expect(tree.queryAllByText('Bread').length).toBe(0);
   });
 });
@@ -350,7 +380,11 @@ describe('StoreView existingSections reactivity (fix-staple-delete-trip-sync 01-
     // dep. We assert via the public list, which is the same source the
     // memo reads on each revision change. The render itself must not have
     // crashed — the mounted tree is still valid.
-    const sections = [...new Set(services.stapleLibrary.listAll().map((s) => s.storeLocation.section))];
+    const sections = [
+      ...new Set(
+        services.stapleLibrary.listAll().map((s) => s.storeLocation.section),
+      ),
+    ];
     expect(sections).toContain('Produce');
     expect(tree).toBeTruthy();
   });

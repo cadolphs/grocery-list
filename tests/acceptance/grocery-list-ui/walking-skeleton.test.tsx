@@ -30,7 +30,12 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // UI ports (to be created during DELIVER wave):
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 
@@ -40,11 +45,31 @@ import { AppShell } from '../../../src/ui/AppShell';
 
 function createTestServices() {
   const stapleStorage = createNullStapleStorage([
-    { name: 'Whole milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Butter', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-    { name: 'Toilet paper', houseArea: 'Bathroom', storeLocation: { section: 'Paper Goods', aisleNumber: 8 } },
-    { name: 'Shampoo', houseArea: 'Bathroom', storeLocation: { section: 'Personal Care', aisleNumber: 7 } },
-    { name: 'Canned beans', houseArea: 'Garage Pantry', storeLocation: { section: 'Canned Goods', aisleNumber: 5 } },
+    {
+      name: 'Whole milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+    },
+    {
+      name: 'Toilet paper',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
+    },
+    {
+      name: 'Shampoo',
+      houseArea: 'Bathroom',
+      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+    },
+    {
+      name: 'Canned beans',
+      houseArea: 'Garage Pantry',
+      storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
+    },
   ]);
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
@@ -70,7 +95,7 @@ describe('UI-WS-1: Home view shows staples organized by house area', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // Then Carlos sees "Fridge" area with "Whole milk" and "Butter"
@@ -103,7 +128,7 @@ describe('UI-WS-2: Quick-add places a new item on the trip', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Carlos types "Greek yogurt" in the quick-add field and taps Add
@@ -134,7 +159,7 @@ describe('UI-WS-3: Toggle switches from home view to store view', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     expect(screen.getByText('Fridge (2)')).toBeTruthy();
 
@@ -163,7 +188,7 @@ describe('UI-WS-4: Store view shows items organized by aisle and section', () =>
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
 
@@ -197,7 +222,7 @@ describe('UI-WS-5: Tapping an item in store view marks it as in the cart', () =>
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
 
@@ -224,7 +249,7 @@ describe('UI-WS-6: Completing the trip shows a summary with carryover', () => {
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
     fireEvent.press(screen.getByText('Whole milk'));

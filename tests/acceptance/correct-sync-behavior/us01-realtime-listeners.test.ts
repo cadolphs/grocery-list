@@ -21,16 +21,24 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
   it('S-01: area rename on one device reflected on the other', () => {
     // Given Clemens has areas including "Pantry"
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
     const areaStorage = createNullAreaStorage(
       ['Bathroom', 'Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'],
-      { onChange }
+      { onChange },
     );
     expect(areaStorage.loadAll()).toContain('Pantry');
 
     // When "Pantry" is renamed to "Garage Pantry" from a remote device
     // (Simulated: adapter receives remote update via simulateRemoteChange)
-    areaStorage.simulateRemoteChange(['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']);
+    areaStorage.simulateRemoteChange([
+      'Bathroom',
+      'Garage Pantry',
+      'Kitchen Cabinets',
+      'Fridge',
+      'Freezer',
+    ]);
 
     // Then the area list contains "Garage Pantry" instead of "Pantry"
     const currentAreas = areaStorage.loadAll();
@@ -48,10 +56,12 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
   it('S-02: section order change propagates to the other device', () => {
     // Given Clemens has section order ["Dairy", "Produce", "Bakery"]
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
     const sectionStorage = createNullSectionOrderStorage(
       ['Dairy', 'Produce', 'Bakery'],
-      { onChange }
+      { onChange },
     );
 
     // When the section order changes to ["Produce", "Dairy", "Bakery"] from a remote device
@@ -71,27 +81,43 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
   it('S-03: staple removed on one device disappears on the other', () => {
     // Given Clemens has staples "Milk", "Eggs", and "Soda"
     const storage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Soda', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Beverages', aisleNumber: 6 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Soda',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Beverages', aisleNumber: 6 },
+      },
     ]);
     const library = createStapleLibrary(storage);
     expect(library.listAll()).toHaveLength(3);
 
     // And a real-time listener is active on the staple library
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     // When "Soda" is removed from the staple library on a remote device
-    const soda = library.listAll().find(s => s.name === 'Soda')!;
+    const soda = library.listAll().find((s) => s.name === 'Soda')!;
     storage.remove(soda.id);
     onChange();
 
     // Then the staple library contains only "Milk" and "Eggs"
     const remaining = library.listAll();
     expect(remaining).toHaveLength(2);
-    expect(remaining.map(s => s.name)).toEqual(expect.arrayContaining(['Milk', 'Eggs']));
-    expect(remaining.map(s => s.name)).not.toContain('Soda');
+    expect(remaining.map((s) => s.name)).toEqual(
+      expect.arrayContaining(['Milk', 'Eggs']),
+    );
+    expect(remaining.map((s) => s.name)).not.toContain('Soda');
 
     // And the onChange callback fires
     expect(onChangeCallCount).toBe(1);
@@ -104,8 +130,16 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
   it('S-04: local write echoed back by listener does not trigger redundant update', () => {
     // Given Clemens has staples "Milk" and "Eggs"
     const storage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Eggs', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Eggs',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const library = createStapleLibrary(storage);
 
@@ -121,7 +155,9 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
     // after a local write followed by an echo, onChange should not fire.
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     // When Clemens adds "Bread" locally
     library.addStaple({
@@ -146,6 +182,6 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
 
     // And the staple library contains "Milk", "Eggs", and "Bread"
     expect(library.listAll()).toHaveLength(3);
-    expect(library.listAll().map(s => s.name)).toContain('Bread');
+    expect(library.listAll().map((s) => s.name)).toContain('Bread');
   });
 });

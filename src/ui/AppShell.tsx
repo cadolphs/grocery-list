@@ -24,7 +24,9 @@ export type AppShellProps = {
   readonly signOut?: () => Promise<void>;
 };
 
-const visibilityStyle = (isActive: boolean): { flex: number; display: 'flex' | 'none' } => ({
+const visibilityStyle = (
+  isActive: boolean,
+): { flex: number; display: 'flex' | 'none' } => ({
   flex: 1,
   display: isActive ? 'flex' : 'none',
 });
@@ -42,10 +44,16 @@ export const AppShell = ({ signOut }: AppShellProps): React.JSX.Element => {
     <SafeAreaView testID="safe-area" style={styles.container}>
       <ViewToggle viewMode={viewMode} onToggle={handleToggle} />
       {signOut ? <SignOutButton onPress={signOut} /> : null}
-      <View testID="home-view-container" style={visibilityStyle(viewMode === 'home')}>
+      <View
+        testID="home-view-container"
+        style={visibilityStyle(viewMode === 'home')}
+      >
         <HomeView />
       </View>
-      <View testID="store-view-container" style={visibilityStyle(viewMode === 'store')}>
+      <View
+        testID="store-view-container"
+        style={visibilityStyle(viewMode === 'store')}
+      >
         <StoreView />
       </View>
     </SafeAreaView>

@@ -40,25 +40,46 @@ describe('M1-1: Staple checklist excludes one-off items', () => {
   it('shows only staples in checklist, not persisted one-offs', () => {
     // Given Elena has staples "Milk", "Bread" and one-off "Tahini" in the library
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
-      { name: 'Bread', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Bakery', aisleNumber: 1 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
     // Manually add a one-off to the library
-    (stapleLibrary as any).addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    (stapleLibrary as any).addOneOff({
+      name: 'Tahini',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
 
     const tripAreas = ['Fridge', 'Kitchen Cabinets'];
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage, tripAreas);
-    tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+    tripService.start(
+      stapleLibrary.listAll().filter((s) => s.type === 'staple'),
+    );
 
     const areaStorage = createNullAreaStorage(tripAreas);
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     render(
-      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+      <ServiceProvider
+        stapleLibrary={stapleLibrary}
+        tripService={tripService}
+        areaManagement={areaManagement}
+      >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Elena switches to checklist mode
@@ -85,17 +106,26 @@ describe('M1-2: New trip preloads only staples', () => {
   it('does not preload one-offs into a new trip', () => {
     // Given Elena has staples "Milk" and one-off "Tahini" in the library
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
-    (stapleLibrary as any).addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    (stapleLibrary as any).addOneOff({
+      name: 'Tahini',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
 
     const tripAreas = ['Fridge'];
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage, tripAreas);
 
     // When a new trip is created with preloaded staples (filtered to type 'staple')
-    tripService.start(stapleLibrary.listAll().filter(s => s.type === 'staple'));
+    tripService.start(
+      stapleLibrary.listAll().filter((s) => s.type === 'staple'),
+    );
 
     // Then only "Milk" is preloaded
     const tripItems = tripService.getItems();
@@ -103,7 +133,7 @@ describe('M1-2: New trip preloads only staples', () => {
     expect(tripItems[0].name).toBe('Milk');
 
     // And "Tahini" is not in the trip
-    expect(tripItems.find(i => i.name === 'Tahini')).toBeUndefined();
+    expect(tripItems.find((i) => i.name === 'Tahini')).toBeUndefined();
   });
 });
 
@@ -119,7 +149,10 @@ describe('M1-3: Empty checklist when only one-offs exist', () => {
     // Given Elena has only one-off "Tahini" in the library (no staples)
     const stapleStorage = createNullStapleStorage([]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
-    (stapleLibrary as any).addOneOff({ name: 'Tahini', storeLocation: { section: 'International', aisleNumber: 7 } });
+    (stapleLibrary as any).addOneOff({
+      name: 'Tahini',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
 
     const tripAreas = ['Fridge'];
     const tripStorage = createNullTripStorage();
@@ -127,12 +160,20 @@ describe('M1-3: Empty checklist when only one-offs exist', () => {
     tripService.start([]);
 
     const areaStorage = createNullAreaStorage(tripAreas);
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     render(
-      <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService} areaManagement={areaManagement}>
+      <ServiceProvider
+        stapleLibrary={stapleLibrary}
+        tripService={tripService}
+        areaManagement={areaManagement}
+      >
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     // When Elena switches to checklist mode

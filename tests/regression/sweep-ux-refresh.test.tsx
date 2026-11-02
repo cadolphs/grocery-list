@@ -52,7 +52,7 @@ describe('home mode tap toggles needed state with green/grey', () => {
         mode="home"
         onPress={onPress}
         onEditStaple={onEditStaple}
-      />
+      />,
     );
 
     fireEvent.press(screen.getByText('Milk'));
@@ -65,13 +65,7 @@ describe('home mode tap toggles needed state with green/grey', () => {
     const onSkip = jest.fn();
     const item = createTripItem();
 
-    render(
-      <TripItemRow
-        item={item}
-        mode="home"
-        onSkip={onSkip}
-      />
-    );
+    render(<TripItemRow item={item} mode="home" onSkip={onSkip} />);
 
     expect(screen.queryByText('Skip')).toBeNull();
   });
@@ -79,12 +73,7 @@ describe('home mode tap toggles needed state with green/grey', () => {
   it('renders needed item with green text color', () => {
     const item = createTripItem({ needed: true });
 
-    render(
-      <TripItemRow
-        item={item}
-        mode="home"
-      />
-    );
+    render(<TripItemRow item={item} mode="home" />);
 
     const text = screen.getByText('Milk');
     const flatStyle = Array.isArray(text.props.style)
@@ -97,12 +86,7 @@ describe('home mode tap toggles needed state with green/grey', () => {
   it('renders skipped item with grey strikethrough text', () => {
     const item = createTripItem({ needed: false });
 
-    render(
-      <TripItemRow
-        item={item}
-        mode="home"
-      />
-    );
+    render(<TripItemRow item={item} mode="home" />);
 
     const text = screen.getByText('Milk');
     const flatStyle = Array.isArray(text.props.style)
@@ -126,13 +110,7 @@ describe('home mode long-press opens edit and no skip section', () => {
     const onLongPress = jest.fn();
     const item = createTripItem();
 
-    render(
-      <TripItemRow
-        item={item}
-        mode="home"
-        onLongPress={onLongPress}
-      />
-    );
+    render(<TripItemRow item={item} mode="home" onLongPress={onLongPress} />);
 
     fireEvent(screen.getByText('Milk'), 'longPress');
 
@@ -141,7 +119,11 @@ describe('home mode long-press opens edit and no skip section', () => {
   });
 
   it('AreaSection does not render Re-add buttons', () => {
-    const skippedItem = createTripItem({ id: 'item-2', name: 'Butter', needed: false });
+    const skippedItem = createTripItem({
+      id: 'item-2',
+      name: 'Butter',
+      needed: false,
+    });
     const areaGroup = createAreaGroup([createTripItem(), skippedItem]);
 
     render(<AreaSection areaGroup={areaGroup} />);
@@ -151,8 +133,16 @@ describe('home mode long-press opens edit and no skip section', () => {
   });
 
   it('AreaSection renders both needed and skipped items inline', () => {
-    const neededItem = createTripItem({ id: 'item-1', name: 'Milk', needed: true });
-    const skippedItem = createTripItem({ id: 'item-2', name: 'Butter', needed: false });
+    const neededItem = createTripItem({
+      id: 'item-1',
+      name: 'Milk',
+      needed: true,
+    });
+    const skippedItem = createTripItem({
+      id: 'item-2',
+      name: 'Butter',
+      needed: false,
+    });
     const areaGroup = createAreaGroup([neededItem, skippedItem]);
 
     render(<AreaSection areaGroup={areaGroup} />);
@@ -168,10 +158,7 @@ describe('home mode long-press opens edit and no skip section', () => {
     const areaGroup = createAreaGroup([item]);
 
     render(
-      <AreaSection
-        areaGroup={areaGroup}
-        onItemLongPress={onItemLongPress}
-      />
+      <AreaSection areaGroup={areaGroup} onItemLongPress={onItemLongPress} />,
     );
 
     fireEvent(screen.getByText('Milk'), 'longPress');
@@ -184,12 +171,7 @@ describe('home mode long-press opens edit and no skip section', () => {
     const item = createTripItem();
     const areaGroup = createAreaGroup([item]);
 
-    render(
-      <AreaSection
-        areaGroup={areaGroup}
-        onItemPress={onItemPress}
-      />
-    );
+    render(<AreaSection areaGroup={areaGroup} onItemPress={onItemPress} />);
 
     fireEvent.press(screen.getByText('Milk'));
 
@@ -218,18 +200,35 @@ describe('groupByArea excludes one-offs from area groups', () => {
   });
 
   it('area groups contain only staple items when mix of staples and one-offs provided', () => {
-    const staple = makeItem({ id: 's1', name: 'Milk', itemType: 'staple', houseArea: 'Fridge' });
-    const oneOff = makeItem({ id: 'o1', name: 'Birthday Candles', itemType: 'one-off', houseArea: 'Fridge' });
+    const staple = makeItem({
+      id: 's1',
+      name: 'Milk',
+      itemType: 'staple',
+      houseArea: 'Fridge',
+    });
+    const oneOff = makeItem({
+      id: 'o1',
+      name: 'Birthday Candles',
+      itemType: 'one-off',
+      houseArea: 'Fridge',
+    });
 
     const result = groupByArea([staple, oneOff], ALL_AREAS);
 
-    const fridgeGroup = result.find((g: { area: string }) => g.area === 'Fridge')!;
+    const fridgeGroup = result.find(
+      (g: { area: string }) => g.area === 'Fridge',
+    )!;
     expect(fridgeGroup.items).toHaveLength(1);
     expect(fridgeGroup.items[0].name).toBe('Milk');
   });
 
   it('one-off items are excluded from all area groups', () => {
-    const oneOff = makeItem({ id: 'o1', name: 'Party Cups', itemType: 'one-off', houseArea: 'Bathroom' });
+    const oneOff = makeItem({
+      id: 'o1',
+      name: 'Party Cups',
+      itemType: 'one-off',
+      houseArea: 'Bathroom',
+    });
 
     const result = groupByArea([oneOff], ALL_AREAS);
 
@@ -239,20 +238,35 @@ describe('groupByArea excludes one-offs from area groups', () => {
 
   it('getOneOffItems returns only one-off items', () => {
     const staple = makeItem({ id: 's1', name: 'Milk', itemType: 'staple' });
-    const oneOff1 = makeItem({ id: 'o1', name: 'Birthday Candles', itemType: 'one-off' });
-    const oneOff2 = makeItem({ id: 'o2', name: 'Party Cups', itemType: 'one-off' });
+    const oneOff1 = makeItem({
+      id: 'o1',
+      name: 'Birthday Candles',
+      itemType: 'one-off',
+    });
+    const oneOff2 = makeItem({
+      id: 'o2',
+      name: 'Party Cups',
+      itemType: 'one-off',
+    });
 
     const result = getOneOffItems([staple, oneOff1, oneOff2]);
 
     expect(result).toHaveLength(2);
-    expect(result.map((i: TripItem) => i.name)).toEqual(['Birthday Candles', 'Party Cups']);
+    expect(result.map((i: TripItem) => i.name)).toEqual([
+      'Birthday Candles',
+      'Party Cups',
+    ]);
   });
 });
 
 describe('sweep mode shows one-offs section separately', () => {
   function renderAppWithOneOff() {
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -270,7 +284,7 @@ describe('sweep mode shows one-offs section separately', () => {
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     return { tripService };
@@ -285,7 +299,11 @@ describe('sweep mode shows one-offs section separately', () => {
 
   it('does not render One-offs section when no one-off items exist', () => {
     const stapleStorage = createNullStapleStorage([
-      { name: 'Milk', houseArea: 'Fridge', storeLocation: { section: 'Dairy', aisleNumber: 3 } },
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
     ]);
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
@@ -295,7 +313,7 @@ describe('sweep mode shows one-offs section separately', () => {
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
         <AppShell />
-      </ServiceProvider>
+      </ServiceProvider>,
     );
 
     expect(screen.queryByText(/One-offs/)).toBeNull();

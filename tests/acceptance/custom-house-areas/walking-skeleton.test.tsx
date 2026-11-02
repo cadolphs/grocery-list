@@ -48,7 +48,13 @@ import { createNullAreaStorage } from '../../../src/adapters/null/null-area-stor
 // import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 // import { AppShell } from '../../../src/ui/AppShell';
 
-const DEFAULT_AREAS = ['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer'];
+const DEFAULT_AREAS = [
+  'Bathroom',
+  'Garage Pantry',
+  'Kitchen Cabinets',
+  'Fridge',
+  'Freezer',
+];
 
 // =============================================================================
 // WS-CHA-03: Dynamic Area Consumption (US-CHA-03 -- riskiest first)
@@ -89,12 +95,12 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
     expect(grouped).toHaveLength(6);
 
     // And "Laundry Room" contains detergent
-    const laundry = grouped.find(g => g.area === 'Laundry Room');
+    const laundry = grouped.find((g) => g.area === 'Laundry Room');
     expect(laundry?.items).toHaveLength(1);
     expect(laundry?.items[0].name).toBe('Detergent');
 
     // And "Fridge" contains milk
-    const fridge = grouped.find(g => g.area === 'Fridge');
+    const fridge = grouped.find((g) => g.area === 'Fridge');
     expect(fridge?.items).toHaveLength(1);
     expect(fridge?.items[0].name).toBe('Whole milk');
   });
@@ -122,9 +128,9 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
 
     // Then all 5 default areas are present
     expect(grouped).toHaveLength(5);
-    expect(grouped.find(g => g.area === 'Fridge')?.items).toHaveLength(1);
-    expect(grouped.find(g => g.area === 'Bathroom')?.items).toHaveLength(1);
-    expect(grouped.find(g => g.area === 'Freezer')?.items).toHaveLength(0);
+    expect(grouped.find((g) => g.area === 'Fridge')?.items).toHaveLength(1);
+    expect(grouped.find((g) => g.area === 'Bathroom')?.items).toHaveLength(1);
+    expect(grouped.find((g) => g.area === 'Freezer')?.items).toHaveLength(0);
   });
 
   it('shows empty groups for areas with no items', () => {
@@ -146,8 +152,10 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
 
     // Then all 6 areas are present, 5 with empty items
     expect(grouped).toHaveLength(6);
-    expect(grouped.find(g => g.area === 'Laundry Room')?.items).toHaveLength(0);
-    expect(grouped.find(g => g.area === 'Bathroom')?.items).toHaveLength(0);
+    expect(grouped.find((g) => g.area === 'Laundry Room')?.items).toHaveLength(
+      0,
+    );
+    expect(grouped.find((g) => g.area === 'Bathroom')?.items).toHaveLength(0);
   });
 });
 
@@ -178,7 +186,7 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, customAreas);
     trip.start([]);
-    DEFAULT_AREAS.forEach(area => trip.completeArea(area));
+    DEFAULT_AREAS.forEach((area) => trip.completeArea(area));
 
     // When Carlos has not yet completed "Laundry Room"
     const progress = trip.getSweepProgress();
@@ -207,7 +215,11 @@ describe('WS-CHA-03: Area management adds a new area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos adds "Laundry Room"
     const result = areaManagement.add('Laundry Room');
@@ -226,7 +238,11 @@ describe('WS-CHA-03: Area management adds a new area', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
 
     // When Carlos tries to add "Bathroom" again
     const result = areaManagement.add('Bathroom');
@@ -249,7 +265,11 @@ describe('WS-CHA-03: New area appears in groupByArea', () => {
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
     const stapleStorage = createNullStapleStorage();
     const tripStorage = createNullTripStorage();
-    const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
+    const areaManagement = createAreaManagement(
+      areaStorage,
+      stapleStorage,
+      tripStorage,
+    );
     areaManagement.add('Laundry Room');
 
     // And Carlos adds "Detergent" as a staple in "Laundry Room"
@@ -266,7 +286,7 @@ describe('WS-CHA-03: New area appears in groupByArea', () => {
 
     // Then "Laundry Room" appears as a group with "Detergent" pre-loaded
     const grouped = groupByArea(trip.getItems(), areaManagement.getAreas());
-    const laundry = grouped.find(g => g.area === 'Laundry Room');
+    const laundry = grouped.find((g) => g.area === 'Laundry Room');
     expect(laundry?.items).toHaveLength(1);
     expect(laundry?.items[0].name).toBe('Detergent');
   });
@@ -284,7 +304,13 @@ describe('WS-CHA-03: Default areas seeded on fresh install', () => {
     const areas = areaStorage.loadAll();
 
     // Then it contains the 5 defaults in order
-    expect(areas).toEqual(['Bathroom', 'Garage Pantry', 'Kitchen Cabinets', 'Fridge', 'Freezer']);
+    expect(areas).toEqual([
+      'Bathroom',
+      'Garage Pantry',
+      'Kitchen Cabinets',
+      'Fridge',
+      'Freezer',
+    ]);
   });
 });
 

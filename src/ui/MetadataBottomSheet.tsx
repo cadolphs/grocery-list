@@ -2,8 +2,24 @@
 // Collects item type (Staple/One-off), house area, store section, and aisle
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, Modal, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { HouseArea, StapleItem, AddStapleRequest, AddOneOffRequest, AddTripItemRequest } from '../domain/types';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Modal,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import {
+  HouseArea,
+  StapleItem,
+  AddStapleRequest,
+  AddOneOffRequest,
+  AddTripItemRequest,
+} from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
 
@@ -28,12 +44,22 @@ type MetadataBottomSheetProps = {
   readonly defaultArea?: HouseArea | null;
   readonly areas: readonly HouseArea[];
   readonly existingSections?: readonly string[];
-  readonly onFindDuplicate?: (name: string, area: HouseArea) => StapleItem | undefined;
+  readonly onFindDuplicate?: (
+    name: string,
+    area: HouseArea,
+  ) => StapleItem | undefined;
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitOneOff?: (request: AddOneOffRequest) => void;
   readonly onSubmitTripItem: (request: AddTripItemRequest) => void;
-  readonly onSaveEdit?: (stapleId: string, changes: { name?: string; houseArea?: HouseArea; storeLocation?: { section: string; aisleNumber: number | null } }) => void;
+  readonly onSaveEdit?: (
+    stapleId: string,
+    changes: {
+      name?: string;
+      houseArea?: HouseArea;
+      storeLocation?: { section: string; aisleNumber: number | null };
+    },
+  ) => void;
   readonly onDeleteStaple?: (stapleId: string) => void;
 };
 
@@ -75,7 +101,10 @@ const decideSectionDropdownState = (
   }
 
   if (!isQueryEmpty && filteredSuggestions.length > 0) {
-    return { kind: 'list', rows: sortSectionsAlphabetically(filteredSuggestions) };
+    return {
+      kind: 'list',
+      rows: sortSectionsAlphabetically(filteredSuggestions),
+    };
   }
 
   return { kind: 'hidden' };
@@ -83,14 +112,19 @@ const decideSectionDropdownState = (
 
 type RenameValidationResult =
   | { readonly kind: 'invalid-empty' }
-  | { readonly kind: 'invalid-duplicate'; readonly trimmedName: string; readonly area: HouseArea }
+  | {
+      readonly kind: 'invalid-duplicate';
+      readonly trimmedName: string;
+      readonly area: HouseArea;
+    }
   | { readonly kind: 'ok'; readonly trimmedName: string };
 
 const validateRename = (
   rawName: string,
   area: HouseArea,
   selfId: string,
-  findDuplicate: ((name: string, area: HouseArea) => StapleItem | undefined) | undefined,
+  findDuplicate:
+    ((name: string, area: HouseArea) => StapleItem | undefined) | undefined,
 ): RenameValidationResult => {
   const trimmedName = rawName.trim();
   if (trimmedName === '') return { kind: 'invalid-empty' };
@@ -136,14 +170,22 @@ export const MetadataBottomSheet = ({
   const resolveDefaultArea = (): HouseArea | null =>
     defaultArea === undefined ? 'Kitchen Cabinets' : defaultArea;
 
-  const [selectedType, setSelectedType] = useState<ItemTypeSelection>(defaultItemType ?? 'Staple');
-  const [selectedArea, setSelectedArea] = useState<HouseArea | null>(resolveDefaultArea());
+  const [selectedType, setSelectedType] = useState<ItemTypeSelection>(
+    defaultItemType ?? 'Staple',
+  );
+  const [selectedArea, setSelectedArea] = useState<HouseArea | null>(
+    resolveDefaultArea(),
+  );
   const [editedName, setEditedName] = useState('');
   const [section, setSection] = useState('');
-  const [sectionSuggestions, setSectionSuggestions] = useState<readonly string[]>([]);
+  const [sectionSuggestions, setSectionSuggestions] = useState<
+    readonly string[]
+  >([]);
   const [aisleText, setAisleText] = useState('');
   const [sheetMode, setSheetMode] = useState<SheetMode>('form');
-  const [duplicateStaple, setDuplicateStaple] = useState<StapleItem | null>(null);
+  const [duplicateStaple, setDuplicateStaple] = useState<StapleItem | null>(
+    null,
+  );
   const [nameError, setNameError] = useState<string | null>(null);
 
   // Re-initialize defaults when sheet opens or defaults change
@@ -154,7 +196,11 @@ export const MetadataBottomSheet = ({
         setSelectedArea(initialValues.houseArea);
         setEditedName(initialValues.name ?? itemName);
         setSection(initialValues.section);
-        setAisleText(initialValues.aisleNumber !== null ? String(initialValues.aisleNumber) : '');
+        setAisleText(
+          initialValues.aisleNumber !== null
+            ? String(initialValues.aisleNumber)
+            : '',
+        );
       } else {
         setSelectedType(defaultItemType ?? 'Staple');
         setSelectedArea(resolveDefaultArea());
@@ -167,7 +213,14 @@ export const MetadataBottomSheet = ({
       setDuplicateStaple(null);
       setNameError(null);
     }
-  }, [visible, defaultItemType, defaultArea, isEditMode, initialValues, itemName]);
+  }, [
+    visible,
+    defaultItemType,
+    defaultArea,
+    isEditMode,
+    initialValues,
+    itemName,
+  ]);
 
   const handleSectionChange = (text: string): void => {
     setSection(text);
@@ -182,7 +235,12 @@ export const MetadataBottomSheet = ({
   const handleSaveEdit = (): void => {
     if (selectedArea === null || !editStapleId || !onSaveEdit) return;
 
-    const validation = validateRename(editedName, selectedArea, editStapleId, onFindDuplicate);
+    const validation = validateRename(
+      editedName,
+      selectedArea,
+      editStapleId,
+      onFindDuplicate,
+    );
     if (validation.kind !== 'ok') {
       setNameError(renameErrorMessage(validation));
       return;
@@ -322,189 +380,232 @@ export const MetadataBottomSheet = ({
               contentContainerStyle={styles.sheetContent}
               showsVerticalScrollIndicator={false}
             >
-          {sheetMode === 'duplicate-warning' && duplicateStaple ? (
-            <>
-              <Text style={styles.title}>Duplicate Found</Text>
-              <Text style={styles.duplicateMessage}>
-                &quot;{duplicateStaple.name}&quot; already exists in {duplicateStaple.houseArea}
-              </Text>
-              <Text style={styles.duplicateMetadata}>
-                {duplicateStaple.storeLocation.section}
-                {duplicateStaple.storeLocation.aisleNumber !== null
-                  ? ` / Aisle ${duplicateStaple.storeLocation.aisleNumber}`
-                  : ''}
-              </Text>
-              <Pressable style={styles.addButton} onPress={handleAddToTripInstead}>
-                <Text style={styles.addButtonText}>Add to trip instead</Text>
-              </Pressable>
-              <Pressable style={styles.skipButton} onPress={handleCancelDuplicate}>
-                <Text style={styles.skipButtonText}>Cancel</Text>
-              </Pressable>
-            </>
-          ) : (
-            <>
-          <Text style={styles.title}>{isEditMode ? `Edit '${itemName}'` : `Add '${itemName}'`}</Text>
-
-          {/* Name field - only shown in edit mode (rename) */}
-          {isEditMode && (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                value={editedName}
-                onChangeText={(text) => {
-                  setEditedName(text);
-                  if (nameError !== null) setNameError(null);
-                }}
-              />
-              {nameError !== null && (
-                <Text style={styles.inlineError}>{nameError}</Text>
-              )}
-            </>
-          )}
-
-          {/* Type toggle - hidden in edit mode */}
-          {!isEditMode && (
-          <View style={styles.typeToggleContainer}>
-            <Pressable
-              testID={selectedType === 'Staple' ? 'type-toggle-Staple-active' : 'type-toggle-Staple'}
-              style={[
-                styles.typeToggleButton,
-                selectedType === 'Staple' && styles.typeToggleActive,
-              ]}
-              onPress={() => setSelectedType('Staple')}
-            >
-              <Text
-                style={[
-                  styles.typeToggleText,
-                  selectedType === 'Staple' && styles.typeToggleTextActive,
-                ]}
-              >
-                Staple
-              </Text>
-            </Pressable>
-            <Pressable
-              testID={selectedType === 'One-off' ? 'type-toggle-One-off-active' : 'type-toggle-One-off'}
-              style={[
-                styles.typeToggleButton,
-                selectedType === 'One-off' && styles.typeToggleActive,
-              ]}
-              onPress={() => setSelectedType('One-off')}
-            >
-              <Text
-                style={[
-                  styles.typeToggleText,
-                  selectedType === 'One-off' && styles.typeToggleTextActive,
-                ]}
-              >
-                One-off
-              </Text>
-            </Pressable>
-          </View>
-          )}
-
-          {/* Area picker - only shown for staples (or edit mode) */}
-          {(selectedType === 'Staple' || isEditMode) && (
-          <View style={styles.areaContainer}>
-            {areas.map((area) => (
-              <Pressable
-                key={area}
-                testID={selectedArea === area ? `area-button-${area}-active` : `area-button-${area}`}
-                style={[
-                  styles.areaButton,
-                  selectedArea === area && styles.areaButtonActive,
-                ]}
-                onPress={() => setSelectedArea(area)}
-              >
-                <Text
-                  style={[
-                    styles.areaButtonText,
-                    selectedArea === area && styles.areaButtonTextActive,
-                  ]}
-                >
-                  {area}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          )}
-
-          {/* Store section and aisle - shown for all item types */}
-          <TextInput
-            style={styles.input}
-            placeholder="Store section..."
-            value={section}
-            onChangeText={handleSectionChange}
-            autoFocus={isWeb}
-          />
-
-          {(() => {
-            const dropdownState = decideSectionDropdownState(
-              mode,
-              section,
-              existingSections,
-              sectionSuggestions,
-            );
-            if (dropdownState.kind === 'hidden') return null;
-            if (dropdownState.kind === 'empty-hint') {
-              return (
-                <View style={styles.sectionSuggestions}>
-                  <Text style={styles.sectionEmptyHint}>
-                    No saved sections yet — type a new one.
+              {sheetMode === 'duplicate-warning' && duplicateStaple ? (
+                <>
+                  <Text style={styles.title}>Duplicate Found</Text>
+                  <Text style={styles.duplicateMessage}>
+                    &quot;{duplicateStaple.name}&quot; already exists in{' '}
+                    {duplicateStaple.houseArea}
                   </Text>
-                </View>
-              );
-            }
-            return (
-              <View style={styles.sectionSuggestions}>
-                {dropdownState.rows.map((sectionName) => (
+                  <Text style={styles.duplicateMetadata}>
+                    {duplicateStaple.storeLocation.section}
+                    {duplicateStaple.storeLocation.aisleNumber !== null
+                      ? ` / Aisle ${duplicateStaple.storeLocation.aisleNumber}`
+                      : ''}
+                  </Text>
                   <Pressable
-                    key={sectionName}
-                    testID={`section-suggestion-${sectionName}`}
-                    style={styles.sectionSuggestionItem}
-                    onPress={() => handleSelectSectionSuggestion(sectionName)}
+                    style={styles.addButton}
+                    onPress={handleAddToTripInstead}
                   >
-                    <Text style={styles.sectionSuggestionText}>{sectionName}</Text>
+                    <Text style={styles.addButtonText}>
+                      Add to trip instead
+                    </Text>
                   </Pressable>
-                ))}
-              </View>
-            );
-          })()}
+                  <Pressable
+                    style={styles.skipButton}
+                    onPress={handleCancelDuplicate}
+                  >
+                    <Text style={styles.skipButtonText}>Cancel</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.title}>
+                    {isEditMode ? `Edit '${itemName}'` : `Add '${itemName}'`}
+                  </Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Aisle number"
-            value={aisleText}
-            onChangeText={setAisleText}
-            onSubmitEditing={isEditMode ? handleSaveEdit : handleSubmit}
-            keyboardType="numeric"
-          />
+                  {/* Name field - only shown in edit mode (rename) */}
+                  {isEditMode && (
+                    <>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Name"
+                        value={editedName}
+                        onChangeText={(text) => {
+                          setEditedName(text);
+                          if (nameError !== null) setNameError(null);
+                        }}
+                      />
+                      {nameError !== null && (
+                        <Text style={styles.inlineError}>{nameError}</Text>
+                      )}
+                    </>
+                  )}
 
-          {/* Action buttons */}
-          {isEditMode ? (
-            <>
-              <Pressable style={styles.addButton} onPress={handleSaveEdit}>
-                <Text style={styles.addButtonText}>Save Changes</Text>
-              </Pressable>
-              {onDeleteStaple && editStapleId && (
-                <Pressable style={styles.deleteButton} onPress={handleDeleteStaple}>
-                  <Text style={styles.deleteButtonText}>Delete Staple</Text>
-                </Pressable>
+                  {/* Type toggle - hidden in edit mode */}
+                  {!isEditMode && (
+                    <View style={styles.typeToggleContainer}>
+                      <Pressable
+                        testID={
+                          selectedType === 'Staple'
+                            ? 'type-toggle-Staple-active'
+                            : 'type-toggle-Staple'
+                        }
+                        style={[
+                          styles.typeToggleButton,
+                          selectedType === 'Staple' && styles.typeToggleActive,
+                        ]}
+                        onPress={() => setSelectedType('Staple')}
+                      >
+                        <Text
+                          style={[
+                            styles.typeToggleText,
+                            selectedType === 'Staple' &&
+                              styles.typeToggleTextActive,
+                          ]}
+                        >
+                          Staple
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        testID={
+                          selectedType === 'One-off'
+                            ? 'type-toggle-One-off-active'
+                            : 'type-toggle-One-off'
+                        }
+                        style={[
+                          styles.typeToggleButton,
+                          selectedType === 'One-off' && styles.typeToggleActive,
+                        ]}
+                        onPress={() => setSelectedType('One-off')}
+                      >
+                        <Text
+                          style={[
+                            styles.typeToggleText,
+                            selectedType === 'One-off' &&
+                              styles.typeToggleTextActive,
+                          ]}
+                        >
+                          One-off
+                        </Text>
+                      </Pressable>
+                    </View>
+                  )}
+
+                  {/* Area picker - only shown for staples (or edit mode) */}
+                  {(selectedType === 'Staple' || isEditMode) && (
+                    <View style={styles.areaContainer}>
+                      {areas.map((area) => (
+                        <Pressable
+                          key={area}
+                          testID={
+                            selectedArea === area
+                              ? `area-button-${area}-active`
+                              : `area-button-${area}`
+                          }
+                          style={[
+                            styles.areaButton,
+                            selectedArea === area && styles.areaButtonActive,
+                          ]}
+                          onPress={() => setSelectedArea(area)}
+                        >
+                          <Text
+                            style={[
+                              styles.areaButtonText,
+                              selectedArea === area &&
+                                styles.areaButtonTextActive,
+                            ]}
+                          >
+                            {area}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Store section and aisle - shown for all item types */}
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Store section..."
+                    value={section}
+                    onChangeText={handleSectionChange}
+                    autoFocus={isWeb}
+                  />
+
+                  {(() => {
+                    const dropdownState = decideSectionDropdownState(
+                      mode,
+                      section,
+                      existingSections,
+                      sectionSuggestions,
+                    );
+                    if (dropdownState.kind === 'hidden') return null;
+                    if (dropdownState.kind === 'empty-hint') {
+                      return (
+                        <View style={styles.sectionSuggestions}>
+                          <Text style={styles.sectionEmptyHint}>
+                            No saved sections yet — type a new one.
+                          </Text>
+                        </View>
+                      );
+                    }
+                    return (
+                      <View style={styles.sectionSuggestions}>
+                        {dropdownState.rows.map((sectionName) => (
+                          <Pressable
+                            key={sectionName}
+                            testID={`section-suggestion-${sectionName}`}
+                            style={styles.sectionSuggestionItem}
+                            onPress={() =>
+                              handleSelectSectionSuggestion(sectionName)
+                            }
+                          >
+                            <Text style={styles.sectionSuggestionText}>
+                              {sectionName}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    );
+                  })()}
+
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Aisle number"
+                    value={aisleText}
+                    onChangeText={setAisleText}
+                    onSubmitEditing={isEditMode ? handleSaveEdit : handleSubmit}
+                    keyboardType="numeric"
+                  />
+
+                  {/* Action buttons */}
+                  {isEditMode ? (
+                    <>
+                      <Pressable
+                        style={styles.addButton}
+                        onPress={handleSaveEdit}
+                      >
+                        <Text style={styles.addButtonText}>Save Changes</Text>
+                      </Pressable>
+                      {onDeleteStaple && editStapleId && (
+                        <Pressable
+                          style={styles.deleteButton}
+                          onPress={handleDeleteStaple}
+                        >
+                          <Text style={styles.deleteButtonText}>
+                            Delete Staple
+                          </Text>
+                        </Pressable>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Pressable
+                        style={styles.addButton}
+                        onPress={handleSubmit}
+                      >
+                        <Text style={styles.addButtonText}>Add Item</Text>
+                      </Pressable>
+
+                      <Pressable style={styles.skipButton} onPress={handleSkip}>
+                        <Text style={styles.skipButtonText}>
+                          Skip, add with defaults
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
+                </>
               )}
-            </>
-          ) : (
-            <>
-              <Pressable style={styles.addButton} onPress={handleSubmit}>
-                <Text style={styles.addButtonText}>Add Item</Text>
-              </Pressable>
-
-              <Pressable style={styles.skipButton} onPress={handleSkip}>
-                <Text style={styles.skipButtonText}>Skip, add with defaults</Text>
-              </Pressable>
-            </>
-          )}
-            </>
-          )}
             </ScrollView>
           </Pressable>
         </KeyboardAvoidingView>

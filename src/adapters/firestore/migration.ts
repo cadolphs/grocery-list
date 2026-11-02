@@ -25,20 +25,29 @@ const migrateAreas = (from: AreaStorage, to: AreaStorage): void => {
   }
 };
 
-const migrateSectionOrder = (from: SectionOrderStorage, to: SectionOrderStorage): void => {
+const migrateSectionOrder = (
+  from: SectionOrderStorage,
+  to: SectionOrderStorage,
+): void => {
   const order = from.loadOrder();
   if (order !== null) {
     to.saveOrder(order);
   }
 };
 
-export const migrateToFirestore = (from: StorageAdapters, to: StorageAdapters): void => {
+export const migrateToFirestore = (
+  from: StorageAdapters,
+  to: StorageAdapters,
+): void => {
   migrateStaples(from.staples, to.staples);
   migrateAreas(from.areas, to.areas);
   migrateSectionOrder(from.sectionOrder, to.sectionOrder);
 };
 
-export const migrateTripIfNeeded = (localTrip: TripStorage, cloudTrip: TripStorage): void => {
+export const migrateTripIfNeeded = (
+  localTrip: TripStorage,
+  cloudTrip: TripStorage,
+): void => {
   const cloudData = cloudTrip.loadTrip();
   if (cloudData !== null) return;
 

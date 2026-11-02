@@ -15,21 +15,26 @@ const mockSetDoc = jest.fn(async (docRef: { path: string }, data: unknown) => {
   mockStore[docRef.path] = data as MockDocData;
 });
 
-type SnapshotCallback = (snapshot: { exists: () => boolean; data: () => MockDocData }) => void;
+type SnapshotCallback = (snapshot: {
+  exists: () => boolean;
+  data: () => MockDocData;
+}) => void;
 const capturedCallbacks: Record<string, SnapshotCallback> = {};
 const mockUnsubscribes: Record<string, jest.Mock> = {};
 
-const mockOnSnapshot = jest.fn((docRef: { path: string }, callback: SnapshotCallback) => {
-  const data = mockStore[docRef.path];
-  callback({
-    exists: () => data !== undefined,
-    data: () => data,
-  });
-  capturedCallbacks[docRef.path] = callback;
-  const unsub = jest.fn();
-  mockUnsubscribes[docRef.path] = unsub;
-  return unsub;
-});
+const mockOnSnapshot = jest.fn(
+  (docRef: { path: string }, callback: SnapshotCallback) => {
+    const data = mockStore[docRef.path];
+    callback({
+      exists: () => data !== undefined,
+      data: () => data,
+    });
+    capturedCallbacks[docRef.path] = callback;
+    const unsub = jest.fn();
+    mockUnsubscribes[docRef.path] = unsub;
+    return unsub;
+  },
+);
 
 const simulateRemoteSnapshot = (path: string, data: MockDocData) => {
   mockStore[path] = data;
@@ -89,7 +94,9 @@ const createFreshStorage = async (onChange?: () => void) => {
 beforeEach(async () => {
   jest.clearAllMocks();
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
-  Object.keys(capturedCallbacks).forEach((key) => delete capturedCallbacks[key]);
+  Object.keys(capturedCallbacks).forEach(
+    (key) => delete capturedCallbacks[key],
+  );
   Object.keys(mockUnsubscribes).forEach((key) => delete mockUnsubscribes[key]);
   // Clear AsyncStorage mirror between tests — the adapter now writes through
   // to AsyncStorage, and the global mock persists across tests by default.
@@ -131,7 +138,7 @@ describe('firestore trip storage implements TripStorage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: TRIP_DOC_PATH }),
-      { trip, writtenAt: expect.any(Number) }
+      { trip, writtenAt: expect.any(Number) },
     );
   });
 
@@ -175,8 +182,8 @@ describe('firestore trip storage implements TripStorage port', () => {
     storage.saveCheckoffs(checkoffs);
 
     const loaded = storage.loadTrip();
-    const milk = loaded!.items.find(i => i.name === 'Milk');
-    const eggs = loaded!.items.find(i => i.name === 'Eggs');
+    const milk = loaded!.items.find((i) => i.name === 'Milk');
+    const eggs = loaded!.items.find((i) => i.name === 'Eggs');
     expect(milk?.checked).toBe(true);
     expect(milk?.checkedAt).toBe('2026-04-10T12:00:00.000Z');
     expect(eggs?.checked).toBe(false);
@@ -211,7 +218,7 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadCarryover()).toEqual(items);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: CARRYOVER_DOC_PATH }),
-      { items, writtenAt: expect.any(Number) }
+      { items, writtenAt: expect.any(Number) },
     );
   });
 
@@ -242,7 +249,7 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadCarryover()).toEqual([]);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: CARRYOVER_DOC_PATH }),
-      { items: [], writtenAt: expect.any(Number) }
+      { items: [], writtenAt: expect.any(Number) },
     );
   });
 });
@@ -255,14 +262,18 @@ describe('firestore trip storage onChange callback', () => {
     mockStore[TRIP_DOC_PATH] = { trip };
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorage(onChange);
     expect(storage.loadTrip()).toEqual(trip);
 
     // Simulate remote checkoff of "Milk"
     const updatedTrip = makeTrip({
-      items: [makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' })],
+      items: [
+        makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' }),
+      ],
     });
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 
@@ -274,7 +285,9 @@ describe('firestore trip storage onChange callback', () => {
     mockStore[TRIP_DOC_PATH] = undefined;
 
     let onChangeCallCount = 0;
-    const onChange = () => { onChangeCallCount++; };
+    const onChange = () => {
+      onChangeCallCount++;
+    };
 
     const storage = await createFreshStorage(onChange);
 
@@ -299,7 +312,9 @@ describe('firestore trip storage onChange callback', () => {
     const storage = await createFreshStorage(onChange);
 
     const editedTrip = makeTrip({
-      items: [makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' })],
+      items: [
+        makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' }),
+      ],
     });
     storage.saveTrip(editedTrip);
 
@@ -332,7 +347,9 @@ describe('firestore trip storage onChange callback', () => {
 
     // Simulate remote change -- should not throw even without onChange
     const updatedTrip = makeTrip({
-      items: [makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' })],
+      items: [
+        makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' }),
+      ],
     });
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 

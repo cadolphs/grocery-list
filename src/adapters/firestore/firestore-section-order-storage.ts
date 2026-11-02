@@ -60,7 +60,10 @@ type MirroredSectionOrder = {
   readonly order: SectionOrder;
 };
 
-type SectionOrderDocumentData = { readonly order?: SectionOrder; readonly writtenAt?: number };
+type SectionOrderDocumentData = {
+  readonly order?: SectionOrder;
+  readonly writtenAt?: number;
+};
 
 type DocumentSnapshot = {
   exists: () => boolean;
@@ -74,7 +77,7 @@ const persistInBackground = (
   db: Firestore,
   uid: string,
   order: SectionOrder,
-  writtenAt: number
+  writtenAt: number,
 ): void => {
   setDoc(buildDocRef(db, uid), { order, writtenAt });
 };
@@ -86,7 +89,9 @@ const isSectionOrder = (candidate: unknown): candidate is SectionOrder =>
 
 // Pre-upgrade v1 mirrors hold { order } under the v1 key; an envelope whose
 // order is neither null nor an array is no usable mirror.
-const parseV1Mirror = (raw: string): { readonly value: SectionOrder } | null => {
+const parseV1Mirror = (
+  raw: string,
+): { readonly value: SectionOrder } | null => {
   try {
     const parsed = JSON.parse(raw) as Partial<MirroredSectionOrder> | null;
     if (parsed === null || typeof parsed !== 'object') return null;
@@ -98,21 +103,26 @@ const parseV1Mirror = (raw: string): { readonly value: SectionOrder } | null => 
 };
 
 const readSectionOrderMirror = (uid: string) =>
-  readMirrorEnvelope<SectionOrder>(uid, 'sectionOrder', parseV1Mirror, isSectionOrder);
+  readMirrorEnvelope<SectionOrder>(
+    uid,
+    'sectionOrder',
+    parseV1Mirror,
+    isSectionOrder,
+  );
 
 // null means "the server has nothing to say" — an absent document or a missing
 // order field. A remote clear is indistinguishable from silence at this level and
 // is deliberately resolved in favour of keeping data (see the guard below).
-const extractIncomingOrder = (data: SectionOrderDocumentData | undefined): SectionOrder =>
-  data?.order ?? null;
+const extractIncomingOrder = (
+  data: SectionOrderDocumentData | undefined,
+): SectionOrder => data?.order ?? null;
 
-const serializeOrder = (order: SectionOrder): string =>
-  JSON.stringify(order);
+const serializeOrder = (order: SectionOrder): string => JSON.stringify(order);
 
 export const createFirestoreSectionOrderStorage = (
   db: Firestore,
   uid: string,
-  options: FirestoreSectionOrderStorageOptions = {}
+  options: FirestoreSectionOrderStorageOptions = {},
 ): FirestoreSectionOrderStorage => {
   let cache: SectionOrder = null;
   let watermark: DocumentWatermark = UNSTAMPED;
@@ -169,7 +179,9 @@ export const createFirestoreSectionOrderStorage = (
 
     // Server data has arrived — it is authoritative for the rest of this
     // session, so the empty-snapshot guard stands down on both branches below.
-    const rePushWrittenAt = serverHasOrder ? rePushStamp(watermark, serverWrittenAt) : null;
+    const rePushWrittenAt = serverHasOrder
+      ? rePushStamp(watermark, serverWrittenAt)
+      : null;
     if (rePushWrittenAt !== null) {
       // The server holds an older document than the decision in cache (an
       // order or a clear): push it back with its own stamp. The echo carries
@@ -229,8 +241,7 @@ export const createFirestoreSectionOrderStorage = (
       unsubscribeFn();
     },
 
-    loadOrder: (): string[] | null =>
-      cache === null ? null : [...cache],
+    loadOrder: (): string[] | null => (cache === null ? null : [...cache]),
 
     saveOrder: (order: string[]): void => {
       commitLocalChange([...order]);

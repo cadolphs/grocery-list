@@ -10,7 +10,8 @@ import * as path from 'path';
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 
-const fileExists = (rel: string): boolean => fs.existsSync(path.join(repoRoot, rel));
+const fileExists = (rel: string): boolean =>
+  fs.existsSync(path.join(repoRoot, rel));
 // Gate reads on existence: absent files -> RED (jest assertion) not BROKEN (ENOENT).
 const readFile = (rel: string): string => {
   expect(fileExists(rel)).toBe(true);

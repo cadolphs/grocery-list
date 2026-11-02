@@ -36,7 +36,7 @@ const expectedBehavior = (): 'padding' | 'height' =>
 describe('keyboard avoidance — forms wrap content in KeyboardAvoidingView', () => {
   test('LoginScreen renders KeyboardAvoidingView with platform-correct behavior', () => {
     const screen = render(
-      <LoginScreen signIn={jest.fn()} signUp={jest.fn()} />
+      <LoginScreen signIn={jest.fn()} signUp={jest.fn()} />,
     );
     const kav = screen.UNSAFE_getByType(KeyboardAvoidingView);
     expect(kav).toBeTruthy();
@@ -52,7 +52,7 @@ describe('keyboard avoidance — forms wrap content in KeyboardAvoidingView', ()
         onDismiss={jest.fn()}
         onSubmitStaple={jest.fn()}
         onSubmitTripItem={jest.fn()}
-      />
+      />,
     );
     const kav = screen.UNSAFE_getByType(KeyboardAvoidingView);
     expect(kav).toBeTruthy();
