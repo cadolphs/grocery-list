@@ -16,7 +16,7 @@
     "check:siblings": "node scripts/check-domain-test-siblings.mjs",
     "check:map": "node scripts/control.mjs map --check",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:siblings && npm run check:map && jest --ci --coverage --bail",
-    "control": "node scripts/control.mjs",
+    "control": "node --env-file-if-exists=.env scripts/control.mjs",
     "postinstall": "simple-git-hooks"
   },
   "dependencies": {

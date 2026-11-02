@@ -100,6 +100,17 @@ const loadPlaywright = async () => {
   }
 };
 
+// Expo web keeps Firestore's listen channel open once signed in, so
+// 'networkidle' never fires there. Settle on the app having rendered, then
+// give in-flight requests a bounded grace period.
+const settle = async (page) => {
+  await page.waitForLoadState('domcontentloaded');
+  await page.locator('#root > *').first().waitFor({ timeout: 30_000 });
+  await page
+    .waitForLoadState('networkidle', { timeout: 5_000 })
+    .catch(() => {});
+};
+
 const withPage = async (flags, origin, fn) => {
   const { chromium } = await loadPlaywright();
   mkdirSync(artifactsDir, { recursive: true });
@@ -314,11 +325,11 @@ const browse = async (flags) => {
     origin,
     async ({ page }) => {
       await page.goto(target);
-      await page.waitForLoadState('networkidle');
+      await settle(page);
       const clicks = [flags.click].flat().filter((c) => typeof c === 'string');
       for (const testId of clicks) {
         await page.getByTestId(testId).click();
-        await page.waitForLoadState('networkidle');
+        await settle(page);
       }
       const text = await page.locator('body').innerText();
       const shot = path.join(
@@ -370,7 +381,7 @@ const execute = async (flags) => {
       origin,
       async (ctx) => {
         await ctx.page.goto(origin);
-        await ctx.page.waitForLoadState('networkidle');
+        await settle(ctx.page);
         return fixture.default(ctx);
       },
     );

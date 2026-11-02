@@ -30,7 +30,8 @@ Artifacts (screenshots, `--record` videos, sessions, `dev.log`) go to
 
 There is no emulator or staging project: the app talks to production Firebase.
 Sign in **only** the dedicated test account the maintainer provides through
-`CONTROL_EMAIL` and `CONTROL_PASSWORD` in your environment. Never create
+`CONTROL_EMAIL` and `CONTROL_PASSWORD` in your environment (or in a gitignored
+`.env` at the repo root, which `npm run control` loads). Never create
 accounts, never touch another account's data, never use the Firebase CLI or
 console (ADR-011). Without those variables, prove signed-out flows and rely on
 jest for the rest; say so under **Testing**.
