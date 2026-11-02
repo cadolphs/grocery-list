@@ -1,0 +1,29 @@
+name: Friction
+description: A durable, reproducible papercut an agent or human hit.
+labels: [friction]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        One papercut per issue; search open friction issues first. After filing,
+        add one priority label (P0 broken now, P1 this week, P2 when nothing
+        higher, P3 nice to have) and needs-decision if it needs the maintainer's
+        call. Keep secrets and user data out.
+  - type: textarea
+    id: what-happened
+    attributes: { label: What happened }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What you expected or wanted }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: How to reproduce }
+    validations: { required: true }
+  - type: textarea
+    id: cost
+    attributes: { label: Cost (time, retries, wrong output) }
+  - type: textarea
+    id: files
+    attributes: { label: Relevant files or commands }

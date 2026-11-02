@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Start with [AGENTS.md](AGENTS.md)**: the agent map, risk tiers, the single
+`npm run verify` gate, and links to decisions, primitives, and the ship loop.
+
 ## Project Overview
 
 This is a React Native mobile app built with Expo SDK 54, targeting iOS, Android, and web platforms. The app uses TypeScript with strict mode enabled and React Native's New Architecture.
@@ -21,6 +24,7 @@ npm run web      # Web browser
 ## Testing
 
 ```bash
+npm run verify        # Full local gate, same as CI
 npm test              # Run all tests
 npm run test:watch    # Run tests in watch mode
 npm test -- path/to/file.test.ts   # Run a single test file

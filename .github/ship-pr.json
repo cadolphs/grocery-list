@@ -1,0 +1,11 @@
+{
+  // No AI reviewer configured yet (interview 2026-11-02).
+  "reviewers": { "low": [], "medium": [], "high": [] },
+  // Medium and high always wait for the maintainer (AGENTS.md risk tiers).
+  "humanApprovalFor": ["medium", "high"],
+  // Agents may merge low-risk PRs with --merge once CI is green.
+  "autoMergeFor": ["low"],
+  "mergeMethod": "squash",
+  // After merge, wait up to 15 min for CI + Deploy Web to serve the merge SHA.
+  "deployCheck": ["node", "scripts/check-deployed-version.mjs"]
+}
