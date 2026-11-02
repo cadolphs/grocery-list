@@ -30,17 +30,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type check
-        run: npx tsc --noEmit
-
-      - name: Lint
-        run: npx eslint . --ext .ts,.tsx --max-warnings 0
-
-      - name: Test-coverage gate (sibling tests for src/domain and src/ports)
-        run: node scripts/check-domain-test-siblings.mjs
-
-      - name: Unit tests with coverage
-        run: npx jest --ci --coverage --bail
+      # Same single gate agents and humans run locally (AGENTS.md):
+      # typecheck, lint, format check, sibling-test check, feature-map check, jest.
+      - name: Verify
+        run: npm run verify
 
       # TODO: add dependency-cruiser config and re-enable architecture enforcement
       # - name: Architecture enforcement
