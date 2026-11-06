@@ -71,3 +71,9 @@ Store each TripItem as a separate Firestore document in a sub-collection.
 | Real-time consistency | Enabled -- trip changes propagate via onSnapshot |
 | Fault tolerance | Maintained -- setDoc fire-and-forget, persistentLocalCache handles offline |
 | Maintainability | Positive -- one fewer storage technology for trip data |
+
+## Revisit if
+
+Two devices editing the same trip lose each other's changes because the whole
+document is rewritten, the trip document nears Firestore's 1 MiB limit, or
+write volume starts to cost money. Each points at one document per item.

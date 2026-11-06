@@ -6,6 +6,8 @@ Door: <!-- two-way | one-way (data, Firestore schema/rules, auth, security, stor
 
 Cleanup: <!-- none | needed (#issue) | done -->
 
+Friction: <!-- #issue filed | none (add the `friction-skipped` label) -->
+
 ## Why
 
 ## Testing

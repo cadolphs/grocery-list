@@ -31,6 +31,7 @@ const getOrInitializeApp = (): FirebaseApp => {
   return app;
 };
 
+/** @public Read by firebase-config.test.ts through a fresh `require`, which knip cannot follow. */
 export const getFirebaseApp = (): FirebaseApp => getOrInitializeApp();
 
 export const getFirebaseAuth = (): Auth => {

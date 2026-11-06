@@ -108,3 +108,14 @@ Traditional three-layer with direct storage calls from service layer.
 | Maintainability | Positive -- clear boundaries, enforced dependencies |
 | Performance | Neutral -- indirection is negligible for this scale |
 | Time-to-market | Slightly positive -- extends existing patterns, no learning curve |
+
+## Revisit if
+
+A feature cannot be built without the domain importing a framework or a storage
+SDK, the app gains a backend or second process that has to share the domain, or
+the home and store views stop sharing one trip model and become independent
+features.
+
+Enforcement note (2026-11-06): the dependency rules are checked by ESLint
+`no-restricted-imports` in `eslint.config.mjs` as part of `npm run verify`, not
+by dependency-cruiser.

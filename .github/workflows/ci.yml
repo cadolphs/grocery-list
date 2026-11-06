@@ -31,13 +31,10 @@ jobs:
         run: npm ci
 
       # Same single gate agents and humans run locally (AGENTS.md):
-      # typecheck, lint, format check, sibling-test check, feature-map check, jest.
+      # typecheck, lint (incl. no-classes and layer-boundary rules), format
+      # check, sibling-test check, feature-map check, dead-code check, jest.
       - name: Verify
         run: npm run verify
-
-      # TODO: add dependency-cruiser config and re-enable architecture enforcement
-      # - name: Architecture enforcement
-      #   run: npx depcruise --validate .dependency-cruiser.cjs src/
 
       - name: Security audit
         run: npm audit --audit-level=high || true

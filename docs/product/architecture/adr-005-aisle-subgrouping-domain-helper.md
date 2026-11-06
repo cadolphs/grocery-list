@@ -45,3 +45,9 @@ The UI (`AisleSection.tsx`) calls the helper, branches on the `null` return for 
 - Maintainability: improved (domain language matches user-story vocabulary; helper is colocated).
 - Testability: improved (pure function; React-free; mutation-scoped).
 - Real-time consistency / fault tolerance / persistence: untouched (no port, no adapter, no schema change).
+
+## Revisit if
+
+Sub-grouping rules become user-configurable or need stored data (the helper is
+no longer pure), a second view needs different partition rules, or the
+`groupBySection` contract changes.

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React Native mobile app built with Expo SDK 54, targeting iOS, Android, and web platforms. The app uses TypeScript with strict mode enabled and React Native's New Architecture.
+This is a React Native mobile app built with Expo SDK 58, targeting iOS, Android, and web platforms. The app uses TypeScript with strict mode enabled and React Native's New Architecture.
 
 ## Development Commands
 

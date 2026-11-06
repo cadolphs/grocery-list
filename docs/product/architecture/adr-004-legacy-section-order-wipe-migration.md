@@ -100,3 +100,10 @@ Create `src/migrations/section-order-legacy.ts`, invoked once from `useAppInitia
 - The predicate must run **before** any consumer (e.g., `SectionOrderSettingsScreen` or `StoreView`) reads the order; placing it inside the hook's mount-time `useEffect` guarantees this ordering since both consumers read the order through the hook.
 - The wipe propagates to remote storage via the existing `clearOrder()` path, which on Firestore writes `{ order: null }` to the document. The Firestore listener echoes this write back through the existing own-write echo detection (serialised-equal snapshot skip), so no spurious React re-renders occur.
 - Documentation of the invariant ("section names will not contain `::`") lives in this ADR and in the design's §8 ("Migration Strategy").
+
+## Revisit if
+
+Section names may legitimately contain `::`, or a second stored-shape change
+needs migrating (then add a schema version instead of another predicate). Once
+every device has launched a build with this migration, the predicate is dead
+code and can be removed.

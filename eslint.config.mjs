@@ -21,6 +21,81 @@ export default tseslint.config(
     },
   },
   {
+    // ADR-009: no classes. The single exception (React error boundary) carries
+    // an inline disable with its reason.
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ClassDeclaration, ClassExpression',
+          message:
+            'No classes (ADR-009): use a factory function, a pure function, or a hook.',
+        },
+      ],
+    },
+  },
+  {
+    // ADR-001-architecture-style-and-paradigm: domain and ports stay free of
+    // frameworks and of the layers that depend on them. Tests may wire null
+    // adapters.
+    files: ['src/domain/**/*.ts', 'src/ports/**/*.ts'],
+    ignores: ['**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/adapters/**',
+                '**/auth/**',
+                '**/hooks/**',
+                '**/ui/**',
+                '**/components/**',
+                '**/storage/**',
+              ],
+              message:
+                'domain and ports must not import adapters, auth, hooks, or UI (ADR-001-architecture-style-and-paradigm).',
+            },
+            {
+              group: [
+                'react',
+                'react-*',
+                'expo',
+                'expo-*',
+                'firebase',
+                'firebase/*',
+                '@react-native-async-storage/*',
+              ],
+              message:
+                'domain and ports must not import frameworks or storage SDKs (ADR-001-architecture-style-and-paradigm).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Adapters and auth implement ports; they never reach up into hooks or UI.
+    files: ['src/adapters/**/*.ts', 'src/auth/**/*.ts'],
+    ignores: ['**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/hooks/**', '**/ui/**', '**/components/**'],
+              message:
+                'adapters and auth must not import hooks or UI (ADR-001-architecture-style-and-paradigm).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: [
       'node_modules/',
       'dist/',

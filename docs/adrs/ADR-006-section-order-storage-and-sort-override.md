@@ -125,3 +125,10 @@ Add a `sortIndex` field to each item's `StoreLocation`, persisted with the stapl
 | Performance | Neutral -- re-sort of <20 groups is negligible |
 | Reliability | Positive -- graceful fallback to default sort on null order |
 | Simplicity | Neutral -- adds files but each is small and focused |
+
+## Revisit if
+
+The order has to differ per store, has to cover aisles inside a section, or
+grouping then re-sorting becomes a measured cost. The stored key format has
+already changed once; see
+`docs/product/architecture/adr-004-legacy-section-order-wipe-migration.md`.

@@ -113,3 +113,9 @@ Use a TypeScript enum and dynamically add members.
 ### Supersedes
 
 This ADR does not supersede any prior ADR. It extends the type system established in the original architecture.
+
+## Revisit if
+
+An invalid area name reaches storage despite `validateAreaName`, areas need an
+identity apart from their name (so a rename no longer rewrites every item), or
+the set of areas becomes fixed again.
