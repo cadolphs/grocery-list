@@ -8,7 +8,14 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  type ScrollViewInstance,
+  Pressable,
+  StyleSheet,
+} from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
@@ -93,7 +100,7 @@ export const HomeView = (): React.JSX.Element => {
     aisleNumber: number | null;
   } | null>(null);
   const [settingsView, setSettingsView] = useState<SettingsView | null>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
 
   const handleToggleSettings = useCallback(() => {
     setSettingsView((prev) => (prev === null ? 'menu' : null));
