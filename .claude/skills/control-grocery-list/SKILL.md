@@ -45,6 +45,13 @@ accounts, never touch another account's data, never use the Firebase CLI or
 console (ADR-011). Without those variables, prove signed-out flows and rely on
 jest for the rest; say so under **Testing**.
 
+Cloud sessions use the same account: the maintainer sets `CONTROL_EMAIL` and
+`CONTROL_PASSWORD` in the cloud environment and allows
+`identitytoolkit.googleapis.com`, `securetoken.googleapis.com`,
+`firestore.googleapis.com` (sign-in and data) and `grocery-list-cad.web.app`
+(`health --sha`). If `login` or `health` cannot reach a host there, that is
+friction to file, not a reason for a scratch script.
+
 ## Fixtures for `execute`
 
 The app has no HTTP API of its own, so `execute` drives the UI. A fixture
