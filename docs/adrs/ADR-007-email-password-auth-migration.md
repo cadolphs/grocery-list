@@ -66,3 +66,9 @@ Replace email-link authentication with email/password authentication across the 
 - The `AuthUser` and `AuthResult` types are unchanged
 - No database schema changes
 - No new dependencies added
+
+## Revisit if
+
+People outside the household need accounts, forgotten passwords become a
+recurring problem (add reset, passkeys, or an OAuth provider), or Firebase
+changes its email/password support.

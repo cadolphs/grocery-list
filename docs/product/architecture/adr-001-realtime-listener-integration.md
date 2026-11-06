@@ -89,3 +89,9 @@ Introduce a lightweight in-process event bus. Adapters publish events ("staples-
 | Testability | Positive -- onChange is a plain function; easy to test in isolation |
 | Performance | Neutral -- onSnapshot first callback replaces getDoc with equivalent latency |
 | Reliability | Positive -- Firestore SDK handles reconnection and offline queuing |
+
+## Revisit if
+
+A storage adapter other than Firestore has to push remote changes (then
+subscription belongs on the port), own-write echo detection drops or duplicates
+an update, or more than one place has to own the listener lifecycle.

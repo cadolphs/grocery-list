@@ -10,6 +10,7 @@ import {
   openSync,
   readFileSync,
   readdirSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import path from 'node:path';
@@ -100,6 +101,84 @@ const loadPlaywright = async () => {
   }
 };
 
+// Playwright pins one Chromium build per release. Containers often ship a
+// different build than package-lock.json expects, so fall back to another
+// installed build (newest first) instead of failing. CONTROL_CHROMIUM_PATH
+// overrides the search.
+const CHROMIUM_BINARIES = new Set([
+  'chrome',
+  'chrome.exe',
+  'Chromium',
+  'Google Chrome for Testing',
+]);
+
+export const pickFallbackBuilds = (expectedDir, siblingDirs) =>
+  siblingDirs
+    .map((name) => ({
+      name,
+      build: Number(name.match(/^chromium-(\d+)$/)?.[1]),
+    }))
+    .filter(({ name, build }) => Number.isFinite(build) && name !== expectedDir)
+    .sort((a, b) => b.build - a.build)
+    .map(({ name }) => name);
+
+const isDirectory = (file) => {
+  try {
+    return statSync(file).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+const findChromiumBinary = (dir, depth = 5) => {
+  if (depth < 0 || !isDirectory(dir)) return null;
+  const entries = readdirSync(dir).map((name) => path.join(dir, name));
+  const binary = entries.find(
+    (file) => CHROMIUM_BINARIES.has(path.basename(file)) && !isDirectory(file),
+  );
+  return (
+    binary ??
+    entries.reduce(
+      (found, file) => found ?? findChromiumBinary(file, depth - 1),
+      null,
+    )
+  );
+};
+
+// Returns {} for the build Playwright expects, { executablePath, note } for an
+// override or fallback, or { error } when no Chromium can be found.
+const resolveChromium = (chromium) => {
+  const override = process.env.CONTROL_CHROMIUM_PATH;
+  if (override) {
+    return existsSync(override)
+      ? { executablePath: override, note: 'CONTROL_CHROMIUM_PATH' }
+      : { error: `CONTROL_CHROMIUM_PATH points at missing ${override}` };
+  }
+  const expected = chromium.executablePath();
+  if (existsSync(expected)) return {};
+  const [, browsersDir, expectedDir] =
+    expected.match(/^(.*)[\\/](chromium-\d+)[\\/]/) ?? [];
+  const fallback = (
+    browsersDir && isDirectory(browsersDir)
+      ? pickFallbackBuilds(expectedDir, readdirSync(browsersDir))
+      : []
+  )
+    .map((name) => ({
+      name,
+      executablePath: findChromiumBinary(path.join(browsersDir, name)),
+    }))
+    .find(({ executablePath }) => executablePath);
+  return fallback
+    ? {
+        executablePath: fallback.executablePath,
+        note: `${fallback.name} (Playwright expects ${expectedDir})`,
+      }
+    : {
+        error:
+          'no Chromium found. Fix: npx playwright install chromium, or set CONTROL_CHROMIUM_PATH',
+      };
+};
+
 // Expo web keeps Firestore's listen channel open once signed in, so
 // 'networkidle' never fires there. Settle on the app having rendered, then
 // give in-flight requests a bounded grace period.
@@ -114,7 +193,17 @@ const settle = async (page) => {
 const withPage = async (flags, origin, fn) => {
   const { chromium } = await loadPlaywright();
   mkdirSync(artifactsDir, { recursive: true });
-  const browser = await chromium.launch({ headless: !flags.headed });
+  const resolved = resolveChromium(chromium);
+  if (resolved.error) throw new Error(resolved.error);
+  if (resolved.note && !flags.json) {
+    console.error(`chromium: using ${resolved.note}`);
+  }
+  const browser = await chromium.launch({
+    headless: !flags.headed,
+    ...(resolved.executablePath
+      ? { executablePath: resolved.executablePath }
+      : {}),
+  });
   const storage = sessionFile(origin);
   const context = await browser.newContext({
     viewport: { width: 430, height: 900 },
@@ -183,12 +272,12 @@ const doctor = async (flags) => {
   const origin = localOrigin(flags);
   const major = Number(process.versions.node.split('.')[0]);
   const hook = path.join(root, '.git', 'hooks', 'pre-commit');
-  let chromiumOk = false;
+  let chromiumState = { error: 'playwright not installed' };
   try {
     const { chromium } = await import('playwright');
-    chromiumOk = existsSync(chromium.executablePath());
+    chromiumState = resolveChromium(chromium);
   } catch {
-    chromiumOk = false;
+    /* keep the error state */
   }
   const checks = [
     { name: 'node >= 20', ok: major >= 20, fix: 'install Node 20+' },
@@ -204,9 +293,9 @@ const doctor = async (flags) => {
       fix: 'npx simple-git-hooks',
     },
     {
-      name: 'playwright chromium',
-      ok: chromiumOk,
-      fix: 'npx playwright install chromium',
+      name: `playwright chromium${chromiumState.note ? ` (using ${chromiumState.note})` : ''}`,
+      ok: !chromiumState.error,
+      fix: 'npx playwright install chromium (or set CONTROL_CHROMIUM_PATH)',
     },
     {
       name: `dev server at ${origin}`,

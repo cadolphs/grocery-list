@@ -78,3 +78,9 @@ Build a bottom sheet from scratch using `Animated.View` with `translateY` animat
 | Maintainability | Positive -- zero external dependency to maintain |
 | Usability | Neutral -- adequate for a form, lacks gesture refinement |
 | Testability | Positive -- Modal testable with @testing-library/react-native |
+
+## Revisit if
+
+A sheet needs drag-to-dismiss, snap points, or gesture-scrolled content, or
+`Modal` keyboard handling breaks on a supported Android version. Either one
+means superseding this record with a gesture-based sheet library.

@@ -98,3 +98,9 @@ Include a `schema_version` key for future data migration support.
 | Performance | Neutral -- sufficient for dataset size, optimistic UI handles perceived latency |
 | Maintainability | Positive -- simple, well-understood technology, swappable via port |
 | Reliability | Positive -- AsyncStorage is battle-tested on React Native |
+
+## Revisit if
+
+Device-local data grows past about 1 MB, a measured write takes longer than the
+500 ms check-off budget, or a feature needs partial reads or a transaction
+across keys.

@@ -44,3 +44,10 @@ Use **Firebase Firestore** as the cloud backend with built-in offline persistenc
 - **Vendor lock-in**: Data lives on Google Cloud. Migration would require exporting and rebuilding adapters.
 - **Query limitations**: Firestore's query model is more limited than SQL. Acceptable for this simple data model.
 - **Ports-and-adapters mitigates lock-in**: Domain logic is Firestore-agnostic. Only adapters would need replacement.
+
+## Revisit if
+
+Usage outgrows the free Spark plan, a feature needs a query Firestore cannot
+express (reporting, sharing lists across households), Firestore's offline
+persistence proves unreliable on a platform the app targets, or the data has to
+be self-hosted.

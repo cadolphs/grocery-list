@@ -19,6 +19,7 @@ type ErrorBoundaryState = {
   readonly error: Error | null;
 };
 
+// eslint-disable-next-line no-restricted-syntax -- React error boundaries need a class (ADR-009 "Revisit if")
 export class ErrorBoundary extends React.Component<
   ErrorBoundaryProps,
   ErrorBoundaryState

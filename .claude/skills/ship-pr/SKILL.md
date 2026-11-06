@@ -26,6 +26,12 @@ description:
 6. File leftover friction ([friction-log](../friction-log/SKILL.md)) and
    `Cleanup:` issues, each with a `P0`-`P3` label and `needs-decision` when it
    needs the maintainer. If nothing was worth filing, add the
-   `friction-skipped` label to the PR.
+   `friction-skipped` label to the PR. Do one or the other on every PR, and
+   fill the template's **Friction** line to match. Anything you worked around
+   to get proof (a missing browser, missing credentials, a blocked host) is
+   friction: file it, do not only mention it under **Testing**.
 7. Summarize in the PR (final comment): what shipped, risk, links, what is
    left.
+
+Steps 6 and 7 apply in every environment, including cloud sessions and PRs
+that end parked for the maintainer.

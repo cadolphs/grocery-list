@@ -26,6 +26,15 @@ npm run control -- dev --stop
 Artifacts (screenshots, `--record` videos, sessions, `dev.log`) go to
 `.control/`, which git ignores.
 
+## Browser
+
+`browse`, `execute` and `login` use the Chromium build Playwright expects. When
+that build is missing (cloud containers often ship another one), the CLI falls
+back to the newest `chromium-*` build in the same Playwright browsers directory
+and says which one it used; `doctor` shows it too. Set `CONTROL_CHROMIUM_PATH`
+to a Chromium binary to skip the search. Use the CLI, not a scratch Playwright
+script, so the proof is the same everywhere.
+
 ## Seed user
 
 There is no emulator or staging project: the app talks to production Firebase.

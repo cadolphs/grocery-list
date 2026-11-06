@@ -117,3 +117,9 @@ Domain services do not call storage on construction. Instead, all operations che
 | Testability | Positive -- null adapters unchanged, adapter testable with AsyncStorage mock |
 | Reliability | Slightly negative -- fire-and-forget writes have small data loss window |
 | Simplicity | Neutral -- adds cache layer but avoids async infection of domain |
+
+## Revisit if
+
+Fire-and-forget writes lose data users notice (a check-off gone after a
+restart), a write failure has to be shown to the user, or a dataset becomes too
+large to load into memory at startup.

@@ -6,6 +6,9 @@ template in ADR-009, end with **Revisit if**, and are listed here in the same
 PR. Supersede instead of rewriting history. A PR that writes or supersedes a
 record also updates the `adrs` lists in [`docs/primitives.md`](../primitives.md).
 
+Every current record ends with **Revisit if**; superseded and stale records do
+not need one.
+
 Numbers below 009 collide (two sets were written in parallel). Cite records by
 **file name**, not number.
 
