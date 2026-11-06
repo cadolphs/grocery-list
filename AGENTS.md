@@ -19,7 +19,7 @@ This file is a map. Open the page that owns the task:
 - Shipping a PR: [ship-pr skill](.claude/skills/ship-pr/SKILL.md)
 - Filing friction: [friction-log skill](.claude/skills/friction-log/SKILL.md)
 - Deploy, health check, rollback: [docs/deploy.md](docs/deploy.md)
-- Feature workflow (nWave waves, feature docs): `docs/feature/`, `docs/evolution/`
+- Feature and product work: [project board](https://github.com/users/cadolphs/projects/4). No fixed workflow ([ADR-012](docs/adrs/ADR-012-no-mandated-feature-workflow.md)); `docs/feature/` and `docs/evolution/` are history
 
 ## Never
 

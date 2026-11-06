@@ -1,7 +1,7 @@
 # Decision records
 
 Read these before proposing a change that spans several PRs. New records use
-the next free number in `docs/adrs/` (currently **ADR-012**), follow the
+the next free number in `docs/adrs/` (currently **ADR-013**), follow the
 template in ADR-009, end with **Revisit if**, and are listed here in the same
 PR. Supersede instead of rewriting history. A PR that writes or supersedes a
 record also updates the `adrs` lists in [`docs/primitives.md`](../primitives.md).
@@ -30,6 +30,7 @@ Numbers below 009 collide (two sets were written in parallel). Cite records by
 | [ADR-006-section-order-storage-and-sort-override](ADR-006-section-order-storage-and-sort-override.md) | Section order storage and sort override |
 | [ADR-007-email-password-auth-migration](ADR-007-email-password-auth-migration.md) | Email/password auth |
 | [ADR-008-signout-listener-lifecycle](ADR-008-signout-listener-lifecycle.md) | Sign-out listener lifecycle invariant |
+| [ADR-012](ADR-012-no-mandated-feature-workflow.md) | No mandated feature workflow; nWave retired |
 | [product/adr-001-realtime-listener-integration](../product/architecture/adr-001-realtime-listener-integration.md) | Real-time listener integration |
 | [product/adr-002-firestore-trip-storage](../product/architecture/adr-002-firestore-trip-storage.md) | Firestore trip storage adapter |
 | [product/adr-004-legacy-section-order-wipe-migration](../product/architecture/adr-004-legacy-section-order-wipe-migration.md) | Wipe-on-detect for legacy section orders |
