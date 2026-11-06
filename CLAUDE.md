@@ -45,7 +45,7 @@ eas build --profile production
 
 ## Development Paradigm
 
-This project follows the **functional programming** paradigm. Use @nw-functional-software-crafter for implementation. Factory functions, pure domain functions, hooks — no classes.
+This project follows the **functional programming** paradigm. Factory functions, pure domain functions, hooks — no classes.
 
 ## Architecture
 
