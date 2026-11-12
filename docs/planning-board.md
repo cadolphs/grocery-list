@@ -61,7 +61,8 @@ description of the overall product goal, and each issue links back to it.
 
 ## Working with the board
 
-Use the board CLI (`scripts/board.mjs`); the
+Use the board CLI (`npm run board`, which runs the `board` command of
+[cad-skills](https://github.com/cadolphs/cad-skills) through `npx`); the
 [planning-board skill](../.claude/skills/planning-board/SKILL.md) says when.
 
 ```sh
@@ -75,12 +76,13 @@ npm run board -- move <item> "In progress" --issue 31,32
 npm run board -- statuses
 ```
 
-The CLI looks up the project, the Status field, and the stage names on GitHub,
-so renaming or adding a stage there needs no change in the script. Two stage
-names carry rules and are matched by name: a move to **Decided** needs the
-maintainer's words and records them under Decisions; a move to **In progress**
-needs the issue numbers and lists them under Issues. If either stage is
-renamed, update `DECIDED` and `IN_PROGRESS` in the script and the table above.
+The CLI reads which board to use from `.github/board.json` and looks up the
+stage names on GitHub, so renaming or adding a stage there needs no other
+change. Two stages carry rules: a move to **Decided** needs the maintainer's
+words and records them under Decisions; a move to **In progress** needs the
+issue numbers and lists them under Issues. If either stage is renamed, name the
+new one in `.github/board.json` (`"stages": { "decided": "...", "inProgress":
+"..." }`) and update the table above.
 
 The `gh` token needs the `project` scope (`gh auth refresh -s project`). Cloud
 sessions may not have it: when the board cannot be reached, say so and put the
