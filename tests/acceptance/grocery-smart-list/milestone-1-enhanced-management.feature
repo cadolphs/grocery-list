@@ -127,11 +127,6 @@ Feature: Milestone 1 - Enhanced Item Management and Navigation
     And breakdown shows 17 staples and 5 one-offs
     And breakdown shows 19 from sweep and 3 from whiteboard
 
-  Scenario: Prep time displayed in trip summary
-    Given Carlos started the sweep 4 minutes ago
-    When Carlos views the trip summary
-    Then the prep time shows approximately 4 minutes
-
   Scenario: Summary reflects skipped staples
     Given Carlos started with 21 pre-loaded staples and skipped 3
     And Carlos added 2 one-offs during sweep

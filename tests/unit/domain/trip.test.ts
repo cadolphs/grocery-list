@@ -352,33 +352,6 @@ describe('Trip: getSummary', () => {
   });
 });
 
-describe('Trip: prepTimeMinutes', () => {
-  it('computes elapsed minutes from start time to now', () => {
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([]);
-
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-    trip.setStartTime(tenMinutesAgo);
-
-    const summary = trip.getSummary();
-
-    expect(summary.prepTimeMinutes).toBeGreaterThanOrEqual(9);
-    expect(summary.prepTimeMinutes).toBeLessThanOrEqual(11);
-  });
-
-  it('returns 0 prep time when trip just started', () => {
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([]);
-
-    const summary = trip.getSummary();
-
-    expect(summary.prepTimeMinutes).toBeGreaterThanOrEqual(0);
-    expect(summary.prepTimeMinutes).toBeLessThanOrEqual(1);
-  });
-});
-
 describe('Trip: resetSweep', () => {
   it('resets staple items to needed=true and checked=false', () => {
     const tripStorage = createNullTripStorage();

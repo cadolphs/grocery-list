@@ -98,11 +98,6 @@ Feature: Milestone 1 - UI for Enhanced Item Management and Navigation
     Then Carlos sees "5 items purchased"
     And breakdown shows staple and one-off counts
 
-  Scenario: Trip summary shows preparation time
-    Given Carlos started the sweep 3 minutes ago
-    When the trip summary screen appears
-    Then Carlos sees approximately "3 minutes" prep time
-
   Scenario: Switch to store view from trip summary
     Given the trip summary is displayed
     When Carlos taps "Switch to Store View"

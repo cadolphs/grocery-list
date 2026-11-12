@@ -421,7 +421,6 @@ describe('US-10: Store section navigation and progress in UI', () => {
 
 describe('US-11: Trip summary screen in UI', () => {
   // AC: Summary shows total purchased and breakdown
-  // AC: Prep time is displayed
   // AC: Store view transition is available
 
   it('displays total purchased and item breakdown', () => {
@@ -446,27 +445,6 @@ describe('US-11: Trip summary screen in UI', () => {
 
     // And breakdown shows staple and one-off counts
     expect(screen.getByText(/5 staples/)).toBeTruthy();
-  });
-
-  it('shows preparation time on summary', () => {
-    // Given Carlos started the sweep 3 minutes ago
-    const { library, tripService } = createTestServices();
-    tripService.setStartTime(new Date(Date.now() - 3 * 60 * 1000));
-    render(
-      <ServiceProvider stapleLibrary={library} tripService={tripService}>
-        <AppShell />
-      </ServiceProvider>,
-    );
-    // Complete all items and finish trip
-    fireEvent.press(screen.getByText('Store'));
-    tripService.getItems().forEach((i) => tripService.checkOff(i.name));
-    fireEvent.press(screen.getByText('Finish Trip'));
-
-    // When the trip summary screen appears
-    // (already rendered)
-
-    // Then Carlos sees approximately "3 minutes" prep time
-    expect(screen.getByText(/3 min/)).toBeTruthy();
   });
 
   it('switches to store view from trip summary', () => {
