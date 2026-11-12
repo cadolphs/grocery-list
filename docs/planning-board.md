@@ -61,23 +61,26 @@ description of the overall product goal, and each issue links back to it.
 
 ## Working with the board
 
+Use the board CLI (`scripts/board.mjs`); the
+[planning-board skill](../.claude/skills/planning-board/SKILL.md) says when.
+
 ```sh
-# List items with their status
-gh project item-list 4 --owner cadolphs --format json
-
-# Log an idea (lands without a status: set it to Proposed)
-gh project item-create 4 --owner cadolphs --title "<idea>" --body "<body>"
-
-# Update the body of a draft item (id starts with DI_, from item-list `content.id`)
-gh project item-edit --id <DI_id> --title "<title>" --body "<new body>"
-
-# Move an item (item id starts with PVTI_)
-gh project item-edit --project-id PVT_kwHOANQEpM4BqgaJ --id <PVTI_id> \
-  --field-id PVTSSF_lAHOANQEpM4BqgaJzho3Qaw --single-select-option-id <option>
+npm run board -- list                      # items in stage order, numbered
+npm run board -- show <item>               # title, status, body
+npm run board -- add "<idea>" --body-file <path>
+npm run board -- body <item> --body-file <path>
+npm run board -- move <item> Exploring
+npm run board -- move <item> Decided --maintainer-said "<their words>"
+npm run board -- move <item> "In progress" --issue 31,32
+npm run board -- statuses
 ```
 
-Status option ids: Proposed `88c40976`, Exploring `b09522c2`, Decided
-`ad22cf85`, In progress `307328d3`, Done `da6a38de`.
+The CLI looks up the project, the Status field, and the stage names on GitHub,
+so renaming or adding a stage there needs no change in the script. Two stage
+names carry rules and are matched by name: a move to **Decided** needs the
+maintainer's words and records them under Decisions; a move to **In progress**
+needs the issue numbers and lists them under Issues. If either stage is
+renamed, update `DECIDED` and `IN_PROGRESS` in the script and the table above.
 
 The `gh` token needs the `project` scope (`gh auth refresh -s project`). Cloud
 sessions may not have it: when the board cannot be reached, say so and put the

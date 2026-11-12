@@ -18,6 +18,7 @@
     "check:dead": "knip --no-progress",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:siblings && npm run check:map && npm run check:dead && jest --ci --coverage --bail",
     "control": "node --env-file-if-exists=.env scripts/control.mjs",
+    "board": "node scripts/board.mjs",
     "postinstall": "simple-git-hooks"
   },
   "dependencies": {
