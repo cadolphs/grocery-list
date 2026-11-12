@@ -39,6 +39,16 @@ This file is a map. Open the page that owns the task:
 No AI reviewer and no preview environment are configured. When unsure, pick
 the higher tier.
 
+## Native builds
+
+`npm run verify` never builds native code. Put the `eas-preview` label on a PR
+that touches `package.json`, `package-lock.json`, `app.json`, `eas.json`, or
+native config: `.github/workflows/eas-preview.yml` then starts an EAS Android
+preview build and comments the build page link (`--no-wait`; check the result
+on expo.dev before merging). It needs the maintainer's `EXPO_TOKEN` secret, so
+a missing link means the secret, not the change. Agents apply the label
+themselves when the rule matches.
+
 ## Issues and triage
 
 Every issue agents file gets one priority label — `P0` (broken now), `P1`
