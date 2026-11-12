@@ -33,9 +33,6 @@ export const StoreView = (): React.JSX.Element => {
   const { areas } = useAreas();
   const { order: sectionOrder } = useSectionOrder();
   const [tripResult, setTripResult] = useState<CompleteTripResult | null>(null);
-  const [prepTimeMinutes, setPrepTimeMinutes] = useState<number | undefined>(
-    undefined,
-  );
   const [showSummary, setShowSummary] = useState(true);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
   const [metadataSheetItemName, setMetadataSheetItemName] = useState('');
@@ -64,8 +61,6 @@ export const StoreView = (): React.JSX.Element => {
   );
 
   const handleFinishTrip = (): void => {
-    const summary = tripService.getSummary();
-    setPrepTimeMinutes(summary.prepTimeMinutes);
     const result = tripService.complete();
     setTripResult(result);
     setShowSummary(true);
@@ -173,7 +168,6 @@ export const StoreView = (): React.JSX.Element => {
     return (
       <TripSummaryView
         result={tripResult}
-        prepTimeMinutes={prepTimeMinutes}
         onSwitchToStoreView={handleSwitchToStoreView}
       />
     );

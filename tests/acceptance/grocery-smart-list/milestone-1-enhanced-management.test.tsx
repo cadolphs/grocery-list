@@ -559,7 +559,6 @@ describe('US-11: Trip Summary', () => {
   // AC: Trip summary shows total item count
   // AC: Breakdown by source (sweep vs whiteboard)
   // AC: Breakdown by type (staple vs one-off)
-  // AC: Prep time displayed
 
   it('shows trip summary with item breakdown', () => {
     // Given Carlos completed sweep with 19 items and 3 from whiteboard
@@ -611,23 +610,6 @@ describe('US-11: Trip Summary', () => {
     expect(summary.oneOffCount).toBe(5);
     expect(summary.sweepCount).toBe(19);
     expect(summary.whiteboardCount).toBe(3);
-  });
-
-  it('displays prep time', () => {
-    // Given Carlos started the sweep 4 minutes ago
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([]);
-    // Simulate 4 minutes elapsed by setting startedAt in the past
-    const fourMinutesAgo = new Date(Date.now() - 4 * 60 * 1000);
-    trip.setStartTime(fourMinutesAgo); // test helper
-
-    // When Carlos views the trip summary
-    const summary = trip.getSummary();
-
-    // Then prep time shows approximately 4 minutes
-    expect(summary.prepTimeMinutes).toBeGreaterThanOrEqual(3);
-    expect(summary.prepTimeMinutes).toBeLessThanOrEqual(5);
   });
 
   it('summary reflects skipped staples', () => {

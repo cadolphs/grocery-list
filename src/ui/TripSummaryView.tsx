@@ -8,13 +8,11 @@ import { theme } from './theme';
 
 type TripSummaryViewProps = {
   readonly result: CompleteTripResult;
-  readonly prepTimeMinutes?: number;
   readonly onSwitchToStoreView?: () => void;
 };
 
 export const TripSummaryView = ({
   result,
-  prepTimeMinutes,
   onSwitchToStoreView,
 }: TripSummaryViewProps): React.JSX.Element => {
   const stapleCount = result.purchasedStaples.length;
@@ -29,9 +27,6 @@ export const TripSummaryView = ({
         <Text style={styles.breakdown}>{stapleCount} staples</Text>
         {oneOffCount > 0 && (
           <Text style={styles.breakdown}>{oneOffCount} one-offs</Text>
-        )}
-        {prepTimeMinutes !== undefined && (
-          <Text style={styles.breakdown}>{prepTimeMinutes} min</Text>
         )}
         {carryoverItems.length > 0 && (
           <View style={styles.carryoverSection}>

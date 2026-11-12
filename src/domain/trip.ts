@@ -27,7 +27,6 @@ export type TripSummary = {
   readonly oneOffCount: number;
   readonly sweepCount: number;
   readonly whiteboardCount: number;
-  readonly prepTimeMinutes: number;
 };
 
 export type SweepProgress = {
@@ -61,7 +60,6 @@ export type TripService = {
   readonly uncompleteArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
   readonly getSummary: () => TripSummary;
-  readonly setStartTime: (date: Date) => void;
   readonly loadFromStorage: () => void;
   readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
   readonly complete: () => CompleteTripResult;
@@ -279,8 +277,6 @@ export const createTrip = (
 
     getSummary: (): TripSummary => {
       const neededItems = items.filter((item) => item.needed);
-      const elapsedMs = Date.now() - new Date(createdAt).getTime();
-      const prepTimeMinutes = Math.round(elapsedMs / 60000);
       return {
         totalItems: neededItems.length,
         stapleCount: neededItems.filter((item) => item.itemType === 'staple')
@@ -292,12 +288,7 @@ export const createTrip = (
         whiteboardCount: neededItems.filter(
           (item) => item.source === 'whiteboard',
         ).length,
-        prepTimeMinutes,
       };
-    },
-
-    setStartTime: (date: Date) => {
-      createdAt = date.toISOString();
     },
 
     loadFromStorage: () => {
