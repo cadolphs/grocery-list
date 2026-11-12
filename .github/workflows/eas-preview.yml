@@ -70,8 +70,8 @@ jobs:
           id="$(jq -r '.[0].id' build.json)"
           url="$(grep -oE 'https://expo\.dev/accounts/[^ ]+/builds/[0-9a-f-]+' build.log | head -1)"
           if [ -z "$url" ]; then
-            account="$(jq -r '.[0].project.ownerAccount.name // empty' build.json)"
-            slug="$(jq -r '.[0].project.slug // empty' build.json)"
+            account="$(jq -r '.[0].app.ownerAccount.name // empty' build.json)"
+            slug="$(jq -r '.[0].app.slug // empty' build.json)"
             url="https://expo.dev/accounts/${account}/projects/${slug}/builds/${id}"
           fi
           echo "id=$id" >> "$GITHUB_OUTPUT"
