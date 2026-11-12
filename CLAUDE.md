@@ -28,6 +28,7 @@ npm run verify        # Full local gate, same as CI
 npm test              # Run all tests
 npm run test:watch    # Run tests in watch mode
 npm test -- path/to/file.test.ts   # Run a single test file
+npm run test:scripts  # Unit tests for scripts/*.mjs (node --test)
 ```
 
 ## Build & Deploy (EAS)
