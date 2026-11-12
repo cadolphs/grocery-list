@@ -33,7 +33,9 @@ rollback, manual fallback, and service-account rotation — see
 [docs/deploy.md](docs/deploy.md).
 
 Android ships via EAS Build (`eas build --profile production`) and is out of
-scope for the web deploy runbook.
+scope for the web deploy runbook. A PR labelled `eas-preview` gets an EAS
+Android preview build started from `.github/workflows/eas-preview.yml`; the
+build link lands in a PR comment.
 
 ## Architecture
 

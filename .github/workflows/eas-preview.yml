@@ -1,0 +1,93 @@
+name: EAS Preview (Android)
+
+# Native regressions (SDK, dependency, app.json changes) do not show up in
+# `npm run verify`. This starts an EAS Android preview build on demand and
+# posts the build page link; the build itself runs on EAS, not here.
+#
+# Triggers (issue #22):
+# - the `eas-preview` label on a PR; later pushes rebuild while it stays on.
+# - workflow_dispatch on any branch.
+#
+# Needs the EXPO_TOKEN repo secret (expo.dev access token). A `synchronize`
+# push by dependabot[bot] cannot read repo secrets and fails at the EAS step;
+# re-apply the label as a human to rebuild those.
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+  workflow_dispatch:
+
+concurrency:
+  group: eas-preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  android-preview:
+    name: Android preview build
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'eas-preview')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Non-blocking: its verdict goes into the comment so a stale app.json
+      # key or version mismatch is visible without hiding the build link.
+      - name: Expo doctor
+        id: doctor
+        continue-on-error: true
+        run: npx expo-doctor
+
+      - name: Start EAS build
+        id: build
+        run: |
+          set -o pipefail
+          eas build --profile preview --platform android \
+            --non-interactive --no-wait --json \
+            > build.json 2> build.log
+          cat build.log
+          id="$(jq -r '.[0].id' build.json)"
+          url="$(grep -oE 'https://expo\.dev/accounts/[^ ]+/builds/[0-9a-f-]+' build.log | head -1)"
+          if [ -z "$url" ]; then
+            account="$(jq -r '.[0].app.ownerAccount.name // empty' build.json)"
+            slug="$(jq -r '.[0].app.slug // empty' build.json)"
+            url="https://expo.dev/accounts/${account}/projects/${slug}/builds/${id}"
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          URL: ${{ steps.build.outputs.url }}
+          DOCTOR: ${{ steps.doctor.outcome }}
+        run: |
+          body="**EAS Android preview build** started for \`${SHA::7}\`: ${URL}
+          expo-doctor: ${DOCTOR} (see the job log)"
+          echo "$body" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$PR" ]; then
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$body"
+          fi
