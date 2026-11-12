@@ -21,7 +21,7 @@ This file is a map. Open the page that owns the task:
 - Shipping a PR: [ship-pr skill](.claude/skills/ship-pr/SKILL.md)
 - Filing friction: [friction-log skill](.claude/skills/friction-log/SKILL.md). Every PR ends with a friction issue or the `friction-skipped` label, in every environment
 - Deploy, health check, rollback: [docs/deploy.md](docs/deploy.md)
-- Feature and product work: [project board](https://github.com/users/cadolphs/projects/4). No fixed workflow ([ADR-012](docs/adrs/ADR-012-no-mandated-feature-workflow.md)); `docs/feature/` and `docs/evolution/` are history
+- Feature and product work: ideas, open questions, decisions, and specs live as draft items on the [planning board](https://github.com/users/cadolphs/projects/4), not in issues; see [docs/planning-board.md](docs/planning-board.md). No fixed workflow ([ADR-012](docs/adrs/ADR-012-no-mandated-feature-workflow.md)); `docs/feature/` and `docs/evolution/` are history
 
 ## Never
 
