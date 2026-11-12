@@ -96,6 +96,23 @@ export default tseslint.config(
     },
   },
   {
+    // scripts/*.mjs run under plain Node (no TypeScript, no bundler), so they
+    // get the base recommended rules plus the Node globals they use.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        AbortSignal: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+  },
+  {
     ignores: [
       'node_modules/',
       'dist/',
@@ -105,7 +122,6 @@ export default tseslint.config(
       'babel.config.js',
       'jest.setup.js',
       'stryker.config.mjs',
-      'scripts/**',
     ],
   },
 );

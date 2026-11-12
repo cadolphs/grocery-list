@@ -6,8 +6,8 @@ through Firestore. Web deploys to https://grocery-list-cad.web.app from CI on
 `main`. Functional, ports-and-adapters code — no classes.
 
 `npm run verify` is the single local gate (typecheck, lint, prettier check,
-domain sibling-test check, feature-map check, dead-code check, jest). CI runs
-the same command. Git hooks (simple-git-hooks, installed by `npm install`) run
+domain sibling-test check, feature-map check, dead-code check, script tests,
+jest). CI runs the same command. Git hooks (simple-git-hooks, installed by `npm install`) run
 lint + format on commit and typecheck + map check + dead-code check on push.
 Lint enforces no classes (ADR-009) and the layer boundaries; `knip`
 (`npm run check:dead`) fails on unused files, exports, and dependencies.
