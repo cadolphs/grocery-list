@@ -1,17 +1,675 @@
 {
-  "version": "2.10",
+  "version": "2.21",
   "children": [
     {
       "type": "frame",
       "id": "bi8Au",
       "x": 0,
       "y": 0,
-      "name": "Frame",
+      "name": "Home - Corner shop",
       "clip": true,
-      "width": 800,
-      "height": 600,
-      "fill": "#FFFFFF",
-      "layout": "none"
+      "width": 430,
+      "fill": "$ground",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "qzYRS",
+          "name": "Tabs",
+          "width": "fill_container",
+          "children": [
+            {
+              "type": "frame",
+              "id": "pk81j",
+              "name": "Home tab",
+              "width": "fill_container",
+              "stroke": "$border",
+              "strokeWidth": {
+                "bottom": 3
+              },
+              "padding": [
+                14,
+                0
+              ],
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RjAyP",
+                  "name": "Home",
+                  "fill": "$text",
+                  "content": "Home",
+                  "fontFamily": "$fontBody",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Dl92P",
+              "name": "Store tab",
+              "width": "fill_container",
+              "stroke": "#00000000",
+              "strokeWidth": {
+                "bottom": 3
+              },
+              "padding": [
+                14,
+                0
+              ],
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c0QRY",
+                  "name": "Store",
+                  "fill": "$textMuted",
+                  "content": "Store",
+                  "fontFamily": "$fontBody",
+                  "fontSize": 16,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "cYOI0",
+          "name": "Sign out row",
+          "width": "fill_container",
+          "padding": [
+            14,
+            0
+          ],
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "WXKPB",
+              "name": "Sign out",
+              "fill": "$text",
+              "content": "Sign out",
+              "fontFamily": "$fontBody",
+              "fontSize": 16,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "p1k2Vl",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            8,
+            16,
+            24,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "aw2kK",
+              "name": "Settings row",
+              "width": "fill_container",
+              "justifyContent": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pdp6J",
+                  "name": "Settings",
+                  "fill": "$text",
+                  "content": "Settings",
+                  "fontFamily": "$fontBody",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "bmt88",
+              "name": "Mode toggle",
+              "clip": true,
+              "width": "fill_container",
+              "cornerRadius": "$radiusSm",
+              "stroke": "$border",
+              "strokeWidth": "$borderWidth",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "We0JS",
+                  "name": "Sweep",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$inverse",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Msr25",
+                      "name": "Sweep",
+                      "fill": "$inverseText",
+                      "content": "Sweep",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "U9Uei",
+                  "name": "Checklist",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$accentSoft",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "F2jnM",
+                      "name": "Checklist",
+                      "fill": "$text",
+                      "content": "Checklist",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "klhV0",
+              "name": "Add row",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "c4GTa",
+                  "name": "Input",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$tile",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wqiZV",
+                      "name": "Add an item...",
+                      "fill": "$textMuted",
+                      "content": "Add an item...",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RMaG3",
+                  "name": "Add button",
+                  "height": 48,
+                  "fill": "$accent",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$border",
+                    "offset": {
+                      "x": 3,
+                      "y": 3
+                    }
+                  },
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jh79P",
+                      "name": "Add",
+                      "fill": "$onAccent",
+                      "content": "Add",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 16,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IpJU9",
+              "name": "Progress",
+              "width": "fill_container",
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TgcPm",
+                  "name": "0 of 5 areas complete",
+                  "fill": "$textMuted",
+                  "content": "0 of 5 areas complete",
+                  "fontFamily": "$fontBody",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PhGRM",
+              "name": "Areas",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PhuY1",
+                  "name": "Bathroom card",
+                  "width": "fill_container",
+                  "fill": "$tile",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$border",
+                    "offset": {
+                      "x": 3,
+                      "y": 3
+                    }
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "wMtOS",
+                      "name": "Bathroom (0)",
+                      "fill": "$text",
+                      "content": "Bathroom (0)",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UIEpf",
+                      "name": "Done button",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "$inverse",
+                      "cornerRadius": "$radiusSm",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZiJVe",
+                          "name": "Done",
+                          "fill": "$inverseText",
+                          "content": "Done",
+                          "fontFamily": "$fontBody",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fGNEd",
+                  "name": "Garage Pantry card",
+                  "width": "fill_container",
+                  "fill": "$tile",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$border",
+                    "offset": {
+                      "x": 3,
+                      "y": 3
+                    }
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "mv5Ru",
+                      "name": "Garage Pantry (0)",
+                      "fill": "$text",
+                      "content": "Garage Pantry (0)",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "F6wNo",
+                      "name": "Done button",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "$inverse",
+                      "cornerRadius": "$radiusSm",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "nDmpg",
+                          "name": "Done",
+                          "fill": "$inverseText",
+                          "content": "Done",
+                          "fontFamily": "$fontBody",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Dt5F0",
+                  "name": "Kitchen Cabinets card",
+                  "width": "fill_container",
+                  "fill": "$tile",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$border",
+                    "offset": {
+                      "x": 3,
+                      "y": 3
+                    }
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FavQQ",
+                      "name": "Kitchen Cabinets (0)",
+                      "fill": "$text",
+                      "content": "Kitchen Cabinets (0)",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "B8V97",
+                      "name": "Done button",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "$inverse",
+                      "cornerRadius": "$radiusSm",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "kFAIM",
+                          "name": "Done",
+                          "fill": "$inverseText",
+                          "content": "Done",
+                          "fontFamily": "$fontBody",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "R7KvOC",
+                  "name": "Fridge card",
+                  "width": "fill_container",
+                  "fill": "$tile",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$border",
+                    "offset": {
+                      "x": 3,
+                      "y": 3
+                    }
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "NF2kR",
+                      "name": "Fridge (0)",
+                      "fill": "$text",
+                      "content": "Fridge (0)",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bhFF4",
+                      "name": "Done button",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "$inverse",
+                      "cornerRadius": "$radiusSm",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "g3g42",
+                          "name": "Done",
+                          "fill": "$inverseText",
+                          "content": "Done",
+                          "fontFamily": "$fontBody",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "tywwt",
+                  "name": "Freezer card",
+                  "width": "fill_container",
+                  "fill": "$tile",
+                  "cornerRadius": "$radiusSm",
+                  "stroke": "$border",
+                  "strokeWidth": "$borderWidth",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "$border",
+                    "offset": {
+                      "x": 3,
+                      "y": 3
+                    }
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zjchQ",
+                      "name": "Freezer (0)",
+                      "fill": "$text",
+                      "content": "Freezer (0)",
+                      "fontFamily": "$fontBody",
+                      "fontSize": 18,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DQVEM",
+                      "name": "Done button",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "$inverse",
+                      "cornerRadius": "$radiusSm",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ASJFr",
+                          "name": "Done",
+                          "fill": "$inverseText",
+                          "content": "Done",
+                          "fontFamily": "$fontBody",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vXdDO",
+              "name": "Reset sweep button",
+              "width": "fill_container",
+              "height": 48,
+              "fill": "$danger",
+              "cornerRadius": "$radiusSm",
+              "stroke": "$border",
+              "strokeWidth": "$borderWidth",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xYbcO",
+                  "name": "Reset sweep",
+                  "fill": "$inverseText",
+                  "content": "Reset sweep",
+                  "fontFamily": "$fontBody",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
-  ]
+  ],
+  "variables": {
+    "ground": {
+      "type": "color",
+      "value": "#FFF6DD"
+    },
+    "tile": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "surface": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "inverse": {
+      "type": "color",
+      "value": "#111111"
+    },
+    "inverseText": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "text": {
+      "type": "color",
+      "value": "#111111"
+    },
+    "textMuted": {
+      "type": "color",
+      "value": "#4D4D4D"
+    },
+    "accent": {
+      "type": "color",
+      "value": "#FFC933"
+    },
+    "onAccent": {
+      "type": "color",
+      "value": "#111111"
+    },
+    "accentSoft": {
+      "type": "color",
+      "value": "#FFE9A8"
+    },
+    "danger": {
+      "type": "color",
+      "value": "#B3261E"
+    },
+    "border": {
+      "type": "color",
+      "value": "#111111"
+    },
+    "radiusSm": {
+      "type": "number",
+      "value": 8
+    },
+    "borderWidth": {
+      "type": "number",
+      "value": 2
+    },
+    "offsetBlock": {
+      "type": "number",
+      "value": 3
+    },
+    "fontBody": {
+      "type": "string",
+      "value": "Inter"
+    }
+  },
+  "fileToken": "aec21359-e78e-44d8-b147-fb42127e42e8"
 }
