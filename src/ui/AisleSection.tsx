@@ -182,6 +182,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.space.sm,
   },
   progress: {
     fontSize: theme.font.size.sm,
@@ -206,6 +207,7 @@ const styles = StyleSheet.create({
   aisleDividerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.space.sm,
   },
   aisleBadge: {
     fontSize: theme.font.size.sm,

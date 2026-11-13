@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { AuthResult } from '../auth/AuthService';
 import { theme } from './theme';
-import { pressedBlock, surfaces } from './surfaces';
+import { pressedBlock, surfaces, linkHit } from './surfaces';
 
 type ScreenState =
   | { kind: 'initial' }
@@ -126,7 +126,7 @@ export const LoginScreen = ({
       >
         <Text style={styles.buttonText}>{submitLabel(mode, isSubmitting)}</Text>
       </Pressable>
-      <Pressable onPress={toggleMode} disabled={isSubmitting}>
+      <Pressable hitSlop={linkHit} onPress={toggleMode} disabled={isSubmitting}>
         <Text style={styles.toggleText}>{toggleLabel(mode)}</Text>
       </Pressable>
     </KeyboardAvoidingView>

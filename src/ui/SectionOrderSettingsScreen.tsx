@@ -7,7 +7,7 @@ import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { appendNewSections } from '../domain/section-ordering';
 import { theme } from './theme';
-import { surfaces } from './surfaces';
+import { surfaces, linkHit } from './surfaces';
 
 const moveItem = <T,>(
   items: readonly T[],
@@ -109,6 +109,7 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
           <View style={styles.rowActions}>
             {index > 0 && (
               <Pressable
+                hitSlop={linkHit}
                 testID={`move-up-${sectionName}`}
                 onPress={() => handleMoveUp(index)}
               >
@@ -117,6 +118,7 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
             )}
             {index < orderedSectionNames.length - 1 && (
               <Pressable
+                hitSlop={linkHit}
                 testID={`move-down-${sectionName}`}
                 onPress={() => handleMoveDown(index)}
               >

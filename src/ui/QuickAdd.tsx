@@ -18,7 +18,7 @@ import {
 } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
-import { pressedBlock, surfaces } from './surfaces';
+import { pressedBlock, surfaces, linkHit } from './surfaces';
 
 const formatLocation = (section: string, aisleNumber: number | null): string =>
   aisleNumber === null ? section : `${section} / Aisle ${aisleNumber}`;
@@ -125,6 +125,7 @@ export const QuickAdd = ({
           ))}
           {trimmedInput.length > 0 && (
             <Pressable
+              hitSlop={linkHit}
               style={[
                 styles.suggestionItem,
                 suggestions.length > 0 && styles.suggestionSeparator,

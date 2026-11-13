@@ -35,7 +35,7 @@ import { StapleChecklist } from './StapleChecklist';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
 import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
 import { theme } from './theme';
-import { surfaces } from './surfaces';
+import { surfaces, linkHit } from './surfaces';
 
 type SettingsView = 'menu' | 'areas' | 'section-order';
 type HomeMode = 'sweep' | 'checklist';
@@ -275,6 +275,7 @@ export const HomeView = (): React.JSX.Element => {
       <View style={styles.settingsContainer}>
         <View style={styles.settingsHeader}>
           <Pressable
+            hitSlop={linkHit}
             testID="settings-back-button"
             onPress={() => setSettingsView('menu')}
           >
@@ -291,6 +292,7 @@ export const HomeView = (): React.JSX.Element => {
       <View style={styles.settingsContainer}>
         <View style={styles.settingsHeader}>
           <Pressable
+            hitSlop={linkHit}
             testID="settings-back-button"
             onPress={handleToggleSettings}
           >
@@ -319,6 +321,7 @@ export const HomeView = (): React.JSX.Element => {
     >
       <View style={styles.headerRow}>
         <Pressable
+          hitSlop={linkHit}
           testID="settings-button"
           onPress={handleToggleSettings}
           style={styles.settingsButton}

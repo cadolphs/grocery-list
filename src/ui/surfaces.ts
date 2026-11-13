@@ -51,3 +51,7 @@ export const pressedBlock = (pressed: boolean): ViewStyle =>
         ],
       }
     : {};
+
+// Text-only links are about 20px tall. This pads their hit area out to the
+// 48px target without moving anything on screen.
+export const linkHit = { top: 14, bottom: 14, left: 10, right: 10 } as const;

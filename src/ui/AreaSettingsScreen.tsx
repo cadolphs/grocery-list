@@ -15,7 +15,7 @@ import {
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { theme } from './theme';
-import { pressedBlock, surfaces } from './surfaces';
+import { pressedBlock, surfaces, linkHit } from './surfaces';
 
 type DeleteState =
   | { readonly kind: 'idle' }
@@ -167,12 +167,14 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
         <Text style={styles.areaName}>{area}</Text>
         <View style={styles.rowActions}>
           <Pressable
+            hitSlop={linkHit}
             testID={`edit-area-${area}`}
             onPress={() => handleEditPress(area)}
           >
             <Text style={styles.actionText}>Edit</Text>
           </Pressable>
           <Pressable
+            hitSlop={linkHit}
             testID={`delete-area-${area}`}
             onPress={() => handleDeletePress(area)}
           >

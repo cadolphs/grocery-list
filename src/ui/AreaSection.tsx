@@ -134,8 +134,9 @@ const styles = StyleSheet.create({
     fontSize: theme.font.size.sm,
   },
   readdButton: {
-    paddingVertical: 6,
+    minHeight: theme.target.min,
     paddingHorizontal: theme.space.md,
+    justifyContent: 'center',
   },
   readdText: {
     textDecorationLine: 'underline',
