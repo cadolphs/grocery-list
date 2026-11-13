@@ -31,6 +31,8 @@ npm test -- path/to/file.test.ts   # Run a single test file
 npm run test:scripts  # Unit tests for scripts/*.mjs (node --test)
 ```
 
+Upgrading a dependency: follow **Dependency upgrades** in [AGENTS.md](AGENTS.md) (`npm install -D` for dev-only packages, `npx expo install` only for runtime Expo/React Native packages).
+
 ## Build & Deploy (EAS)
 
 ```bash
