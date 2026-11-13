@@ -49,6 +49,17 @@ on expo.dev before merging). It needs the maintainer's `EXPO_TOKEN` secret, so
 a missing link means the secret, not the change. Agents apply the label
 themselves when the rule matches.
 
+## Dependency upgrades
+
+`npx expo install --check` lists packages whose version differs from what the
+Expo SDK expects; it is the upgrade list, not the installer. Runtime Expo and
+React Native packages go through `npx expo install <pkg>@<expected>`. Dev-only
+packages (TypeScript, Jest, `@types/*`, lint and format tools, knip, Stryker,
+Playwright) go through `npm install -D <pkg>@<expected>`: `npx expo install`
+writes them under `dependencies` and leaves the old devDependency behind
+(#40). Done when `npx expo install --check` is clean and `npx -y expo-doctor`
+reports 20/20.
+
 ## Issues and triage
 
 Every issue agents file gets one priority label — `P0` (broken now), `P1`
