@@ -350,12 +350,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionText: {
-    color: theme.color.accent,
+    color: theme.color.text,
     fontSize: 14,
     fontWeight: '600',
   },
   deleteActionText: {
-    color: theme.color.accentDark,
+    color: theme.color.danger,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   addButtonText: {
-    color: theme.color.inverseText,
+    color: theme.color.onAccent,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     color: theme.color.text,
   },
   errorText: {
-    color: theme.color.accentDark,
+    color: theme.color.danger,
     fontSize: 14,
     marginBottom: 8,
   },
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteDialog: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.lg,
     padding: 16,
     marginBottom: 8,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   deleteConfirmButton: {
-    backgroundColor: theme.color.accentDark,
+    backgroundColor: theme.color.danger,
     borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 20,

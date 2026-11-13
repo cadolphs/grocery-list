@@ -22,6 +22,7 @@ import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage
 import { createTrip } from '../../src/domain/trip';
 import { createAreaManagement } from '../../src/domain/area-management';
 import { StapleItem } from '../../src/domain/types';
+import { theme } from '../../src/ui/theme';
 
 const createStaple = (name: string, houseArea: string): StapleItem => ({
   id: `id-${name.toLowerCase()}`,
@@ -93,15 +94,15 @@ describe('staple checklist renders sorted list with toggle', () => {
     );
 
     // Checked staples: green text, no strikethrough
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
-    expect(screen.getByText('Bread')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
+    expect(screen.getByText('Bread')).toHaveStyle({ color: theme.color.text });
     // Unchecked staples: gray strikethrough
     expect(screen.getByText('Apples')).toHaveStyle({
-      color: '#6B6B6B',
+      color: theme.color.textMuted,
       textDecorationLine: 'line-through',
     });
     expect(screen.getByText('Cheese')).toHaveStyle({
-      color: '#6B6B6B',
+      color: theme.color.textMuted,
       textDecorationLine: 'line-through',
     });
   });
@@ -236,12 +237,12 @@ describe('preloaded staples show as already on trip', () => {
     fireEvent.press(screen.getByTestId('home-mode-checklist'));
 
     // Preloaded and still needed -> green text
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
-    expect(screen.getByText('Bread')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
+    expect(screen.getByText('Bread')).toHaveStyle({ color: theme.color.text });
 
     // Preloaded but skipped (needed=false) -> strikethrough
     expect(screen.getByText('Eggs')).toHaveStyle({
-      color: '#6B6B6B',
+      color: theme.color.textMuted,
       textDecorationLine: 'line-through',
     });
   });
@@ -260,8 +261,8 @@ describe('checklist mode shows staple checklist', () => {
     renderAppInChecklistMode();
 
     // Both staples are already on the trip from preload, so they should be green
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
-    expect(screen.getByText('Bread')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
+    expect(screen.getByText('Bread')).toHaveStyle({ color: theme.color.text });
   });
 
   it('tapping a checked staple skips it and shows strikethrough', () => {
@@ -272,7 +273,7 @@ describe('checklist mode shows staple checklist', () => {
 
     // After skip, Milk should show strikethrough
     expect(screen.getByText('Milk')).toHaveStyle({
-      color: '#6B6B6B',
+      color: theme.color.textMuted,
       textDecorationLine: 'line-through',
     });
   });
@@ -288,6 +289,6 @@ describe('checklist mode shows staple checklist', () => {
 
     // Now tap Milk again to unskip it
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
-    expect(screen.getByText('Milk')).toHaveStyle({ color: '#1A1A1A' });
+    expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
   });
 });

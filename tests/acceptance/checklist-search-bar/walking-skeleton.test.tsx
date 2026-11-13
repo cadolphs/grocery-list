@@ -28,6 +28,7 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
+import { theme } from '../../../src/ui/theme';
 
 function createTestServices() {
   const stapleStorage = createNullStapleStorage([
@@ -197,7 +198,7 @@ describe('WS-3: Toggle staple from filtered results', () => {
 
     // And "Cheddar Cheese" is on the trip (green text)
     expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
-      color: '#1A1A1A',
+      color: theme.color.text,
     });
 
     // When he taps "Cheddar Cheese" to skip it
@@ -205,7 +206,7 @@ describe('WS-3: Toggle staple from filtered results', () => {
 
     // Then it shows strikethrough (removed from trip)
     expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
-      color: '#6B6B6B',
+      color: theme.color.textMuted,
       textDecorationLine: 'line-through',
     });
   });
@@ -231,7 +232,7 @@ describe('WS-3: Toggle staple from filtered results', () => {
 
     // Then it shows green (back on trip)
     expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
-      color: '#1A1A1A',
+      color: theme.color.text,
     });
   });
 });

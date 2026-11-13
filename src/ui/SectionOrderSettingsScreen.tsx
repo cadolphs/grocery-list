@@ -188,12 +188,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionText: {
-    color: theme.color.accent,
+    color: theme.color.text,
     fontSize: 14,
     fontWeight: '600',
   },
   resetButton: {
-    backgroundColor: theme.color.accentDark,
+    backgroundColor: theme.color.danger,
     borderRadius: theme.radius.md,
     padding: 14,
     alignItems: 'center',
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   confirmationDialog: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.lg,
     padding: 16,
     marginTop: 8,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   confirmButton: {
-    backgroundColor: theme.color.accentDark,
+    backgroundColor: theme.color.danger,
     borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 20,

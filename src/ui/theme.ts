@@ -1,20 +1,25 @@
-// Soft Bento — Warm Linen palette.
-// Tokens mirror design.pen. Update both in sync.
+// Corner shop palette: cream page, black ink, hard borders, a sunny yellow
+// accent. Contrast carries the design: src/ui/theme.test.ts asserts WCAG AA
+// for every text and UI pair below. Tokens mirror design.pen. Update both in
+// sync.
+//
+// accent is a fill, never a text colour (yellow on cream is 1.4:1). Text on an
+// accent fill uses onAccent.
 
 export const theme = {
   color: {
-    ground: '#F3EBE2',
-    tile: '#E8DDCD',
-    tileAlt: '#E0D7CD',
+    ground: '#FFF6DD',
+    tile: '#FFFFFF',
     surface: '#FFFFFF',
-    inverse: '#1A1A1A',
+    inverse: '#111111',
     inverseText: '#FFFFFF',
-    text: '#1A1A1A',
-    textMuted: '#6B6B6B',
-    textDim: '#999999',
-    accent: '#D4916E',
-    accentDark: '#A0392E',
-    accentSoft: '#EADBCF',
+    text: '#111111',
+    textMuted: '#4D4D4D',
+    accent: '#FFC933',
+    onAccent: '#111111',
+    accentSoft: '#FFE9A8',
+    danger: '#B3261E',
+    border: '#111111',
   },
   radius: {
     sm: 8,

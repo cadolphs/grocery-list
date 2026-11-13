@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     fontSize: 16,
-    color: theme.color.accent,
+    color: theme.color.text,
     marginLeft: 6,
     fontWeight: '600',
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: theme.color.textMuted,
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: theme.radius.pill,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   aisleCheckmark: {
     fontSize: 14,
-    color: theme.color.accent,
+    color: theme.color.text,
     marginLeft: 6,
     fontWeight: '600',
   },

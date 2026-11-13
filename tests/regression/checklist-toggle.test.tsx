@@ -9,6 +9,7 @@ import { createStapleLibrary } from '../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../src/domain/trip';
+import { theme } from '../../src/ui/theme';
 
 function renderApp() {
   const stapleStorage = createNullStapleStorage([
@@ -44,8 +45,10 @@ describe('home view has sweep checklist toggle', () => {
     const sweepButton = screen.getByTestId('home-mode-sweep');
     const checklistButton = screen.getByTestId('home-mode-checklist');
 
-    expect(sweepButton).toHaveStyle({ backgroundColor: '#1A1A1A' });
-    expect(checklistButton).not.toHaveStyle({ backgroundColor: '#1A1A1A' });
+    expect(sweepButton).toHaveStyle({ backgroundColor: theme.color.inverse });
+    expect(checklistButton).not.toHaveStyle({
+      backgroundColor: theme.color.inverse,
+    });
   });
 
   it('switches to Checklist mode when Checklist is tapped', () => {
@@ -56,8 +59,12 @@ describe('home view has sweep checklist toggle', () => {
     const sweepButton = screen.getByTestId('home-mode-sweep');
     const checklistButton = screen.getByTestId('home-mode-checklist');
 
-    expect(checklistButton).toHaveStyle({ backgroundColor: '#1A1A1A' });
-    expect(sweepButton).not.toHaveStyle({ backgroundColor: '#1A1A1A' });
+    expect(checklistButton).toHaveStyle({
+      backgroundColor: theme.color.inverse,
+    });
+    expect(sweepButton).not.toHaveStyle({
+      backgroundColor: theme.color.inverse,
+    });
   });
 
   it('switches back to Sweep mode when Sweep is tapped', () => {
@@ -71,8 +78,10 @@ describe('home view has sweep checklist toggle', () => {
     const sweepButton = screen.getByTestId('home-mode-sweep');
     const checklistButton = screen.getByTestId('home-mode-checklist');
 
-    expect(sweepButton).toHaveStyle({ backgroundColor: '#1A1A1A' });
-    expect(checklistButton).not.toHaveStyle({ backgroundColor: '#1A1A1A' });
+    expect(sweepButton).toHaveStyle({ backgroundColor: theme.color.inverse });
+    expect(checklistButton).not.toHaveStyle({
+      backgroundColor: theme.color.inverse,
+    });
   });
 });
 

@@ -52,14 +52,14 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: theme.color.accent,
+    borderBottomColor: theme.color.text,
   },
   tabText: {
     fontSize: 16,
     color: theme.color.textMuted,
   },
   activeTabText: {
-    color: theme.color.accent,
+    color: theme.color.text,
     fontWeight: '600',
   },
 });
