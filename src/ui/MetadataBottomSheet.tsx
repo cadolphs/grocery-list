@@ -22,6 +22,7 @@ import {
 } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
+import { pressedBlock, surfaces } from './surfaces';
 
 type ItemTypeSelection = 'Staple' | 'One-off';
 type SheetMode = 'form' | 'duplicate-warning';
@@ -394,7 +395,10 @@ export const MetadataBottomSheet = ({
                       : ''}
                   </Text>
                   <Pressable
-                    style={styles.addButton}
+                    style={({ pressed }) => [
+                      styles.addButton,
+                      pressedBlock(pressed),
+                    ]}
                     onPress={handleAddToTripInstead}
                   >
                     <Text style={styles.addButtonText}>
@@ -572,7 +576,10 @@ export const MetadataBottomSheet = ({
                   {isEditMode ? (
                     <>
                       <Pressable
-                        style={styles.addButton}
+                        style={({ pressed }) => [
+                          styles.addButton,
+                          pressedBlock(pressed),
+                        ]}
                         onPress={handleSaveEdit}
                       >
                         <Text style={styles.addButtonText}>Save Changes</Text>
@@ -591,7 +598,10 @@ export const MetadataBottomSheet = ({
                   ) : (
                     <>
                       <Pressable
-                        style={styles.addButton}
+                        style={({ pressed }) => [
+                          styles.addButton,
+                          pressedBlock(pressed),
+                        ]}
                         onPress={handleSubmit}
                       >
                         <Text style={styles.addButtonText}>Add Item</Text>
@@ -624,40 +634,42 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheetContent: {
-    paddingBottom: 8,
+    paddingBottom: theme.space.sm,
   },
   sheet: {
     backgroundColor: theme.color.ground,
-    borderTopLeftRadius: theme.radius.lg,
-    borderTopRightRadius: theme.radius.lg,
+    borderTopLeftRadius: theme.radius.md,
+    borderTopRightRadius: theme.radius.md,
     padding: 20,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
-    marginBottom: 16,
+    marginBottom: theme.space.lg,
   },
   typeToggleContainer: {
     flexDirection: 'row',
-    marginBottom: 16,
+    borderWidth: theme.border.width,
+    borderColor: theme.color.border,
+    marginBottom: theme.space.lg,
     borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
   typeToggleButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: theme.space.md,
     alignItems: 'center',
     backgroundColor: theme.color.accentSoft,
-    minHeight: 44,
+    minHeight: theme.target.min,
     justifyContent: 'center',
   },
   typeToggleActive: {
     backgroundColor: theme.color.inverse,
   },
   typeToggleText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.regular,
     color: theme.color.text,
   },
   typeToggleTextActive: {
@@ -666,111 +678,103 @@ const styles = StyleSheet.create({
   areaContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
+    gap: theme.space.sm,
+    marginBottom: theme.space.lg,
   },
   areaButton: {
-    paddingHorizontal: 16,
+    ...surfaces.secondaryButton,
+    paddingHorizontal: theme.space.lg,
     paddingVertical: 10,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.color.accentSoft,
-    minHeight: 44,
     justifyContent: 'center',
   },
   areaButtonActive: {
     backgroundColor: theme.color.accent,
   },
   areaButtonText: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
   },
   areaButtonTextActive: {
     color: theme.color.onAccent,
   },
   input: {
-    borderRadius: theme.radius.md,
-    padding: 12,
-    fontSize: 16,
+    ...surfaces.input,
+    padding: theme.space.md,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    backgroundColor: theme.color.surface,
-    marginBottom: 12,
+    marginBottom: theme.space.md,
   },
   inlineError: {
     color: theme.color.danger,
-    fontSize: 13,
+    fontSize: theme.font.size.sm,
     marginTop: -8,
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    marginBottom: theme.space.md,
+    paddingHorizontal: theme.space.xs,
   },
   duplicateMessage: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   duplicateMetadata: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.textMuted,
-    marginBottom: 16,
+    marginBottom: theme.space.lg,
   },
   sectionSuggestions: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.md,
-    marginBottom: 12,
+    ...surfaces.card,
+    marginBottom: theme.space.md,
     marginTop: -8,
   },
   sectionSuggestionItem: {
-    padding: 12,
+    padding: theme.space.md,
   },
   sectionSuggestionText: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
   },
   sectionEmptyHint: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.textMuted,
-    padding: 12,
+    padding: theme.space.md,
     fontStyle: 'italic',
   },
   addButton: {
-    backgroundColor: theme.color.accent,
-    borderRadius: theme.radius.md,
-    padding: 16,
+    ...surfaces.primaryButton,
+    padding: theme.space.lg,
     alignItems: 'center',
-    marginBottom: 8,
-    minHeight: 44,
+    marginBottom: theme.space.sm,
     justifyContent: 'center',
   },
   addButtonText: {
     color: theme.color.onAccent,
-    fontWeight: '600',
-    fontSize: 16,
+    fontWeight: theme.font.weight.bold,
+    fontSize: theme.font.size.md,
   },
   deleteButton: {
     borderWidth: 1,
     borderColor: theme.color.danger,
     borderRadius: theme.radius.md,
-    padding: 16,
+    padding: theme.space.lg,
     alignItems: 'center',
-    marginBottom: 8,
-    minHeight: 44,
+    marginBottom: theme.space.sm,
+    minHeight: theme.target.min,
     justifyContent: 'center',
   },
   deleteButtonText: {
     color: theme.color.danger,
-    fontWeight: '600',
-    fontSize: 16,
+    fontWeight: theme.font.weight.bold,
+    fontSize: theme.font.size.md,
   },
   skipButton: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.md,
-    padding: 16,
+    ...surfaces.secondaryButton,
+    padding: theme.space.lg,
     alignItems: 'center',
-    minHeight: 44,
     justifyContent: 'center',
   },
   skipButtonText: {
     color: theme.color.text,
-    fontWeight: '500',
-    fontSize: 16,
+    fontWeight: theme.font.weight.regular,
+    fontSize: theme.font.size.md,
   },
 });

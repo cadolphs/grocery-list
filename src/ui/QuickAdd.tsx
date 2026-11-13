@@ -18,6 +18,7 @@ import {
 } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
+import { pressedBlock, surfaces } from './surfaces';
 
 const formatLocation = (section: string, aisleNumber: number | null): string =>
   aisleNumber === null ? section : `${section} / Aisle ${aisleNumber}`;
@@ -99,7 +100,7 @@ export const QuickAdd = ({
           autoFocus={isWeb}
         />
         <Pressable
-          style={styles.addButton}
+          style={({ pressed }) => [styles.addButton, pressedBlock(pressed)]}
           onPress={handleAdd}
           disabled={!onOpenMetadataSheet}
         >
@@ -143,54 +144,47 @@ export const QuickAdd = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
+    marginBottom: theme.space.md,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   input: {
+    ...surfaces.input,
     flex: 1,
-    borderRadius: theme.radius.md,
-    padding: 12,
-    fontSize: 16,
+    padding: theme.space.md,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    backgroundColor: theme.color.surface,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
   addButton: {
-    backgroundColor: theme.color.accent,
-    borderRadius: theme.radius.md,
-    padding: 12,
-    marginLeft: 8,
+    ...surfaces.primaryButton,
+    padding: theme.space.md,
+    marginLeft: theme.space.sm,
   },
   addButtonText: {
     color: theme.color.onAccent,
-    fontWeight: '600',
-    fontSize: 16,
+    fontWeight: theme.font.weight.bold,
+    fontSize: theme.font.size.md,
   },
   suggestionList: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    marginTop: 4,
+    ...surfaces.card,
+    marginTop: theme.space.xs,
   },
   suggestionItem: {
-    padding: 12,
+    padding: theme.space.md,
   },
   suggestionSeparator: {
     borderTopWidth: 0,
   },
   suggestionText: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
   },
   addNewItemText: {
-    fontSize: 14,
+    textDecorationLine: 'underline',
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
-    fontWeight: '500',
+    fontWeight: theme.font.weight.regular,
   },
 });

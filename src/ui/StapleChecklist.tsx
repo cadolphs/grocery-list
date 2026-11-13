@@ -6,6 +6,7 @@ import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { StapleItem } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
+import { surfaces } from './surfaces';
 
 export const filterStaples = (
   staples: readonly StapleItem[],
@@ -149,44 +150,38 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: theme.space.lg,
+    paddingVertical: theme.space.sm,
   },
   searchInput: {
+    ...surfaces.input,
     flex: 1,
-    borderRadius: theme.radius.md,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: theme.color.surface,
+    padding: theme.space.md,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
   clearButton: {
-    marginLeft: 8,
-    padding: 8,
+    marginLeft: theme.space.sm,
+    padding: theme.space.sm,
   },
   clearButtonText: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.textMuted,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
   emptyStateMessage: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.textMuted,
     textAlign: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    paddingVertical: theme.space.xl,
+    paddingHorizontal: theme.space.lg,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    minHeight: theme.target.min,
+    paddingHorizontal: theme.space.lg,
+    paddingVertical: theme.space.sm,
   },
   rowPressable: {
     flex: 1,
@@ -195,15 +190,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   editButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: theme.space.sm,
+    paddingHorizontal: theme.space.md,
   },
   editIcon: {
-    fontSize: 18,
+    fontSize: theme.font.size.lg,
     color: theme.color.textMuted,
   },
   stapleName: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
   },
   checkedName: {
@@ -214,7 +209,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   areaLabel: {
-    fontSize: 12,
+    fontSize: theme.font.size.sm,
     color: theme.color.textMuted,
     marginTop: 2,
   },

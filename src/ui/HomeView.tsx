@@ -35,6 +35,7 @@ import { StapleChecklist } from './StapleChecklist';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
 import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
 import { theme } from './theme';
+import { surfaces } from './surfaces';
 
 type SettingsView = 'menu' | 'areas' | 'section-order';
 type HomeMode = 'sweep' | 'checklist';
@@ -487,25 +488,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: theme.space.lg,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   settingsButton: {
-    padding: 8,
+    padding: theme.space.sm,
   },
   modeToggleRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    borderWidth: theme.border.width,
+    borderColor: theme.color.border,
+    marginBottom: theme.space.sm,
     borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
   modeToggleButton: {
     flex: 1,
-    paddingVertical: 8,
+    minHeight: theme.target.min,
+    justifyContent: 'center',
+    paddingVertical: theme.space.sm,
     alignItems: 'center',
     backgroundColor: theme.color.accentSoft,
   },
@@ -513,15 +518,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.inverse,
   },
   modeToggleText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
   },
   modeToggleTextActive: {
     color: theme.color.inverseText,
   },
   settingsButtonText: {
-    fontSize: 16,
+    textDecorationLine: 'underline',
+    fontSize: theme.font.size.md,
     color: theme.color.text,
   },
   settingsContainer: {
@@ -529,92 +535,87 @@ const styles = StyleSheet.create({
   },
   settingsHeader: {
     flexDirection: 'row',
-    padding: 16,
+    padding: theme.space.lg,
     paddingBottom: 0,
   },
   backButtonText: {
-    fontSize: 16,
+    textDecorationLine: 'underline',
+    fontSize: theme.font.size.md,
     color: theme.color.text,
   },
   sweepProgress: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.textMuted,
     textAlign: 'center',
-    marginVertical: 8,
+    marginVertical: theme.space.sm,
   },
   oneOffsSection: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginTop: 8,
+    ...surfaces.card,
+    padding: theme.space.lg,
+    marginTop: theme.space.sm,
   },
   oneOffsHeading: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
-    marginBottom: 4,
+    marginBottom: theme.space.xs,
   },
   resetSweepButton: {
-    backgroundColor: theme.color.danger,
-    borderRadius: theme.radius.md,
-    padding: 12,
-    marginTop: 16,
+    ...surfaces.dangerButton,
+    padding: theme.space.md,
+    marginTop: theme.space.lg,
     alignItems: 'center',
   },
   resetSweepButtonText: {
     color: theme.color.inverseText,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
   },
   resetConfirmation: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.md,
-    padding: 12,
-    marginTop: 8,
+    ...surfaces.dialog,
+    padding: theme.space.md,
+    marginTop: theme.space.sm,
   },
   resetConfirmationText: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   resetConfirmationButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
+    gap: theme.space.md,
   },
   confirmButton: {
-    backgroundColor: theme.color.danger,
-    borderRadius: theme.radius.sm,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    ...surfaces.dangerButton,
+    paddingVertical: theme.space.sm,
+    paddingHorizontal: theme.space.lg,
   },
   confirmButtonText: {
     color: theme.color.inverseText,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
   cancelButton: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.sm,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    ...surfaces.secondaryButton,
+    paddingVertical: theme.space.sm,
+    paddingHorizontal: theme.space.lg,
   },
   cancelButtonText: {
     color: theme.color.text,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
   settingsMenuContainer: {
-    padding: 16,
+    padding: theme.space.lg,
   },
   settingsMenuItem: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginBottom: 8,
+    ...surfaces.card,
+    padding: theme.space.lg,
+    marginBottom: theme.space.sm,
   },
   settingsMenuItemText: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
 });

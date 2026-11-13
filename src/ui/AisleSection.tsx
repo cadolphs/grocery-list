@@ -22,6 +22,7 @@ import {
 import { TripItem } from '../domain/types';
 import { TripItemRow } from './TripItemRow';
 import { theme } from './theme';
+import { surfaces } from './surfaces';
 
 type AisleSectionProps = {
   readonly sectionGroup: SectionGroup;
@@ -163,20 +164,19 @@ export const AisleSection = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    marginBottom: 12,
-    padding: 16,
+    ...surfaces.card,
+    marginBottom: theme.space.md,
+    padding: theme.space.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   heading: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
   },
   headerRight: {
@@ -184,14 +184,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progress: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.textMuted,
   },
   checkmark: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
     marginLeft: 6,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
   separator: {
     height: 0,
@@ -200,30 +200,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: theme.space.sm,
+    marginBottom: theme.space.xs,
   },
   aisleDividerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   aisleBadge: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.textMuted,
     backgroundColor: theme.color.accentSoft,
-    paddingHorizontal: 8,
+    paddingHorizontal: theme.space.sm,
     paddingVertical: 2,
     borderRadius: theme.radius.pill,
   },
   aisleProgress: {
-    fontSize: 13,
+    fontSize: theme.font.size.sm,
     color: theme.color.textMuted,
   },
   aisleCheckmark: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
     marginLeft: 6,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
 });

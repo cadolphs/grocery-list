@@ -48,18 +48,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     alignItems: 'center',
-    minHeight: 44,
+    minHeight: theme.target.min,
   },
   activeTab: {
     borderBottomWidth: 3,
     borderBottomColor: theme.color.text,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.textMuted,
   },
   activeTabText: {
     color: theme.color.text,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
 });

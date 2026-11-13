@@ -25,6 +25,7 @@ import { TripSummaryView } from './TripSummaryView';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
 import { theme } from './theme';
+import { surfaces } from './surfaces';
 
 export const StoreView = (): React.JSX.Element => {
   const { items, addItem, toggleCheckOff, unskipItem, syncStapleUpdate } =
@@ -230,20 +231,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: theme.space.lg,
   },
   finishButton: {
-    backgroundColor: theme.color.inverse,
+    ...surfaces.darkButton,
     paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.space.xl,
     alignItems: 'center',
-    marginTop: 16,
-    minHeight: 44,
+    marginTop: theme.space.lg,
   },
   finishButtonText: {
     color: theme.color.inverseText,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
   },
 });

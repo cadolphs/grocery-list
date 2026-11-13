@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { AuthResult } from '../auth/AuthService';
 import { theme } from './theme';
+import { pressedBlock, surfaces } from './surfaces';
 
 type ScreenState =
   | { kind: 'initial' }
@@ -115,7 +116,11 @@ export const LoginScreen = ({
         <Text style={styles.errorText}>{screenState.message}</Text>
       )}
       <Pressable
-        style={[styles.button, isSubmitting && styles.buttonDisabled]}
+        style={({ pressed }) => [
+          styles.button,
+          isSubmitting && styles.buttonDisabled,
+          pressedBlock(pressed),
+        ]}
         onPress={handleSubmit}
         disabled={isSubmitting}
       >
@@ -134,28 +139,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.color.ground,
-    padding: 24,
+    padding: theme.space.xl,
   },
   input: {
+    ...surfaces.input,
     width: '100%',
     maxWidth: 320,
-    borderRadius: theme.radius.md,
-    padding: 12,
-    fontSize: 16,
+    padding: theme.space.md,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    backgroundColor: theme.color.surface,
-    marginBottom: 16,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    marginBottom: theme.space.lg,
   },
   button: {
-    backgroundColor: theme.color.accent,
-    borderRadius: theme.radius.md,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    ...surfaces.primaryButton,
+    paddingVertical: theme.space.md,
+    paddingHorizontal: theme.space.xl,
     width: '100%',
     maxWidth: 320,
     alignItems: 'center',
@@ -165,17 +163,18 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: theme.color.onAccent,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.danger,
-    marginBottom: 12,
+    marginBottom: theme.space.md,
   },
   toggleText: {
+    textDecorationLine: 'underline',
     color: theme.color.text,
-    fontSize: 14,
-    marginTop: 16,
+    fontSize: theme.font.size.sm,
+    marginTop: theme.space.lg,
   },
 });

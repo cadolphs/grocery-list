@@ -19,8 +19,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.ground,
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.textMuted,
-    marginTop: 16,
+    marginTop: theme.space.lg,
   },
 });

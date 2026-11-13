@@ -56,18 +56,18 @@ export class ErrorBoundary extends React.Component<
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: theme.space.xl,
     justifyContent: 'center',
     backgroundColor: theme.color.ground,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.danger,
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   message: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
   },
 });

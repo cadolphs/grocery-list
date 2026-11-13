@@ -15,6 +15,7 @@ import {
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { theme } from './theme';
+import { pressedBlock, surfaces } from './surfaces';
 
 type DeleteState =
   | { readonly kind: 'idle' }
@@ -304,7 +305,7 @@ export const AreaSettingsScreen = (): React.JSX.Element => {
           </View>
         ) : (
           <Pressable
-            style={styles.addButton}
+            style={({ pressed }) => [styles.addButton, pressedBlock(pressed)]}
             testID="add-area-button"
             onPress={handleAddPress}
           >
@@ -324,115 +325,108 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: theme.space.lg,
   },
   header: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
-    marginBottom: 16,
+    marginBottom: theme.space.lg,
   },
   areaCard: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginBottom: 8,
+    ...surfaces.card,
+    padding: theme.space.lg,
+    marginBottom: theme.space.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   areaName: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
   },
   rowActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: theme.space.md,
   },
   actionText: {
+    textDecorationLine: 'underline',
     color: theme.color.text,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   deleteActionText: {
     color: theme.color.danger,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   editForm: {
     flex: 1,
   },
   addButton: {
-    backgroundColor: theme.color.accent,
-    borderRadius: theme.radius.md,
+    ...surfaces.primaryButton,
     padding: 14,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: theme.space.sm,
   },
   addButtonText: {
     color: theme.color.onAccent,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
   },
   addForm: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginTop: 8,
+    ...surfaces.card,
+    padding: theme.space.lg,
+    marginTop: theme.space.sm,
   },
   nameInput: {
-    backgroundColor: theme.color.surface,
-    borderRadius: theme.radius.md,
+    ...surfaces.input,
     padding: 10,
-    fontSize: 16,
-    marginBottom: 8,
+    fontSize: theme.font.size.md,
+    marginBottom: theme.space.sm,
     color: theme.color.text,
   },
   errorText: {
     color: theme.color.danger,
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: theme.font.size.sm,
+    marginBottom: theme.space.sm,
   },
   formButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.space.sm,
   },
   saveButton: {
-    backgroundColor: theme.color.inverse,
-    borderRadius: theme.radius.sm,
+    ...surfaces.darkButton,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   saveButtonText: {
     color: theme.color.inverseText,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   cancelButton: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.sm,
+    ...surfaces.secondaryButton,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   cancelButtonText: {
     color: theme.color.text,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   deleteDialog: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginBottom: 8,
+    ...surfaces.dialog,
+    padding: theme.space.lg,
+    marginBottom: theme.space.sm,
   },
   deleteDialogText: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    marginBottom: 12,
+    marginBottom: theme.space.md,
   },
   deleteConfirmButton: {
-    backgroundColor: theme.color.danger,
-    borderRadius: theme.radius.sm,
+    ...surfaces.dangerButton,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
@@ -440,16 +434,15 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   reassignOption: {
-    backgroundColor: theme.color.surface,
-    borderRadius: theme.radius.sm,
-    padding: 12,
-    marginBottom: 8,
+    ...surfaces.input,
+    padding: theme.space.md,
+    marginBottom: theme.space.sm,
   },
   reassignOptionSelected: {
     backgroundColor: theme.color.accentSoft,
   },
   reassignOptionText: {
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
   },
 });
