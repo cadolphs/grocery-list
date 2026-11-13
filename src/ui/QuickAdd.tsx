@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   addButtonText: {
-    color: theme.color.inverseText,
+    color: theme.color.onAccent,
     fontWeight: '600',
     fontSize: 16,
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   addNewItemText: {
     fontSize: 14,
-    color: theme.color.accent,
+    color: theme.color.text,
     fontWeight: '500',
   },
 });

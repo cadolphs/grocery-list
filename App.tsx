@@ -10,6 +10,7 @@ import { AppShell } from './src/ui/AppShell';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
 import { LoadingScreen } from './src/ui/LoadingScreen';
 import { LoginScreen } from './src/ui/LoginScreen';
+import { theme } from './src/ui/theme';
 
 export default function App() {
   const authService = useMemo(() => createAuthService(), []);
@@ -63,6 +64,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.color.ground,
   },
 });

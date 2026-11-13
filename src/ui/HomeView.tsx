@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
   },
   modeToggleButtonActive: {
     backgroundColor: theme.color.inverse,
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   },
   settingsButtonText: {
     fontSize: 16,
-    color: theme.color.accent,
+    color: theme.color.text,
   },
   settingsContainer: {
     flex: 1,
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: theme.color.accent,
+    color: theme.color.text,
   },
   sweepProgress: {
     fontSize: 14,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   resetSweepButton: {
-    backgroundColor: theme.color.accentDark,
+    backgroundColor: theme.color.danger,
     borderRadius: theme.radius.md,
     padding: 12,
     marginTop: 16,
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resetConfirmation: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.md,
     padding: 12,
     marginTop: 8,
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   confirmButton: {
-    backgroundColor: theme.color.accentDark,
+    backgroundColor: theme.color.danger,
     borderRadius: theme.radius.sm,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.sm,
     paddingVertical: 8,
     paddingHorizontal: 16,

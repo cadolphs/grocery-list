@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   readdText: {
-    color: theme.color.accent,
+    color: theme.color.text,
     fontWeight: '600',
   },
   doneButton: {

@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     minHeight: 44,
     justifyContent: 'center',
   },
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     minHeight: 44,
     justifyContent: 'center',
   },
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
     color: theme.color.text,
   },
   areaButtonTextActive: {
-    color: theme.color.inverseText,
+    color: theme.color.onAccent,
   },
   input: {
     borderRadius: theme.radius.md,
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   inlineError: {
-    color: theme.color.accentDark,
+    color: theme.color.danger,
     fontSize: 13,
     marginTop: -8,
     marginBottom: 12,
@@ -741,13 +741,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButtonText: {
-    color: theme.color.inverseText,
+    color: theme.color.onAccent,
     fontWeight: '600',
     fontSize: 16,
   },
   deleteButton: {
     borderWidth: 1,
-    borderColor: theme.color.accentDark,
+    borderColor: theme.color.danger,
     borderRadius: theme.radius.md,
     padding: 16,
     alignItems: 'center',
@@ -756,12 +756,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteButtonText: {
-    color: theme.color.accentDark,
+    color: theme.color.danger,
     fontWeight: '600',
     fontSize: 16,
   },
   skipButton: {
-    backgroundColor: theme.color.tileAlt,
+    backgroundColor: theme.color.accentSoft,
     borderRadius: theme.radius.md,
     padding: 16,
     alignItems: 'center',

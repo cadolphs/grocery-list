@@ -6,7 +6,7 @@ import { theme } from './theme';
 
 export const LoadingScreen = (): React.JSX.Element => (
   <View style={styles.container}>
-    <ActivityIndicator size="large" color={theme.color.accent} />
+    <ActivityIndicator size="large" color={theme.color.text} />
     <Text style={styles.loadingText}>Loading...</Text>
   </View>
 );

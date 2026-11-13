@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: theme.color.accent,
+    color: theme.color.text,
     fontWeight: '600',
   },
 });

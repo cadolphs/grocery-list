@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   switchButtonText: {
-    color: theme.color.inverseText,
+    color: theme.color.onAccent,
     fontSize: 16,
     fontWeight: '600',
   },

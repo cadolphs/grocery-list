@@ -164,17 +164,17 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: theme.color.inverseText,
+    color: theme.color.onAccent,
     fontSize: 16,
     fontWeight: '600',
   },
   errorText: {
     fontSize: 14,
-    color: theme.color.accentDark,
+    color: theme.color.danger,
     marginBottom: 12,
   },
   toggleText: {
-    color: theme.color.accent,
+    color: theme.color.text,
     fontSize: 14,
     marginTop: 16,
   },
