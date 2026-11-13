@@ -119,6 +119,7 @@ export default tseslint.config(
       'web/',
       '.stryker-tmp/',
       '.expo/',
+      '.claude/worktrees/',
       'babel.config.js',
       'jest.setup.js',
       'stryker.config.mjs',
