@@ -7,6 +7,7 @@ import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { appendNewSections } from '../domain/section-ordering';
 import { theme } from './theme';
+import { surfaces } from './surfaces';
 
 const moveItem = <T,>(
   items: readonly T[],
@@ -162,83 +163,79 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: theme.space.lg,
   },
   header: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
-    marginBottom: 16,
+    marginBottom: theme.space.lg,
   },
   sectionCard: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginBottom: 8,
+    ...surfaces.card,
+    padding: theme.space.lg,
+    marginBottom: theme.space.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   sectionName: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
   },
   rowActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: theme.space.md,
   },
   actionText: {
+    textDecorationLine: 'underline',
     color: theme.color.text,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   resetButton: {
-    backgroundColor: theme.color.danger,
-    borderRadius: theme.radius.md,
+    ...surfaces.dangerButton,
     padding: 14,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: theme.space.sm,
   },
   resetButtonText: {
     color: theme.color.inverseText,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
   },
   confirmationDialog: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.lg,
-    padding: 16,
-    marginTop: 8,
+    ...surfaces.dialog,
+    padding: theme.space.lg,
+    marginTop: theme.space.sm,
   },
   confirmationText: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    marginBottom: 12,
+    marginBottom: theme.space.md,
   },
   confirmationButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.space.sm,
   },
   confirmButton: {
-    backgroundColor: theme.color.danger,
-    borderRadius: theme.radius.sm,
+    ...surfaces.dangerButton,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   confirmButtonText: {
     color: theme.color.inverseText,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   cancelButton: {
-    backgroundColor: theme.color.accentSoft,
-    borderRadius: theme.radius.sm,
+    ...surfaces.secondaryButton,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
   cancelButtonText: {
     color: theme.color.text,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
 });

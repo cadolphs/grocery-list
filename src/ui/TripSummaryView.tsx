@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { CompleteTripResult } from '../domain/trip';
 import { theme } from './theme';
+import { pressedBlock, surfaces } from './surfaces';
 
 type TripSummaryViewProps = {
   readonly result: CompleteTripResult;
@@ -42,7 +43,13 @@ export const TripSummaryView = ({
           </View>
         )}
         {onSwitchToStoreView && (
-          <Pressable style={styles.switchButton} onPress={onSwitchToStoreView}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.switchButton,
+              pressedBlock(pressed),
+            ]}
+            onPress={onSwitchToStoreView}
+          >
             <Text style={styles.switchButtonText}>Switch to Store View</Text>
           </Pressable>
         )}
@@ -54,54 +61,51 @@ export const TripSummaryView = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: theme.space.lg,
   },
   card: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
+    ...surfaces.card,
     padding: 20,
   },
   heading: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: theme.font.size.xl,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   breakdown: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.textMuted,
-    marginBottom: 4,
+    marginBottom: theme.space.xs,
   },
   carryoverSection: {
-    marginTop: 12,
+    marginTop: theme.space.md,
   },
   separator: {
     height: 0,
-    marginBottom: 12,
+    marginBottom: theme.space.md,
   },
   carryoverHeading: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   carryoverItem: {
-    fontSize: 15,
+    fontSize: theme.font.size.sm,
     color: theme.color.text,
-    paddingVertical: 4,
+    paddingVertical: theme.space.xs,
   },
   switchButton: {
-    backgroundColor: theme.color.accent,
-    borderRadius: theme.radius.md,
+    ...surfaces.primaryButton,
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: theme.space.xl,
     alignItems: 'center',
-    marginTop: 16,
-    minHeight: 48,
+    marginTop: theme.space.lg,
   },
   switchButtonText: {
     color: theme.color.onAccent,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.font.size.md,
+    fontWeight: theme.font.weight.bold,
   },
 });

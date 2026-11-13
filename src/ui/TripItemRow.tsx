@@ -96,16 +96,16 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
-    paddingHorizontal: 16,
+    minHeight: theme.target.min,
+    paddingHorizontal: theme.space.lg,
   },
   itemPressable: {
     flex: 1,
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: theme.target.min,
   },
   itemName: {
-    fontSize: 16,
+    fontSize: theme.font.size.md,
     color: theme.color.text,
   },
   checkedText: {
@@ -120,19 +120,19 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   skipButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: theme.space.sm,
+    paddingHorizontal: theme.space.md,
   },
   skipText: {
     color: theme.color.textMuted,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
   editButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: theme.space.sm,
+    paddingHorizontal: theme.space.md,
   },
   editIcon: {
-    fontSize: 18,
+    fontSize: theme.font.size.lg,
     color: theme.color.textMuted,
   },
 });

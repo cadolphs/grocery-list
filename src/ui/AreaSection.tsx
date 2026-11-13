@@ -6,6 +6,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { AreaGroup } from '../domain/item-grouping';
 import { TripItemRow } from './TripItemRow';
 import { theme } from './theme';
+import { surfaces } from './surfaces';
 
 type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
@@ -92,32 +93,31 @@ export const AreaSection = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.color.tile,
-    borderRadius: theme.radius.lg,
-    marginBottom: 12,
-    padding: 16,
+    ...surfaces.card,
+    marginBottom: theme.space.md,
+    padding: theme.space.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: theme.space.sm,
   },
   heading: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
     color: theme.color.text,
   },
   badge: {
     backgroundColor: theme.color.inverse,
     borderRadius: theme.radius.pill,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: theme.space.xs,
   },
   badgeText: {
     color: theme.color.inverseText,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
   },
   separator: {
     height: 0,
@@ -126,32 +126,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 4,
+    paddingVertical: theme.space.xs,
   },
   skippedName: {
     color: theme.color.textMuted,
     textDecorationLine: 'line-through',
-    fontSize: 14,
+    fontSize: theme.font.size.sm,
   },
   readdButton: {
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: theme.space.md,
   },
   readdText: {
+    textDecorationLine: 'underline',
     color: theme.color.text,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
   doneButton: {
-    backgroundColor: theme.color.inverse,
-    borderRadius: theme.radius.md,
+    ...surfaces.darkButton,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.space.lg,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: theme.space.sm,
   },
   doneText: {
     color: theme.color.inverseText,
-    fontWeight: '600',
-    fontSize: 14,
+    fontWeight: theme.font.weight.bold,
+    fontSize: theme.font.size.sm,
   },
 });

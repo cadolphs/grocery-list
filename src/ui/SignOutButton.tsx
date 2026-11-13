@@ -58,13 +58,14 @@ export const SignOutButton = ({
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.space.lg,
     alignItems: 'center',
-    minHeight: 44,
+    minHeight: theme.target.min,
   },
   label: {
-    fontSize: 16,
+    textDecorationLine: 'underline',
+    fontSize: theme.font.size.md,
     color: theme.color.text,
-    fontWeight: '600',
+    fontWeight: theme.font.weight.bold,
   },
 });
