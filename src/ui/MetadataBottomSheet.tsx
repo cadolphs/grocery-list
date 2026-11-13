@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
     fontSize: theme.font.size.md,
   },
   deleteButton: {
-    borderWidth: 1,
+    borderWidth: theme.border.width,
     borderColor: theme.color.danger,
     borderRadius: theme.radius.md,
     padding: theme.space.lg,

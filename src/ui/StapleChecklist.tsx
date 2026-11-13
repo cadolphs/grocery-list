@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.space.lg,
     paddingVertical: theme.space.sm,
   },
   searchInput: {
@@ -180,7 +179,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: theme.target.min,
-    paddingHorizontal: theme.space.lg,
     paddingVertical: theme.space.sm,
   },
   rowPressable: {
@@ -190,8 +188,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   editButton: {
-    paddingVertical: theme.space.sm,
-    paddingHorizontal: theme.space.md,
+    minHeight: theme.target.min,
+    minWidth: theme.target.min,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   editIcon: {
     fontSize: theme.font.size.lg,

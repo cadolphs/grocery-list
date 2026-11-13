@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: theme.target.min,
-    paddingHorizontal: theme.space.lg,
   },
   itemPressable: {
     flex: 1,
@@ -128,8 +127,10 @@ const styles = StyleSheet.create({
     fontWeight: theme.font.weight.bold,
   },
   editButton: {
-    paddingVertical: theme.space.sm,
-    paddingHorizontal: theme.space.md,
+    minHeight: theme.target.min,
+    minWidth: theme.target.min,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   editIcon: {
     fontSize: theme.font.size.lg,
