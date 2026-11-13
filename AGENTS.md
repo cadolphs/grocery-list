@@ -19,6 +19,7 @@ This file is a map. Open the page that owns the task:
 - Decisions, including what **not** to do: [docs/adrs/README.md](docs/adrs/README.md)
 - Run and prove a change in the real app: [control-grocery-list skill](.claude/skills/control-grocery-list/SKILL.md), [docs/feature-map.md](docs/feature-map.md)
 - Shipping a PR: [ship-pr skill](.claude/skills/ship-pr/SKILL.md)
+- UI and visual design work: [userinterface-wiki skill](.claude/skills/userinterface-wiki/SKILL.md), 48 pruned rules on UX laws, typography and visual design (upstream: raphaelsalaja/userinterface-wiki, MIT)
 - Filing friction: [friction-log skill](.claude/skills/friction-log/SKILL.md). Every PR ends with a friction issue or the `friction-skipped` label, in every environment
 - Deploy, health check, rollback: [docs/deploy.md](docs/deploy.md)
 - Feature and product work: ideas, open questions, decisions, and specs live as draft items on the [planning board](https://github.com/users/cadolphs/projects/4), not in issues; see [docs/planning-board.md](docs/planning-board.md) and the [planning-board skill](.claude/skills/planning-board/SKILL.md) (`npm run board`). No fixed workflow ([ADR-012](docs/adrs/ADR-012-no-mandated-feature-workflow.md)); `docs/feature/` and `docs/evolution/` are history
