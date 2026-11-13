@@ -5,7 +5,9 @@ name: EAS Preview (Android)
 # posts the build page link; the build itself runs on EAS, not here.
 #
 # Triggers (issue #22):
-# - the `eas-preview` label on a PR; later pushes rebuild while it stays on.
+# - adding the `eas-preview` label to a PR (only that label's `labeled` event
+#   runs; other labels added alongside it do not, issue #38).
+# - later pushes to the PR rebuild while the label stays on.
 # - workflow_dispatch on any branch.
 #
 # Needs the EXPO_TOKEN repo secret (expo.dev access token). A `synchronize`
@@ -27,9 +29,14 @@ env:
 jobs:
   android-preview:
     name: Android preview build
+    # One run per real trigger (issue #38): a `labeled` event fires once per
+    # label, so gate it on the label that was added, not on the PR's label set.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      contains(github.event.pull_request.labels.*.name, 'eas-preview')
+      (github.event.action == 'labeled' &&
+        github.event.label.name == 'eas-preview') ||
+      (github.event.action == 'synchronize' &&
+        contains(github.event.pull_request.labels.*.name, 'eas-preview'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
