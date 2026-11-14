@@ -191,60 +191,60 @@ describe('US-SSO-03: Section Navigation Follows Custom Order', () => {
   // AC: Last section shows completion indicator instead of "Next"
   // Trace: US-SSO-03, AC-1, AC-2, AC-4
 
-  it.skip('next section follows custom order after completing a section', () => {
-    // Given Carlos has custom order and items in all 4 sections
-    // const customOrder = ['Deli', 'Dairy', 'Canned Goods', 'Produce'];
-    // const items = [
-    //   tripItem('Deli turkey', 'Deli', null),
-    //   tripItem('Whole milk', 'Dairy', 3),
-    //   tripItem('Canned beans', 'Canned Goods', 5),
-    //   tripItem('Apples', 'Produce', null),
-    // ];
-    // And the sorted store sections are in custom order
-    // const groups = groupBySection(items);
-    // const sorted = sortByCustomOrder(groups, customOrder);
-    // When Carlos finishes the Deli section (index 0)
-    // const currentIndex = 0;
-    // const nextIndex = currentIndex + 1;
-    // Then the next section is Dairy
-    // expect(sorted[nextIndex].section).toBe('Dairy');
-  });
+  it.todo('next section follows custom order after completing a section');
+  // Sketch of the pending test:
+  // Given Carlos has custom order and items in all 4 sections
+  // const customOrder = ['Deli', 'Dairy', 'Canned Goods', 'Produce'];
+  // const items = [
+  //   tripItem('Deli turkey', 'Deli', null),
+  //   tripItem('Whole milk', 'Dairy', 3),
+  //   tripItem('Canned beans', 'Canned Goods', 5),
+  //   tripItem('Apples', 'Produce', null),
+  // ];
+  // And the sorted store sections are in custom order
+  // const groups = groupBySection(items);
+  // const sorted = sortByCustomOrder(groups, customOrder);
+  // When Carlos finishes the Deli section (index 0)
+  // const currentIndex = 0;
+  // const nextIndex = currentIndex + 1;
+  // Then the next section is Dairy
+  // expect(sorted[nextIndex].section).toBe('Dairy');
 
-  it.skip('next section skips empty sections in custom order', () => {
-    // Given Carlos has custom order but no items in Dairy
-    // const customOrder = ['Deli', 'Dairy', 'Canned Goods', 'Produce'];
-    // const items = [
-    //   tripItem('Deli turkey', 'Deli', null),
-    //   tripItem('Canned beans', 'Canned Goods', 5),
-    //   tripItem('Apples', 'Produce', null),
-    // ];
-    // And the sorted store sections are in custom order (Dairy excluded by groupBySection)
-    // const groups = groupBySection(items);
-    // const sorted = sortByCustomOrder(groups, customOrder);
-    // When Carlos finishes the Deli section (index 0)
-    // const currentIndex = 0;
-    // const nextIndex = currentIndex + 1;
-    // Then the next section is Canned Goods (Dairy skipped - no items)
-    // expect(sorted[nextIndex].section).toBe('Canned Goods');
-  });
+  it.todo('next section skips empty sections in custom order');
+  // Sketch of the pending test:
+  // Given Carlos has custom order but no items in Dairy
+  // const customOrder = ['Deli', 'Dairy', 'Canned Goods', 'Produce'];
+  // const items = [
+  //   tripItem('Deli turkey', 'Deli', null),
+  //   tripItem('Canned beans', 'Canned Goods', 5),
+  //   tripItem('Apples', 'Produce', null),
+  // ];
+  // And the sorted store sections are in custom order (Dairy excluded by groupBySection)
+  // const groups = groupBySection(items);
+  // const sorted = sortByCustomOrder(groups, customOrder);
+  // When Carlos finishes the Deli section (index 0)
+  // const currentIndex = 0;
+  // const nextIndex = currentIndex + 1;
+  // Then the next section is Canned Goods (Dairy skipped - no items)
+  // expect(sorted[nextIndex].section).toBe('Canned Goods');
 
-  it.skip('no next section after the last section in custom order', () => {
-    // Given Carlos has custom order and items in 3 sections
-    // const customOrder = ['Deli', 'Dairy', 'Produce'];
-    // const items = [
-    //   tripItem('Deli turkey', 'Deli', null),
-    //   tripItem('Whole milk', 'Dairy', 3),
-    //   tripItem('Apples', 'Produce', null),
-    // ];
-    // And the sorted store sections are in custom order
-    // const groups = groupBySection(items);
-    // const sorted = sortByCustomOrder(groups, customOrder);
-    // When Carlos finishes the Produce section (last, index 2)
-    // const currentIndex = 2;
-    // const nextIndex = currentIndex + 1;
-    // Then there is no next section
-    // expect(sorted[nextIndex]).toBeUndefined();
-  });
+  it.todo('no next section after the last section in custom order');
+  // Sketch of the pending test:
+  // Given Carlos has custom order and items in 3 sections
+  // const customOrder = ['Deli', 'Dairy', 'Produce'];
+  // const items = [
+  //   tripItem('Deli turkey', 'Deli', null),
+  //   tripItem('Whole milk', 'Dairy', 3),
+  //   tripItem('Apples', 'Produce', null),
+  // ];
+  // And the sorted store sections are in custom order
+  // const groups = groupBySection(items);
+  // const sorted = sortByCustomOrder(groups, customOrder);
+  // When Carlos finishes the Produce section (last, index 2)
+  // const currentIndex = 2;
+  // const nextIndex = currentIndex + 1;
+  // Then there is no next section
+  // expect(sorted[nextIndex]).toBeUndefined();
 });
 
 // =============================================================================
@@ -255,16 +255,16 @@ describe('Edge: Auto-append with null order', () => {
   // When no custom order exists, auto-append should be a no-op
   // Trace: US-SSO-04, boundary condition
 
-  it.skip('auto-append with null order returns null (no-op)', () => {
-    // Given no custom section order has been set
-    // const currentOrder = null;
-    // When the app detects new sections from trip items
-    // const knownKeys = ['Deli', 'Dairy'];
-    // Then no auto-append occurs (can't append to null)
-    // This behavior is for the hook/caller to handle:
-    // if order is null, don't call appendNewSections
-    // The domain function only operates on non-null orders
-  });
+  it.todo('auto-append with null order returns null (no-op)');
+  // Sketch of the pending test:
+  // Given no custom section order has been set
+  // const currentOrder = null;
+  // When the app detects new sections from trip items
+  // const knownKeys = ['Deli', 'Dairy'];
+  // Then no auto-append occurs (can't append to null)
+  // This behavior is for the hook/caller to handle:
+  // if order is null, don't call appendNewSections
+  // The domain function only operates on non-null orders
 });
 
 describe('Edge: Reset when no custom order exists', () => {

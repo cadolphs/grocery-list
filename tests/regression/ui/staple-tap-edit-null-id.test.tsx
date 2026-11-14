@@ -63,6 +63,7 @@ function renderAppWithNullStapleId() {
 
 describe('Tap staple with stapleId=null opens edit sheet', () => {
   // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('tapping a staple item with null stapleId opens the edit sheet', () => {
     renderAppWithNullStapleId();
 
