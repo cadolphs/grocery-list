@@ -19,11 +19,9 @@
  */
 
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createTrip, TripService } from '../../../src/domain/trip';
+import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { StapleItem } from '../../../src/domain/types';
-import { StapleStorage } from '../../../src/ports/staple-storage';
 
 // =============================================================================
 // WS-1: Staple added on one device appears on the other via real-time listener

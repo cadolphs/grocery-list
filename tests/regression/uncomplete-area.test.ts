@@ -4,7 +4,6 @@
 import { createTrip } from '../../src/domain/trip';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { UseTripResult } from '../../src/hooks/useTrip';
-import { HouseArea } from '../../src/domain/types';
 
 describe('uncompleteArea removes area from completed set', () => {
   it('area is no longer in completedAreas after uncompleteArea', () => {

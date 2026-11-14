@@ -63,9 +63,8 @@ import { StapleItem, AddStapleRequest } from '../domain/types';
 // Helper: create initializable wrappers around null storages
 const createInitializableStapleStorage = (
   initialItems: AddStapleRequest[] = [],
-  options: { onChange?: () => void } = {},
 ): InitializableStapleStorage => ({
-  ...createNullStapleStorage(initialItems, options),
+  ...createNullStapleStorage(initialItems),
   initialize: async () => {},
 });
 
@@ -329,16 +328,13 @@ describe('initializeApp', () => {
           options?: { onChange?: () => void },
         ) => {
           // Create storage with initial staples, wire onChange
-          sharedStorage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -384,21 +380,18 @@ describe('initializeApp', () => {
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-              {
-                name: 'Soda',
-                houseArea: 'Kitchen Cabinets',
-                storeLocation: { section: 'Beverages', aisleNumber: 6 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+            {
+              name: 'Soda',
+              houseArea: 'Kitchen Cabinets',
+              storeLocation: { section: 'Beverages', aisleNumber: 6 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -443,16 +436,13 @@ describe('initializeApp', () => {
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -495,16 +485,13 @@ describe('initializeApp', () => {
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage(
-            [
-              {
-                name: 'Tahini',
-                houseArea: 'Kitchen Cabinets',
-                storeLocation: { section: 'International', aisleNumber: 4 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Tahini',
+              houseArea: 'Kitchen Cabinets',
+              storeLocation: { section: 'International', aisleNumber: 4 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -557,16 +544,13 @@ describe('initializeApp', () => {
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -625,16 +609,13 @@ describe('initializeApp', () => {
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return {
             ...sharedStorage,
@@ -693,16 +674,13 @@ describe('initializeApp', () => {
           options?: { onChange?: () => void },
         ) => {
           // Real seed: one staple, captured onChange that we WILL NOT auto-fire.
-          const storage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          const storage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return { ...storage, initialize: async () => {} };
         },
@@ -741,20 +719,14 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
-          _uid: string,
-          options?: { onChange?: () => void },
-        ) => {
-          const storage = createNullStapleStorage(
-            [
-              {
-                name: 'Cinnamon',
-                houseArea: 'Pantry',
-                storeLocation: { section: 'Spices', aisleNumber: 5 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+        createStapleStorage: (_uid: string) => {
+          const storage = createNullStapleStorage([
+            {
+              name: 'Cinnamon',
+              houseArea: 'Pantry',
+              storeLocation: { section: 'Spices', aisleNumber: 5 },
+            },
+          ]);
           return { ...storage, initialize: async () => {} };
         },
         createTripStorage: () => {
@@ -827,20 +799,14 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
-          _uid: string,
-          options?: { onChange?: () => void },
-        ) => {
-          const storage = createNullStapleStorage(
-            [
-              {
-                name: 'Soda',
-                houseArea: 'Pantry',
-                storeLocation: { section: 'Beverages', aisleNumber: 6 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+        createStapleStorage: (_uid: string) => {
+          const storage = createNullStapleStorage([
+            {
+              name: 'Soda',
+              houseArea: 'Pantry',
+              storeLocation: { section: 'Beverages', aisleNumber: 6 },
+            },
+          ]);
           return { ...storage, initialize: async () => {} };
         },
       };
@@ -876,21 +842,18 @@ describe('initializeApp', () => {
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          const storage = createNullStapleStorage(
-            [
-              {
-                name: 'Milk',
-                houseArea: 'Fridge',
-                storeLocation: { section: 'Dairy', aisleNumber: 3 },
-              },
-              {
-                name: 'Bread',
-                houseArea: 'Pantry',
-                storeLocation: { section: 'Bakery', aisleNumber: 1 },
-              },
-            ],
-            { onChange: options?.onChange },
-          );
+          const storage = createNullStapleStorage([
+            {
+              name: 'Milk',
+              houseArea: 'Fridge',
+              storeLocation: { section: 'Dairy', aisleNumber: 3 },
+            },
+            {
+              name: 'Bread',
+              houseArea: 'Pantry',
+              storeLocation: { section: 'Bakery', aisleNumber: 1 },
+            },
+          ]);
           capturedOnChange = options?.onChange;
           return { ...storage, initialize: async () => {} };
         },

@@ -14,7 +14,15 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       // Lenient for now -- tighten incrementally
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/no-require-imports': 'off',
       'react-hooks/set-state-in-effect': 'off',
     },

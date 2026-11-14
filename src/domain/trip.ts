@@ -8,7 +8,6 @@ import {
   AddTripItemResult,
   AddStapleRequest,
   HouseArea,
-  StoreLocation,
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import { StapleLibrary } from './staple-library';

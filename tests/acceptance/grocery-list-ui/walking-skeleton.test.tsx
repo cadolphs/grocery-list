@@ -25,17 +25,12 @@
 // --- Driving port imports ---
 // Domain ports (already implemented):
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createTrip, completeTrip } from '../../../src/domain/trip';
+import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // UI ports (to be created during DELIVER wave):
-import {
-  render,
-  fireEvent,
-  screen,
-  waitFor,
-} from '@testing-library/react-native';
+import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 

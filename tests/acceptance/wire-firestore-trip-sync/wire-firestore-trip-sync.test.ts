@@ -28,7 +28,7 @@ import {
 } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
-import { Trip, TripItem } from '../../../src/domain/types';
+import { Trip } from '../../../src/domain/types';
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
 
@@ -176,9 +176,6 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
 
     // And the trip is started with staples
     // (initializeApp calls initializeFromStorage, which starts from staple list)
-    // Verify initial state
-    const initialItems = tripService.getItems();
-
     // When a remote device checks off "Milk" and the trip update arrives via onChange
     // (Simulated: remote writes updated trip to storage, then onChange fires)
     const currentTrip = tripStorage.loadTrip();

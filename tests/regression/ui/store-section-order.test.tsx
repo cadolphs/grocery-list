@@ -61,9 +61,8 @@ describe('StoreView section ordering integration', () => {
     renderAppWithCustomOrder(['Deli', 'Dairy', 'Bakery']);
 
     // Get all section headers by testID pattern
-    const storeScroll = screen.getByTestId('store-scroll');
+    expect(screen.getByTestId('store-scroll')).toBeTruthy();
     // Verify Deli appears before Dairy and Dairy before Bakery
-    const allText = screen.getByTestId('store-scroll').children;
 
     // Use getAllByTestId to find aisle section headers
     const sectionHeaders = screen.getAllByTestId(/^aisle-section-/);

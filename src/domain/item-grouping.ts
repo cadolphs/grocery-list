@@ -128,11 +128,6 @@ const bucketByAisleKey = (
   return { numericBuckets, nullBucket };
 };
 
-const distinctAisleKeyCount = (
-  numericBuckets: Map<number, TripItem[]>,
-  nullBucket: TripItem[],
-): number => numericBuckets.size + (nullBucket.length > 0 ? 1 : 0);
-
 // Discriminated union describing how a SectionGroup partitions by aisle.
 // `flat-no-aisle`  : section has no aisle metadata (all aisleNumber = null) → flat render, no badge.
 // `single-aisle`   : section has exactly one numeric aisle, no null items → flat list with `Aisle N` badge in header.
