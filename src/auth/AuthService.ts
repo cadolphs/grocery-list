@@ -40,14 +40,19 @@ const failureResult = (error: string): AuthResult => ({
   error,
 });
 
+// Firebase rejects with Error subclasses; anything else is stringified so a
+// non-Error rejection still yields a message instead of undefined.
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 const attemptAuth = async (
   action: () => Promise<{ user: User }>,
 ): Promise<AuthResult> => {
   try {
     const credential = await action();
     return successResult(toAuthUser(credential.user));
-  } catch (error: any) {
-    return failureResult(error.message);
+  } catch (error) {
+    return failureResult(errorMessage(error));
   }
 };
 
