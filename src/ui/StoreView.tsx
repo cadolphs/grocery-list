@@ -24,6 +24,7 @@ import { AisleSection } from './AisleSection';
 import { TripSummaryView } from './TripSummaryView';
 import { QuickAdd } from './QuickAdd';
 import { MetadataBottomSheet } from './MetadataBottomSheet';
+import { useStaples } from '../hooks/useStaples';
 import { theme } from './theme';
 import { surfaces } from './surfaces';
 
@@ -46,19 +47,11 @@ export const StoreView = (): React.JSX.Element => {
   // Subscribe to staple-library mutations so existingSections re-derives when
   // a staple introducing a new section is added/edited while StoreView is
   // mounted. Mirrors SectionOrderSettingsScreen's reactive pattern.
-  const [stapleRevision, setStapleRevision] = useState(0);
-  useEffect(() => {
-    const unsubscribe = stapleLibrary.subscribe(() => {
-      setStapleRevision((previous) => previous + 1);
-    });
-    return unsubscribe;
-  }, [stapleLibrary]);
+  const staples = useStaples(stapleLibrary);
 
   const existingSections = useMemo(
-    () => [
-      ...new Set(stapleLibrary.listAll().map((s) => s.storeLocation.section)),
-    ],
-    [stapleLibrary, stapleRevision],
+    () => [...new Set(staples.map((s) => s.storeLocation.section))],
+    [staples],
   );
 
   const handleFinishTrip = (): void => {

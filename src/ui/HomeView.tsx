@@ -34,6 +34,7 @@ import { MetadataBottomSheet } from './MetadataBottomSheet';
 import { StapleChecklist } from './StapleChecklist';
 import { AreaSettingsScreen } from './AreaSettingsScreen';
 import { SectionOrderSettingsScreen } from './SectionOrderSettingsScreen';
+import { useStaples } from '../hooks/useStaples';
 import { theme } from './theme';
 import { surfaces, linkHit } from './surfaces';
 
@@ -67,18 +68,8 @@ export const HomeView = (): React.JSX.Element => {
   // Subscribe to staple-library mutations so derived data (allStaples,
   // checklistStaples, existingSections) refreshes on every add/update/remove.
   // Mirrors the reactive pattern in SectionOrderSettingsScreen.
-  const [stapleRevision, setStapleRevision] = useState(0);
-  useEffect(() => {
-    const unsubscribe = stapleLibrary.subscribe(() => {
-      setStapleRevision((previous) => previous + 1);
-    });
-    return unsubscribe;
-  }, [stapleLibrary]);
+  const allStaples = useStaples(stapleLibrary);
 
-  const allStaples = useMemo(
-    () => stapleLibrary.listAll(),
-    [stapleLibrary, stapleRevision],
-  );
   const checklistStaples = useMemo(
     () => allStaples.filter((s) => s.type === 'staple'),
     [allStaples],
