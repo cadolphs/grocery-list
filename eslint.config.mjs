@@ -13,10 +13,17 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       // Lenient for now -- tighten incrementally
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
       'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+  {
+    // Tests mock modules and spies by name: jest.spyOn(obj, 'method' as any) and
+    // require() after jest.resetModules() are the standard idioms for that.
+    files: ['**/*.test.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   {
