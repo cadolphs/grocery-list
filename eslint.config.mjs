@@ -1,6 +1,7 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
+import jest from 'eslint-plugin-jest';
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -32,6 +33,18 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+  {
+    // Test hygiene: a focused test silently skips the rest of the file, a test
+    // without an assertion passes while proving nothing.
+    files: ['**/*.test.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
+    plugins: { jest },
+    rules: {
+      'jest/no-focused-tests': 'error',
+      'jest/no-disabled-tests': 'warn',
+      'jest/valid-expect': 'error',
+      'jest/expect-expect': 'error',
     },
   },
   {

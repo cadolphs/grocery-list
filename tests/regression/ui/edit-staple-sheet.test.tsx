@@ -60,6 +60,7 @@ function renderApp() {
 
 describe('Edit Staple via MetadataBottomSheet', () => {
   // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('tapping a staple name opens edit sheet with pre-filled values and Save Changes button', () => {
     renderApp();
 
@@ -90,6 +91,7 @@ describe('Edit Staple via MetadataBottomSheet', () => {
   });
 
   // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('Save Changes updates the staple and syncs the trip', () => {
     renderApp();
 

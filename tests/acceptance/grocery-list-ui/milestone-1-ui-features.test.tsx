@@ -88,6 +88,7 @@ describe('US-07: Skip staple from home screen', () => {
   // AC: Skipped item can be re-added
 
   // Skip button removed in sweep-ux-refresh (01-01). Tap-to-toggle needs AreaSection wiring (later step).
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('removes skipped item from the home view area', () => {
     // Given Carlos is viewing the home screen with Bathroom items
     const { library, tripService } = createTestServices();
@@ -110,6 +111,7 @@ describe('US-07: Skip staple from home screen', () => {
   });
 
   // Skip button removed in sweep-ux-refresh (01-01). Tap-to-toggle needs AreaSection wiring (later step).
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('skipped item does not appear in store view', () => {
     // Given Carlos has skipped "Shampoo" on the home screen
     const { library, tripService } = createTestServices();
@@ -128,6 +130,7 @@ describe('US-07: Skip staple from home screen', () => {
   });
 
   // Skip button removed in sweep-ux-refresh (01-01). Tap-to-toggle needs AreaSection wiring (later step).
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('re-adds a skipped staple on the home screen', () => {
     // Given Carlos has skipped "Butter" in the "Fridge" area
     const { library, tripService } = createTestServices();

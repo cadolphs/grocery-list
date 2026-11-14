@@ -207,6 +207,7 @@ describe('WS-3: Enter key in metadata sheet submits the form', () => {
 // WS-5: Focus returns to QuickAdd after sheet dismiss (US-05)
 // =============================================================================
 
+// eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
 describe.skip('WS-5: Focus returns to QuickAdd input after sheet is dismissed', () => {
   // AC: On web, when the metadata sheet dismisses (submit or cancel), focus
   //     returns to the QuickAdd input so the user can immediately type the next item

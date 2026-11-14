@@ -647,11 +647,11 @@ describe('US-11: Trip Summary', () => {
     expect(summary.totalItems).toBe(20);
   });
 
-  it.skip('summary offers store view transition', () => {
-    // This would be a UI-level test with React Testing Library
-    // Given the trip summary is rendered
-    // const { getByText } = render(<TripSummary trip={trip} />);
-    // Then "Switch to Store View" is available
-    // expect(getByText('Switch to Store View')).toBeTruthy();
-  });
+  it.todo('summary offers store view transition');
+  // Sketch of the pending test:
+  // This would be a UI-level test with React Testing Library
+  // Given the trip summary is rendered
+  // const { getByText } = render(<TripSummary trip={trip} />);
+  // Then "Switch to Store View" is available
+  // expect(getByText('Switch to Store View')).toBeTruthy();
 });

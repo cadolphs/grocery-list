@@ -465,53 +465,53 @@ describe('US-AIF-05: Duplicate Staple Detection', () => {
   // AC: Same name in different area is not treated as duplicate
   // Trace: US-AIF-05, AC-1 through AC-5
 
-  it.skip('duplicate detected when same name and area exist', () => {
-    // Given "Whole milk" exists as a staple in the Fridge area
-    // const { library } = createTestServices();
-    // const existing = library.search('Whole milk').find(s => s.houseArea === 'Fridge');
-    // expect(existing).toBeDefined();
-    // And Carlos has opened the metadata bottom sheet for "Whole milk" with area Fridge
-    // When Carlos taps "Add Item"
-    // Then the bottom sheet shows "Whole milk already exists in Fridge"
-    // And displays the existing metadata "Dairy / Aisle 3"
-    // (UI: expect(screen.getByText(/already exists in Fridge/)).toBeTruthy())
-    // (UI: expect(screen.getByText(/Dairy/)).toBeTruthy())
-  });
+  it.todo('duplicate detected when same name and area exist');
+  // Sketch of the pending test:
+  // Given "Whole milk" exists as a staple in the Fridge area
+  // const { library } = createTestServices();
+  // const existing = library.search('Whole milk').find(s => s.houseArea === 'Fridge');
+  // expect(existing).toBeDefined();
+  // And Carlos has opened the metadata bottom sheet for "Whole milk" with area Fridge
+  // When Carlos taps "Add Item"
+  // Then the bottom sheet shows "Whole milk already exists in Fridge"
+  // And displays the existing metadata "Dairy / Aisle 3"
+  // (UI: expect(screen.getByText(/already exists in Fridge/)).toBeTruthy())
+  // (UI: expect(screen.getByText(/Dairy/)).toBeTruthy())
 
-  it.skip('same name in different area is not a duplicate', () => {
-    // Given "Trash bags" exists as a staple in Kitchen Cabinets
-    // const { library } = createTestServices([
-    //   { name: 'Trash bags', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Cleaning', aisleNumber: 9 } },
-    // ]);
-    // And Carlos has opened the metadata bottom sheet for "Trash bags" with area Bathroom
-    // When Carlos taps "Add Item"
-    // Then "Trash bags" is saved as a new staple in Bathroom
-    // const trashBags = library.listAll().filter(s => s.name === 'Trash bags');
-    // expect(trashBags).toHaveLength(2);
-    // And no duplicate warning is shown
-  });
+  it.todo('same name in different area is not a duplicate');
+  // Sketch of the pending test:
+  // Given "Trash bags" exists as a staple in Kitchen Cabinets
+  // const { library } = createTestServices([
+  //   { name: 'Trash bags', houseArea: 'Kitchen Cabinets', storeLocation: { section: 'Cleaning', aisleNumber: 9 } },
+  // ]);
+  // And Carlos has opened the metadata bottom sheet for "Trash bags" with area Bathroom
+  // When Carlos taps "Add Item"
+  // Then "Trash bags" is saved as a new staple in Bathroom
+  // const trashBags = library.listAll().filter(s => s.name === 'Trash bags');
+  // expect(trashBags).toHaveLength(2);
+  // And no duplicate warning is shown
 
-  it.skip('"Add to trip instead" uses existing staple metadata', () => {
-    // Given the duplicate warning is showing for "Whole milk" in Fridge
-    // const { library, tripService } = createTestServices();
-    // When Carlos taps "Add to trip instead"
-    // (UI: fireEvent.press(screen.getByText('Add to trip instead')))
-    // Then "Whole milk" is added to the trip with area Fridge, section Dairy, aisle 3
-    // const milk = tripService.getItems().find(i => i.name === 'Whole milk');
-    // expect(milk?.houseArea).toBe('Fridge');
-    // expect(milk?.storeLocation.section).toBe('Dairy');
-    // expect(milk?.storeLocation.aisleNumber).toBe(3);
-    // And the bottom sheet dismisses
-  });
+  it.todo('"Add to trip instead" uses existing staple metadata');
+  // Sketch of the pending test:
+  // Given the duplicate warning is showing for "Whole milk" in Fridge
+  // const { library, tripService } = createTestServices();
+  // When Carlos taps "Add to trip instead"
+  // (UI: fireEvent.press(screen.getByText('Add to trip instead')))
+  // Then "Whole milk" is added to the trip with area Fridge, section Dairy, aisle 3
+  // const milk = tripService.getItems().find(i => i.name === 'Whole milk');
+  // expect(milk?.houseArea).toBe('Fridge');
+  // expect(milk?.storeLocation.section).toBe('Dairy');
+  // expect(milk?.storeLocation.aisleNumber).toBe(3);
+  // And the bottom sheet dismisses
 
-  it.skip('cancel from duplicate warning returns to form', () => {
-    // Given the duplicate warning is showing for "Whole milk" in Fridge
-    // When Carlos taps "Cancel"
-    // (UI: fireEvent.press(screen.getByText('Cancel')))
-    // Then the bottom sheet returns to the metadata form
-    // (UI: expect(screen.getByText('Add Item')).toBeTruthy())
-    // And Carlos can change the area or name
-  });
+  it.todo('cancel from duplicate warning returns to form');
+  // Sketch of the pending test:
+  // Given the duplicate warning is showing for "Whole milk" in Fridge
+  // When Carlos taps "Cancel"
+  // (UI: fireEvent.press(screen.getByText('Cancel')))
+  // Then the bottom sheet returns to the metadata form
+  // (UI: expect(screen.getByText('Add Item')).toBeTruthy())
+  // And Carlos can change the area or name
 });
 
 // =============================================================================
@@ -521,48 +521,48 @@ describe('US-AIF-05: Duplicate Staple Detection', () => {
 describe('Error and Edge Cases', () => {
   // These validate error paths and boundary conditions
 
-  it.skip('submit blocked when area is not selected', () => {
-    // Given Carlos has opened the metadata bottom sheet for "Oat milk"
-    // And Carlos has not selected an area
-    // When Carlos taps "Add Item"
-    // Then the item is not added
-    // And Carlos sees a message that area is required
-    // (UI: expect(screen.getByText(/area is required/i)).toBeTruthy())
-  });
+  it.todo('submit blocked when area is not selected');
+  // Sketch of the pending test:
+  // Given Carlos has opened the metadata bottom sheet for "Oat milk"
+  // And Carlos has not selected an area
+  // When Carlos taps "Add Item"
+  // Then the item is not added
+  // And Carlos sees a message that area is required
+  // (UI: expect(screen.getByText(/area is required/i)).toBeTruthy())
 
-  it.skip('submit blocked when section is empty', () => {
-    // Given Carlos has opened the metadata bottom sheet for "Oat milk"
-    // And Carlos selects area "Fridge" but leaves section empty
-    // When Carlos taps "Add Item"
-    // Then the item is not added
-    // And Carlos sees a message that section is required
-  });
+  it.todo('submit blocked when section is empty');
+  // Sketch of the pending test:
+  // Given Carlos has opened the metadata bottom sheet for "Oat milk"
+  // And Carlos selects area "Fridge" but leaves section empty
+  // When Carlos taps "Add Item"
+  // Then the item is not added
+  // And Carlos sees a message that section is required
 
-  it.skip('aisle number is optional and item saves without it', () => {
-    // Given Carlos has opened the metadata bottom sheet for "Rotisserie chicken"
-    // And Carlos selects type "Staple", area "Fridge", section "Deli"
-    // And Carlos leaves the aisle field blank
-    // When Carlos taps "Add Item"
-    // Then "Rotisserie chicken" is saved with no aisle number
-    // const chicken = library.listAll().find(s => s.name === 'Rotisserie chicken');
-    // expect(chicken?.storeLocation.aisleNumber).toBeNull();
-  });
+  it.todo('aisle number is optional and item saves without it');
+  // Sketch of the pending test:
+  // Given Carlos has opened the metadata bottom sheet for "Rotisserie chicken"
+  // And Carlos selects type "Staple", area "Fridge", section "Deli"
+  // And Carlos leaves the aisle field blank
+  // When Carlos taps "Add Item"
+  // Then "Rotisserie chicken" is saved with no aisle number
+  // const chicken = library.listAll().find(s => s.name === 'Rotisserie chicken');
+  // expect(chicken?.storeLocation.aisleNumber).toBeNull();
 
-  it.skip('dismissing the bottom sheet adds nothing', () => {
-    // Given Carlos has opened the metadata bottom sheet for "Oat milk"
-    // const { library, tripService } = createTestServices();
-    // const initialStapleCount = library.listAll().length;
-    // const initialTripCount = tripService.getItems().length;
-    // When Carlos dismisses the bottom sheet without submitting
-    // Then no item is added to the trip
-    // expect(tripService.getItems()).toHaveLength(initialTripCount);
-    // And no staple is added to the library
-    // expect(library.listAll()).toHaveLength(initialStapleCount);
-  });
+  it.todo('dismissing the bottom sheet adds nothing');
+  // Sketch of the pending test:
+  // Given Carlos has opened the metadata bottom sheet for "Oat milk"
+  // const { library, tripService } = createTestServices();
+  // const initialStapleCount = library.listAll().length;
+  // const initialTripCount = tripService.getItems().length;
+  // When Carlos dismisses the bottom sheet without submitting
+  // Then no item is added to the trip
+  // expect(tripService.getItems()).toHaveLength(initialTripCount);
+  // And no staple is added to the library
+  // expect(library.listAll()).toHaveLength(initialStapleCount);
 
-  it.skip('QuickAdd input clears after successful submission', () => {
-    // Given Carlos has submitted an item through the metadata bottom sheet
-    // Then the QuickAdd input is cleared
-    // (UI: expect(screen.getByPlaceholderText('Add an item...')).toHaveProp('value', ''))
-  });
+  it.todo('QuickAdd input clears after successful submission');
+  // Sketch of the pending test:
+  // Given Carlos has submitted an item through the metadata bottom sheet
+  // Then the QuickAdd input is cleared
+  // (UI: expect(screen.getByPlaceholderText('Add an item...')).toHaveProp('value', ''))
 });

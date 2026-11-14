@@ -363,6 +363,7 @@ describe('UAT-4: Sign Out fails due to a network error and Maria can retry', () 
   // component is designed (see docs/feature/logout-button/discuss/user-stories.md,
   // scenario 4).
 
+  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
   it.skip('(PENDING) keeps Maria on the authenticated shell and surfaces a retryable error message', async () => {
     // Intentionally unimplemented — see describe block comment.
     expect(true).toBe(true);
