@@ -1,7 +1,7 @@
 // SectionOrderSettingsScreen - manage store section ordering
 // Shows known section names with up/down reorder buttons and reset-to-default
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';

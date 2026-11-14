@@ -160,9 +160,6 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
 
   it('S-14: delayed listener callback after logout does not update state', async () => {
     // Given Clemens has logged out and listeners were cleaned up
-    const onChangeCallCount = 0;
-    let capturedOnChange: (() => void) | undefined;
-
     const factories: AdapterFactories = {
       createStapleStorage: (_uid: string) => {
         const storage = createNullStapleStorage();
@@ -170,10 +167,6 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
           ...storage,
           initialize: () => Promise.resolve(),
           unsubscribe: () => {},
-          // The onChange is passed to the adapter; capture it so we can fire it later
-          onChange: (cb: () => void) => {
-            capturedOnChange = cb;
-          },
         };
       },
       createAreaStorage: (_uid: string) => ({

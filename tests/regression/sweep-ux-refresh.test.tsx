@@ -5,7 +5,7 @@
  * 01-02: Home mode long-press opens edit sheet; no skip section in AreaSection.
  *
  * New behavior:
- * - Tap calls onPress (not onEditStaple)
+ * - Tap calls onPress
  * - No Skip button in home mode
  * - Needed items: green text (#4CAF50)
  * - Skipped items: grey text (#999999) with strikethrough
@@ -42,24 +42,15 @@ const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
 });
 
 describe('home mode tap toggles needed state with green/grey', () => {
-  it('tap calls onPress, not onEditStaple, for staple items in home mode', () => {
+  it('tap calls onPress for staple items in home mode', () => {
     const onPress = jest.fn();
-    const onEditStaple = jest.fn();
     const item = createTripItem();
 
-    render(
-      <TripItemRow
-        item={item}
-        mode="home"
-        onPress={onPress}
-        onEditStaple={onEditStaple}
-      />,
-    );
+    render(<TripItemRow item={item} mode="home" onPress={onPress} />);
 
     fireEvent.press(screen.getByText('Milk'));
 
     expect(onPress).toHaveBeenCalledTimes(1);
-    expect(onEditStaple).not.toHaveBeenCalled();
   });
 
   it('does not render a Skip button in home mode', () => {

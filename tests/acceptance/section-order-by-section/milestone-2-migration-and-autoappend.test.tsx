@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 import { appendNewSections } from '../../../src/domain/section-ordering';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { createStapleLibrary } from '../../../src/domain/staple-library';

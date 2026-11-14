@@ -72,7 +72,7 @@ describe('Reset Sweep button', () => {
   });
 
   it('confirming Reset Sweep resets the trip and refreshes the view', () => {
-    const { tripService } = renderAppWithItems();
+    renderAppWithItems();
 
     // Before reset: one-off item should be visible
     expect(screen.getByText('Birthday candles')).toBeTruthy();

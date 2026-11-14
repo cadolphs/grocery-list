@@ -1,8 +1,8 @@
 // StoreView - displays trip items grouped by store section
 // Composes useTrip hook with groupBySection pure function
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useSectionOrder } from '../hooks/useSectionOrder';

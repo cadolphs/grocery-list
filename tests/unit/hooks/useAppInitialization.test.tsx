@@ -1,4 +1,3 @@
-import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppInitialization } from '../../../src/hooks/useAppInitialization';

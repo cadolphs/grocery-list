@@ -7,7 +7,7 @@
  * All tests marked .skip -- enable one at a time during DELIVER.
  */
 
-import { createTrip, TripService } from '../../../src/domain/trip';
+import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 describe('US-02: Firestore trip storage adapter', () => {

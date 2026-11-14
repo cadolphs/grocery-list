@@ -9,7 +9,6 @@
 
 import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { Trip, TripItem } from '../../../src/domain/types';
 
 describe('US-03: Real-time listeners on trip data', () => {
   // =============================================================================
