@@ -147,6 +147,11 @@ const renameErrorMessage = (
   return `"${result.trimmedName}" already exists in ${result.area}`;
 };
 
+const resolveDefaultArea = (
+  defaultArea: HouseArea | null | undefined,
+): HouseArea | null =>
+  defaultArea === undefined ? 'Kitchen Cabinets' : defaultArea;
+
 export const MetadataBottomSheet = ({
   visible,
   itemName,
@@ -168,14 +173,11 @@ export const MetadataBottomSheet = ({
   const isEditMode = mode === 'edit';
   const isWeb = useIsWeb();
 
-  const resolveDefaultArea = (): HouseArea | null =>
-    defaultArea === undefined ? 'Kitchen Cabinets' : defaultArea;
-
   const [selectedType, setSelectedType] = useState<ItemTypeSelection>(
     defaultItemType ?? 'Staple',
   );
   const [selectedArea, setSelectedArea] = useState<HouseArea | null>(
-    resolveDefaultArea(),
+    resolveDefaultArea(defaultArea),
   );
   const [editedName, setEditedName] = useState('');
   const [section, setSection] = useState('');
@@ -204,7 +206,7 @@ export const MetadataBottomSheet = ({
         );
       } else {
         setSelectedType(defaultItemType ?? 'Staple');
-        setSelectedArea(resolveDefaultArea());
+        setSelectedArea(resolveDefaultArea(defaultArea));
         setEditedName('');
         setSection('');
         setAisleText('');

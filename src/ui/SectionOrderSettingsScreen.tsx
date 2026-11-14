@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useServices } from './ServiceProvider';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { appendNewSections } from '../domain/section-ordering';
+import { useStaples } from '../hooks/useStaples';
 import { theme } from './theme';
 import { surfaces, linkHit } from './surfaces';
 
@@ -39,22 +40,11 @@ export const SectionOrderSettingsScreen = (): React.JSX.Element => {
 
   // Subscribe to staple-library mutations so knownSectionNames re-derives when
   // a staple introducing a new section is added while this screen is mounted.
-  // Version counter drives re-render without caching the (mutable) listAll array.
-  const [stapleRevision, setStapleRevision] = useState(0);
-  useEffect(() => {
-    const unsubscribe = stapleLibrary.subscribe(() => {
-      setStapleRevision((previous) => previous + 1);
-    });
-    return unsubscribe;
-  }, [stapleLibrary]);
+  const staples = useStaples(stapleLibrary);
 
   const knownSectionNames = useMemo(
-    () =>
-      dedupeInOrder(
-        stapleLibrary.listAll().map((staple) => staple.storeLocation.section),
-      ),
-    // stapleRevision participates in the dep list so mutations invalidate this memo.
-    [stapleLibrary, stapleRevision],
+    () => dedupeInOrder(staples.map((staple) => staple.storeLocation.section)),
+    [staples],
   );
 
   const orderedSectionNames: string[] = useMemo(() => {
