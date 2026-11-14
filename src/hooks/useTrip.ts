@@ -2,12 +2,7 @@
 // Reads items from context and exposes them as reactive state
 
 import { useState, useCallback, useEffect } from 'react';
-import {
-  TripItem,
-  AddTripItemResult,
-  HouseArea,
-  StoreLocation,
-} from '../domain/types';
+import { TripItem, AddTripItemResult, HouseArea } from '../domain/types';
 import { SweepProgress, AddTripItemWithStapleId } from '../domain/trip';
 import { UpdateStapleChanges } from '../domain/staple-library';
 import { useServices } from '../ui/ServiceProvider';

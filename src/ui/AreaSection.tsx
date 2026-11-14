@@ -15,7 +15,6 @@ type AreaSectionProps = {
   readonly onCompleteArea?: (area: string) => void;
   readonly onUncompleteArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
-  readonly onEditStaple?: (name: string, area: string) => void;
   readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
   readonly isCompleted?: boolean;

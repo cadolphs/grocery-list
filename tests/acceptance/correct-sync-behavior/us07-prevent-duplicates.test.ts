@@ -9,7 +9,6 @@
 
 import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { TripItem } from '../../../src/domain/types';
 
 describe('US-07: Prevent duplicate trip items', () => {
   // =============================================================================
@@ -41,16 +40,7 @@ describe('US-07: Prevent duplicate trip items', () => {
     // (The onSnapshot approach replaces the entire trip state from the remote document.
     //  This naturally prevents duplicates because the remote state IS the state.)
     //
-    // Alternative: if merging, guard with stapleId check before adding.
-    // The duplicate prevention guard:
-    const existingStapleIds = new Set(
-      trip
-        .getItems()
-        .filter((i) => i.stapleId !== null)
-        .map((i) => i.stapleId),
-    );
-    const remoteTahiniStapleId = 'staple-tahini-abc';
-    const wouldBeDuplicate = existingStapleIds.has(remoteTahiniStapleId);
+    // Alternative: if merging, guard with a stapleId check before adding.
 
     // Then the trip contains exactly one "Tahini" item
     // (Either by whole-state replacement or by duplicate guard)

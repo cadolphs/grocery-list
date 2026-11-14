@@ -154,7 +154,7 @@ describe('TripService.subscribe', () => {
   });
 
   test('loadFromStorage does not notify when state is identical', () => {
-    const { tripService, storage } = createTestTripServiceWithStorage();
+    const { tripService } = createTestTripServiceWithStorage();
     tripService.start([
       {
         name: 'Milk',

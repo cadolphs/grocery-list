@@ -47,9 +47,8 @@ type Initializable<T> = T & {
 
 const wrapStapleStorage = (
   initial: AddStapleRequest[],
-  options: { onChange?: () => void } = {},
 ): Initializable<StapleStorage> => ({
-  ...createNullStapleStorage(initial, options),
+  ...createNullStapleStorage(initial),
   initialize: async () => {},
 });
 

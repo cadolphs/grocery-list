@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-native/pure';
-import { createNullAuthService, AuthService } from '../auth/AuthService';
+import { createNullAuthService } from '../auth/AuthService';
 import { useAuth } from './useAuth';
 
 describe('useAuth', () => {
@@ -96,7 +96,7 @@ describe('useAuth', () => {
   describe('unit: cleanup on unmount', () => {
     test('unsubscribes from auth state changes on unmount', async () => {
       const authService = createNullAuthService(null);
-      const { result, unmount } = renderHook(() => useAuth(authService));
+      const { unmount } = renderHook(() => useAuth(authService));
 
       unmount();
 

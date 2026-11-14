@@ -3,14 +3,7 @@
 // Optionally accepts onSearch for type-ahead suggestions from staple library
 
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  Pressable,
-  Text,
-  FlatList,
-  StyleSheet,
-} from 'react-native';
+import { View, TextInput, Pressable, Text, StyleSheet } from 'react-native';
 import {
   AddTripItemRequest,
   AddTripItemResult,

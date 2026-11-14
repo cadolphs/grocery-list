@@ -13,7 +13,6 @@ type TripItemRowProps = {
   readonly mode: ViewMode;
   readonly onPress?: () => void;
   readonly onSkip?: () => void;
-  readonly onEditStaple?: (name: string, area: string) => void;
   readonly onLongPress?: (name: string, area: string) => void;
 };
 
@@ -22,7 +21,7 @@ export const TripItemRow = ({
   mode,
   onPress,
   onSkip,
-  onEditStaple,
+
   onLongPress,
 }: TripItemRowProps): React.JSX.Element => {
   const isWeb = useIsWeb();

@@ -2,7 +2,6 @@
 
 import {
   groupByArea,
-  AreaGroup,
   groupBySection,
   SectionGroup,
 } from '../../../src/domain/item-grouping';

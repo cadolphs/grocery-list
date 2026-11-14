@@ -1,13 +1,7 @@
 // HomeView - displays trip items grouped by house area
 // Composes useTrip hook with groupByArea pure function
 
-import React, {
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,

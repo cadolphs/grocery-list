@@ -410,7 +410,6 @@ describe('US-CHA-06: Reorder Areas', () => {
       'Kitchen Cabinets',
       'Fridge',
     ];
-    const areaStorage = createNullAreaStorage(newOrder);
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
     library.addStaple({

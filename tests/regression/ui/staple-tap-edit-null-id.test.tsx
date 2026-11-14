@@ -1,7 +1,7 @@
 /**
  * Regression test: Tapping a staple item with stapleId=null opens edit sheet.
  *
- * Bug: TripItemRow checks item.stapleId for truthiness before calling onEditStaple.
+ * Bug: TripItemRow checks item.stapleId for truthiness before calling the edit handler.
  * Trip items from stapleInputToTripItem can have stapleId=null when the staple
  * has no id field, preventing the edit sheet from opening.
  */

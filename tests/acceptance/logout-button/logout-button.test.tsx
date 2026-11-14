@@ -34,7 +34,7 @@
  *   - UAT-5     : ENABLED
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   render,
   fireEvent,
