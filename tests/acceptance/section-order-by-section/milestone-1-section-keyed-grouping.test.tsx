@@ -142,7 +142,7 @@ describe('US-02: Null aisle items sort last within a section', () => {
 
     // Then within the Inner Aisles card, the aisle-4 item appears before the no-aisle item
     expect(groups).toHaveLength(1);
-    const innerAislesItems = groups[0].items.map((i) => i.name);
+    const innerAislesItems = groups[0]!.items.map((i) => i.name);
     expect(innerAislesItems).toEqual(['Bread', 'Pasta']);
   });
 });
@@ -209,10 +209,10 @@ describe('Edge: All-null aisle items render in a single section card', () => {
 
     // Then exactly one Deli card appears
     expect(groups).toHaveLength(1);
-    expect(groups[0].section).toBe('Deli');
+    expect(groups[0]!.section).toBe('Deli');
 
     // And the Deli card contains every Deli item
-    expect(groups[0].items.map((i) => i.name).sort()).toEqual([
+    expect(groups[0]!.items.map((i) => i.name).sort()).toEqual([
       'Cheese',
       'Olives',
       'Turkey',

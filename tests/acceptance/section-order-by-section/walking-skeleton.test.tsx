@@ -74,13 +74,13 @@ describe('WS-1: Carlos opens the store view and sees one card per section with c
     expect(sorted).toHaveLength(2);
 
     // And the first card is Produce
-    expect(sorted[0].section).toBe('Produce');
+    expect(sorted[0]!.section).toBe('Produce');
 
     // And the second card is Inner Aisles
-    expect(sorted[1].section).toBe('Inner Aisles');
+    expect(sorted[1]!.section).toBe('Inner Aisles');
 
     // And the Inner Aisles card contains items in aisle order: Bread, Pasta, Soap
-    const innerAislesItems = sorted[1].items.map((i) => i.name);
+    const innerAislesItems = sorted[1]!.items.map((i) => i.name);
     expect(innerAislesItems).toEqual(['Bread', 'Pasta', 'Soap']);
   });
 });

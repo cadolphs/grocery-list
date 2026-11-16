@@ -349,7 +349,7 @@ describe('initializeApp', () => {
       // Trip starts with 1 item (Milk)
       const tripBefore = result.services!.tripService.getItems();
       expect(tripBefore).toHaveLength(1);
-      expect(tripBefore[0].name).toBe('Milk');
+      expect(tripBefore[0]!.name).toBe('Milk');
 
       // Simulate remote staple add: save directly to storage, then fire onChange
       sharedStorage!.save({
@@ -505,7 +505,7 @@ describe('initializeApp', () => {
 
       // Trip starts with 1 Tahini (from initializeFromStorage, has stapleId)
       expect(tripService.getItems()).toHaveLength(1);
-      const tahiniStapleId = tripService.getItems()[0].stapleId!;
+      const tahiniStapleId = tripService.getItems()[0]!.stapleId!;
 
       // Simulate: remove from storage, fire onChange (removes from trip)
       sharedStorage!.remove(tahiniStapleId);
@@ -566,8 +566,8 @@ describe('initializeApp', () => {
       const tripBefore = tripService.getItems();
       expect(tripBefore).toHaveLength(1);
       const milkBefore = tripBefore[0];
-      expect(milkBefore.houseArea).toBe('Fridge');
-      expect(milkBefore.storeLocation).toEqual({
+      expect(milkBefore!.houseArea).toBe('Fridge');
+      expect(milkBefore!.storeLocation).toEqual({
         section: 'Dairy',
         aisleNumber: 3,
       });
@@ -589,9 +589,9 @@ describe('initializeApp', () => {
       const tripAfter = tripService.getItems();
       expect(tripAfter).toHaveLength(1);
       const milkAfter = tripAfter[0];
-      expect(milkAfter.stapleId).toBe(milkStaple.id);
-      expect(milkAfter.houseArea).toBe('Kitchen Cabinets');
-      expect(milkAfter.storeLocation).toEqual({
+      expect(milkAfter!.stapleId).toBe(milkStaple.id);
+      expect(milkAfter!.houseArea).toBe('Kitchen Cabinets');
+      expect(milkAfter!.storeLocation).toEqual({
         section: 'Bakery',
         aisleNumber: 1,
       });
@@ -696,7 +696,7 @@ describe('initializeApp', () => {
       const milkStaple = stapleLibrary
         .listAll()
         .find((s) => s.name === 'Milk')!;
-      expect(before[0].stapleId).toBe(milkStaple.id);
+      expect(before[0]!.stapleId).toBe(milkStaple.id);
 
       // Drive locally: stapleLibrary.remove (NO storage.onChange invocation).
       stapleLibrary.remove(milkStaple.id);
@@ -828,7 +828,7 @@ describe('initializeApp', () => {
       // Trip is unchanged: subscription was unwired.
       const after = tripService.getItems();
       expect(after).toHaveLength(1);
-      expect(after[0].name).toBe('Soda');
+      expect(after[0]!.name).toBe('Soda');
     });
 
     test('double-fire (delayed Firestore echo) is idempotent: stapleLibrary.remove + manual onChange replay does not double-mutate', async () => {
@@ -874,7 +874,7 @@ describe('initializeApp', () => {
 
       const afterFirst = tripService.getItems();
       expect(afterFirst).toHaveLength(1);
-      expect(afterFirst[0].name).toBe('Bread');
+      expect(afterFirst[0]!.name).toBe('Bread');
 
       // Second fire (simulated delayed Firestore echo): manually invoke the
       // captured stapleStorage.onChange. previousStaples has been advanced by
@@ -886,8 +886,8 @@ describe('initializeApp', () => {
       // duplicate removal, no inadvertent re-add.
       const afterSecond = tripService.getItems();
       expect(afterSecond).toHaveLength(1);
-      expect(afterSecond[0].name).toBe('Bread');
-      expect(afterSecond[0].id).toBe(afterFirst[0].id);
+      expect(afterSecond[0]!.name).toBe('Bread');
+      expect(afterSecond[0]!.id).toBe(afterFirst[0]!.id);
     });
   });
 });
@@ -912,8 +912,8 @@ describe('diffStaples', () => {
     const diff = diffStaples(previous, current);
 
     expect(diff.updated).toHaveLength(1);
-    expect(diff.updated[0].id).toBe('s1');
-    expect(diff.updated[0].houseArea).toBe('Kitchen Cabinets');
+    expect(diff.updated[0]!.id).toBe('s1');
+    expect(diff.updated[0]!.houseArea).toBe('Kitchen Cabinets');
   });
 
   test('returns updated with staples whose storeLocation.section changed', () => {
@@ -933,7 +933,7 @@ describe('diffStaples', () => {
     const diff = diffStaples(previous, current);
 
     expect(diff.updated).toHaveLength(1);
-    expect(diff.updated[0].storeLocation.section).toBe('Bakery');
+    expect(diff.updated[0]!.storeLocation.section).toBe('Bakery');
   });
 
   test('returns updated with staples whose storeLocation.aisleNumber changed', () => {
@@ -953,7 +953,7 @@ describe('diffStaples', () => {
     const diff = diffStaples(previous, current);
 
     expect(diff.updated).toHaveLength(1);
-    expect(diff.updated[0].storeLocation.aisleNumber).toBe(7);
+    expect(diff.updated[0]!.storeLocation.aisleNumber).toBe(7);
   });
 
   test('does NOT include unchanged staples in updated', () => {

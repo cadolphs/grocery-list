@@ -152,9 +152,9 @@ export const partitionSectionByAisle = (
   }
 
   // Exactly one numeric aisle and no null items → single-aisle render with header badge.
-  if (numericKeyCount === 1 && !hasNulls) {
-    const [aisleNumber] = numericBuckets.keys();
-    return { kind: 'single-aisle', aisleNumber };
+  const [firstAisle] = numericBuckets.keys();
+  if (numericKeyCount === 1 && !hasNulls && firstAisle !== undefined) {
+    return { kind: 'single-aisle', aisleNumber: firstAisle };
   }
 
   // 2+ distinct keys (numeric+numeric, or numeric+null) → multi-aisle subgroups.

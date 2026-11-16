@@ -26,9 +26,11 @@ let db: Firestore | null = null;
 const getOrInitializeApp = (): FirebaseApp => {
   if (app) return app;
 
-  app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+  const [existing] = getApps();
+  const initialized = existing ?? initializeApp(firebaseConfig);
+  app = initialized;
 
-  return app;
+  return initialized;
 };
 
 /** @public Read by firebase-config.test.ts through a fresh `require`, which knip cannot follow. */

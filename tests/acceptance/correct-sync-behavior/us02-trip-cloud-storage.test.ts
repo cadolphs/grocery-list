@@ -85,7 +85,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     // Then "Olive Oil" is saved as carryover in cloud storage
     const carryover = tripStorage.loadCarryover();
     expect(carryover).toHaveLength(1);
-    expect(carryover[0].name).toBe('Olive Oil');
+    expect(carryover[0]!.name).toBe('Olive Oil');
 
     // And the trip status is "completed" in cloud storage
     const savedTrip = tripStorage.loadTrip();

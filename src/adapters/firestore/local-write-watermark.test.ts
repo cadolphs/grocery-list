@@ -57,13 +57,13 @@ describe('nextWrittenAt', () => {
           previousStamps.length === 0
             ? null
             : previousStamps[previousStamps.length - 1];
-        return [...previousStamps, nextWrittenAt(now, lastSeen)];
+        return [...previousStamps, nextWrittenAt(now, lastSeen!)];
       },
       [],
     );
 
     stamps.slice(1).forEach((stamp, index) => {
-      expect(stamp).toBeGreaterThan(stamps[index]);
+      expect(stamp).toBeGreaterThan(stamps[index]!);
     });
     expect(stamps).toEqual([100, 101, 102, 200, 201]);
   });
@@ -363,7 +363,7 @@ describe('writeMirrorEnvelope', () => {
       writeMirrorEnvelope(TEST_UID, 'trip', rawTrip, writtenAt);
 
       expect(setItemSpy).toHaveBeenCalledTimes(1);
-      const [writtenKey, writtenPayload] = setItemSpy.mock.calls[0];
+      const [writtenKey, writtenPayload] = setItemSpy.mock.calls[0]!;
       expect(writtenKey).toBe(buildV2MirrorKey(TEST_UID, 'trip'));
       const envelope = JSON.parse(writtenPayload) as Record<string, unknown>;
       expect(Object.keys(envelope).sort()).toEqual(['value', 'writtenAt']);

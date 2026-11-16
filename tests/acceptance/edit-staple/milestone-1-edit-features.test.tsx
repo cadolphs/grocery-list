@@ -50,7 +50,7 @@ describe('US-ES-01/02: Edit Validation', () => {
     const staple = library.listAll()[0];
 
     // When Carlos clears the house area field and tries to save
-    const result = library.updateStaple(staple.id, { houseArea: '' });
+    const result = library.updateStaple(staple!.id, { houseArea: '' });
 
     // Then the edit is rejected with a validation message
     expect(result.success).toBe(false);
@@ -76,7 +76,7 @@ describe('US-ES-01/02: Edit Validation', () => {
     const staple = library.listAll()[0];
 
     // When Carlos clears the store section and tries to save
-    const result = library.updateStaple(staple.id, {
+    const result = library.updateStaple(staple!.id, {
       storeLocation: { section: '', aisleNumber: 7 },
     });
 
@@ -102,10 +102,10 @@ describe('US-ES-01/02: Edit Validation', () => {
     ]);
     const library = createStapleLibrary(stapleStorage);
     const staple = library.listAll()[0];
-    library.remove(staple.id);
+    library.remove(staple!.id);
 
     // When Carlos tries to edit the removed staple
-    const result = library.updateStaple(staple.id, { houseArea: 'Freezer' });
+    const result = library.updateStaple(staple!.id, { houseArea: 'Freezer' });
 
     // Then the edit is rejected because the staple no longer exists
     expect(result.success).toBe(false);
@@ -168,7 +168,7 @@ describe('US-ES-03: Remove Staple from Edit Sheet', () => {
 
     // Then "Toilet paper" is gone from the library
     expect(library.listAll()).toHaveLength(1);
-    expect(library.listAll()[0].name).toBe('Shampoo');
+    expect(library.listAll()[0]!.name).toBe('Shampoo');
 
     // And "Toilet paper" will not appear on future trips
     const tripStorage = createNullTripStorage();
@@ -225,7 +225,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     // And "Fridge" only has "Butter"
     const fridgeItems = grouped.find((g) => g.area === 'Fridge')?.items ?? [];
     expect(fridgeItems).toHaveLength(1);
-    expect(fridgeItems[0].name).toBe('Butter');
+    expect(fridgeItems[0]!.name).toBe('Butter');
   });
 
   it('trip item updates store section when staple section is edited', () => {

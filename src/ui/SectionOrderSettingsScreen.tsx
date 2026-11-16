@@ -16,8 +16,8 @@ const moveItem = <T,>(
   toIndex: number,
 ): T[] => {
   const result = [...items];
-  const [moved] = result.splice(fromIndex, 1);
-  result.splice(toIndex, 0, moved);
+  const moved = result.splice(fromIndex, 1);
+  result.splice(toIndex, 0, ...moved);
   return result;
 };
 

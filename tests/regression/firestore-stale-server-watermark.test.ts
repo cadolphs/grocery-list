@@ -294,7 +294,7 @@ const setDocCallsFor = (path: string) =>
 
 const lastWrittenAtFor = (path: string): unknown => {
   const calls = setDocCallsFor(path);
-  const [, payload] = calls[calls.length - 1];
+  const [, payload] = calls[calls.length - 1]!;
   return (payload as { writtenAt?: unknown }).writtenAt;
 };
 
@@ -365,7 +365,7 @@ describe.each(rows)(
       expectOnChangeCalls(row, onChange, 0);
       const rePushes = setDocCallsFor(row.docPath).slice(setDocCountBefore);
       expect(rePushes).toHaveLength(1);
-      expect(rePushes[0][1]).toEqual({ [row.serverField]: V1, writtenAt: W1 });
+      expect(rePushes[0]![1]).toEqual({ [row.serverField]: V1, writtenAt: W1 });
 
       const adapterC = await coldStartWithRemoteForgotten(row);
       expect(row.read(adapterC)).toEqual(V1);
@@ -494,6 +494,6 @@ describe('Stale server after process restart — section order document: a mirro
       setDocCountBefore,
     );
     expect(rePushes).toHaveLength(1);
-    expect(rePushes[0][1]).toEqual({ order: null, writtenAt: W });
+    expect(rePushes[0]![1]).toEqual({ order: null, writtenAt: W });
   });
 });

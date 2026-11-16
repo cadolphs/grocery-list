@@ -111,11 +111,11 @@ describe('TripService.subscribe', () => {
     });
 
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
-    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+    const savedTrip = saveTripSpy.mock.calls[0]![0] as {
       items: Array<{ name: string }>;
     };
     expect(savedTrip.items).toHaveLength(1);
-    expect(savedTrip.items[0].name).toBe('Bread');
+    expect(savedTrip.items[0]!.name).toBe('Bread');
   });
 
   test('subscriber is notified when loadFromStorage updates state', () => {
@@ -301,7 +301,7 @@ describe('TripService.subscribe', () => {
 
     // Skip the item (simulates unchecking in checklist)
     tripService.skipItem('Milk');
-    expect(tripService.getItems()[0].needed).toBe(false);
+    expect(tripService.getItems()[0]!.needed).toBe(false);
 
     // Attempting to add the same stapleId again should be rejected
     const duplicateResult = tripService.addItem({
@@ -507,7 +507,7 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
 
     // Items unchanged.
     expect(tripService.getItems()).toHaveLength(1);
-    expect(tripService.getItems()[0].name).toBe('Apples');
+    expect(tripService.getItems()[0]!.name).toBe('Apples');
     // No subscriber notification.
     expect(notifications).toHaveLength(0);
     // No persistence call.
@@ -564,8 +564,8 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
 
     const remaining = tripService.getItems();
     expect(remaining).toHaveLength(1);
-    expect(remaining[0].id).toBe('item-oneoff');
-    expect(remaining[0].itemType).toBe('one-off');
+    expect(remaining[0]!.id).toBe('item-oneoff');
+    expect(remaining[0]!.itemType).toBe('one-off');
     expect(notifications).toHaveLength(1);
   });
 });
@@ -672,7 +672,7 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
 
     // Assert — storage received the updated trip
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
-    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+    const savedTrip = saveTripSpy.mock.calls[0]![0] as {
       items: ReadonlyArray<{
         stapleId: string | null;
         houseArea: string;
@@ -740,7 +740,7 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     // Assert — must detect the section change and persist
     expect(notifications).toHaveLength(1);
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
-    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+    const savedTrip = saveTripSpy.mock.calls[0]![0] as {
       items: ReadonlyArray<{
         stapleId: string | null;
         storeLocation: { section: string; aisleNumber: number };
@@ -778,7 +778,7 @@ describe('TripService.syncStapleUpdate persists and notifies', () => {
     // Assert — must detect the aisleNumber change and persist
     expect(notifications).toHaveLength(1);
     expect(saveTripSpy).toHaveBeenCalledTimes(1);
-    const savedTrip = saveTripSpy.mock.calls[0][0] as {
+    const savedTrip = saveTripSpy.mock.calls[0]![0] as {
       items: ReadonlyArray<{
         stapleId: string | null;
         storeLocation: { section: string; aisleNumber: number };

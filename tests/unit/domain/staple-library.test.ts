@@ -22,8 +22,8 @@ describe('staple library', () => {
         type: 'staple',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       });
-      expect(allStaples[0].id).toBeDefined();
-      expect(allStaples[0].createdAt).toBeDefined();
+      expect(allStaples[0]!.id).toBeDefined();
+      expect(allStaples[0]!.createdAt).toBeDefined();
     });
 
     it('rejects duplicate staple with same name and house area', () => {
@@ -80,7 +80,7 @@ describe('staple library', () => {
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       });
-      const stapleId = library.listAll()[0].id;
+      const stapleId = library.listAll()[0]!.id;
 
       const result = library.updateStaple(stapleId, { name: '' });
 
@@ -89,7 +89,7 @@ describe('staple library', () => {
         expect(result.error).toContain('name is required');
       }
       // Staple is unchanged
-      expect(library.listAll()[0].name).toBe('Milkk');
+      expect(library.listAll()[0]!.name).toBe('Milkk');
     });
 
     it('rejects rename to whitespace-only name with an error result', () => {
@@ -101,7 +101,7 @@ describe('staple library', () => {
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       });
-      const stapleId = library.listAll()[0].id;
+      const stapleId = library.listAll()[0]!.id;
 
       const result = library.updateStaple(stapleId, { name: '   ' });
 
@@ -109,7 +109,7 @@ describe('staple library', () => {
       if (!result.success) {
         expect(result.error).toContain('name is required');
       }
-      expect(library.listAll()[0].name).toBe('Milkk');
+      expect(library.listAll()[0]!.name).toBe('Milkk');
     });
 
     it('merges changes.name into the persisted staple', () => {
@@ -121,7 +121,7 @@ describe('staple library', () => {
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       });
-      const stapleId = library.listAll()[0].id;
+      const stapleId = library.listAll()[0]!.id;
 
       const result = library.updateStaple(stapleId, { name: 'Milk' });
 
@@ -182,8 +182,8 @@ describe('staple library', () => {
         type: 'one-off',
         storeLocation: { section: 'International', aisleNumber: 7 },
       });
-      expect(allItems[0].id).toBeDefined();
-      expect(allItems[0].createdAt).toBeDefined();
+      expect(allItems[0]!.id).toBeDefined();
+      expect(allItems[0]!.createdAt).toBeDefined();
     });
 
     it('deduplicates by name and type one-off', () => {

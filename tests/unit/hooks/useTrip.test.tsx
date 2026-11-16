@@ -35,6 +35,6 @@ describe('useTrip', () => {
     const { result } = renderHook(() => useTrip(), { wrapper });
 
     expect(result.current.items).toHaveLength(1);
-    expect(result.current.items[0].name).toBe('Whole milk');
+    expect(result.current.items[0]!.name).toBe('Whole milk');
   });
 });

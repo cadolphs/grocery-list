@@ -45,7 +45,7 @@ describe('WS-ES-1: Edit Staple House Area', () => {
     const staple = library.listAll()[0];
 
     // When Carlos changes "Whole milk" house area to "Freezer"
-    const result = library.updateStaple(staple.id, { houseArea: 'Freezer' });
+    const result = library.updateStaple(staple!.id, { houseArea: 'Freezer' });
 
     // Then "Whole milk" is now in "Freezer"
     expect(result.success).toBe(true);
@@ -80,7 +80,7 @@ describe('WS-ES-2: Edit Staple Store Location', () => {
     const staple = library.listAll()[0];
 
     // When Carlos moves "Canned beans" to "International" section, aisle 9
-    const result = library.updateStaple(staple.id, {
+    const result = library.updateStaple(staple!.id, {
       storeLocation: { section: 'International', aisleNumber: 9 },
     });
 
@@ -119,7 +119,7 @@ describe('WS-ES-3: Duplicate Detection on Edit', () => {
     const fridgeMilk = library.listByArea('Fridge')[0];
 
     // When Carlos tries to move the Fridge "Whole milk" to "Freezer"
-    const result = library.updateStaple(fridgeMilk.id, {
+    const result = library.updateStaple(fridgeMilk!.id, {
       houseArea: 'Freezer',
     });
 
@@ -134,7 +134,7 @@ describe('WS-ES-3: Duplicate Detection on Edit', () => {
     // And the original staple remains unchanged in "Fridge"
     const fridgeItems = library.listByArea('Fridge');
     expect(fridgeItems).toHaveLength(1);
-    expect(fridgeItems[0].name).toBe('Whole milk');
+    expect(fridgeItems[0]!.name).toBe('Whole milk');
   });
 });
 
@@ -160,7 +160,7 @@ describe('WS-ES-4: Self-Update Allowed', () => {
     const staple = library.listAll()[0];
 
     // When Carlos updates aisle from 3 to 4 (same name, same area)
-    const result = library.updateStaple(staple.id, {
+    const result = library.updateStaple(staple!.id, {
       storeLocation: { section: 'Dairy', aisleNumber: 4 },
     });
 

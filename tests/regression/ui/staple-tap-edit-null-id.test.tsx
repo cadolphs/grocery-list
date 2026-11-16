@@ -48,7 +48,7 @@ function renderAppWithNullStapleId() {
 
   // Verify the trip item has stapleId=null (the bug condition)
   const items = tripService.getItems();
-  expect(items[0].stapleId).toBeNull();
+  expect(items[0]!.stapleId).toBeNull();
 
   render(
     <ServiceProvider
