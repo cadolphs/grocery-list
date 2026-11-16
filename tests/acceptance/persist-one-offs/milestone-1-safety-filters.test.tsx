@@ -130,7 +130,7 @@ describe('M1-2: New trip preloads only staples', () => {
     // Then only "Milk" is preloaded
     const tripItems = tripService.getItems();
     expect(tripItems).toHaveLength(1);
-    expect(tripItems[0].name).toBe('Milk');
+    expect(tripItems[0]!.name).toBe('Milk');
 
     // And "Tahini" is not in the trip
     expect(tripItems.find((i) => i.name === 'Tahini')).toBeUndefined();

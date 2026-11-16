@@ -336,7 +336,7 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
 
     // Then matching staples appear
     expect(suggestions).toHaveLength(2);
-    expect(suggestions[0].name).toBe('Greek yogurt');
+    expect(suggestions[0]!.name).toBe('Greek yogurt');
   });
 
   it('returns no suggestions for unknown item', () => {
@@ -373,7 +373,7 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
 
     // Then "Greek yogurt" appears
     expect(suggestions).toHaveLength(1);
-    expect(suggestions[0].name).toBe('Greek yogurt');
+    expect(suggestions[0]!.name).toBe('Greek yogurt');
   });
 
   it('multiple suggestions for partial match', () => {
@@ -455,11 +455,11 @@ describe('US-10: Navigate Store Sections', () => {
     const groups = groupBySection(items as any);
 
     // When all Dairy items are checked
-    const dairyComplete = groups[0].checkedCount === groups[0].totalCount;
+    const dairyComplete = groups[0]!.checkedCount === groups[0]!.totalCount;
 
     // Then the next section is Canned Goods
     expect(dairyComplete).toBe(true);
-    expect(groups[1].section).toBe('Canned Goods');
+    expect(groups[1]!.section).toBe('Canned Goods');
   });
 
   it('section progress reflects partial completion', () => {
@@ -524,7 +524,7 @@ describe('US-10: Navigate Store Sections', () => {
     expect(completed).toHaveLength(2);
     const incomplete = groups.filter((g) => g.checkedCount < g.totalCount);
     expect(incomplete).toHaveLength(1);
-    expect(incomplete[0].section).toBe('Deli');
+    expect(incomplete[0]!.section).toBe('Deli');
   });
 
   it('all sections complete enables trip completion', () => {

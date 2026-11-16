@@ -83,7 +83,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     const loadedTrip = createTrip(cloudTripStorage);
     loadedTrip.loadFromStorage();
     expect(loadedTrip.getItems()).toHaveLength(12);
-    expect(loadedTrip.getItems()[0].name).toContain('Cloud');
+    expect(loadedTrip.getItems()[0]!.name).toContain('Cloud');
   });
 
   // =============================================================================

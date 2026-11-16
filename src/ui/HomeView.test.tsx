@@ -254,7 +254,7 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
       .getItems()
       .filter((i) => i.name === 'Bread');
     expect(remaining.length).toBe(1);
-    expect(remaining[0].stapleId).toBeNull();
+    expect(remaining[0]!.stapleId).toBeNull();
 
     const tree = renderHomeView(services);
     expect(tree.queryAllByText('Bread').length).toBeGreaterThan(0);
@@ -345,11 +345,11 @@ describe('HomeView staple-add flow (fix-staple-add-duplicate 01-01)', () => {
       .find((s) => s.name === 'Eggs');
     if (!eggsStaple) throw new Error('Eggs staple was not created');
 
-    expect(items[0].name).toBe('Eggs');
-    expect(items[0].houseArea).toBe('Kitchen Cabinets');
-    expect(items[0].stapleId).toBe(eggsStaple.id);
-    expect(typeof items[0].stapleId).toBe('string');
-    expect(items[0].stapleId).not.toBe('');
+    expect(items[0]!.name).toBe('Eggs');
+    expect(items[0]!.houseArea).toBe('Kitchen Cabinets');
+    expect(items[0]!.stapleId).toBe(eggsStaple.id);
+    expect(typeof items[0]!.stapleId).toBe('string');
+    expect(items[0]!.stapleId).not.toBe('');
   });
 });
 

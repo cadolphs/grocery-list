@@ -59,7 +59,7 @@ describe('useStaples', () => {
     const { result } = renderHook(() => useStaples(library));
 
     act(() => {
-      library.remove(result.current[0].id);
+      library.remove(result.current[0]!.id);
     });
 
     expect(result.current).toEqual([]);

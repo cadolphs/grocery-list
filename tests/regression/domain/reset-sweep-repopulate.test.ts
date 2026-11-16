@@ -71,6 +71,6 @@ describe('resetSweep re-populates from library', () => {
 
     const items = trip.getItems();
     expect(items).toHaveLength(1);
-    expect(items[0].name).toBe('Milk');
+    expect(items[0]!.name).toBe('Milk');
   });
 });

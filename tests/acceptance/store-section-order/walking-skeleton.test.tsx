@@ -97,11 +97,11 @@ describe('WS-1: Custom section order overrides default sort', () => {
 
     // Then sections appear in Carlos's walking order
     expect(sorted).toHaveLength(5);
-    expect(sorted[0].section).toBe('Health & Beauty');
-    expect(sorted[1].section).toBe('Deli');
-    expect(sorted[2].section).toBe('Dairy');
-    expect(sorted[3].section).toBe('Canned Goods');
-    expect(sorted[4].section).toBe('Bakery');
+    expect(sorted[0]!.section).toBe('Health & Beauty');
+    expect(sorted[1]!.section).toBe('Deli');
+    expect(sorted[2]!.section).toBe('Dairy');
+    expect(sorted[3]!.section).toBe('Canned Goods');
+    expect(sorted[4]!.section).toBe('Bakery');
   });
 });
 
@@ -129,9 +129,9 @@ describe('WS-2: Fallback to default order when no custom order exists', () => {
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
     // Then sections appear in default alphabetical order
-    expect(sorted[0].section).toBe('Canned Goods');
-    expect(sorted[1].section).toBe('Dairy');
-    expect(sorted[2].section).toBe('Deli');
+    expect(sorted[0]!.section).toBe('Canned Goods');
+    expect(sorted[1]!.section).toBe('Dairy');
+    expect(sorted[2]!.section).toBe('Deli');
   });
 });
 
@@ -159,9 +159,9 @@ describe('WS-3: Unknown sections append to end of custom order', () => {
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
     // Then Deli appears first, Dairy second, Bakery last
-    expect(sorted[0].section).toBe('Deli');
-    expect(sorted[1].section).toBe('Dairy');
-    expect(sorted[2].section).toBe('Bakery');
+    expect(sorted[0]!.section).toBe('Deli');
+    expect(sorted[1]!.section).toBe('Dairy');
+    expect(sorted[2]!.section).toBe('Bakery');
   });
 });
 
@@ -218,8 +218,8 @@ describe('WS-5: Custom order still hides empty sections', () => {
     // Then only 2 sections are shown (groupBySection already excludes empties)
     expect(sorted).toHaveLength(2);
     // And they appear in custom order: Deli first, Bakery second
-    expect(sorted[0].section).toBe('Deli');
-    expect(sorted[1].section).toBe('Bakery');
+    expect(sorted[0]!.section).toBe('Deli');
+    expect(sorted[1]!.section).toBe('Bakery');
   });
 });
 
@@ -246,8 +246,8 @@ describe('WS-6: null stored order means default sort', () => {
     const sorted = sortByCustomOrder(defaultGroups, loaded);
 
     // Then Dairy appears before Deli (alphabetical default)
-    expect(sorted[0].section).toBe('Dairy');
-    expect(sorted[1].section).toBe('Deli');
+    expect(sorted[0]!.section).toBe('Dairy');
+    expect(sorted[1]!.section).toBe('Deli');
   });
 });
 
@@ -272,7 +272,7 @@ describe('WS-7: Empty array order falls back to default sort', () => {
     const sorted = sortByCustomOrder(defaultGroups, customOrder);
 
     // Then default alphabetical sort: Dairy before Deli
-    expect(sorted[0].section).toBe('Dairy');
-    expect(sorted[1].section).toBe('Deli');
+    expect(sorted[0]!.section).toBe('Dairy');
+    expect(sorted[1]!.section).toBe('Deli');
   });
 });

@@ -217,9 +217,9 @@ describe('firestore staple storage implements staple storage port', () => {
     storage.updateArea('Kitchen', 'Cocina');
 
     const result = storage.loadAll();
-    expect(result[0].houseArea).toBe('Cocina');
-    expect(result[1].houseArea).toBe('Bathroom');
-    expect(result[2].houseArea).toBe('Cocina');
+    expect(result[0]!.houseArea).toBe('Cocina');
+    expect(result[1]!.houseArea).toBe('Bathroom');
+    expect(result[2]!.houseArea).toBe('Cocina');
   });
 });
 
@@ -299,7 +299,7 @@ describe('firestore staple storage onChange callback', () => {
 
     expect(onChangeCallCount).toBe(1);
     expect(storage.loadAll()).toHaveLength(1);
-    expect(storage.loadAll()[0].name).toBe('Milk');
+    expect(storage.loadAll()[0]!.name).toBe('Milk');
   });
 
   test('returns unsubscribe function that stops the listener', async () => {

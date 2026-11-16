@@ -32,7 +32,7 @@ describe('Trip: addItem', () => {
         checked: false,
       }),
     );
-    expect(items[0].id).toBeDefined();
+    expect(items[0]!.id).toBeDefined();
   });
 
   it('one-off item does not have a stapleId', () => {
@@ -49,7 +49,7 @@ describe('Trip: addItem', () => {
     });
 
     const items = trip.getItems();
-    expect(items[0].stapleId).toBeNull();
+    expect(items[0]!.stapleId).toBeNull();
   });
 
   it('returns success result when adding a valid item', () => {
@@ -210,7 +210,7 @@ describe('Trip: skipItem', () => {
     trip.skipItem('Butter');
 
     expect(trip.getItems()).toHaveLength(1);
-    expect(trip.getItems()[0].name).toBe('Butter');
+    expect(trip.getItems()[0]!.name).toBe('Butter');
   });
 });
 
@@ -408,7 +408,7 @@ describe('Trip: resetSweep', () => {
 
     const items = trip.getItems();
     expect(items).toHaveLength(1);
-    expect(items[0].name).toBe('Milk');
+    expect(items[0]!.name).toBe('Milk');
   });
 
   it('clears completed areas so sweep progress resets to zero', () => {
@@ -457,9 +457,9 @@ describe('Trip: resetSweep', () => {
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();
     expect(loadedTrip?.items).toHaveLength(1);
-    expect(loadedTrip?.items[0].name).toBe('Milk');
-    expect(loadedTrip?.items[0].checked).toBe(false);
-    expect(loadedTrip?.items[0].needed).toBe(true);
+    expect(loadedTrip?.items[0]!.name).toBe('Milk');
+    expect(loadedTrip?.items[0]!.checked).toBe(false);
+    expect(loadedTrip?.items[0]!.needed).toBe(true);
   });
 });
 
@@ -485,7 +485,7 @@ describe('completeTrip', () => {
     const result = completeTrip(trip, library);
 
     expect(result.purchasedStaples).toHaveLength(1);
-    expect(result.purchasedStaples[0].name).toBe('Milk');
+    expect(result.purchasedStaples[0]!.name).toBe('Milk');
   });
 
   it('categorizes checked one-offs as purchasedOneOffs', () => {
@@ -502,7 +502,7 @@ describe('completeTrip', () => {
     const result = completeTrip(trip, library);
 
     expect(result.purchasedOneOffs).toHaveLength(1);
-    expect(result.purchasedOneOffs[0].name).toBe('Candles');
+    expect(result.purchasedOneOffs[0]!.name).toBe('Candles');
   });
 
   it('categorizes unchecked items as unboughtItems', () => {

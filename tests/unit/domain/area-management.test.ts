@@ -118,7 +118,7 @@ describe('area management', () => {
 
       expect(result).toEqual({ success: true });
       expect(management.getAreas()).toEqual(['Pantry', 'Bathroom']);
-      expect(stapleStorage.loadAll()[0].houseArea).toBe('Pantry');
+      expect(stapleStorage.loadAll()[0]!.houseArea).toBe('Pantry');
     });
   });
 
@@ -186,7 +186,7 @@ describe('area management', () => {
 
       expect(result).toEqual({ success: true });
       expect(management.getAreas()).toEqual(['Bathroom']);
-      expect(stapleStorage.loadAll()[0].houseArea).toBe('Bathroom');
+      expect(stapleStorage.loadAll()[0]!.houseArea).toBe('Bathroom');
     });
 
     it('deletes empty area without reassignment', () => {

@@ -149,9 +149,9 @@ describe('US-SSO-05: Reset Section Order to Default', () => {
     ];
     const groups = groupBySection(items);
     const sorted = sortByCustomOrder(groups, storage.loadOrder());
-    expect(sorted[0].section).toBe('Canned Goods');
-    expect(sorted[1].section).toBe('Dairy');
-    expect(sorted[2].section).toBe('Deli');
+    expect(sorted[0]!.section).toBe('Canned Goods');
+    expect(sorted[1]!.section).toBe('Dairy');
+    expect(sorted[2]!.section).toBe('Deli');
   });
 
   it('allows creating new custom order after reset', () => {
@@ -175,9 +175,9 @@ describe('US-SSO-05: Reset Section Order to Default', () => {
     ];
     const groups = groupBySection(items);
     const sorted = sortByCustomOrder(groups, storage.loadOrder());
-    expect(sorted[0].section).toBe('Bakery');
-    expect(sorted[1].section).toBe('Produce');
-    expect(sorted[2].section).toBe('Dairy');
+    expect(sorted[0]!.section).toBe('Bakery');
+    expect(sorted[1]!.section).toBe('Produce');
+    expect(sorted[2]!.section).toBe('Dairy');
   });
 });
 

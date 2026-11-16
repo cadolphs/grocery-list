@@ -97,12 +97,12 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
     // And "Laundry Room" contains detergent
     const laundry = grouped.find((g) => g.area === 'Laundry Room');
     expect(laundry?.items).toHaveLength(1);
-    expect(laundry?.items[0].name).toBe('Detergent');
+    expect(laundry?.items[0]!.name).toBe('Detergent');
 
     // And "Fridge" contains milk
     const fridge = grouped.find((g) => g.area === 'Fridge');
     expect(fridge?.items).toHaveLength(1);
-    expect(fridge?.items[0].name).toBe('Whole milk');
+    expect(fridge?.items[0]!.name).toBe('Whole milk');
   });
 
   it('preserves existing behavior with default 5 areas', () => {
@@ -288,7 +288,7 @@ describe('WS-CHA-03: New area appears in groupByArea', () => {
     const grouped = groupByArea(trip.getItems(), areaManagement.getAreas());
     const laundry = grouped.find((g) => g.area === 'Laundry Room');
     expect(laundry?.items).toHaveLength(1);
-    expect(laundry?.items[0].name).toBe('Detergent');
+    expect(laundry?.items[0]!.name).toBe('Detergent');
   });
 });
 

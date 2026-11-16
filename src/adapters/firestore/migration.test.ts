@@ -175,7 +175,7 @@ describe('migration service', () => {
 
       const cloudTrip = cloudStorage.loadTrip();
       expect(cloudTrip!.items).toHaveLength(2);
-      expect(cloudTrip!.items[0].name).toBe('Cloud Item 1');
+      expect(cloudTrip!.items[0]!.name).toBe('Cloud Item 1');
     });
 
     it('is a no-op when neither has trip data', () => {

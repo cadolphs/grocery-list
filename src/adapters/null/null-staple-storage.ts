@@ -39,11 +39,11 @@ export const createNullStapleStorage = (
         item.name.toLowerCase().includes(query.toLowerCase()),
       ),
     updateArea: (oldName: string, newName: string) => {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].houseArea === oldName) {
-          items[i] = { ...items[i], houseArea: newName };
+      items.forEach((item, i) => {
+        if (item.houseArea === oldName) {
+          items[i] = { ...item, houseArea: newName };
         }
-      }
+      });
     },
     unsubscribe: () => {},
   };

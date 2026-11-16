@@ -72,10 +72,10 @@ describe('WS-1: Add a Staple Item', () => {
     expect(result.success).toBe(true);
     const allStaples = library.listAll();
     expect(allStaples).toHaveLength(1);
-    expect(allStaples[0].name).toBe('Whole milk');
-    expect(allStaples[0].houseArea).toBe('Fridge');
-    expect(allStaples[0].storeLocation.section).toBe('Dairy');
-    expect(allStaples[0].storeLocation.aisleNumber).toBe(3);
+    expect(allStaples[0]!.name).toBe('Whole milk');
+    expect(allStaples[0]!.houseArea).toBe('Fridge');
+    expect(allStaples[0]!.storeLocation.section).toBe('Dairy');
+    expect(allStaples[0]!.storeLocation.aisleNumber).toBe(3);
   });
 
   it('adds a staple item without an aisle number', () => {
@@ -93,8 +93,8 @@ describe('WS-1: Add a Staple Item', () => {
     // Then "Rotisserie chicken" is saved with no aisle assigned
     expect(result.success).toBe(true);
     const staple = library.listAll()[0];
-    expect(staple.name).toBe('Rotisserie chicken');
-    expect(staple.storeLocation.aisleNumber).toBeNull();
+    expect(staple!.name).toBe('Rotisserie chicken');
+    expect(staple!.storeLocation.aisleNumber).toBeNull();
   });
 
   it('adds a one-off item to the current trip only', () => {

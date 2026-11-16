@@ -57,9 +57,9 @@ describe('US-05: New staple auto-adds to active trip', () => {
     // Orchestration adds to trip
     const tahini = newStaples[0];
     trip.addItem({
-      name: tahini.name,
-      houseArea: tahini.houseArea,
-      storeLocation: tahini.storeLocation,
+      name: tahini!.name,
+      houseArea: tahini!.houseArea,
+      storeLocation: tahini!.storeLocation,
       itemType: 'staple',
       source: 'preloaded',
     });

@@ -43,13 +43,13 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // 1. Result categorizes items correctly
     expect(result.purchasedStaples).toHaveLength(1);
-    expect(result.purchasedStaples[0].name).toBe('Milk');
+    expect(result.purchasedStaples[0]!.name).toBe('Milk');
 
     expect(result.purchasedOneOffs).toHaveLength(1);
-    expect(result.purchasedOneOffs[0].name).toBe('Birthday Cake');
+    expect(result.purchasedOneOffs[0]!.name).toBe('Birthday Cake');
 
     expect(result.unboughtItems).toHaveLength(1);
-    expect(result.unboughtItems[0].name).toBe('Bread');
+    expect(result.unboughtItems[0]!.name).toBe('Bread');
 
     // 2. Trip persisted with status 'completed'
     const savedTrip = storage.loadTrip();
@@ -59,8 +59,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // 3. Carryover saved — unbought items with source changed to 'carryover'
     const carryover = storage.loadCarryover();
     expect(carryover).toHaveLength(1);
-    expect(carryover[0].name).toBe('Bread');
-    expect(carryover[0].source).toBe('carryover');
+    expect(carryover[0]!.name).toBe('Bread');
+    expect(carryover[0]!.source).toBe('carryover');
   });
 
   it('new trip loads carryover from completed trip', () => {
@@ -104,12 +104,12 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const items = trip2.getItems();
     const carryoverItems = items.filter((item) => item.source === 'carryover');
     expect(carryoverItems).toHaveLength(1);
-    expect(carryoverItems[0].name).toBe('Bread');
+    expect(carryoverItems[0]!.name).toBe('Bread');
 
     // Staples should also be present
     const stapleItems = items.filter((item) => item.source === 'preloaded');
     expect(stapleItems).toHaveLength(1);
-    expect(stapleItems[0].name).toBe('Milk');
+    expect(stapleItems[0]!.name).toBe('Milk');
 
     // Carryover should be cleared from storage after loading
     const remainingCarryover = storage.loadCarryover();
@@ -156,7 +156,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const result = trip1.complete();
     expect(result.purchasedStaples).toHaveLength(2);
     expect(result.unboughtItems).toHaveLength(1);
-    expect(result.unboughtItems[0].name).toBe('Eggs');
+    expect(result.unboughtItems[0]!.name).toBe('Eggs');
 
     // --- Trip 2: start new trip with same staples + carryover ---
     const trip2 = createTrip(storage);
@@ -183,8 +183,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
       (item) => item.source === 'carryover',
     );
     expect(carryoverItems).toHaveLength(1);
-    expect(carryoverItems[0].name).toBe('Eggs');
-    expect(carryoverItems[0].source).toBe('carryover');
+    expect(carryoverItems[0]!.name).toBe('Eggs');
+    expect(carryoverItems[0]!.source).toBe('carryover');
 
     // Carryover should be cleared from storage after starting new trip
     const remainingCarryover2 = storage.loadCarryover();
@@ -225,7 +225,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // Verify preconditions: storage has completed trip + carryover
     expect(storage.loadTrip()!.status).toBe('completed');
     expect(storage.loadCarryover()).toHaveLength(1);
-    expect(storage.loadCarryover()[0].name).toBe('Bread');
+    expect(storage.loadCarryover()[0]!.name).toBe('Bread');
 
     // --- App init: new session creates fresh trip service, calls initializeFromStorage ---
     const currentStaples = [
@@ -265,8 +265,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     ]);
 
     expect(carryoverItems).toHaveLength(1);
-    expect(carryoverItems[0].name).toBe('Bread');
-    expect(carryoverItems[0].source).toBe('carryover');
+    expect(carryoverItems[0]!.name).toBe('Bread');
+    expect(carryoverItems[0]!.source).toBe('carryover');
 
     // 2. Total items = 3 staples + 1 carryover = 4
     expect(items).toHaveLength(4);
@@ -304,8 +304,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // Should load the existing active trip items, not start fresh
     const items = newTripService.getItems();
     expect(items).toHaveLength(1);
-    expect(items[0].name).toBe('Milk');
-    expect(items[0].checked).toBe(true);
+    expect(items[0]!.name).toBe('Milk');
+    expect(items[0]!.checked).toBe(true);
   });
 
   it('app init starts fresh trip when no stored trip exists', () => {
@@ -324,9 +324,9 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // Should start fresh trip with staples
     const items = tripService.getItems();
     expect(items).toHaveLength(1);
-    expect(items[0].name).toBe('Milk');
-    expect(items[0].source).toBe('preloaded');
-    expect(items[0].checked).toBe(false);
+    expect(items[0]!.name).toBe('Milk');
+    expect(items[0]!.source).toBe('preloaded');
+    expect(items[0]!.checked).toBe(false);
   });
 
   it('finish trip button triggers domain completion', () => {
@@ -359,9 +359,9 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // The result categorizes items correctly
     expect(result.purchasedStaples).toHaveLength(1);
-    expect(result.purchasedStaples[0].name).toBe('Milk');
+    expect(result.purchasedStaples[0]!.name).toBe('Milk');
     expect(result.unboughtItems).toHaveLength(1);
-    expect(result.unboughtItems[0].name).toBe('Bread');
+    expect(result.unboughtItems[0]!.name).toBe('Bread');
 
     // CRITICAL: trip is persisted as completed in storage
     const savedTrip = storage.loadTrip();
@@ -371,8 +371,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // CRITICAL: carryover is saved for unbought items
     const carryover = storage.loadCarryover();
     expect(carryover).toHaveLength(1);
-    expect(carryover[0].name).toBe('Bread');
-    expect(carryover[0].source).toBe('carryover');
+    expect(carryover[0]!.name).toBe('Bread');
+    expect(carryover[0]!.source).toBe('carryover');
 
     // Contrast: standalone completeTrip() does NOT persist
     const storage2 = createNullTripStorage();

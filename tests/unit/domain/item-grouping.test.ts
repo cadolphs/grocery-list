@@ -59,7 +59,7 @@ describe('groupByArea', () => {
 
     const bathroomGroup = result.find((g) => g.area === 'Bathroom')!;
     expect(bathroomGroup.items).toHaveLength(1);
-    expect(bathroomGroup.items[0].name).toBe('Shampoo');
+    expect(bathroomGroup.items[0]!.name).toBe('Shampoo');
   });
 
   it('computes totalCount as number of items in each area', () => {
@@ -160,7 +160,7 @@ describe('groupBySection', () => {
     const result = groupBySection(items);
 
     expect(result).toHaveLength(1);
-    expect(result[0].items.map((i) => i.name)).toEqual([
+    expect(result[0]!.items.map((i) => i.name)).toEqual([
       'Bread',
       'Pasta',
       'Soap',
@@ -188,7 +188,7 @@ describe('groupBySection', () => {
 
     const result = groupBySection(items);
 
-    expect(result[0].items.map((i) => i.name)).toEqual([
+    expect(result[0]!.items.map((i) => i.name)).toEqual([
       'Bread',
       'Pasta',
       'Bulk Bin Oats',
@@ -216,7 +216,7 @@ describe('groupBySection', () => {
 
     const result = groupBySection(items);
 
-    expect(result[0].items.map((i) => i.name)).toEqual([
+    expect(result[0]!.items.map((i) => i.name)).toEqual([
       'Pasta',
       'Rice',
       'Beans',
@@ -282,7 +282,7 @@ describe('groupBySection', () => {
 
     const result = groupBySection(items);
 
-    expect(result[0].totalCount).toBe(3);
-    expect(result[0].checkedCount).toBe(2);
+    expect(result[0]!.totalCount).toBe(3);
+    expect(result[0]!.checkedCount).toBe(2);
   });
 });

@@ -204,9 +204,9 @@ describe('firestore trip storage implements TripStorage port', () => {
     storage.updateItemArea('Kitchen', 'Cocina');
 
     const loaded = storage.loadTrip();
-    expect(loaded!.items[0].houseArea).toBe('Cocina');
-    expect(loaded!.items[1].houseArea).toBe('Bathroom');
-    expect(loaded!.items[2].houseArea).toBe('Cocina');
+    expect(loaded!.items[0]!.houseArea).toBe('Cocina');
+    expect(loaded!.items[1]!.houseArea).toBe('Bathroom');
+    expect(loaded!.items[2]!.houseArea).toBe('Cocina');
   });
 
   test('saveCarryover persists carryover items to Firestore', async () => {
@@ -278,7 +278,7 @@ describe('firestore trip storage onChange callback', () => {
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 
     expect(onChangeCallCount).toBe(1);
-    expect(storage.loadTrip()!.items[0].checked).toBe(true);
+    expect(storage.loadTrip()!.items[0]!.checked).toBe(true);
   });
 
   test('does NOT call onChange when snapshot echoes current cache (own-write detection)', async () => {
@@ -353,6 +353,6 @@ describe('firestore trip storage onChange callback', () => {
     });
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 
-    expect(storage.loadTrip()!.items[0].checked).toBe(true);
+    expect(storage.loadTrip()!.items[0]!.checked).toBe(true);
   });
 });
