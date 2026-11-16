@@ -2,6 +2,7 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jest from 'eslint-plugin-jest';
+import functional from 'eslint-plugin-functional';
 
 const noClasses = {
   selector: 'ClassDeclaration, ClassExpression',
@@ -117,6 +118,31 @@ export default tseslint.config(
           ],
         },
       ],
+    },
+  },
+  {
+    // Pure domain modules and ports: no `let`, no loops, no mutating
+    // calls on shared data. Local result-building (push right after creating
+    // the array) is allowed. Adapters, hooks and UI hold state on purpose.
+    files: ['src/domain/**/*.ts', 'src/ports/**/*.ts'],
+    // trip.ts and staple-library.ts are stateful stores (closure state plus
+    // listeners), so they are exempt.
+    ignores: [
+      '**/*.test.ts',
+      'src/domain/trip.ts',
+      'src/domain/staple-library.ts',
+    ],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: { functional },
+    rules: {
+      'functional/no-let': 'error',
+      'functional/no-loop-statements': 'error',
+      'functional/immutable-data': ['error', { ignoreImmediateMutation: true }],
     },
   },
   {
