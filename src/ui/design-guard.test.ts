@@ -10,6 +10,7 @@ const sources = readdirSync(dir)
 const offenders = (pattern: RegExp) =>
   sources.filter(({ text }) => pattern.test(text)).map(({ name }) => name);
 
+// Hex colors in screens are banned by ESLint (no-restricted-syntax, src/ui).
 describe('Corner shop design guard', () => {
   it('has screens to check', () => {
     expect(sources.length).toBeGreaterThan(10);
@@ -27,10 +28,6 @@ describe('Corner shop design guard', () => {
     expect(offenders(/shadow(Color|Offset|Opacity|Radius)|elevation:/)).toEqual(
       [],
     );
-  });
-
-  it('has no hard-coded hex colors in screens', () => {
-    expect(offenders(/#[0-9A-Fa-f]{3,8}\b/)).toEqual([]);
   });
 
   it('keeps every font size at 14 or above', () => {

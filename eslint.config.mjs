@@ -3,6 +3,12 @@ import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jest from 'eslint-plugin-jest';
 
+const noClasses = {
+  selector: 'ClassDeclaration, ClassExpression',
+  message:
+    'No classes (ADR-009): use a factory function, a pure function, or a hook.',
+};
+
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -52,12 +58,22 @@ export default tseslint.config(
     // an inline disable with its reason.
     files: ['**/*.{ts,tsx}'],
     rules: {
+      'no-restricted-syntax': ['error', noClasses],
+    },
+  },
+  {
+    // Corner shop design: screens take colours from the theme, never literals.
+    // no-restricted-syntax replaces (not merges) options, so repeat noClasses.
+    files: ['src/ui/**/*.tsx'],
+    ignores: ['**/*.test.tsx'],
+    rules: {
       'no-restricted-syntax': [
         'error',
+        noClasses,
         {
-          selector: 'ClassDeclaration, ClassExpression',
+          selector: 'Literal[value=/#[0-9A-Fa-f]{3,8}\\b/]',
           message:
-            'No classes (ADR-009): use a factory function, a pure function, or a hook.',
+            'No hard-coded hex colors in screens: use theme.color (src/ui/theme.ts).',
         },
       ],
     },
