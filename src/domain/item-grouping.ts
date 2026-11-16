@@ -78,21 +78,14 @@ export const groupBySection = (items: TripItem[]): SectionGroup[] => {
   const indexOf = new Map<TripItem, number>(items.map((item, i) => [item, i]));
 
   // Bucket items by section, preserving first-seen section order.
-  const sectionOrder: string[] = [];
-  const itemsBySection = new Map<string, TripItem[]>();
-  for (const item of items) {
-    const section = item.storeLocation.section;
-    if (!itemsBySection.has(section)) {
-      sectionOrder.push(section);
-      itemsBySection.set(section, []);
-    }
-    itemsBySection.get(section)!.push(item);
-  }
+  const sectionOrder = [...new Set(items.map((i) => i.storeLocation.section))];
 
   const compare = compareItemsInSection(indexOf, items.length);
 
   return sectionOrder.map((section) => {
-    const sectionItems = [...itemsBySection.get(section)!].sort(compare);
+    const sectionItems = items
+      .filter((item) => item.storeLocation.section === section)
+      .sort(compare);
     return createSectionGroup(section, sectionItems);
   });
 };
@@ -112,19 +105,18 @@ const createAisleSubGroup = (
 const bucketByAisleKey = (
   items: TripItem[],
 ): { numericBuckets: Map<number, TripItem[]>; nullBucket: TripItem[] } => {
-  const numericBuckets = new Map<number, TripItem[]>();
-  const nullBucket: TripItem[] = [];
-  for (const item of items) {
-    const aisle = item.storeLocation.aisleNumber;
-    if (aisle === null) {
-      nullBucket.push(item);
-      continue;
-    }
-    if (!numericBuckets.has(aisle)) {
-      numericBuckets.set(aisle, []);
-    }
-    numericBuckets.get(aisle)!.push(item);
-  }
+  const nullBucket = items.filter(
+    (item) => item.storeLocation.aisleNumber === null,
+  );
+  const aisles = [
+    ...new Set(items.flatMap((item) => item.storeLocation.aisleNumber ?? [])),
+  ];
+  const numericBuckets = new Map<number, TripItem[]>(
+    aisles.map((aisle) => [
+      aisle,
+      items.filter((item) => item.storeLocation.aisleNumber === aisle),
+    ]),
+  );
   return { numericBuckets, nullBucket };
 };
 
