@@ -1,0 +1,61 @@
+name: Test expectations
+
+# Comments the `expect(` lines a PR removes or adds in test files, so the
+# "every changed expectation needs a reason" rule is visible in the review.
+# Uses pull_request (never pull_request_target): it runs the PR's own code, so
+# the token is minimal and fork PRs (read-only token) are skipped.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: test-expectations-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  comment:
+    name: Changed expectations
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: List changed expectations
+        run: node scripts/changed-expectations.mjs "origin/${{ github.base_ref }}" > comment.md
+
+      # One sticky comment, found by its marker: updated when expectations
+      # still differ from main, deleted when the PR no longer changes any.
+      - name: Update the PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          existing=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- changed-expectations -->"))) | .id' | head -n 1)
+          if [ -s comment.md ]; then
+            if [ -n "$existing" ]; then
+              gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F body=@comment.md > /dev/null
+            else
+              gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@comment.md > /dev/null
+            fi
+          elif [ -n "$existing" ]; then
+            gh api -X DELETE "repos/$REPO/issues/comments/$existing" > /dev/null
+          fi
