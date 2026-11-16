@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, edited]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -21,6 +22,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -38,3 +41,10 @@ jobs:
 
       - name: Security audit
         run: npm audit --audit-level=high || true
+
+      # A PR may declare a higher Risk than its paths imply, never a lower one.
+      - name: Check declared risk tier
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node scripts/check-risk-tier.mjs "origin/${{ github.base_ref }}"
