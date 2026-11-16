@@ -22,7 +22,12 @@ const TEMPLATE = join(
   'pull_request_template.md',
 );
 
-const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
+// Repeat until stable so nested input like `<!<!-- x -->--` cannot leave a
+// comment opener behind.
+const stripComments = (text) => {
+  const next = text.replace(/<!--[\s\S]*?-->/g, '');
+  return next === text ? text : stripComments(next);
+};
 
 // `## Heading` lines of the template, in order.
 export const templateHeadings = (template) =>

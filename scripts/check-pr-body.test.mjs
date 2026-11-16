@@ -123,4 +123,11 @@ describe('checkPrBody', () => {
     const body = GOOD.replace('Because.', '<!-- Because. -->');
     assert.equal(checkPrBody({ template, body }).ok, false);
   });
+
+  it('strips nested comment openers completely', () => {
+    const body = GOOD.replace('Because.', '<!<!-- x -->-- hidden -->');
+    assert.deepEqual(checkPrBody({ template, body }).problems, [
+      'section "## Why" is empty',
+    ]);
+  });
 });
