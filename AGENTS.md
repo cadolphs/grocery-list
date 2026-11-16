@@ -37,6 +37,11 @@ This file is a map. Open the page that owns the task:
 | medium | Changes that extend a primitive's behavior or contract, storage/sync adapters, new dependencies | CI green + control CLI proof in **Testing** | human |
 | high | `firestore.rules`, `src/auth/`, auth flows, `.github/workflows/`, `firebase.json`, `eas.json`, `app.json` | CI green + proof + human approval | human |
 
+CI enforces both the PR template (`scripts/check-pr-body.mjs`, headings and
+fields read from `.github/pull_request_template.md`) and that `Risk:` is not
+lower than the changed paths imply (`scripts/check-risk-tier.mjs`). Use
+`gh pr create --body-file` with the template filled in, never a free-form body.
+
 No AI reviewer and no preview environment are configured. When unsure, pick
 the higher tier.
 
