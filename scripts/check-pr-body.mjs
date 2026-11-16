@@ -22,11 +22,15 @@ const TEMPLATE = join(
   'pull_request_template.md',
 );
 
-// Repeat until stable so nested input like `<!<!-- x -->--` cannot leave a
-// comment opener behind.
+// Removes every `<!-- ... -->` span (an unterminated opener drops the rest).
+// Plain scanning instead of a regex replace: nothing is left to re-combine
+// into a new opener, and static analysis has no sanitizer pattern to flag.
 const stripComments = (text) => {
-  const next = text.replace(/<!--[\s\S]*?-->/g, '');
-  return next === text ? text : stripComments(next);
+  const start = text.indexOf('<!--');
+  if (start === -1) return text;
+  const end = text.indexOf('-->', start + 4);
+  const joined = text.slice(0, start) + (end === -1 ? '' : text.slice(end + 3));
+  return stripComments(joined); // joining can form a new opener; length shrinks, so this ends
 };
 
 // `## Heading` lines of the template, in order.
