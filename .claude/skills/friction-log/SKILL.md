@@ -2,7 +2,7 @@
 name: friction-log
 description:
   File a friction issue for a durable papercut hit while working. Use after
-  every PR (ship-pr step 6) and whenever tooling, docs, or tests slowed you
+  every PR (ship-pr step 7) and whenever tooling, docs, or tests slowed you
   down.
 ---
 
