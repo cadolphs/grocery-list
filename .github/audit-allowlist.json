@@ -1,0 +1,12 @@
+[
+  {
+    "id": "GHSA-fc5q-39xc-vjpf",
+    "reason": "picomatch ReDoS (<=4.0.7). No patched release exists (4.0.7 is the newest). Reached through jest, metro, expo and typescript-eslint globbing in build and test tooling, never on user input. Recheck for a 4.0.8 or later.",
+    "expires": "2027-02-15"
+  },
+  {
+    "id": "GHSA-m9gg-hp2v-232j",
+    "reason": "grpc-js getAuthContext, pinned by firebase's @firebase/firestore (~1.9). Fixed by the overrides entry in PR 68; delete this entry once that is merged.",
+    "expires": "2026-12-15"
+  }
+]

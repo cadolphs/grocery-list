@@ -42,6 +42,12 @@ fields read from `.github/pull_request_template.md`) and that `Risk:` is not
 lower than the changed paths imply (`scripts/check-risk-tier.mjs`). Use
 `gh pr create --body-file` with the template filled in, never a free-form body.
 
+CI also fails on a high or critical `npm audit` advisory in shipped
+dependencies (`--omit=dev`) unless it is in `.github/audit-allowlist.json`
+with a reason and an expiry date (`scripts/check-audit.mjs`). Fix the
+dependency first; an expired entry fails CI again, so each exception gets
+rechecked. CI also runs weekly, since advisories appear without commits.
+
 No AI reviewer and no preview environment are configured. When unsure, pick
 the higher tier.
 
