@@ -37,5 +37,5 @@ description:
 8. Summarize in the PR (final comment): what shipped, risk, links, what is
    left.
 
-Steps 6 and 7 apply in every environment, including cloud sessions and PRs
+Steps 7 and 8 apply in every environment, including cloud sessions and PRs
 that end parked for the maintainer.
