@@ -73,5 +73,8 @@
   "simple-git-hooks": {
     "pre-commit": "npm run lint && npm run format:check",
     "pre-push": "npm run typecheck && npm run check:map && npm run check:dead"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.7"
   }
 }
