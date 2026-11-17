@@ -3,6 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+  # Weekly run: advisories appear and allowlist entries expire without commits.
+  schedule:
+    - cron: '0 7 * * 1'
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
@@ -39,8 +42,10 @@ jobs:
       - name: Verify
         run: npm run verify
 
+      # Blocks on high/critical advisories in shipped dependencies unless they
+      # are on .github/audit-allowlist.json (reason + expiry); see AGENTS.md.
       - name: Security audit
-        run: npm audit --audit-level=high || true
+        run: node scripts/check-audit.mjs
 
       # PR hygiene, deterministic: the body must follow the PR template, and a
       # PR may declare a higher Risk than its paths imply, never a lower one.
