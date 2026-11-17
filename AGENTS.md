@@ -19,6 +19,11 @@ This file is a map. Open the page that owns the task:
 - Decisions, including what **not** to do: [docs/adrs/README.md](docs/adrs/README.md)
 - Run and prove a change in the real app: [control-grocery-list skill](.claude/skills/control-grocery-list/SKILL.md), [docs/feature-map.md](docs/feature-map.md)
 - Shipping a PR: [ship-pr skill](.claude/skills/ship-pr/SKILL.md)
+- Review before a PR is marked ready: run the [pr-review subagent](.claude/agents/pr-review.md)
+  on `git diff main...HEAD` after `npm run verify`, then fix each finding or
+  answer it in the PR body. A fresh subagent, not the author's session, so it is
+  not anchored on the author's reasoning. Skip for docs-only or generated-file
+  changes.
 - UI and visual design work: [userinterface-wiki skill](.claude/skills/userinterface-wiki/SKILL.md), 48 pruned rules on UX laws, typography and visual design (upstream: raphaelsalaja/userinterface-wiki, MIT)
 - Filing friction: [friction-log skill](.claude/skills/friction-log/SKILL.md). Every PR ends with a friction issue or the `friction-skipped` label, in every environment
 - Deploy, health check, rollback: [docs/deploy.md](docs/deploy.md)
