@@ -30,6 +30,7 @@ import {
 } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
+import { theme } from '../../../src/ui/theme';
 
 // =============================================================================
 // Shared test setup
@@ -153,11 +154,12 @@ describe('US-07: Skip staple from home screen', () => {
     // When Carlos taps the skipped "Butter" again
     fireEvent.press(screen.getByText('Butter'));
 
-    // Then "Butter" is needed again in the "Fridge" area
+    // Then "Butter" is needed again in the "Fridge" area, in the needed
+    // style (no strikethrough, regular text color)
     expect(screen.getByText('Fridge (3)')).toBeTruthy();
-    expect(flatStyle(screen.getByText('Butter')).textDecorationLine).toBe(
-      undefined,
-    );
+    const butter = flatStyle(screen.getByText('Butter'));
+    expect(butter.textDecorationLine).not.toBe('line-through');
+    expect(butter.color).toBe(theme.color.text);
   });
 });
 

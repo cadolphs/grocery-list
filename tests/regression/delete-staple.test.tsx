@@ -15,14 +15,15 @@ import { MetadataBottomSheet } from '../../src/ui/MetadataBottomSheet';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
 import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
-import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage';
-import { createNullSectionOrderStorage } from '../../src/adapters/null/null-section-order-storage';
 import {
   initializeApp,
-  AdapterFactories,
   AppServices,
 } from '../../src/hooks/useAppInitialization';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../acceptance/helpers/null-adapter-factories';
 import { HouseArea } from '../../src/domain/types';
 
 const AREAS: readonly HouseArea[] = ['Bathroom', 'Fridge', 'Freezer'];
@@ -135,11 +136,11 @@ const WIRING_AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 // Wires services through initializeApp (the production composition root) so
 // that stapleLibrary.remove drives trip cleanup via stapleLibrary.subscribe ->
-// handleStapleChange, exactly as in the running app. Null storages carry the
-// seeded state; the extra initialize() matches InitializableStorage<T>.
+// handleStapleChange, exactly as in the running app. Only the storages that
+// carry seeded state are overridden; the rest come from the shared helper.
 async function createWiringTestServices(): Promise<AppServices> {
-  const stapleStorage = {
-    ...createNullStapleStorage([
+  const stapleStorage = withInitialize(
+    createNullStapleStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
@@ -151,45 +152,12 @@ async function createWiringTestServices(): Promise<AppServices> {
         storeLocation: { section: 'Personal Care', aisleNumber: 7 },
       },
     ]),
-    initialize: async () => {},
-  };
-  const areaStorage = {
-    ...createNullAreaStorage(WIRING_AREAS),
-    initialize: async () => {},
-  };
-  const tripStorage = {
-    ...createNullTripStorage(),
-    initialize: async () => {},
-  };
-  const sectionOrderStorage = {
-    ...createNullSectionOrderStorage(),
-    initialize: async () => {},
-  };
-  const factories: AdapterFactories = {
+  );
+  const areaStorage = withInitialize(createNullAreaStorage(WIRING_AREAS));
+  const factories = createNullAdapterFactories({
     createStapleStorage: () => stapleStorage,
     createAreaStorage: () => areaStorage,
-    createSectionOrderStorage: () => sectionOrderStorage,
-    createTripStorage: () => tripStorage,
-    checkMigrationNeeded: () => false,
-    migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
-      initialize: async () => {},
-    }),
-    createAsyncAreaStorage: () => ({
-      ...createNullAreaStorage(),
-      initialize: async () => {},
-    }),
-    createAsyncSectionOrderStorage: () => ({
-      ...createNullSectionOrderStorage(),
-      initialize: async () => {},
-    }),
-    createAsyncTripStorage: () => ({
-      ...createNullTripStorage(),
-      initialize: async () => {},
-    }),
-    migrateTripIfNeeded: () => {},
-  };
+  });
   const result = await initializeApp({ uid: 'test', email: null }, factories);
   if (!result.isReady || result.services === null) {
     throw new Error(`initializeApp failed: ${result.error ?? 'unknown'}`);
