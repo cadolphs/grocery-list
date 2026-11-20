@@ -8,10 +8,14 @@ name: PR hygiene
 # the concurrency group cancels reads as a failed check to the ship-pr
 # autopilot, which looks at every check run on the head commit.
 #
-# For the same reason this workflow never cancels a run: it reads the PR as it
-# is now (`gh api`), not the event payload, so both runs of that `opened` +
-# `labeled` pair see the label and pass. The `opened` payload of a PR created
-# with `--label` has no labels yet, which is what made the re-run necessary.
+# For the same reason this workflow never cancels a run. It has no
+# `concurrency:` group at all: a group keeps at most one pending run, so a
+# third event (`opened` + two `labeled`, or `opened` + `labeled` + `edited`)
+# would cancel the waiting run even with cancel-in-progress off. Runs only
+# read, so they can overlap. Each reads the PR as it is now (`gh api`), not
+# the event payload, so both runs of that `opened` + `labeled` pair see the
+# label and pass. The `opened` payload of a PR created with `--label` has no
+# labels yet, which is what made the re-run necessary.
 # Dependabot PRs have generated bodies, so they are exempt.
 
 on:
@@ -22,12 +26,6 @@ on:
 permissions:
   contents: read
   pull-requests: read
-
-# Serialize per PR, never cancel: a cancelled run is the false failure #73 is
-# about. A run is cheap (no npm ci), so a queued duplicate costs seconds.
-concurrency:
-  group: pr-hygiene-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
