@@ -23,7 +23,9 @@ This file is a map. Open the page that owns the task:
   on `git diff main...HEAD` after `npm run verify`, then fix each finding or
   answer it in the PR body. A fresh subagent, not the author's session, so it is
   not anchored on the author's reasoning. Skip for docs-only or generated-file
-  changes.
+  changes. Review rounds are capped (`maxReviewRounds`, `maxLocalReviewPasses`
+  in `.github/ship-pr.json`): at the cap the PR is parked for the maintainer
+  with the `needs-decision` label, whatever the tier (ship-pr step 5).
 - UI and visual design work: [userinterface-wiki skill](.claude/skills/userinterface-wiki/SKILL.md), 48 pruned rules on UX laws, typography and visual design (upstream: raphaelsalaja/userinterface-wiki, MIT)
 - Filing friction: [friction-log skill](.claude/skills/friction-log/SKILL.md). Every PR ends with a friction issue or the `friction-skipped` label, in every environment
 - Deploy, health check, rollback: [docs/deploy.md](docs/deploy.md)
