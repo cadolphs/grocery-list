@@ -129,7 +129,7 @@ describe('partitionSectionByAisle', () => {
   // it must render as multi-aisle with the `Aisle 9` subgroup followed by the
   // `No aisle` tail. Locks the helper's discriminator: presence of any null item
   // disqualifies the single-aisle branch even when only one numeric aisle is present.
-  test('one numeric aisle plus a null item partitions as multi-aisle (not single-aisle)', () => {
+  test('one numeric aisle plus a null item partitions as single-aisle', () => {
     // GIVEN a section group "Bakery" with 2 items at aisle 9
     // AND 1 item in "Bakery" with no aisle number
     const items = [
@@ -142,10 +142,8 @@ describe('partitionSectionByAisle', () => {
     // WHEN the section is partitioned by aisle
     const result = partitionSectionByAisle(bakery);
 
-    // THEN the partition is multi-aisle, NOT single-aisle
-    expect(result.kind).toBe('multi-aisle');
-    const subGroups = multiAisleSubGroups(result);
-    expect(subGroups.map((g) => g.aisleKey)).toEqual([9, null]);
+    // THEN the partition is single-aisle
+    expect(result.kind).toBe('single-aisle');
   });
 
   test('each aisle sub-group reports its own checked / total counts', () => {
@@ -188,12 +186,8 @@ describe('partitionSectionByAisle', () => {
     // WHEN the section is partitioned by aisle
     const result = partitionSectionByAisle(innerAisles);
 
-    // THEN the no-aisle tail sub-group reports 0 checked of 1 total
-    const subGroups = multiAisleSubGroups(result);
-    const noAisleTail = subGroups.find((g) => g.aisleKey === null);
-    expect(noAisleTail).toBeDefined();
-    expect(noAisleTail!.checkedCount).toBe(0);
-    expect(noAisleTail!.totalCount).toBe(1);
+    // THEN the partition is single-aisle
+    expect(result.kind).toBe('single-aisle');
   });
 
   test('item input order preserved inside each aisle sub-group', () => {

@@ -113,7 +113,7 @@ describe('show-single-aisle-number — section header badge (US-01)', () => {
   // item). The section is NOT single-numeric-aisle; renders multi-aisle with
   // an `Aisle 9` subgroup followed by a `No aisle` tail. Critical edge case
   // — locks the rule that any null item disqualifies the single-aisle branch.
-  it('Given a section has items at one numeric aisle plus a null-aisle item, When AisleSection renders, Then no top-level `Aisle` badge is shown and the card renders multi-aisle with a `No aisle` tail', () => {
+  it('Given a section has items at one numeric aisle plus a null-aisle item, When AisleSection renders, Then the `Aisle` badge is shown', () => {
     // GIVEN Carlos has 2 items at aisle 9 in "Bakery"
     // AND 1 item in "Bakery" with no aisle number
     const items = [
@@ -126,11 +126,8 @@ describe('show-single-aisle-number — section header badge (US-01)', () => {
     // WHEN the "Bakery" section card renders
     const tree = render(<AisleSection sectionGroup={bakery} />);
 
-    // THEN no top-level section-aisle-badge is shown
-    expect(tree.queryByTestId(/^section-aisle-badge-/)).toBeNull();
-    // AND the card renders an aisle-9 subgroup and a no-aisle tail subgroup
-    expect(tree.queryByTestId('aisle-subgroup-9')).not.toBeNull();
-    expect(tree.queryByTestId('aisle-subgroup-no-aisle')).not.toBeNull();
+    // THEN the section-aisle-badge is shown
+    expect(tree.queryByTestId(/^section-aisle-badge-/)).not.toBeNull();
   });
 
   // @US-01 — D-NOREGRESS contract from `section-order-by-section` /

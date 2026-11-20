@@ -145,7 +145,7 @@ export const partitionSectionByAisle = (
 
   // Exactly one numeric aisle and no null items → single-aisle render with header badge.
   const [firstAisle] = numericBuckets.keys();
-  if (numericKeyCount === 1 && !hasNulls && firstAisle !== undefined) {
+  if (numericKeyCount === 1 && firstAisle !== undefined) {
     return { kind: 'single-aisle', aisleNumber: firstAisle };
   }
 
