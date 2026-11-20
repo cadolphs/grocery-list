@@ -32,7 +32,7 @@ Specifically:
 4. `groupByArea` receives the area list as a parameter
 5. Trip service receives the area list at creation time
 6. MetadataBottomSheet receives the area list as a prop
-7. Area name validation enforced by `validateAreaName` pure function at creation/rename time
+7. Area name validation (trimmed non-empty, case-insensitive unique) enforced by `createAreaManagement` `add`/`rename` (the separate `validateAreaName` module had no production caller and was removed in #74)
 
 ## Alternatives Considered
 
@@ -116,6 +116,6 @@ This ADR does not supersede any prior ADR. It extends the type system establishe
 
 ## Revisit if
 
-An invalid area name reaches storage despite `validateAreaName`, areas need an
-identity apart from their name (so a rename no longer rewrites every item), or
-the set of areas becomes fixed again.
+An invalid area name reaches storage despite the `add`/`rename` checks, areas
+need an identity apart from their name (so a rename no longer rewrites every
+item), or the set of areas becomes fixed again.

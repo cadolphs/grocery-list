@@ -5,7 +5,7 @@
  * after the walking skeleton is complete.
  *
  * Driving Ports:
- * - Domain: createAreaManagement, validateAreaName, groupByArea
+ * - Domain: createAreaManagement, groupByArea
  * - Null adapters: createNullAreaStorage, createNullStapleStorage, createNullTripStorage
  *
  * Story Trace:
@@ -19,7 +19,6 @@
 
 // Domain ports:
 import { createAreaManagement } from '../../../src/domain/area-management';
-import { validateAreaName } from '../../../src/domain/area-validation';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
@@ -467,80 +466,112 @@ describe('US-CHA-06: Reorder Areas', () => {
 describe('US-CHA-07: Area Name Validation', () => {
   // AC: Area name must be non-empty (after trimming whitespace)
   // AC: Area name must be unique (case-insensitive comparison)
-  // AC: Area name max length is 40 characters
   // AC: Validation applies to both add and rename operations
-  // Trace: US-CHA-07, AC-1 through AC-6
+  // Trace: US-CHA-07, AC-1 through AC-4, AC-6
+  //
+  // The 40-character limit (AC-5) was only ever implemented in a
+  // validation module that no production path called; createAreaManagement
+  // never enforced it, so it is not covered here (#74).
 
-  it('rejects duplicate name case-insensitively', () => {
+  const createManagement = (areas: string[] = DEFAULT_AREAS) =>
+    createAreaManagement(
+      createNullAreaStorage(areas),
+      createNullStapleStorage(),
+      createNullTripStorage(),
+    );
+
+  it('rejects duplicate name case-insensitively on add', () => {
     // Given "Bathroom" exists in the area list
-    const existingAreas = DEFAULT_AREAS;
+    const areaManagement = createManagement();
 
     // When Carlos tries to add "bathroom" (lowercase)
-    const result = validateAreaName('bathroom', existingAreas);
+    const result = areaManagement.add('bathroom');
 
-    // Then the validation rejects it
-    expect(result.valid).toBe(false);
-    if (!result.valid) {
+    // Then the add is rejected and the list is unchanged
+    expect(result.success).toBe(false);
+    if (!result.success) {
       expect(result.error).toContain('already exists');
     }
+    expect(areaManagement.getAreas()).toEqual(DEFAULT_AREAS);
   });
 
-  it('rejects empty name', () => {
+  it('rejects duplicate name case-insensitively on rename', () => {
+    // Given "Bathroom" and "Fridge" exist in the area list
+    const areaManagement = createManagement();
+
+    // When Carlos tries to rename "Fridge" to "bathroom" (lowercase)
+    const result = areaManagement.rename('Fridge', 'bathroom');
+
+    // Then the rename is rejected and the list is unchanged
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('already exists');
+    }
+    expect(areaManagement.getAreas()).toEqual(DEFAULT_AREAS);
+  });
+
+  it('rejects empty name on add', () => {
     // When Carlos tries to add an area with a blank name
-    const result = validateAreaName('', DEFAULT_AREAS);
+    const areaManagement = createManagement();
+    const result = areaManagement.add('');
 
-    // Then validation rejects it
-    expect(result.valid).toBe(false);
-    if (!result.valid) {
+    // Then the add is rejected and the list is unchanged
+    expect(result.success).toBe(false);
+    if (!result.success) {
       expect(result.error).toContain('required');
     }
+    expect(areaManagement.getAreas()).toEqual(DEFAULT_AREAS);
   });
 
-  it('rejects whitespace-only name', () => {
+  it('rejects whitespace-only name on add', () => {
     // When Carlos tries to add "   " as an area name
-    const result = validateAreaName('   ', DEFAULT_AREAS);
+    const areaManagement = createManagement();
+    const result = areaManagement.add('   ');
 
-    // Then validation rejects it
-    expect(result.valid).toBe(false);
-    if (!result.valid) {
+    // Then the add is rejected and the list is unchanged
+    expect(result.success).toBe(false);
+    if (!result.success) {
       expect(result.error).toContain('required');
     }
+    expect(areaManagement.getAreas()).toEqual(DEFAULT_AREAS);
   });
 
-  it('rejects name exceeding 40 characters', () => {
-    // When Carlos tries to add a name that is 41 characters
-    const longName = 'A'.repeat(41);
-    const result = validateAreaName(longName, DEFAULT_AREAS);
+  it('rejects whitespace-only name on rename', () => {
+    // When Carlos tries to rename "Fridge" to "   "
+    const areaManagement = createManagement();
+    const result = areaManagement.rename('Fridge', '   ');
 
-    // Then validation rejects it
-    expect(result.valid).toBe(false);
-    if (!result.valid) {
-      expect(result.error).toContain('40 characters');
+    // Then the rename is rejected and the list is unchanged
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('required');
     }
-  });
-
-  it('accepts name at exactly 40 characters', () => {
-    // When Carlos tries to add a name that is exactly 40 characters
-    const exactName = 'A'.repeat(40);
-    const result = validateAreaName(exactName, DEFAULT_AREAS);
-
-    // Then validation accepts it
-    expect(result.valid).toBe(true);
+    expect(areaManagement.getAreas()).toEqual(DEFAULT_AREAS);
   });
 
   it('accepts valid unique name', () => {
-    // When Carlos tries to add "Laundry Room"
-    const result = validateAreaName('Laundry Room', DEFAULT_AREAS);
+    // When Carlos adds "Laundry Room"
+    const areaManagement = createManagement();
+    const result = areaManagement.add('Laundry Room');
 
-    // Then validation accepts it
-    expect(result.valid).toBe(true);
+    // Then the area is added
+    expect(result).toEqual({ success: true });
+    expect(areaManagement.getAreas()).toEqual([
+      ...DEFAULT_AREAS,
+      'Laundry Room',
+    ]);
   });
 
   it('trims whitespace before validation', () => {
     // When Carlos types "  Laundry Room  " with leading/trailing spaces
-    const result = validateAreaName('  Laundry Room  ', DEFAULT_AREAS);
+    const areaManagement = createManagement();
+    const result = areaManagement.add('  Laundry Room  ');
 
-    // Then validation accepts the trimmed name
-    expect(result.valid).toBe(true);
+    // Then the trimmed name is stored
+    expect(result).toEqual({ success: true });
+    expect(areaManagement.getAreas()).toEqual([
+      ...DEFAULT_AREAS,
+      'Laundry Room',
+    ]);
   });
 });

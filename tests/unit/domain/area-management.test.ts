@@ -96,6 +96,17 @@ describe('area management', () => {
       });
     });
 
+    it('rejects whitespace-only new name', () => {
+      const { management } = createManagement(['Kitchen']);
+
+      const result = management.rename('Kitchen', '   ');
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Area name is required',
+      });
+    });
+
     it('rejects duplicate new name', () => {
       const { management } = createManagement(['Kitchen', 'Bathroom']);
 
@@ -105,6 +116,27 @@ describe('area management', () => {
       if (!result.success) {
         expect(result.error).toContain('already exists');
       }
+    });
+
+    it('rejects duplicate new name case-insensitively', () => {
+      const { management } = createManagement(['Kitchen', 'Bathroom']);
+
+      const result = management.rename('Kitchen', 'bathroom');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('already exists');
+      }
+      expect(management.getAreas()).toEqual(['Kitchen', 'Bathroom']);
+    });
+
+    it('trims the new name before saving', () => {
+      const { management } = createManagement(['Kitchen', 'Bathroom']);
+
+      const result = management.rename('Kitchen', '  Pantry  ');
+
+      expect(result).toEqual({ success: true });
+      expect(management.getAreas()).toEqual(['Pantry', 'Bathroom']);
     });
 
     it('renames area and propagates to staples and trip items', () => {

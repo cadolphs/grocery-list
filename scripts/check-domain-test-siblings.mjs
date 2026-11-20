@@ -36,7 +36,6 @@ const SCAN_DIRS = ['src/domain', 'src/ports'];
 // Path is relative to repo root, forward-slash separated.
 const ALLOWLIST = new Set([
   'src/domain/area-management.ts',
-  'src/domain/area-validation.ts',
   'src/domain/item-grouping.ts',
   'src/domain/staple-library.ts',
 ]);
