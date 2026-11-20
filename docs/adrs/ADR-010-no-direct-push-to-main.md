@@ -6,8 +6,9 @@ Status: accepted Date: 2026-11-02
 
 Agents never push to `main`. Every change goes on a branch, opens a PR using
 `.github/pull_request_template.md`, passes `npm run verify` in CI, and follows
-the `ship-pr` skill. Branch protection requires the CI "Commit Stage" check;
-the maintainer keeps an admin bypass for emergencies.
+the `ship-pr` skill. Branch protection must require both the CI "Commit Stage"
+check and the "PR hygiene" check (PR template and risk tier, a separate
+workflow since #73); the maintainer keeps an admin bypass for emergencies.
 
 ## Why
 
