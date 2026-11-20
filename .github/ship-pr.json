@@ -15,6 +15,16 @@
   // Agents may merge low-risk PRs with --merge once CI is green.
   "autoMergeFor": ["low"],
   "mergeMethod": "squash",
+  // Review round cap (#78). A round is one `address-review` or `fix-ci`
+  // action followed by a push that triggers a new review; the local pr-review
+  // passes (ship-pr step 2) are counted separately. The autopilot does not
+  // read these keys yet (proposed upstream for kcd-skills); the ship-pr skill
+  // applies them. At the cap: stop pushing, post one PR comment listing each
+  // unresolved thread with your position (fixed / disagrees and why / unsure),
+  // add the `needs-decision` label, and treat the PR as parked for the
+  // maintainer, whatever the tier.
+  "maxReviewRounds": 3,
+  "maxLocalReviewPasses": 2,
   // After merge, wait up to 15 min for CI + Deploy Web to serve the merge SHA.
   "deployCheck": ["node", "scripts/check-deployed-version.mjs"]
 }
