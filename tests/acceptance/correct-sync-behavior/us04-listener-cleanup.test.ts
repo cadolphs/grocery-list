@@ -183,14 +183,14 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
       });
     });
 
-    // Then the old session's services still exist but its trip is unchanged:
-    // neither callback reached the trip service (initializeApp's cancelled
-    // guard), and nothing was written to trip storage after logout
+    // Then the old session's trip is unchanged in memory: neither callback
+    // reached the trip service (initializeApp's cancelled guard). This is the
+    // proof; without the guard the trip callback reloads Milk as checked.
     expect(result.services).not.toBeNull();
     expect(tripService.getItems()).toEqual(tripBeforeLogout);
-    expect(tripStorage.loadTrip()).toEqual(
-      expect.objectContaining({ id: storedTripBeforeLogout!.id }),
-    );
+
+    // And the remote write did land in storage: the callbacks fired for real
+    // and the guard dropped them, the fake did not swallow them.
     expect(
       tripStorage.loadTrip()!.items.map((i) => [i.name, i.checked]),
     ).toEqual([['Milk', true]]);
