@@ -25,7 +25,7 @@ name: Claude review
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, ready_for_review]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -44,7 +44,6 @@ jobs:
     name: Claude review
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.draft == false &&
       github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -57,7 +56,8 @@ jobs:
 
       # The reviewer cannot call `gh api` (not in the tool list), so what it
       # already said is handed over as a file: issue comments and inline review
-      # comments, for de-duplicating across pushes.
+      # comments, for de-duplicating across pushes. Bot comments only: the repo
+      # is public, so a stranger's comment must never reach the prompt.
       - name: Collect earlier review comments
         env:
           GH_TOKEN: ${{ github.token }}
@@ -65,8 +65,8 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           {
-            gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" --jq '.[] | {where: "summary", author: .user.login, body: .body}'
-            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" --jq '.[] | {where: "\(.path):\(.line)", author: .user.login, body: .body}'
+            gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "summary", body: .body}'
+            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "\(.path):\(.line)", body: .body}'
           } > "$RUNNER_TEMP/earlier-comments.jsonl"
 
       - uses: anthropics/claude-code-action@v1

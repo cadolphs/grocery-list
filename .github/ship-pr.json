@@ -2,8 +2,9 @@
   // The Claude review workflow (.github/workflows/claude-review.yml). Matched
   // by check name, not by login: a review with no findings posts only an issue
   // comment, which the autopilot does not count as a review. Findings arrive as
-  // review threads, which the autopilot then makes the agent address. Draft,
-  // Dependabot and fork PRs skip the job, and a skipped check counts as present.
+  // review threads, which the autopilot then makes the agent address. Dependabot
+  // and fork PRs skip the job, and a skipped check counts as present. Drafts are
+  // reviewed too: skipping them left a skipped check beside the real one.
   "reviewers": {
     "low": ["Claude review"],
     "medium": ["Claude review"],
