@@ -19,8 +19,9 @@ services from `ServiceProvider`. No classes (ADR-009).
   [product/architecture/adr-002-firestore-trip-storage.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring
   items and their metadata. adrs: []
-- **Area management** (`area-management.ts`, `area-validation.ts`): add,
-  rename, reorder, delete-and-move house areas. adrs:
+- **Area management** (`area-management.ts`: `createAreaManagement`): add,
+  rename, reorder, delete-and-move house areas; add and rename reject empty
+  and case-insensitive duplicate names. adrs:
   [adrs/ADR-005-house-area-type-migration.md]
 - **Item grouping** (`item-grouping.ts`: `groupByArea`, `groupBySection`,
   `partitionSectionByAisle`): pure view grouping. adrs:
