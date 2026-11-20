@@ -120,16 +120,13 @@ describe('TripService.subscribe', () => {
 
   test('subscriber is notified when loadFromStorage updates state', () => {
     const { tripService, storage } = createTestTripServiceWithStorage();
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 2 },
       },
     ]);
-    // Persist initial state
-    tripService.checkOff('Milk');
-    tripService.uncheckItem('Milk');
 
     const notifications: number[] = [];
     tripService.subscribe(() => notifications.push(1));
@@ -155,16 +152,13 @@ describe('TripService.subscribe', () => {
 
   test('loadFromStorage does not notify when state is identical', () => {
     const { tripService } = createTestTripServiceWithStorage();
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 2 },
       },
     ]);
-    // Persist current state
-    tripService.checkOff('Milk');
-    tripService.uncheckItem('Milk');
 
     const notifications: number[] = [];
     tripService.subscribe(() => notifications.push(1));

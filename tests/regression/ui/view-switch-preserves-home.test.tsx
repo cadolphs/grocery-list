@@ -49,7 +49,7 @@ function createTestServices(areas: string[], staples: StapleItem[]) {
     stapleStorage,
     tripStorage,
   );
-  tripService.start(stapleLibrary.listAll());
+  tripService.initializeFromStorage(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
 

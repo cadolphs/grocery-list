@@ -10,7 +10,6 @@ import { useServices } from '../ui/ServiceProvider';
 export type UseTripResult = {
   readonly items: TripItem[];
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
-  readonly checkOff: (name: string) => void;
   readonly toggleCheckOff: (name: string) => void;
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
@@ -21,7 +20,6 @@ export type UseTripResult = {
     stapleId: string,
     changes: UpdateStapleChanges,
   ) => void;
-  readonly removeItemByStapleId: (stapleId: string) => void;
   readonly sweepProgress: SweepProgress;
 };
 
@@ -50,14 +48,6 @@ export const useTrip = (): UseTripResult => {
         setItems(tripService.getItems());
       }
       return result;
-    },
-    [tripService],
-  );
-
-  const checkOff = useCallback(
-    (name: string): void => {
-      tripService.checkOff(name);
-      setItems(tripService.getItems());
     },
     [tripService],
   );
@@ -124,18 +114,9 @@ export const useTrip = (): UseTripResult => {
     [tripService],
   );
 
-  const removeItemByStapleId = useCallback(
-    (stapleId: string): void => {
-      tripService.removeItemByStapleId(stapleId);
-      setItems(tripService.getItems());
-    },
-    [tripService],
-  );
-
   return {
     items,
     addItem,
-    checkOff,
     toggleCheckOff,
     skipItem,
     unskipItem,
@@ -143,7 +124,6 @@ export const useTrip = (): UseTripResult => {
     uncompleteArea,
     resetSweep,
     syncStapleUpdate,
-    removeItemByStapleId,
     sweepProgress,
   };
 };

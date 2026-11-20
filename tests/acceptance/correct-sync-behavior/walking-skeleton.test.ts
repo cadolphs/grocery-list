@@ -90,7 +90,7 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     // Given Clemens has an active trip with "Milk", "Eggs", and "Bread"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -158,7 +158,7 @@ describe('WS-3: New staple auto-adds to active trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // And the "Bathroom" area sweep is completed
     trip.completeArea('Bathroom');

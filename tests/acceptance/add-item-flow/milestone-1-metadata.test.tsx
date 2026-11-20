@@ -59,7 +59,7 @@ function createTestServices(
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  tripService.start(library.listAll());
+  tripService.initializeFromStorage(library.listAll());
 
   // Mirror the production composition root (initializeApp in
   // useAppInitialization.ts): when the staple library changes, diff against

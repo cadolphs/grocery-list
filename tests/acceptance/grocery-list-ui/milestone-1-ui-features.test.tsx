@@ -74,7 +74,7 @@ function createTestServices() {
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  tripService.start(library.listAll());
+  tripService.initializeFromStorage(library.listAll());
   return { library, tripService, stapleStorage, tripStorage };
 }
 

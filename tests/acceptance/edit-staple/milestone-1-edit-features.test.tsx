@@ -173,7 +173,7 @@ describe('US-ES-03: Remove Staple from Edit Sheet', () => {
     // And "Toilet paper" will not appear on future trips
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     const tripItems = trip.getItems();
     expect(tripItems).not.toContainEqual(
       expect.objectContaining({ name: 'Toilet paper' }),
@@ -208,7 +208,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     const staple = library.listAll().find((s) => s.name === 'Whole milk')!;
 
     // When Carlos edits "Whole milk" to move to "Freezer"
@@ -240,7 +240,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     const staple = library.listAll().find((s) => s.name === 'Canned beans')!;
 
     // When Carlos changes "Canned beans" to "International" section, aisle 9
@@ -269,7 +269,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     trip.addItem({
       name: 'Birthday cake',
       houseArea: 'Fridge',

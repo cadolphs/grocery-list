@@ -19,7 +19,7 @@ describe('US-03: Real-time listeners on trip data', () => {
     // Given Clemens has an active trip with "Butter" marked as needed
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
@@ -56,7 +56,7 @@ describe('US-03: Real-time listeners on trip data', () => {
     // Given Clemens has an active trip with "Milk" and "Eggs"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',

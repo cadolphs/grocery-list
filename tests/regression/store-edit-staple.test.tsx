@@ -102,7 +102,7 @@ function createStoreEditTestServices() {
     stapleStorage,
     tripStorage,
   );
-  tripService.start(stapleLibrary.listAll());
+  tripService.initializeFromStorage(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
 

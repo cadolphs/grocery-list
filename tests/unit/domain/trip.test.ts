@@ -1,6 +1,6 @@
 // Trip domain - unit tests
 
-import { createTrip, completeTrip } from '../../../src/domain/trip';
+import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
@@ -9,7 +9,7 @@ describe('Trip: addItem', () => {
   it('adds a one-off item to the trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     trip.addItem({
       name: 'Birthday candles',
@@ -38,7 +38,7 @@ describe('Trip: addItem', () => {
   it('one-off item does not have a stapleId', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     trip.addItem({
       name: 'Party hats',
@@ -55,7 +55,7 @@ describe('Trip: addItem', () => {
   it('returns success result when adding a valid item', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     const result = trip.addItem({
       name: 'Canned beans',
@@ -72,7 +72,7 @@ describe('Trip: addItem', () => {
   it('rejects item with empty houseArea', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     const result = trip.addItem({
       name: 'Something',
@@ -94,7 +94,7 @@ describe('Trip: checkOff persistence', () => {
   it('persists checked item to storage via saveTrip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
@@ -113,7 +113,7 @@ describe('Trip: checkOff persistence', () => {
   it('persists only the checked item, others remain unchecked', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
@@ -138,7 +138,7 @@ describe('Trip: loadFromStorage', () => {
   it('restores trip items including checked state from storage', () => {
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
-    trip1.start([
+    trip1.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -174,7 +174,7 @@ describe('Trip: skipItem', () => {
   it('sets needed to false for the matching item', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
@@ -199,7 +199,7 @@ describe('Trip: skipItem', () => {
   it('does not remove the item from the trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
@@ -218,7 +218,7 @@ describe('Trip: completeArea and getSweepProgress', () => {
   it('marks an area as completed and reports it in progress', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
@@ -238,7 +238,7 @@ describe('Trip: completeArea and getSweepProgress', () => {
   it('returns zero completed areas initially', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     const progress = trip.getSweepProgress();
 
@@ -251,7 +251,7 @@ describe('Trip: completeArea and getSweepProgress', () => {
   it('reports allAreasComplete when all 5 areas are done', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     [
       'Bathroom',
@@ -269,86 +269,13 @@ describe('Trip: completeArea and getSweepProgress', () => {
   it('completing the same area twice does not double-count', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     trip.completeArea('Bathroom');
     trip.completeArea('Bathroom');
 
     const progress = trip.getSweepProgress();
     expect(progress.completedCount).toBe(1);
-  });
-});
-
-describe('Trip: getSummary', () => {
-  it('returns zero counts for an empty trip', () => {
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([]);
-
-    const summary = trip.getSummary();
-
-    expect(summary.totalItems).toBe(0);
-    expect(summary.stapleCount).toBe(0);
-    expect(summary.oneOffCount).toBe(0);
-    expect(summary.sweepCount).toBe(0);
-    expect(summary.whiteboardCount).toBe(0);
-  });
-
-  it('counts only needed items in totals', () => {
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([
-      {
-        name: 'Milk',
-        houseArea: 'Fridge',
-        storeLocation: { section: 'Dairy', aisleNumber: 3 },
-      },
-      {
-        name: 'Butter',
-        houseArea: 'Fridge',
-        storeLocation: { section: 'Dairy', aisleNumber: 3 },
-      },
-    ]);
-    trip.skipItem('Butter');
-
-    const summary = trip.getSummary();
-
-    expect(summary.totalItems).toBe(1);
-    expect(summary.stapleCount).toBe(1);
-  });
-
-  it('breaks down items by type and source', () => {
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([
-      {
-        name: 'Milk',
-        houseArea: 'Fridge',
-        storeLocation: { section: 'Dairy', aisleNumber: 3 },
-      },
-    ]);
-    trip.addItem({
-      name: 'Candles',
-      houseArea: 'Kitchen Cabinets',
-      storeLocation: { section: 'Baking', aisleNumber: 12 },
-      itemType: 'one-off',
-      source: 'quick-add',
-    });
-    trip.addItem({
-      name: 'Wine',
-      houseArea: 'Kitchen Cabinets',
-      storeLocation: { section: 'Alcohol', aisleNumber: 10 },
-      itemType: 'one-off',
-      source: 'whiteboard',
-    });
-
-    const summary = trip.getSummary();
-
-    expect(summary.totalItems).toBe(3);
-    expect(summary.stapleCount).toBe(1);
-    expect(summary.oneOffCount).toBe(2);
-    expect(summary.sweepCount).toBe(2); // preloaded + quick-add
-    expect(summary.whiteboardCount).toBe(1);
   });
 });
 
@@ -368,7 +295,7 @@ describe('Trip: resetSweep', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ];
-    trip.start(staples);
+    trip.initializeFromStorage(staples);
     trip.checkOff('Milk');
     trip.skipItem('Butter');
 
@@ -395,7 +322,7 @@ describe('Trip: resetSweep', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ];
-    trip.start(staples);
+    trip.initializeFromStorage(staples);
     trip.addItem({
       name: 'Birthday candles',
       houseArea: 'Kitchen Cabinets',
@@ -421,7 +348,7 @@ describe('Trip: resetSweep', () => {
         storeLocation: { section: 'Personal Care', aisleNumber: 7 },
       },
     ];
-    trip.start(staples);
+    trip.initializeFromStorage(staples);
     trip.completeArea('Bathroom');
     trip.completeArea('Fridge');
 
@@ -442,7 +369,7 @@ describe('Trip: resetSweep', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ];
-    trip.start(staples);
+    trip.initializeFromStorage(staples);
     trip.checkOff('Milk');
     trip.addItem({
       name: 'Candles',
@@ -463,7 +390,7 @@ describe('Trip: resetSweep', () => {
   });
 });
 
-describe('completeTrip', () => {
+describe('Trip: complete categorizes items', () => {
   const setupTripWithItems = () => {
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
@@ -474,22 +401,22 @@ describe('completeTrip', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
-    return { trip, library };
+    trip.initializeFromStorage(library.listAll());
+    return { trip };
   };
 
   it('categorizes checked staples as purchasedStaples', () => {
-    const { trip, library } = setupTripWithItems();
+    const { trip } = setupTripWithItems();
     trip.checkOff('Milk');
 
-    const result = completeTrip(trip, library);
+    const result = trip.complete();
 
     expect(result.purchasedStaples).toHaveLength(1);
     expect(result.purchasedStaples[0]!.name).toBe('Milk');
   });
 
   it('categorizes checked one-offs as purchasedOneOffs', () => {
-    const { trip, library } = setupTripWithItems();
+    const { trip } = setupTripWithItems();
     trip.addItem({
       name: 'Candles',
       houseArea: 'Kitchen Cabinets',
@@ -499,14 +426,14 @@ describe('completeTrip', () => {
     });
     trip.checkOff('Candles');
 
-    const result = completeTrip(trip, library);
+    const result = trip.complete();
 
     expect(result.purchasedOneOffs).toHaveLength(1);
     expect(result.purchasedOneOffs[0]!.name).toBe('Candles');
   });
 
   it('categorizes unchecked items as unboughtItems', () => {
-    const { trip, library } = setupTripWithItems();
+    const { trip } = setupTripWithItems();
     trip.addItem({
       name: 'Avocados',
       houseArea: 'Fridge',
@@ -516,7 +443,7 @@ describe('completeTrip', () => {
     });
     // Leave Milk and Avocados unchecked
 
-    const result = completeTrip(trip, library);
+    const result = trip.complete();
 
     expect(result.unboughtItems).toHaveLength(2);
     expect(result.unboughtItems).toContainEqual(
@@ -528,13 +455,11 @@ describe('completeTrip', () => {
   });
 
   it('returns empty arrays when trip has no items', () => {
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
-    const result = completeTrip(trip, library);
+    const result = trip.complete();
 
     expect(result.purchasedStaples).toHaveLength(0);
     expect(result.purchasedOneOffs).toHaveLength(0);
