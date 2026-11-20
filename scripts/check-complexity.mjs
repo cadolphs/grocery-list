@@ -11,13 +11,17 @@
 // - "nesting" is bracket depth: every unclosed `{`, `(` or `[` counts one
 //   level, so a JSX tree and a nested arrow callback both add depth.
 // - a "function" is a `{` block opened by `=>` or by `name(...)` where name is
-//   not a control keyword (declarations, methods, arrow bodies). The name is
-//   read from the line where the parameter list starts; a callback that has
-//   no name of its own (`useEffect(() => {`, `onPress={() => {`) is reported
-//   under the nearest enclosing name. `StyleSheet.create({` and other object
-//   literals are not functions.
+//   not a control keyword (declarations, methods, arrow bodies), or a `(`
+//   opened by `=>` (an expression-bodied arrow such as `() => (<View />)`).
+//   The name is read from the line where the parameter list starts; a
+//   callback that has no name of its own (`useEffect(() => {`,
+//   `onPress={() => {`) is reported under the nearest enclosing name.
+//   `StyleSheet.create({` and other object literals are not functions.
 // - strings, template literals, comments and regex literals are skipped; an
-//   apostrophe in JSX text (Don't) is not treated as a quote.
+//   apostrophe in JSX text (Don't) is not treated as a quote, and a quote
+//   left open at the end of a line ends there, as it does in JS.
+// - on an internal error the report is a single "Complexity measurement
+//   failed" line, so the sweep can tell an empty table from a broken run.
 //
 // Zero npm dependencies; Node built-ins only.
 //
@@ -88,6 +92,7 @@ const isWordChar = (ch) => /[\w$]/.test(ch);
 // an unnamed paren (`useEffect((`, `return (`) comes back as ''.
 const nameBefore = (text) => {
   const head = text.replace(/\basync\s*$/, '').trimEnd();
+  if (/\bfor\s+await$/.test(head)) return 'for';
   const tail = /([\w$]+)$/.exec(head)?.[1];
   if (tail === 'function') return '(anonymous)';
   if (tail && KEYWORDS.has(tail)) return '';
@@ -145,6 +150,10 @@ export const measureSource = (source) => {
     const frame = { char: ch, line: lineIndex, name: '', isFunction: false };
     if (ch === '(') {
       frame.name = nameBefore(text);
+      if (text.trimEnd().endsWith('=>')) {
+        frame.isFunction = true;
+        frame.name = lastParen?.name ?? '';
+      }
     } else if (ch === '{') {
       const head = blockHead(text);
       if (head.endsWith('=>')) {
@@ -171,8 +180,9 @@ export const measureSource = (source) => {
   };
 
   lines.forEach((line, lineIndex) => {
-    // Neither can span lines; a false start must not swallow the file.
-    if (mode === 'line-comment' || mode === 'regex') mode = 'code';
+    // None of these can span lines; a false start (an unpaired quote in
+    // JSX text) must not swallow the rest of the file.
+    if (['line-comment', 'regex', "'", '"'].includes(mode)) mode = 'code';
     let word = '';
     const endWord = () => {
       if (!word) return;
@@ -364,8 +374,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   try {
     main();
   } catch (err) {
-    // Informational only: a broken run must not fail the sweep job.
-    console.error('check-complexity: could not measure');
+    // Informational only, so still exit 0, but say so on stdout: the sweep
+    // reads stdout and must not mistake a broken run for a clean one.
+    process.stdout.write(`Complexity measurement failed: ${err.message}\n`);
     console.error(err);
   }
 }

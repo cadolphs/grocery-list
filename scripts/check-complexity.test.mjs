@@ -86,7 +86,7 @@ describe('measureSource: longest function', () => {
 
   it('measures methods on an object literal and async arrows', () => {
     const src = lines(
-      'export const createStore = () => ({',
+      'const store = {',
       '  async load(key: string) {',
       '    const raw = await get(key);',
       '    return raw;',
@@ -94,11 +94,26 @@ describe('measureSource: longest function', () => {
       '  save: async (key: string) => {',
       '    await set(key);',
       '  },',
-      '});',
+      '};',
     );
     const { longestFunction } = measureSource(src);
     assert.equal(longestFunction.name, 'load');
     assert.equal(longestFunction.lines, 4);
+  });
+
+  it('counts the `=> ({` wrapper of a factory as the factory body', () => {
+    const src = lines(
+      'export const createStore = () => ({',
+      '  load: () => {',
+      '    return 1;',
+      '  },',
+      '});',
+    );
+    assert.deepEqual(measureSource(src).longestFunction, {
+      name: 'createStore',
+      lines: 5,
+      line: 1,
+    });
   });
 
   it('does not count object literals or control blocks as functions', () => {
@@ -124,6 +139,35 @@ describe('measureSource: longest function', () => {
       name: 'tiny',
       lines: 3,
       line: 14,
+    });
+  });
+
+  it('counts an expression-bodied arrow and not a for-await loop', () => {
+    const src = lines(
+      'export const Row = ({ item }: Props): React.JSX.Element => (',
+      '  <View>',
+      '    <Text>{item.name}</Text>',
+      '  </View>',
+      ');',
+      'const drain = async () => {',
+      '  for await (const chunk of stream) {',
+      '    use(chunk);',
+      '    use(chunk);',
+      '    use(chunk);',
+      '    use(chunk);',
+      '    use(chunk);',
+      '    use(chunk);',
+      '  }',
+      '};',
+    );
+    const { longestFunction } = measureSource(src);
+    assert.equal(longestFunction.name, 'drain');
+    assert.equal(longestFunction.lines, 10);
+    const rowOnly = measureSource(lines(...src.split('\n').slice(0, 5)));
+    assert.deepEqual(rowOnly.longestFunction, {
+      name: 'Row',
+      lines: 5,
+      line: 1,
     });
   });
 
@@ -192,6 +236,22 @@ describe('measureSource: what the scan skips', () => {
     const { longestFunction, maxNesting } = measureSource(src);
     assert.equal(longestFunction.lines, 3);
     assert.equal(maxNesting.depth, 2);
+  });
+
+  it('ends an unpaired quote at the end of its line', () => {
+    // The rest of that one line is lost to the "string", nothing after it.
+    const src = lines(
+      'const Size = () => {',
+      '  return <Text>5" pipe, \'tis {size}</Text>;',
+      '};',
+      'const after = () => {',
+      '  const a = 1;',
+      '  return a;',
+      '};',
+    );
+    const { longestFunction, maxNesting } = measureSource(src);
+    assert.deepEqual(longestFunction, { name: 'after', lines: 4, line: 4 });
+    assert.equal(maxNesting.depth, 1);
   });
 
   it('does not take a self-closing JSX tag after a brace for a regex', () => {

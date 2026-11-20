@@ -92,7 +92,8 @@ keyless like the review) files at most one `Code health <date>` issue
 (`cleanup` + `P3`): up to 10 verified findings on missed reuse, dead code
 knip cannot see, the same logic in two layers, and convention drift no lint
 rule covers, plus the size outliers `node scripts/check-complexity.mjs`
-measures. Nothing is filed when nothing is new, and an open `cleanup` issue
-suppresses repeats. Triage: promote an accepted row to its own `Cleanup:`
-issue (the ship-pr step 7 convention, priority label as usual), strike
-dropped rows, close the sweep issue when every row is handled.
+measures. Nothing is filed when nothing is new; an open `cleanup` issue by
+the maintainer, a collaborator or the sweep suppresses repeats. Triage:
+promote an accepted row to its own `Cleanup:` issue with the `cleanup` label
+(the ship-pr step 7 convention, priority label as usual), strike dropped
+rows, close the sweep issue when every row is handled.
