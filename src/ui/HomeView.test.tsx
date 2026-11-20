@@ -388,3 +388,52 @@ describe('StoreView existingSections reactivity (fix-staple-delete-trip-sync 01-
     expect(tree).toBeTruthy();
   });
 });
+
+describe('HomeView QuickAdd suggestion un-skips a skipped item (#74 finding 4)', () => {
+  test('picking a suggestion for a one-off that is in the trip but skipped marks it needed again without a duplicate', async () => {
+    // GIVEN "Tahini" is a persisted one-off, already in the trip, and skipped.
+    const services = await initServicesWith([], ['Kitchen Cabinets']);
+    services.stapleLibrary.addOneOff({
+      name: 'Tahini',
+      storeLocation: { section: 'International', aisleNumber: 7 },
+    });
+    const tahini = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Tahini');
+    if (!tahini) throw new Error('Tahini one-off was not created');
+    services.tripService.addItem({
+      name: 'Tahini',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: tahini.storeLocation,
+      itemType: 'one-off',
+      source: 'quick-add',
+      stapleId: tahini.id,
+    });
+    services.tripService.skipItem('Tahini');
+    const tree = renderHomeView(services);
+
+    // Sanity: it is in the trip exactly once and not needed.
+    const before = services.tripService
+      .getItems()
+      .filter((i) => i.name === 'Tahini');
+    expect(before).toHaveLength(1);
+    expect(before[0]!.needed).toBe(false);
+
+    // WHEN the user types into QuickAdd on Home and taps the suggestion.
+    const quickAddInput = tree.getByPlaceholderText('Add an item...');
+    await act(async () => {
+      fireEvent.changeText(quickAddInput, 'Tah');
+    });
+    await act(async () => {
+      fireEvent.press(tree.getByText(/Tahini.*International/));
+    });
+
+    // THEN the existing row is needed again, and no duplicate was added:
+    // the same behaviour StoreView.handleSelectSuggestion already has.
+    const after = services.tripService
+      .getItems()
+      .filter((i) => i.name === 'Tahini');
+    expect(after).toHaveLength(1);
+    expect(after[0]!.needed).toBe(true);
+  });
+});

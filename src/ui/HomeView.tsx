@@ -231,15 +231,20 @@ export const HomeView = (): React.JSX.Element => {
   const handleSelectSuggestion = useCallback(
     (staple: StapleItem): void => {
       const isOneOff = staple.type === 'one-off';
-      const alreadyInTrip = isOneOff
-        ? items.some(
+      const existing = isOneOff
+        ? items.find(
             (item) => item.name === staple.name && item.itemType === 'one-off',
           )
-        : items.some(
+        : items.find(
             (item) =>
               item.name === staple.name && item.houseArea === staple.houseArea,
           );
-      if (!alreadyInTrip) {
+      // Same rule as StoreView.handleSelectSuggestion and
+      // handleAddFromChecklist above: a skipped row is un-skipped, a missing
+      // row is added, and a needed row is left alone (no duplicate).
+      if (existing && !existing.needed) {
+        unskipItem(existing.name);
+      } else if (!existing) {
         const houseArea =
           isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
         addItem({
@@ -252,7 +257,7 @@ export const HomeView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem],
+    [items, addItem, unskipItem],
   );
 
   if (settingsView === 'section-order') {
