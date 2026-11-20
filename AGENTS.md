@@ -64,9 +64,10 @@ rechecked. CI also runs weekly, since advisories appear without commits.
 The Claude review workflow (`.github/workflows/claude-review.yml`, keyless via
 workload identity) is **disabled** until the account has API credits (#89);
 re-enable it with `gh workflow enable claude-review.yml` and restore the
-`reviewers` in `.github/ship-pr.json`. Until then the pr-review subagent is
-the only pre-merge review. No preview environment is configured. When unsure,
-pick the higher tier.
+`reviewers` in `.github/ship-pr.json`. Once enabled it reviews a PR when it is
+marked ready; drafts, Dependabot and fork PRs are not reviewed. Until then the
+pr-review subagent is the only pre-merge review. No preview environment is
+configured. When unsure, pick the higher tier.
 
 ## Native builds
 
