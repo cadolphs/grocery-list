@@ -1,0 +1,68 @@
+name: PR hygiene
+
+# Deterministic PR checks, kept out of ci.yml (issue #73): the body must
+# follow the PR template, and a PR may declare a higher Risk than its changed
+# paths imply, never a lower one. `Friction: none` needs the `friction-skipped`
+# label, so this re-runs when labels change. CI must not: `gh pr create
+# --label` fires `opened` and `labeled` together, and the duplicate CI run that
+# the concurrency group cancels reads as a failed check to the ship-pr
+# autopilot, which looks at every check run on the head commit.
+#
+# For the same reason this workflow never cancels a run: it reads the PR as it
+# is now (`gh api`), not the event payload, so both runs of that `opened` +
+# `labeled` pair see the label and pass. The `opened` payload of a PR created
+# with `--label` has no labels yet, which is what made the re-run necessary.
+# Dependabot PRs have generated bodies, so they are exempt.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# Serialize per PR, never cancel: a cancelled run is the false failure #73 is
+# about. A run is cheap (no npm ci), so a queued duplicate costs seconds.
+concurrency:
+  group: pr-hygiene-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  hygiene:
+    name: PR hygiene
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # check-risk-tier diffs against origin/<base>
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The scripts take the body and labels from the environment (see their
+      # headers); the values come from the live PR, not the event payload.
+      - name: Read the PR as it is now
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr.json"
+
+      - name: Check PR body follows the template
+        run: |
+          PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/pr.json")" \
+          PR_LABELS="$(jq -c '[.labels[].name]' "$RUNNER_TEMP/pr.json")" \
+          node scripts/check-pr-body.mjs
+
+      - name: Check declared risk tier
+        run: |
+          PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/pr.json")" \
+          node scripts/check-risk-tier.mjs "origin/${{ github.base_ref }}"
