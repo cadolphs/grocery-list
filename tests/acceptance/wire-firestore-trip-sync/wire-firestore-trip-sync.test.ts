@@ -174,26 +174,39 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
 
     const tripService = result.services!.tripService;
 
-    // And the trip is started with staples
-    // (initializeApp calls initializeFromStorage, which starts from staple list)
+    // And the trip service holds the stored trip (initializeApp calls
+    // initializeFromStorage, which adopts the active trip), with "Milk" not
+    // yet checked
+    const itemsBefore = tripService.getItems();
+    expect(itemsBefore.map((i) => i.name)).toEqual(['Milk', 'Eggs']);
+    expect(itemsBefore.find((i) => i.name === 'Milk')).toMatchObject({
+      checked: false,
+      checkedAt: null,
+    });
+
     // When a remote device checks off "Milk" and the trip update arrives via onChange
     // (Simulated: remote writes updated trip to storage, then onChange fires)
-    const currentTrip = tripStorage.loadTrip();
-    if (currentTrip) {
-      const updatedItems = currentTrip.items.map((item) =>
-        item.name === 'Milk'
-          ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
-          : item,
-      );
-      tripStorage.simulateRemoteChange((s) => {
-        s.saveTrip({ ...currentTrip, items: updatedItems });
-      });
-    }
+    const currentTrip = tripStorage.loadTrip()!;
+    const updatedItems = currentTrip.items.map((item) =>
+      item.name === 'Milk'
+        ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+        : item,
+    );
+    tripStorage.simulateRemoteChange((s) => {
+      s.saveTrip({ ...currentTrip, items: updatedItems });
+    });
 
     // Then the local trip service shows "Milk" as checked
-    const milkItem = tripService.getItems().find((i) => i.name === 'Milk');
+    const itemsAfter = tripService.getItems();
+    const milkItem = itemsAfter.find((i) => i.name === 'Milk');
     expect(milkItem?.checked).toBe(true);
     expect(milkItem?.checkedAt).toBe('2026-04-13T10:00:00Z');
+
+    // And nothing else about the trip changed
+    expect(itemsAfter.map((i) => i.name)).toEqual(['Milk', 'Eggs']);
+    expect(itemsAfter.find((i) => i.name === 'Eggs')).toEqual(
+      itemsBefore.find((i) => i.name === 'Eggs'),
+    );
   });
 
   it('remote item addition via onChange appears in local trip', async () => {
