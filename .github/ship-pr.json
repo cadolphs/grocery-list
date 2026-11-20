@@ -1,6 +1,12 @@
 {
-  // No AI reviewer configured yet (interview 2026-11-02).
-  "reviewers": { "low": [], "medium": [], "high": [] },
+  // The Claude review workflow (.github/workflows/claude-review.yml) posts its
+  // reviews as github-actions[bot]; the autopilot waits for one on every tier.
+  // Dependabot and fork PRs are never reviewed, so they wait here too.
+  "reviewers": {
+    "low": ["github-actions[bot]"],
+    "medium": ["github-actions[bot]"],
+    "high": ["github-actions[bot]"]
+  },
   // Medium and high always wait for the maintainer (AGENTS.md risk tiers).
   "humanApprovalFor": ["medium", "high"],
   // Agents may merge low-risk PRs with --merge once CI is green.

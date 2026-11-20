@@ -10,6 +10,12 @@ name: Claude review
 # - Dependabot and other bot PRs are not reviewed (bots are blocked by
 #   default, and cannot reach the OIDC exchange meaningfully).
 # - PRs from forks are skipped: they get no id-token and no secrets.
+# - Anyone with write access can edit this workflow or add another one on a
+#   branch and request an Anthropic token (the job runs the PR's own file).
+#   Mitigation: the federation rule is pinned to this repository and the
+#   pull_request subject; add a `job_workflow_ref` condition in the Console so
+#   only this workflow file can use it; workflow changes are high tier and need
+#   the maintainer's approval.
 # - Prompt injection through PR text is a risk on a public repo. Mitigation: the
 #   tool list is narrow, repo access is read-only, and `show_full_output` stays
 #   off because the logs are public.
@@ -79,6 +85,11 @@ jobs:
             every removed or changed `expect(` without a stated reason in the
             PR body; Firestore schema or rules changes without migration,
             secrets, and new workflow permissions.
+
+            This workflow re-runs on every push to the PR. Before posting,
+            read what you already said (`gh pr view --comments`) and do not
+            repeat a finding that is still open; post only new findings and,
+            in the summary, say which earlier ones are now fixed.
 
             Post a specific inline comment for each finding, most severe
             first, with the concrete input or state that triggers it. Then
