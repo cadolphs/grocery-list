@@ -13,7 +13,9 @@ description:
 2. After `npm run verify` is green and before marking the PR ready, run the
    [pr-review subagent](../../agents/pr-review.md) on `git diff main...HEAD`
    (skip for docs-only or generated-file changes). Fix each finding, or answer
-   it in the PR body.
+   it in the PR body. Drafts get no Claude review, so this pass is the only
+   review until the PR is marked ready; mark it ready once, when the pass is
+   done, since the Claude review then runs on every push.
 3. Run `npx kcd-skills@latest autopilot ship-pr <pr-number> --risk <tier> --json`
    (reads state with `gh`; config in `.github/ship-pr.json`).
 4. Do the one action it returns: fix CI, address review threads (fix, or reply
