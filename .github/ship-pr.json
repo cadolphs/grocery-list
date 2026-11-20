@@ -1,11 +1,13 @@
 {
-  // The Claude review workflow (.github/workflows/claude-review.yml) posts its
-  // reviews as github-actions[bot]; the autopilot waits for one on every tier.
-  // Dependabot and fork PRs are never reviewed, so they wait here too.
+  // The Claude review workflow (.github/workflows/claude-review.yml). Matched
+  // by check name, not by login: a review with no findings posts only an issue
+  // comment, which the autopilot does not count as a review. Findings arrive as
+  // review threads, which the autopilot then makes the agent address. Draft,
+  // Dependabot and fork PRs skip the job, and a skipped check counts as present.
   "reviewers": {
-    "low": ["github-actions[bot]"],
-    "medium": ["github-actions[bot]"],
-    "high": ["github-actions[bot]"]
+    "low": ["Claude review"],
+    "medium": ["Claude review"],
+    "high": ["Claude review"]
   },
   // Medium and high always wait for the maintainer (AGENTS.md risk tiers).
   "humanApprovalFor": ["medium", "high"],

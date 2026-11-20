@@ -53,6 +53,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false # keep the job token out of .git/config
+
+      # The reviewer cannot call `gh api` (not in the tool list), so what it
+      # already said is handed over as a file: issue comments and inline review
+      # comments, for de-duplicating across pushes.
+      - name: Collect earlier review comments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" --jq '.[] | {where: "summary", author: .user.login, body: .body}'
+            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" --jq '.[] | {where: "\(.path):\(.line)", author: .user.login, body: .body}'
+          } > "$RUNNER_TEMP/earlier-comments.jsonl"
 
       - uses: anthropics/claude-code-action@v1
         with:
@@ -87,7 +102,8 @@ jobs:
             secrets, and new workflow permissions.
 
             This workflow re-runs on every push to the PR. Before posting,
-            read what you already said (`gh pr view --comments`) and do not
+            read what was already said in ${{ runner.temp }}/earlier-comments.jsonl
+            (summary and inline comments, one JSON object per line) and do not
             repeat a finding that is still open; post only new findings and,
             in the summary, say which earlier ones are now fixed.
 
