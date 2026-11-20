@@ -259,11 +259,13 @@ export const createTrip = (
 
     completeArea: (area: HouseArea) => {
       completedAreas.add(area);
+      notify();
       persistTrip();
     },
 
     uncompleteArea: (area: HouseArea) => {
       completedAreas.delete(area);
+      notify();
       persistTrip();
     },
 
@@ -319,6 +321,7 @@ export const createTrip = (
       const stapleItems = staples.map(stapleInputToTripItem);
       items = stapleItems;
       completedAreas.clear();
+      notify();
       persistTrip();
     },
 

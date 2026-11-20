@@ -2,8 +2,7 @@
  * Walking Skeleton Acceptance Tests - Web UX Polish (Keyboard Flow)
  *
  * Core keyboard-driven add flow on desktop web:
- *   type item name -> Enter -> sheet opens -> fill fields -> Enter -> submit ->
- *   focus returns to QuickAdd -> type next item.
+ *   type item name -> Enter -> sheet opens -> fill fields -> Enter -> submit.
  *
  * Driving Ports:
  * - UI: React components rendered with ServiceProvider
@@ -14,7 +13,8 @@
  * - US-01: Autofocus QuickAdd input on web
  * - US-02: Enter in QuickAdd opens metadata sheet with typed name
  * - US-03: Enter in metadata sheet submits the form
- * - US-05: Focus returns to QuickAdd after sheet dismiss
+ * (US-05, focus returning to QuickAdd after the sheet closes, was never built
+ * and was dropped with #61; its WS-5 scenario is gone. It can be revisited.)
  *
  * Mobile non-regression: each web behavior is accompanied by a mobile-default
  * scenario that asserts the behavior is ABSENT on iOS/Android.
@@ -200,43 +200,5 @@ describe('WS-3: Enter key in metadata sheet submits the form', () => {
     expect(
       tripItems.some((i) => i.name === 'Tahini' && i.itemType === 'staple'),
     ).toBe(true);
-  });
-});
-
-// =============================================================================
-// WS-5: Focus returns to QuickAdd after sheet dismiss (US-05)
-// =============================================================================
-
-// eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-describe.skip('WS-5: Focus returns to QuickAdd input after sheet is dismissed', () => {
-  // AC: On web, when the metadata sheet dismisses (submit or cancel), focus
-  //     returns to the QuickAdd input so the user can immediately type the next item
-  // AC: On mobile, no explicit refocus happens
-  // Driving port: QuickAdd imperative focus() + HomeView handleDismiss
-  //
-  // NOTE: This scenario verifies focus through a testable proxy — we check that
-  // QuickAdd's ref.focus() is invoked on sheet dismiss. jsdom focus assertions
-  // are unreliable, so the implementation must expose an observable marker
-  // (e.g., a testID-addressable focus counter or onFocus callback we can spy on).
-
-  it('refocuses QuickAdd input after sheet is dismissed on web', () => {
-    setWebPlatform(true);
-    renderApp();
-
-    const input = screen.getByPlaceholderText('Add an item...');
-    fireEvent.changeText(input, 'Tahini');
-    fireEvent(input, 'submitEditing');
-
-    // Add the item
-    fireEvent.changeText(
-      screen.getByPlaceholderText('Store section...'),
-      'International',
-    );
-    fireEvent.press(screen.getByText('Add Item'));
-
-    // Assertion: input has the "focused" marker (implementation-defined).
-    // Consumers verify via onFocus spy or visible autofocus-triggering prop
-    // change. Exact assertion shape deferred to implementation.
-    expect(input.props.autoFocus).toBe(true);
   });
 });

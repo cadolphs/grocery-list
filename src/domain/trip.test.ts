@@ -87,6 +87,34 @@ describe('TripService.subscribe', () => {
     expect(notifications).toHaveLength(1);
   });
 
+  // Sweep progress (completed areas) and the reset also feed every useTrip
+  // instance, so these must notify as well.
+  test.each([
+    ['completeArea', (t: TripService) => t.completeArea('Fridge')],
+    ['uncompleteArea', (t: TripService) => t.uncompleteArea('Fridge')],
+    [
+      'resetSweep',
+      (t: TripService) =>
+        t.resetSweep([
+          {
+            name: 'Bread',
+            houseArea: 'Kitchen Cabinets',
+            storeLocation: { section: 'Bakery', aisleNumber: 1 },
+          },
+        ]),
+    ],
+  ])('subscriber is notified when %s is called', (_name, mutate) => {
+    const tripService = createTestTripService();
+    tripService.completeArea('Fridge');
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    mutate(tripService);
+
+    expect(notifications).toHaveLength(1);
+  });
+
   test('item added with stapleId is removed by removeItemByStapleId', () => {
     const tripService = createTestTripService();
 
