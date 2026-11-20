@@ -110,30 +110,6 @@ const serializeTrip = (trip: Trip | null): string => JSON.stringify(trip);
 const serializeItems = (items: readonly TripItem[]): string =>
   JSON.stringify(items);
 
-const deriveCheckoffsFromItems = (
-  items: readonly TripItem[],
-): ReadonlyMap<string, string> => {
-  const checkoffs = new Map<string, string>();
-  for (const item of items) {
-    if (item.checked && item.checkedAt !== null) {
-      checkoffs.set(item.name, item.checkedAt);
-    }
-  }
-  return checkoffs;
-};
-
-const applyCheckoffsToItems = (
-  items: TripItem[],
-  checkoffs: ReadonlyMap<string, string>,
-): TripItem[] =>
-  items.map((item) => {
-    const checkedAt = checkoffs.get(item.name);
-    if (checkedAt !== undefined) {
-      return { ...item, checked: true, checkedAt };
-    }
-    return { ...item, checked: false, checkedAt: null };
-  });
-
 export const createFirestoreTripStorage = (
   db: Firestore,
   uid: string,
@@ -347,17 +323,6 @@ export const createFirestoreTripStorage = (
 
     saveTrip: (trip: Trip): void => {
       commitLocalTripChange(trip);
-    },
-
-    loadCheckoffs: (): ReadonlyMap<string, string> => {
-      if (!cachedTrip) return new Map();
-      return deriveCheckoffsFromItems(cachedTrip.items);
-    },
-
-    saveCheckoffs: (checkoffs: ReadonlyMap<string, string>): void => {
-      if (!cachedTrip) return;
-      const updatedItems = applyCheckoffsToItems(cachedTrip.items, checkoffs);
-      commitLocalTripChange({ ...cachedTrip, items: updatedItems });
     },
 
     updateItemArea: (oldName: string, newName: string): void => {

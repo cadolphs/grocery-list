@@ -30,7 +30,7 @@ function renderAppWithItems() {
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  tripService.start(stapleLibrary.listAll());
+  tripService.initializeFromStorage(stapleLibrary.listAll());
 
   // Check off Milk and complete an area to have state to reset
   tripService.checkOff('Milk');

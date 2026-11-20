@@ -25,7 +25,6 @@
 // Domain ports:
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { completeTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { groupBySection } from '../../../src/domain/item-grouping';
 import { TripItem } from '../../../src/domain/types';
@@ -101,7 +100,7 @@ describe('WS-1: Add a Staple Item', () => {
     // Given Carlos has an active trip
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     // When Carlos adds "Birthday candles" as a one-off
     trip.addItem({
@@ -223,7 +222,7 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const staples = library.listAll();
-    trip.start(staples);
+    trip.initializeFromStorage(staples);
 
     // Then items are grouped by house area
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
@@ -250,7 +249,7 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // When Carlos views the home view
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
@@ -279,7 +278,7 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
     // When Carlos starts the next sweep
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // Then "Oat milk" appears pre-loaded in "Fridge"
     const fridgeItems = groupByArea(trip.getItems(), DEFAULT_AREAS).find(
@@ -307,7 +306,7 @@ describe('WS-3: Quick-Add Item', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     // When Carlos quick-adds "Canned tomatoes" as a staple
     library.addStaple({
@@ -338,7 +337,7 @@ describe('WS-3: Quick-Add Item', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     // When Carlos quick-adds "Deli turkey" as a one-off
     trip.addItem({
@@ -360,7 +359,7 @@ describe('WS-3: Quick-Add Item', () => {
     // Given Carlos has an active trip
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     // When Carlos tries to quick-add without specifying an area
     const result = trip.addItem({
@@ -472,7 +471,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
     // Given Carlos has checked off "Whole milk" in store view
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
@@ -505,7 +504,7 @@ describe('WS-5: Check Off Items in Store', () => {
     // Given Carlos has an active trip with "Whole milk"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
@@ -530,7 +529,7 @@ describe('WS-5: Check Off Items in Store', () => {
     // Given Carlos has checked off "Butter"
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
@@ -556,7 +555,7 @@ describe('WS-5: Check Off Items in Store', () => {
     // Given Carlos has checked off 3 items
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
-    trip1.start([
+    trip1.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -652,7 +651,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     trip.addItem({
       name: 'Birthday candles',
       houseArea: 'Kitchen Cabinets',
@@ -672,7 +671,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
     // Avocados left unchecked
 
     // When Carlos finishes the trip
-    const result = completeTrip(trip, library);
+    const result = trip.complete();
 
     // Then bought staple re-queues (it is in the library, so it will pre-load next trip)
     expect(result.purchasedStaples).toContainEqual(
@@ -689,7 +688,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
 
     // Verify next trip has staples + carried-over items
     const nextTrip = createTrip(tripStorage);
-    nextTrip.start(library.listAll(), result.unboughtItems);
+    nextTrip.initializeFromStorage(library.listAll());
     const nextItems = nextTrip.getItems();
     expect(nextItems).toContainEqual(
       expect.objectContaining({ name: 'Whole milk' }),
@@ -720,17 +719,25 @@ describe('WS-6: Complete Trip with Carryover', () => {
         checkedAt: null,
       },
     ];
-    trip.start([], carryover);
+    tripStorage.saveTrip({
+      id: 'trip-previous',
+      items: [],
+      status: 'completed',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      completedAreas: [],
+    });
+    tripStorage.saveCarryover(carryover);
+    trip.initializeFromStorage([]);
     // Carlos did not buy "Avocados" again
 
     // When Carlos finishes the trip
     const stapleStorage = createNullStapleStorage();
     const library = createStapleLibrary(stapleStorage);
-    const result = completeTrip(trip, library);
+    trip.complete();
 
     // Then "Avocados" appears once on the next trip
     const nextTrip = createTrip(tripStorage);
-    nextTrip.start(library.listAll(), result.unboughtItems);
+    nextTrip.initializeFromStorage(library.listAll());
     const avocadoEntries = nextTrip
       .getItems()
       .filter((i) => i.name === 'Avocados');
@@ -768,12 +775,12 @@ describe('WS-6: Complete Trip with Carryover', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     trip.checkOff('Milk');
     trip.checkOff('Eggs');
 
     // When Carlos finishes the trip
-    completeTrip(trip, library);
+    trip.complete();
 
     // Then the staple library still contains exactly 5 items
     expect(library.listAll()).toHaveLength(5);
@@ -802,7 +809,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     trip.addItem({
       name: 'Candles',
       houseArea: 'Kitchen Cabinets',
@@ -821,11 +828,11 @@ describe('WS-6: Complete Trip with Carryover', () => {
     trip.getItems().forEach((i) => trip.checkOff(i.name));
 
     // When Carlos finishes the trip
-    const result = completeTrip(trip, library);
+    trip.complete();
 
     // Then the next trip has only the 3 staples
     const nextTrip = createTrip(tripStorage);
-    nextTrip.start(library.listAll(), result.unboughtItems);
+    nextTrip.initializeFromStorage(library.listAll());
     expect(nextTrip.getItems()).toHaveLength(3);
     expect(nextTrip.getItems().every((i) => i.itemType === 'staple')).toBe(
       true,

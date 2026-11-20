@@ -175,7 +175,7 @@ describe('TripService.subscribe', () => {
 
   test('subscriber is notified when loadFromStorage updates state', () => {
     const { tripService, storage } = createTestTripServiceWithStorage();
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -210,7 +210,7 @@ describe('TripService.subscribe', () => {
 
   test('loadFromStorage does not notify when state is identical', () => {
     const { tripService } = createTestTripServiceWithStorage();
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',

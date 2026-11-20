@@ -4,7 +4,6 @@ import { createAsyncTripStorage } from '../../../src/adapters/async-storage/asyn
 import { Trip } from '../../../src/domain/types';
 
 const TRIP_KEY = '@grocery/active_trip';
-const CHECKOFFS_KEY = '@grocery/trip_checkoffs';
 
 const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
   id: 'trip-1',
@@ -114,49 +113,6 @@ describe('createAsyncTripStorage', () => {
       storage.saveTrip(trip2);
 
       expect(storage.loadTrip()).toEqual(trip2);
-    });
-  });
-
-  describe('loadCheckoffs', () => {
-    it('loads checkoffs from AsyncStorage into cache', async () => {
-      const checkoffs = { 'item-1': '2026-01-01T00:00:00.000Z' };
-      (AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
-        if (key === CHECKOFFS_KEY)
-          return Promise.resolve(JSON.stringify(checkoffs));
-        return Promise.resolve(null);
-      });
-
-      const storage = createAsyncTripStorage();
-      await storage.initialize();
-
-      const result = storage.loadCheckoffs();
-      expect(result).toEqual(new Map([['item-1', '2026-01-01T00:00:00.000Z']]));
-    });
-
-    it('returns empty map when no checkoffs stored', async () => {
-      const storage = createAsyncTripStorage();
-      await storage.initialize();
-
-      expect(storage.loadCheckoffs()).toEqual(new Map());
-    });
-  });
-
-  describe('saveCheckoffs', () => {
-    it('updates cache and persists in background', async () => {
-      const storage = createAsyncTripStorage();
-      await storage.initialize();
-
-      const checkoffs = new Map([['item-1', '2026-01-01T00:00:00.000Z']]);
-      storage.saveCheckoffs(checkoffs);
-
-      expect(storage.loadCheckoffs()).toEqual(checkoffs);
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        CHECKOFFS_KEY,
-        JSON.stringify({ 'item-1': '2026-01-01T00:00:00.000Z' }),
-      );
     });
   });
 });

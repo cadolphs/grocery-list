@@ -214,7 +214,7 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     // Given a trip service with a subscriber listening for changes
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -228,7 +228,6 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     ]);
 
     // Persist initial state so loadFromStorage has something to load
-    // (start doesn't persist, so we trigger a persist via checkOff/uncheckItem)
     tripService.checkOff('Milk');
     tripService.uncheckItem('Milk');
 
