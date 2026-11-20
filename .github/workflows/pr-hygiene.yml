@@ -54,11 +54,28 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr.json"
 
+      # `gh pr create --label X` adds the label in a second API call after the
+      # PR exists. If the `opened` run reads the PR before that call lands,
+      # `Friction: none` has no label yet and fails, and that failed run would
+      # stay on the head SHA. So on `opened` only, a failed body check is
+      # retried once after 20 s with a fresh read of the PR.
       - name: Check PR body follows the template
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RETRY_ONCE: ${{ github.event.action == 'opened' }}
         run: |
-          PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/pr.json")" \
-          PR_LABELS="$(jq -c '[.labels[].name]' "$RUNNER_TEMP/pr.json")" \
-          node scripts/check-pr-body.mjs
+          check() {
+            PR_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/pr.json")" \
+            PR_LABELS="$(jq -c '[.labels[].name]' "$RUNNER_TEMP/pr.json")" \
+            node scripts/check-pr-body.mjs
+          }
+          if check; then exit 0; fi
+          if [ "$RETRY_ONCE" != "true" ]; then exit 1; fi
+          echo "Body check failed on 'opened': re-reading the PR in 20 s in case a label is still landing."
+          sleep 20
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr.json"
+          check
 
       - name: Check declared risk tier
         run: |

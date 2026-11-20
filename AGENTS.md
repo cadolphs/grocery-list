@@ -42,8 +42,9 @@ This file is a map. Open the page that owns the task:
 | medium | Changes that extend a primitive's behavior or contract, storage/sync adapters, new dependencies | CI green + control CLI proof in **Testing** | human |
 | high | `firestore.rules`, `src/auth/`, auth flows, `.github/workflows/`, `firebase.json`, `eas.json`, `app.json` | CI green + proof + human approval | human |
 
-The `PR hygiene` check (`.github/workflows/pr-hygiene.yml`) enforces both the
-PR template (`scripts/check-pr-body.mjs`, headings and fields read from
+The `PR hygiene` check (`.github/workflows/pr-hygiene.yml`), which branch
+protection must list as required next to `Commit Stage`, checks both the PR
+template (`scripts/check-pr-body.mjs`, headings and fields read from
 `.github/pull_request_template.md`) and that `Risk:` is not lower than the
 changed paths imply (`scripts/check-risk-tier.mjs`). It re-runs on body edits
 and label changes; CI (`Commit Stage`) runs only on code events, so a label
