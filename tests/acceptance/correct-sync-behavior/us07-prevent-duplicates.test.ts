@@ -7,10 +7,7 @@
  * All tests marked .skip -- enable one at a time during DELIVER.
  */
 
-import {
-  initializeApp,
-  AdapterFactories,
-} from '../../../src/hooks/useAppInitialization';
+import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { AuthUser } from '../../../src/auth/AuthService';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
@@ -18,8 +15,10 @@ import {
   createNullTripStorage,
   NullTripStorageWithSync,
 } from '../../../src/adapters/null/null-trip-storage';
-import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
-import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../helpers/null-adapter-factories';
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
 
@@ -33,56 +32,16 @@ const createSyncFactories = (
 ) => {
   let stapleOnChange: (() => void) | undefined;
 
-  const factories: AdapterFactories = {
-    createStapleStorage: (
-      _uid: string,
-      options?: { onChange?: () => void },
-    ) => {
+  const factories = createNullAdapterFactories({
+    createStapleStorage: (_uid, options) => {
       stapleOnChange = options?.onChange;
-      return {
-        ...stapleStorage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      };
+      return withInitialize(stapleStorage);
     },
-    createAreaStorage: (_uid: string) => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-      unsubscribe: () => {},
-    }),
-    createSectionOrderStorage: (_uid: string) => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-      unsubscribe: () => {},
-    }),
-    createTripStorage: (_uid: string, options?: { onChange?: () => void }) => {
+    createTripStorage: (_uid, options) => {
       if (options?.onChange) tripStorage.setOnChange(options.onChange);
-      return {
-        ...tripStorage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      };
+      return withInitialize(tripStorage);
     },
-    checkMigrationNeeded: () => false,
-    migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncAreaStorage: () => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncSectionOrderStorage: () => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncTripStorage: () => ({
-      ...createNullTripStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    migrateTripIfNeeded: () => {},
-  };
+  });
 
   return { factories, fireStapleOnChange: () => stapleOnChange?.() };
 };
@@ -152,9 +111,16 @@ describe('US-07: Prevent duplicate trip items', () => {
     });
     fireStapleOnChange();
 
-    // Then the trip contains exactly one "Tahini" item, the remote one
+    // Then the trip contains exactly one "Tahini" item. Three guards overlap
+    // here, all keyed on the same stapleId: alreadyInTrip in
+    // applyAddedStaplesToTrip, then addItem's stapleId check, then its
+    // name+houseArea fallback. Any one of them keeps this passing, so the
+    // test protects the behaviour, not the outer guard on its own.
     const items = tripService.getItems();
     expect(items.map((i) => i.name)).toEqual(['Milk', 'Tahini']);
+
+    // And the surviving "Tahini" is the remote copy (whole-state replacement
+    // by loadFromStorage won; this is not what prevents the duplicate)
     expect(items.filter((i) => i.name === 'Tahini')).toEqual([
       expect.objectContaining({
         id: 'trip-item-remote-tahini',

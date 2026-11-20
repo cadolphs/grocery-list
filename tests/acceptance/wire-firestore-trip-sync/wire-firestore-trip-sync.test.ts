@@ -15,20 +15,18 @@
  * - US-03: TripService notifies subscribers after remote state load
  */
 
-import {
-  initializeApp,
-  AdapterFactories,
-} from '../../../src/hooks/useAppInitialization';
+import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { createTrip } from '../../../src/domain/trip';
 import { AuthUser } from '../../../src/auth/AuthService';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import {
   createNullTripStorage,
   NullTripStorageWithSync,
 } from '../../../src/adapters/null/null-trip-storage';
-import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
-import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { Trip } from '../../../src/domain/types';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../helpers/null-adapter-factories';
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
 
@@ -66,31 +64,13 @@ const createActiveTripWithItems = (): Trip => ({
   ],
 });
 
-// Helper: create factories where createTripStorage accepts uid and onChange option
+// Helper: factories where createTripStorage accepts uid and onChange option
 const createTestFactories = (options?: {
   tripStorage?: NullTripStorageWithSync;
 }) => {
   let capturedTripStorage: NullTripStorageWithSync | undefined;
 
-  const factories: AdapterFactories = {
-    createStapleStorage: (_uid: string) => {
-      const storage = createNullStapleStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      };
-    },
-    createAreaStorage: (_uid: string) => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-      unsubscribe: () => {},
-    }),
-    createSectionOrderStorage: (_uid: string) => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-      unsubscribe: () => {},
-    }),
+  const factories = createNullAdapterFactories({
     createTripStorage: (
       _uid: string,
       tripOptions?: { onChange?: () => void },
@@ -102,32 +82,9 @@ const createTestFactories = (options?: {
         storage.setOnChange(tripOptions.onChange);
       }
       capturedTripStorage = storage;
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      };
+      return withInitialize(storage);
     },
-    checkMigrationNeeded: () => false,
-    migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncAreaStorage: () => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncSectionOrderStorage: () => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncTripStorage: () => ({
-      ...createNullTripStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    migrateTripIfNeeded: () => {},
-  };
+  });
 
   return { factories, getCapturedTripStorage: () => capturedTripStorage };
 };

@@ -9,10 +9,7 @@
  * all Firestore listeners and prevent stale callbacks from corrupting state.
  */
 
-import {
-  initializeApp,
-  AdapterFactories,
-} from '../../../src/hooks/useAppInitialization';
+import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { AuthUser } from '../../../src/auth/AuthService';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import {
@@ -21,9 +18,13 @@ import {
 } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../helpers/null-adapter-factories';
 
-// Helper: create test factories that track unsubscribe calls and expose onChange triggers.
-// Pass shared storages to read or change them from a test.
+// Helper: factories that record which adapters were unsubscribed. Pass shared
+// storages to read or change them from a test.
 const createTrackingFactories = (
   shared: {
     stapleStorage?: ReturnType<typeof createNullStapleStorage>;
@@ -31,72 +32,24 @@ const createTrackingFactories = (
   } = {},
 ) => {
   const unsubscribeCalls: string[] = [];
-  const onChangeCallbacks: Record<string, () => void> = {};
+  const tracked = <T extends object>(name: string, storage: T) => ({
+    ...withInitialize(storage),
+    unsubscribe: () => {
+      unsubscribeCalls.push(name);
+    },
+  });
 
-  const factories: AdapterFactories = {
-    createStapleStorage: (_uid: string) => {
-      const storage = shared.stapleStorage ?? createNullStapleStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('staples');
-        },
-      };
-    },
-    createAreaStorage: (_uid: string) => {
-      const storage = createNullAreaStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('areas');
-        },
-      };
-    },
-    createSectionOrderStorage: (_uid: string) => {
-      const storage = createNullSectionOrderStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('sectionOrder');
-        },
-      };
-    },
-    createTripStorage: (_uid: string, options?: { onChange?: () => void }) => {
-      const storage = shared.tripStorage ?? createNullTripStorage();
-      if (options?.onChange) storage.setOnChange(options.onChange);
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('trip');
-        },
-      };
-    },
-    checkMigrationNeeded: () => false,
-    migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncAreaStorage: () => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncSectionOrderStorage: () => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncTripStorage: () => ({
-      ...createNullTripStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    migrateTripIfNeeded: () => {},
-  };
+  const factories = createNullAdapterFactories({
+    createStapleStorage: () =>
+      tracked('staples', shared.stapleStorage ?? createNullStapleStorage()),
+    createAreaStorage: () => tracked('areas', createNullAreaStorage()),
+    createSectionOrderStorage: () =>
+      tracked('sectionOrder', createNullSectionOrderStorage()),
+    createTripStorage: () =>
+      tracked('trip', shared.tripStorage ?? createNullTripStorage()),
+  });
 
-  return { factories, unsubscribeCalls, onChangeCallbacks };
+  return { factories, unsubscribeCalls };
 };
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
@@ -168,7 +121,10 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
   // S-14: Stale listener callback does not corrupt state after logout
   // =============================================================================
 
-  it('S-14: delayed listener callback after logout does not update state', async () => {
+  // Half of S-14: the one listener initializeApp subscribes to itself (the
+  // staple library's change seam) is released by unsubscribeAll(). The other
+  // half, a stale adapter onChange, has no guard yet (see the todo below).
+  it('local staple change after logout does not touch the trip', async () => {
     // Given Clemens is logged in with "Milk" as a staple and an active trip
     const stapleStorage = createNullStapleStorage([
       {
@@ -209,4 +165,11 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
     expect(tripService.getItems()).toEqual(tripBeforeLogout);
     expect(tripStorage.loadTrip()).toEqual(storedTripBeforeLogout);
   });
+
+  // initializeApp has no cancelled flag: after unsubscribeAll(), a trip or
+  // staple adapter onChange still reloads the trip or runs the staple diff.
+  // Only the adapters' own unsubscribe keeps this from happening today.
+  it.todo(
+    'S-14: stale adapter onChange after unsubscribeAll() does not update state (needs cancelled guard in initializeApp, see #60)',
+  );
 });
