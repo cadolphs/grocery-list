@@ -1,9 +1,6 @@
 /**
  * Milestone 1: UI for Enhanced Item Management and Navigation
  *
- * All tests in this file are SKIPPED. They should be enabled one at a time
- * after the walking skeleton is complete.
- *
  * Driving Ports:
  * - UI: React components rendered with ServiceProvider
  * - User actions: fireEvent (tap, changeText)
@@ -83,13 +80,21 @@ function createTestServices() {
 // =============================================================================
 
 describe('US-07: Skip staple from home screen', () => {
-  // AC: Tapping skip removes item from visible area
+  // AC: Tapping an item on the home screen skips it (drops it from the needed count)
   // AC: Skipped item does not appear in store view
   // AC: Skipped item can be re-added
+  //
+  // sweep-ux-refresh replaced the per-row Skip / Re-add buttons with
+  // tap-to-toggle: tapping a needed item skips it (grey strikethrough), tapping
+  // a skipped item re-adds it. The scenarios below drive that affordance.
 
-  // Skip button removed in sweep-ux-refresh (01-01). Tap-to-toggle needs AreaSection wiring (later step).
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('removes skipped item from the home view area', () => {
+  // Flattens a Text node's style array so individual properties can be asserted.
+  const flatStyle = (node: { props: { style: unknown } }) =>
+    Array.isArray(node.props.style)
+      ? Object.assign({}, ...node.props.style.filter(Boolean))
+      : node.props.style;
+
+  it('removes skipped item from the home view area', () => {
     // Given Carlos is viewing the home screen with Bathroom items
     const { library, tripService } = createTestServices();
     render(
@@ -97,22 +102,21 @@ describe('US-07: Skip staple from home screen', () => {
         <AppShell />
       </ServiceProvider>,
     );
-    expect(screen.getByText('Shampoo')).toBeTruthy();
+    expect(screen.getByText('Bathroom (2)')).toBeTruthy();
 
-    // When Carlos taps "skip" on "Shampoo"
-    fireEvent.press(screen.getByTestId('skip-Shampoo'));
+    // When Carlos taps "Shampoo" to skip it
+    fireEvent.press(screen.getByText('Shampoo'));
 
     // Then "Shampoo" is removed from the needed items (area count drops)
     expect(screen.getByText('Bathroom (1)')).toBeTruthy();
+    expect(screen.queryByText('Bathroom (2)')).toBeNull();
 
-    // And "Shampoo" still appears as a skipped item (with strikethrough + Re-add)
-    expect(screen.getByText('Shampoo')).toBeTruthy();
-    expect(screen.getByTestId('readd-Shampoo')).toBeTruthy();
+    // And "Shampoo" still appears in the area as a skipped item (strikethrough)
+    const shampoo = screen.getByText('Shampoo');
+    expect(flatStyle(shampoo).textDecorationLine).toBe('line-through');
   });
 
-  // Skip button removed in sweep-ux-refresh (01-01). Tap-to-toggle needs AreaSection wiring (later step).
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('skipped item does not appear in store view', () => {
+  it('skipped item does not appear in store view', () => {
     // Given Carlos has skipped "Shampoo" on the home screen
     const { library, tripService } = createTestServices();
     render(
@@ -120,18 +124,19 @@ describe('US-07: Skip staple from home screen', () => {
         <AppShell />
       </ServiceProvider>,
     );
-    fireEvent.press(screen.getByTestId('skip-Shampoo'));
+    fireEvent.press(screen.getByText('Shampoo'));
 
     // When Carlos switches to the store view
     fireEvent.press(screen.getByText('Store'));
 
     // Then "Shampoo" is not visible in any store section
     expect(screen.queryByText('Shampoo')).toBeNull();
+
+    // And the other Bathroom staple is still listed, so the store view did render
+    expect(screen.getByText('Toilet paper')).toBeTruthy();
   });
 
-  // Skip button removed in sweep-ux-refresh (01-01). Tap-to-toggle needs AreaSection wiring (later step).
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('re-adds a skipped staple on the home screen', () => {
+  it('re-adds a skipped staple on the home screen', () => {
     // Given Carlos has skipped "Butter" in the "Fridge" area
     const { library, tripService } = createTestServices();
     render(
@@ -139,17 +144,20 @@ describe('US-07: Skip staple from home screen', () => {
         <AppShell />
       </ServiceProvider>,
     );
-    fireEvent.press(screen.getByTestId('skip-Butter'));
+    fireEvent.press(screen.getByText('Butter'));
+    expect(screen.getByText('Fridge (2)')).toBeTruthy();
+    expect(flatStyle(screen.getByText('Butter')).textDecorationLine).toBe(
+      'line-through',
+    );
 
-    // Butter is visible in skipped row (with strikethrough + Re-add)
-    expect(screen.getByText('Butter')).toBeTruthy();
-    expect(screen.getByTestId('readd-Butter')).toBeTruthy();
+    // When Carlos taps the skipped "Butter" again
+    fireEvent.press(screen.getByText('Butter'));
 
-    // When Carlos taps "re-add" on "Butter"
-    fireEvent.press(screen.getByTestId('readd-Butter'));
-
-    // Then "Butter" reappears in the "Fridge" area
-    expect(screen.getByText('Butter')).toBeTruthy();
+    // Then "Butter" is needed again in the "Fridge" area
+    expect(screen.getByText('Fridge (3)')).toBeTruthy();
+    expect(flatStyle(screen.getByText('Butter')).textDecorationLine).toBe(
+      undefined,
+    );
   });
 });
 

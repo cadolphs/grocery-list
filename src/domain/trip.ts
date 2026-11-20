@@ -151,12 +151,16 @@ export const createTrip = (
     storage.saveTrip(buildTrip(tripId, items, createdAt, completedAreas));
   };
 
-  // Apply a partial patch to every item matching `name`, then persist.
-  // Used by check/uncheck/skip/unskip — all share this shape.
+  // Apply a partial patch to every item matching `name`, then notify and
+  // persist. Used by check/uncheck/skip/unskip — all share this shape.
+  // Notifying matters because HomeView and StoreView are mounted at the same
+  // time (AppShell) and each holds its own useTrip state: without it, an item
+  // skipped on Home stays listed on Store until something else notifies.
   const updateItemByName = (name: string, patch: Partial<TripItem>): void => {
     items = items.map((item) =>
       item.name === name ? { ...item, ...patch } : item,
     );
+    notify();
     persistTrip();
   };
 
