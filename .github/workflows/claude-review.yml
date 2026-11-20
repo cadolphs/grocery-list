@@ -66,7 +66,7 @@ jobs:
         run: |
           {
             gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "summary", body: .body}'
-            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "\(.path):\(.line)", body: .body}'
+            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "\(.path):\(.line // .original_line)", body: .body}'
           } > "$RUNNER_TEMP/earlier-comments.jsonl"
 
       - uses: anthropics/claude-code-action@v1
