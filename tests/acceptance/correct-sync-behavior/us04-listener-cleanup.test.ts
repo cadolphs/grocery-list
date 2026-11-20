@@ -23,8 +23,9 @@ import {
   withInitialize,
 } from '../helpers/null-adapter-factories';
 
-// Helper: factories that record which adapters were unsubscribed. Pass shared
-// storages to read or change them from a test.
+// Helper: factories that record which adapters were unsubscribed and capture
+// each adapter's onChange so a test can fire it. Pass shared storages to read
+// or change them from a test.
 const createTrackingFactories = (
   shared: {
     stapleStorage?: ReturnType<typeof createNullStapleStorage>;
@@ -32,6 +33,7 @@ const createTrackingFactories = (
   } = {},
 ) => {
   const unsubscribeCalls: string[] = [];
+  const onChangeCallbacks: Record<string, () => void> = {};
   const tracked = <T extends object>(name: string, storage: T) => ({
     ...withInitialize(storage),
     unsubscribe: () => {
@@ -40,16 +42,27 @@ const createTrackingFactories = (
   });
 
   const factories = createNullAdapterFactories({
-    createStapleStorage: () =>
-      tracked('staples', shared.stapleStorage ?? createNullStapleStorage()),
+    createStapleStorage: (_uid, options) => {
+      if (options?.onChange) onChangeCallbacks.staples = options.onChange;
+      return tracked(
+        'staples',
+        shared.stapleStorage ?? createNullStapleStorage(),
+      );
+    },
     createAreaStorage: () => tracked('areas', createNullAreaStorage()),
     createSectionOrderStorage: () =>
       tracked('sectionOrder', createNullSectionOrderStorage()),
-    createTripStorage: () =>
-      tracked('trip', shared.tripStorage ?? createNullTripStorage()),
+    createTripStorage: (_uid, options) => {
+      const storage = shared.tripStorage ?? createNullTripStorage();
+      if (options?.onChange) {
+        storage.setOnChange(options.onChange);
+        onChangeCallbacks.trip = options.onChange;
+      }
+      return tracked('trip', storage);
+    },
   });
 
-  return { factories, unsubscribeCalls };
+  return { factories, unsubscribeCalls, onChangeCallbacks };
 };
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
@@ -121,9 +134,70 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
   // S-14: Stale listener callback does not corrupt state after logout
   // =============================================================================
 
-  // Half of S-14: the one listener initializeApp subscribes to itself (the
-  // staple library's change seam) is released by unsubscribeAll(). The other
-  // half, a stale adapter onChange, has no guard yet (see the todo below).
+  it('S-14: delayed listener callback after logout does not update state', async () => {
+    // Given Clemens is logged in with "Milk" as a staple and an active trip
+    const stapleStorage = createNullStapleStorage([
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+    const tripStorage = createNullTripStorage();
+    const { factories, onChangeCallbacks } = createTrackingFactories({
+      stapleStorage,
+      tripStorage,
+    });
+    const result = await initializeApp(testUser, factories);
+    expect(result.isReady).toBe(true);
+    const tripService = result.services!.tripService;
+    const tripBeforeLogout = tripService.getItems();
+    expect(tripBeforeLogout.map((i) => i.name)).toEqual(['Milk']);
+    const storedTripBeforeLogout = tripStorage.loadTrip();
+    expect(storedTripBeforeLogout).not.toBeNull();
+
+    // And Clemens has logged out (listeners cleaned up)
+    result.unsubscribeAll!();
+
+    // When a delayed staple adapter callback fires after logout
+    // (a remote add that was in flight when the listener was torn down)
+    stapleStorage.save({
+      id: 'staple-cheese-remote',
+      name: 'Cheese',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      type: 'staple',
+      createdAt: '2026-04-10T10:00:00.000Z',
+    });
+    onChangeCallbacks.staples!();
+
+    // And a delayed trip adapter callback fires after logout
+    tripStorage.simulateRemoteChange((s) => {
+      s.saveTrip({
+        ...storedTripBeforeLogout!,
+        items: storedTripBeforeLogout!.items.map((item) => ({
+          ...item,
+          checked: true,
+          checkedAt: '2026-04-13T10:00:00Z',
+        })),
+      });
+    });
+
+    // Then the old session's services still exist but its trip is unchanged:
+    // neither callback reached the trip service (initializeApp's cancelled
+    // guard), and nothing was written to trip storage after logout
+    expect(result.services).not.toBeNull();
+    expect(tripService.getItems()).toEqual(tripBeforeLogout);
+    expect(tripStorage.loadTrip()).toEqual(
+      expect.objectContaining({ id: storedTripBeforeLogout!.id }),
+    );
+    expect(
+      tripStorage.loadTrip()!.items.map((i) => [i.name, i.checked]),
+    ).toEqual([['Milk', true]]);
+  });
+
+  // The listener initializeApp subscribes to itself (the staple library's
+  // change seam) is released by unsubscribeAll() as well.
   it('local staple change after logout does not touch the trip', async () => {
     // Given Clemens is logged in with "Milk" as a staple and an active trip
     const stapleStorage = createNullStapleStorage([
@@ -165,11 +239,4 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
     expect(tripService.getItems()).toEqual(tripBeforeLogout);
     expect(tripStorage.loadTrip()).toEqual(storedTripBeforeLogout);
   });
-
-  // initializeApp has no cancelled flag: after unsubscribeAll(), a trip or
-  // staple adapter onChange still reloads the trip or runs the staple diff.
-  // Only the adapters' own unsubscribe keeps this from happening today.
-  it.todo(
-    'S-14: stale adapter onChange after unsubscribeAll() does not update state (needs cancelled guard in initializeApp, see #60)',
-  );
 });
