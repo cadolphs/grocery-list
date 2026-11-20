@@ -1,9 +1,10 @@
 /**
- * Regression test: Tapping a staple item with stapleId=null opens edit sheet.
+ * Regression test: Long-pressing a staple item with stapleId=null opens edit sheet.
  *
- * Bug: TripItemRow checks item.stapleId for truthiness before calling the edit handler.
+ * Bug: TripItemRow checked item.stapleId for truthiness before calling the edit handler.
  * Trip items from stapleInputToTripItem can have stapleId=null when the staple
- * has no id field, preventing the edit sheet from opening.
+ * has no id field, preventing the edit sheet from opening. The edit handler
+ * must resolve the staple by name + area instead.
  */
 
 import React from 'react';
@@ -61,14 +62,14 @@ function renderAppWithNullStapleId() {
   );
 }
 
-describe('Tap staple with stapleId=null opens edit sheet', () => {
-  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('tapping a staple item with null stapleId opens the edit sheet', () => {
+describe('Long-press staple with stapleId=null opens edit sheet', () => {
+  // sweep-ux-refresh replaced tap-to-edit with long-press; the guarded
+  // behaviour (edit must not depend on item.stapleId) is unchanged.
+  it('long-pressing a staple item with null stapleId opens the edit sheet', () => {
     renderAppWithNullStapleId();
 
-    // Tap the "Butter" item name
-    fireEvent.press(screen.getByText('Butter'));
+    // Long-press the "Butter" item name
+    fireEvent(screen.getByText('Butter'), 'longPress');
 
     // Edit sheet should open with the edit title
     expect(screen.getByText("Edit 'Butter'")).toBeTruthy();

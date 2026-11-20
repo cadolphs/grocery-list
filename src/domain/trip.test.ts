@@ -60,6 +60,61 @@ describe('TripService.subscribe', () => {
     expect(notifications).toHaveLength(1);
   });
 
+  // HomeView and StoreView are mounted together (AppShell) with separate
+  // useTrip state, so every needed/checked mutation must notify or the other
+  // view goes stale (#61: "skipped item does not appear in store view").
+  test.each([
+    ['skipItem', (t: TripService) => t.skipItem('Bread')],
+    ['unskipItem', (t: TripService) => t.unskipItem('Bread')],
+    ['checkOff', (t: TripService) => t.checkOff('Bread')],
+    ['uncheckItem', (t: TripService) => t.uncheckItem('Bread')],
+  ])('subscriber is notified when %s is called', (_name, mutate) => {
+    const tripService = createTestTripService();
+    tripService.addItem({
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-1',
+    });
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    mutate(tripService);
+
+    expect(notifications).toHaveLength(1);
+  });
+
+  // Sweep progress (completed areas) and the reset also feed every useTrip
+  // instance, so these must notify as well.
+  test.each([
+    ['completeArea', (t: TripService) => t.completeArea('Fridge')],
+    ['uncompleteArea', (t: TripService) => t.uncompleteArea('Fridge')],
+    [
+      'resetSweep',
+      (t: TripService) =>
+        t.resetSweep([
+          {
+            name: 'Bread',
+            houseArea: 'Kitchen Cabinets',
+            storeLocation: { section: 'Bakery', aisleNumber: 1 },
+          },
+        ]),
+    ],
+  ])('subscriber is notified when %s is called', (_name, mutate) => {
+    const tripService = createTestTripService();
+    tripService.completeArea('Fridge');
+
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    mutate(tripService);
+
+    expect(notifications).toHaveLength(1);
+  });
+
   test('item added with stapleId is removed by removeItemByStapleId', () => {
     const tripService = createTestTripService();
 
