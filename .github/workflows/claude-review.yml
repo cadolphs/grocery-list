@@ -1,0 +1,118 @@
+name: Claude review
+
+# Independent AI review on every pull request (layer 3 of #44; issue #56).
+# Authenticates with workload identity federation: GitHub's OIDC token is
+# exchanged for a short-lived Anthropic token, so there is no API key secret.
+# The IDs below are identifiers, not credentials. The federation rule in the
+# Claude Console must match subject `repo:cadolphs/grocery-list:pull_request`.
+#
+# Known limits:
+# - Dependabot and other bot PRs are not reviewed (bots are blocked by
+#   default, and cannot reach the OIDC exchange meaningfully).
+# - PRs from forks are skipped: they get no id-token and no secrets.
+# - Anyone with write access can edit this workflow or add another one on a
+#   branch and request an Anthropic token (the job runs the PR's own file).
+#   Mitigation: the federation rule is pinned to this repository and the
+#   pull_request subject; add a `job_workflow_ref` condition in the Console so
+#   only this workflow file can use it; workflow changes are high tier and need
+#   the maintainer's approval.
+# - Prompt injection through PR text is a risk on a public repo. Mitigation: the
+#   tool list is narrow, repo access is read-only, and `show_full_output` stays
+#   off because the logs are public.
+# Uses pull_request, never pull_request_target (it runs the PR's own workflow
+# file with a token that can only comment).
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write # OIDC token for the Anthropic federation exchange
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  review:
+    name: Claude review
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false # keep the job token out of .git/config
+
+      # The reviewer cannot call `gh api` (not in the tool list), so what it
+      # already said is handed over as a file: issue comments and inline review
+      # comments, for de-duplicating across pushes. Bot comments only: the repo
+      # is public, so a stranger's comment must never reach the prompt.
+      - name: Collect earlier review comments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "summary", body: .body}'
+            gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "github-actions[bot]") | {where: "\(.path):\(.line // .original_line)", body: .body}'
+          } > "$RUNNER_TEMP/earlier-comments.jsonl"
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic_federation_rule_id: fdrl_01QJLNj1jzNYKCpTqrQhA28z
+          anthropic_organization_id: ac25ce9f-5b55-499e-b6c9-ec3147a22a47
+          anthropic_service_account_id: svac_01FfVyomgzGHPqjcB4GdoJrn
+          anthropic_workspace_id: wrkspc_01NQuq5e5xfSjSLdh2bu9z1m
+          allow_fork_prs: 'false'
+          use_sticky_comment: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are an adversarial reviewer of this pull request. You did not
+            write it. Read AGENTS.md first for the rules and risk tiers, then
+            review the diff (`gh pr diff`) and the PR body (`gh pr view`), and
+            read surrounding code and tests, not only the changed lines.
+
+            `npm run verify` already checks types, lint, formatting, sibling
+            tests, the feature map, dead code and that tests pass. Do not
+            report anything it would catch.
+
+            Look for: bugs and missed edge cases (empty or null input,
+            ordering, async races, listeners or subscriptions not cleaned
+            up, swallowed errors); changes that do more or less than the
+            PR's Intent says; a `Risk:` line lower than the changed paths and
+            the AGENTS.md tiers justify; Testing claims the diff and test
+            changes do not support, including tests that could not fail;
+            every removed or changed `expect(` without a stated reason in the
+            PR body; Firestore schema or rules changes without migration,
+            secrets, and new workflow permissions.
+
+            This workflow re-runs on every push to the PR. Before posting,
+            read what was already said in ${{ runner.temp }}/earlier-comments.jsonl
+            (summary and inline comments, one JSON object per line) and do not
+            repeat a finding that is still open; post only new findings and,
+            in the summary, say which earlier ones are now fixed.
+
+            Post a specific inline comment for each finding, most severe
+            first, with the concrete input or state that triggers it. Then
+            post one summary comment: the findings by severity, or exactly
+            "No findings.", and a "Could not check" list of what you could
+            not verify from the diff. Do not praise, do not pad with style
+            opinions, and do not invent findings: a false finding costs the
+            author time.
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

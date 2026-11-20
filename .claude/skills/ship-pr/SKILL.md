@@ -20,9 +20,10 @@ description:
    with why), resolve conflicts, mark ready, merge, or wait. Any changed test
    expectation needs a reason in the PR body.
 5. Repeat step 3 until it says `merge`, `parked`, or `done`. Add `--merge` only
-   for **low** risk. With no AI reviewer configured, medium and high end in
-   `park` ("no reviewer configured"): request the maintainer's review and stop;
-   they merge.
+   for **low** risk. The Claude review workflow (`github-actions[bot]`) is the
+   configured reviewer on every tier (matched by its check name, `Claude review`): the autopilot waits for it, then
+   asks you to fix or answer each thread. Medium and high then end in `park`
+   (human approval): request the maintainer's review and stop; they merge.
 6. Before asking for merge, prove the change with the
    [control CLI](../control-grocery-list/SKILL.md) and cite the commands under
    **Testing**. After merge the deploy check waits for
