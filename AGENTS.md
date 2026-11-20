@@ -54,8 +54,9 @@ with a reason and an expiry date (`scripts/check-audit.mjs`). Fix the
 dependency first; an expired entry fails CI again, so each exception gets
 rechecked. CI also runs weekly, since advisories appear without commits.
 
-Every PR gets an independent Claude review (`.github/workflows/claude-review.yml`,
-keyless via workload identity); Dependabot and fork PRs are not reviewed. No
+Every PR gets an independent Claude review once it is marked ready
+(`.github/workflows/claude-review.yml`, keyless via workload identity, about
+$0.23 a run on purchased credits); drafts, Dependabot and fork PRs are not reviewed. No
 preview environment is configured. When unsure, pick
 the higher tier.
 

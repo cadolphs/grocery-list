@@ -3,8 +3,9 @@
   // by check name, not by login: a review with no findings posts only an issue
   // comment, which the autopilot does not count as a review. Findings arrive as
   // review threads, which the autopilot then makes the agent address. Dependabot
-  // and fork PRs skip the job, and a skipped check counts as present. Drafts are
-  // reviewed too: skipping them left a skipped check beside the real one.
+  // and fork PRs skip the job, and a skipped check counts as present. Drafts
+  // skip it too (cost: every push was a paid run); the review starts on
+  // ready_for_review, so mark a PR ready only after the local pr-review pass.
   "reviewers": {
     "low": ["Claude review"],
     "medium": ["Claude review"],
