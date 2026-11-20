@@ -240,18 +240,28 @@ export const initializeApp = async (
   try {
     const { uid } = authUser;
 
+    // Defence in depth: adapters must not deliver after unsubscribe, but the
+    // hook no longer depends on that; unsubscribeAll makes every callback a no-op.
+    let cancelled = false;
+
     // Late-binding callbacks: set after services are created
     // eslint-disable-next-line prefer-const
     let handleStapleChange: (() => void) | undefined;
-    const onStapleChange = () => handleStapleChange?.();
+    const onStapleChange = () => {
+      if (!cancelled) handleStapleChange?.();
+    };
 
     // eslint-disable-next-line prefer-const
     let handleTripChange: (() => void) | undefined;
-    const onTripChange = () => handleTripChange?.();
+    const onTripChange = () => {
+      if (!cancelled) handleTripChange?.();
+    };
 
     // eslint-disable-next-line prefer-const
     let handleAreaChange: (() => void) | undefined;
-    const onAreaChange = () => handleAreaChange?.();
+    const onAreaChange = () => {
+      if (!cancelled) handleAreaChange?.();
+    };
 
     const stapleStorage = factories.createStapleStorage(uid, {
       onChange: onStapleChange,
@@ -344,6 +354,7 @@ export const initializeApp = async (
     const unsubscribeStapleLibrary = stapleLibrary.subscribe(onStapleChange);
 
     const unsubscribeAll = () => {
+      cancelled = true;
       stapleStorage.unsubscribe?.();
       areaStorage.unsubscribe?.();
       sectionOrderStorage.unsubscribe?.();

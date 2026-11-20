@@ -15,20 +15,18 @@
  * - US-03: TripService notifies subscribers after remote state load
  */
 
-import {
-  initializeApp,
-  AdapterFactories,
-} from '../../../src/hooks/useAppInitialization';
+import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { createTrip } from '../../../src/domain/trip';
 import { AuthUser } from '../../../src/auth/AuthService';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import {
   createNullTripStorage,
   NullTripStorageWithSync,
 } from '../../../src/adapters/null/null-trip-storage';
-import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
-import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { Trip } from '../../../src/domain/types';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../helpers/null-adapter-factories';
 
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
 
@@ -66,31 +64,13 @@ const createActiveTripWithItems = (): Trip => ({
   ],
 });
 
-// Helper: create factories where createTripStorage accepts uid and onChange option
+// Helper: factories where createTripStorage accepts uid and onChange option
 const createTestFactories = (options?: {
   tripStorage?: NullTripStorageWithSync;
 }) => {
   let capturedTripStorage: NullTripStorageWithSync | undefined;
 
-  const factories: AdapterFactories = {
-    createStapleStorage: (_uid: string) => {
-      const storage = createNullStapleStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      };
-    },
-    createAreaStorage: (_uid: string) => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-      unsubscribe: () => {},
-    }),
-    createSectionOrderStorage: (_uid: string) => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-      unsubscribe: () => {},
-    }),
+  const factories = createNullAdapterFactories({
     createTripStorage: (
       _uid: string,
       tripOptions?: { onChange?: () => void },
@@ -102,32 +82,9 @@ const createTestFactories = (options?: {
         storage.setOnChange(tripOptions.onChange);
       }
       capturedTripStorage = storage;
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      };
+      return withInitialize(storage);
     },
-    checkMigrationNeeded: () => false,
-    migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncAreaStorage: () => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncSectionOrderStorage: () => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncTripStorage: () => ({
-      ...createNullTripStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    migrateTripIfNeeded: () => {},
-  };
+  });
 
   return { factories, getCapturedTripStorage: () => capturedTripStorage };
 };
@@ -174,26 +131,39 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
 
     const tripService = result.services!.tripService;
 
-    // And the trip is started with staples
-    // (initializeApp calls initializeFromStorage, which starts from staple list)
+    // And the trip service holds the stored trip (initializeApp calls
+    // initializeFromStorage, which adopts the active trip), with "Milk" not
+    // yet checked
+    const itemsBefore = tripService.getItems();
+    expect(itemsBefore.map((i) => i.name)).toEqual(['Milk', 'Eggs']);
+    expect(itemsBefore.find((i) => i.name === 'Milk')).toMatchObject({
+      checked: false,
+      checkedAt: null,
+    });
+
     // When a remote device checks off "Milk" and the trip update arrives via onChange
     // (Simulated: remote writes updated trip to storage, then onChange fires)
-    const currentTrip = tripStorage.loadTrip();
-    if (currentTrip) {
-      const updatedItems = currentTrip.items.map((item) =>
-        item.name === 'Milk'
-          ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
-          : item,
-      );
-      tripStorage.simulateRemoteChange((s) => {
-        s.saveTrip({ ...currentTrip, items: updatedItems });
-      });
-    }
+    const currentTrip = tripStorage.loadTrip()!;
+    const updatedItems = currentTrip.items.map((item) =>
+      item.name === 'Milk'
+        ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+        : item,
+    );
+    tripStorage.simulateRemoteChange((s) => {
+      s.saveTrip({ ...currentTrip, items: updatedItems });
+    });
 
     // Then the local trip service shows "Milk" as checked
-    const milkItem = tripService.getItems().find((i) => i.name === 'Milk');
+    const itemsAfter = tripService.getItems();
+    const milkItem = itemsAfter.find((i) => i.name === 'Milk');
     expect(milkItem?.checked).toBe(true);
     expect(milkItem?.checkedAt).toBe('2026-04-13T10:00:00Z');
+
+    // And nothing else about the trip changed
+    expect(itemsAfter.map((i) => i.name)).toEqual(['Milk', 'Eggs']);
+    expect(itemsAfter.find((i) => i.name === 'Eggs')).toEqual(
+      itemsBefore.find((i) => i.name === 'Eggs'),
+    );
   });
 
   it('remote item addition via onChange appears in local trip', async () => {
