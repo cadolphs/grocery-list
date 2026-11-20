@@ -88,7 +88,7 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
     // When Carlos starts a new sweep
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // Then the home view shows 6 area sections
     const grouped = groupByArea(trip.getItems(), customAreas);
@@ -123,7 +123,7 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
     // When Carlos starts a new sweep with the default area list
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
 
     // Then all 5 default areas are present
@@ -147,7 +147,7 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
     // When Carlos starts a sweep
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     const grouped = groupByArea(trip.getItems(), customAreas);
 
     // Then all 6 areas are present, 5 with empty items
@@ -168,7 +168,7 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
     const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, customAreas);
-    trip.start([]);
+    trip.initializeFromStorage([]);
 
     // When Carlos completes "Bathroom"
     trip.completeArea('Bathroom');
@@ -185,7 +185,7 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
     const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, customAreas);
-    trip.start([]);
+    trip.initializeFromStorage([]);
     DEFAULT_AREAS.forEach((area) => trip.completeArea(area));
 
     // When Carlos has not yet completed "Laundry Room"
@@ -282,7 +282,7 @@ describe('WS-CHA-03: New area appears in groupByArea', () => {
 
     // When Carlos starts a new sweep
     const trip = createTrip(tripStorage, areaManagement.getAreas());
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // Then "Laundry Room" appears as a group with "Detergent" pre-loaded
     const grouped = groupByArea(trip.getItems(), areaManagement.getAreas());

@@ -18,7 +18,7 @@ const createTestWrapper = () => {
   const library = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  tripService.start(library.listAll());
+  tripService.initializeFromStorage(library.listAll());
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ServiceProvider stapleLibrary={library} tripService={tripService}>

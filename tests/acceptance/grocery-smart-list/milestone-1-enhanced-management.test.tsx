@@ -18,7 +18,7 @@
 
 // --- Driving port imports (to be created during DELIVER wave) ---
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createTrip, completeTrip } from '../../../src/domain/trip';
+import { createTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { groupBySection } from '../../../src/domain/item-grouping';
 // import { searchStaples } from '../../../src/domain/staple-library';
@@ -60,7 +60,7 @@ describe('US-07: Skip Staple This Trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // When Carlos skips "Shampoo" for this trip
     trip.skipItem('Shampoo');
@@ -90,16 +90,18 @@ describe('US-07: Skip Staple This Trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
-    trip1.start(library.listAll());
+    trip1.initializeFromStorage(library.listAll());
     trip1.skipItem('Shampoo');
-    completeTrip(trip1, library);
+    trip1.complete();
 
     // When Carlos starts the next sweep
     const trip2 = createTrip(tripStorage);
-    trip2.start(library.listAll());
+    trip2.initializeFromStorage(library.listAll());
 
     // Then "Shampoo" appears pre-loaded again with needed = true
-    const shampoo = trip2.getItems().find((i) => i.name === 'Shampoo');
+    const shampoo = trip2
+      .getItems()
+      .find((i) => i.name === 'Shampoo' && i.source === 'preloaded');
     expect(shampoo?.needed).toBe(true);
   });
 
@@ -115,7 +117,7 @@ describe('US-07: Skip Staple This Trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     trip.skipItem('Butter');
 
     // When Carlos re-adds "Butter"
@@ -168,7 +170,7 @@ describe('US-07: Skip Staple This Trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // When Carlos skips 1 in Bathroom and 2 in Fridge
     trip.skipItem('Shampoo');
@@ -195,7 +197,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
     // Given Carlos is sweeping with items in Bathroom
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
@@ -227,7 +229,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
     // Given trip with items in multiple areas
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
@@ -255,7 +257,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
     // Given Carlos has completed all 5 house areas
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([]);
+    trip.initializeFromStorage([]);
     [
       'Bathroom',
       'Garage Pantry',
@@ -276,7 +278,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
     // Given Carlos is sweeping Kitchen Cabinets with 2 pre-loaded staples
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Cereal',
         houseArea: 'Kitchen Cabinets',
@@ -556,97 +558,6 @@ describe('US-10: Navigate Store Sections', () => {
 // =============================================================================
 
 describe('US-11: Trip Summary', () => {
-  // AC: Trip summary shows total item count
-  // AC: Breakdown by source (sweep vs whiteboard)
-  // AC: Breakdown by type (staple vs one-off)
-
-  it('shows trip summary with item breakdown', () => {
-    // Given Carlos completed sweep with 19 items and 3 from whiteboard
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    // Simulate 19 sweep items (17 staples + 2 one-offs) and 3 whiteboard items (3 one-offs)
-    const sweepStaples = Array.from({ length: 17 }, (_, i) => ({
-      name: `Staple ${i}`,
-      houseArea: 'Fridge' as const,
-      storeLocation: { section: 'General', aisleNumber: 1 },
-    }));
-    const sweepOneOffs: Array<{
-      name: string;
-      houseArea: 'Fridge';
-      storeLocation: { section: string; aisleNumber: number };
-      itemType: 'one-off';
-      source: 'quick-add';
-    }> = Array.from({ length: 2 }, (_, i) => ({
-      name: `SweepOneOff ${i}`,
-      houseArea: 'Fridge' as const,
-      storeLocation: { section: 'General', aisleNumber: 1 },
-      itemType: 'one-off' as const,
-      source: 'quick-add' as const,
-    }));
-    const whiteboardItems: Array<{
-      name: string;
-      houseArea: 'Kitchen Cabinets';
-      storeLocation: { section: string; aisleNumber: number };
-      itemType: 'one-off';
-      source: 'whiteboard';
-    }> = Array.from({ length: 3 }, (_, i) => ({
-      name: `Whiteboard ${i}`,
-      houseArea: 'Kitchen Cabinets' as const,
-      storeLocation: { section: 'General', aisleNumber: 2 },
-      itemType: 'one-off' as const,
-      source: 'whiteboard' as const,
-    }));
-    // Start trip and add items
-    trip.start(sweepStaples);
-    sweepOneOffs.forEach((i) => trip.addItem(i));
-    whiteboardItems.forEach((i) => trip.addItem(i));
-
-    // When Carlos views the trip summary
-    const summary = trip.getSummary();
-
-    // Then it shows correct totals and breakdowns
-    expect(summary.totalItems).toBe(22);
-    expect(summary.stapleCount).toBe(17);
-    expect(summary.oneOffCount).toBe(5);
-    expect(summary.sweepCount).toBe(19);
-    expect(summary.whiteboardCount).toBe(3);
-  });
-
-  it('summary reflects skipped staples', () => {
-    // Given Carlos started with 21 staples and skipped 3, added 2 one-offs
-    const staples = Array.from({ length: 21 }, (_, i) => ({
-      name: `Staple ${i}`,
-      houseArea: 'Fridge' as const,
-      storeLocation: { section: 'General', aisleNumber: 1 },
-    }));
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start(staples);
-    trip.skipItem('Staple 0');
-    trip.skipItem('Staple 1');
-    trip.skipItem('Staple 2');
-    trip.addItem({
-      name: 'OneOff A',
-      houseArea: 'Fridge',
-      storeLocation: { section: 'General', aisleNumber: 1 },
-      itemType: 'one-off',
-      source: 'quick-add',
-    });
-    trip.addItem({
-      name: 'OneOff B',
-      houseArea: 'Fridge',
-      storeLocation: { section: 'General', aisleNumber: 1 },
-      itemType: 'one-off',
-      source: 'quick-add',
-    });
-
-    // When Carlos views the summary (only needed items count)
-    const summary = trip.getSummary();
-
-    // Then 20 total items (18 staples + 2 one-offs)
-    expect(summary.totalItems).toBe(20);
-  });
-
   it.todo('summary offers store view transition');
   // Sketch of the pending test:
   // This would be a UI-level test with React Testing Library

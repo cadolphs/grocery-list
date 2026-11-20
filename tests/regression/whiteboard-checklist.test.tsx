@@ -165,7 +165,7 @@ function renderAppInChecklistMode() {
   const tripStorage = createNullTripStorage();
   const tripAreas = ['Fridge', 'Pantry'];
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll());
+  tripService.initializeFromStorage(stapleLibrary.listAll());
 
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
@@ -211,7 +211,7 @@ describe('preloaded staples show as already on trip', () => {
     const tripStorage = createNullTripStorage();
     const tripAreas = ['Fridge', 'Pantry'];
     const tripService = createTrip(tripStorage, tripAreas);
-    tripService.start(stapleLibrary.listAll());
+    tripService.initializeFromStorage(stapleLibrary.listAll());
 
     // Skip Eggs during the sweep phase (needed becomes false)
     tripService.skipItem('Eggs');

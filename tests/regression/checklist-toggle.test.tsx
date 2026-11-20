@@ -22,7 +22,7 @@ function renderApp() {
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  tripService.start(stapleLibrary.listAll());
+  tripService.initializeFromStorage(stapleLibrary.listAll());
 
   return render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>

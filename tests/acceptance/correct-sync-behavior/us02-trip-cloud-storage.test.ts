@@ -19,7 +19,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     // Given Clemens has an active trip with "Milk", "Eggs", and "Bread" in cloud storage
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -57,7 +57,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     // Given Clemens has an active trip with 3 items and "Olive Oil" is unchecked
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -142,7 +142,7 @@ describe('US-02: Firestore trip storage adapter', () => {
         storeLocation: { section: 'Oils', aisleNumber: 7 },
       },
     ];
-    setupTrip.start(staples);
+    setupTrip.initializeFromStorage(staples);
     setupTrip.checkOff('Milk');
     setupTrip.checkOff('Eggs');
     setupTrip.checkOff('Bread');
@@ -170,7 +170,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     // (Firestore adapter uses fire-and-forget setDoc -- failures do not propagate)
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Eggs',
         houseArea: 'Fridge',

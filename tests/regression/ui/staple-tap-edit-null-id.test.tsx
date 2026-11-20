@@ -38,7 +38,7 @@ function renderAppWithNullStapleId() {
   const tripService = createTrip(tripStorage, AREAS);
 
   // Start trip WITHOUT passing staple ids -- stapleId will be null on trip items
-  tripService.start([
+  tripService.initializeFromStorage([
     {
       name: 'Butter',
       houseArea: 'Fridge',

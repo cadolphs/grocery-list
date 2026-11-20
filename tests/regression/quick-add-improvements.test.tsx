@@ -29,7 +29,7 @@ describe('store view has quick add bar', () => {
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
-    tripService.start(stapleLibrary.listAll());
+    tripService.initializeFromStorage(stapleLibrary.listAll());
 
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
@@ -118,7 +118,7 @@ describe('store view metadata sheet uses store context', () => {
     const stapleLibrary = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
-    tripService.start(stapleLibrary.listAll());
+    tripService.initializeFromStorage(stapleLibrary.listAll());
 
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>

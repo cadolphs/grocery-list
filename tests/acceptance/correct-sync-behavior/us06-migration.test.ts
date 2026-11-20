@@ -26,7 +26,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
       houseArea: 'Fridge' as const,
       storeLocation: { section: 'General', aisleNumber: i + 1 },
     }));
-    localTrip.start(staples);
+    localTrip.initializeFromStorage(staples);
     for (let i = 0; i < 7; i++) {
       localTrip.checkOff(`Item ${i + 1}`);
     }
@@ -58,10 +58,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
       houseArea: 'Fridge' as const,
       storeLocation: { section: 'General', aisleNumber: i + 1 },
     }));
-    cloudTrip.start(cloudStaples);
-    // Persist cloud trip to storage (start does not auto-persist)
-    cloudTrip.checkOff('Cloud Item 1');
-    cloudTrip.uncheckItem('Cloud Item 1');
+    cloudTrip.initializeFromStorage(cloudStaples);
 
     // And local storage has a stale trip with 10 items
     const localTripStorage = createNullTripStorage();
@@ -71,10 +68,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
       houseArea: 'Fridge' as const,
       storeLocation: { section: 'General', aisleNumber: i + 1 },
     }));
-    localTrip.start(localStaples);
-    // Persist local trip to storage
-    localTrip.checkOff('Local Item 1');
-    localTrip.uncheckItem('Local Item 1');
+    localTrip.initializeFromStorage(localStaples);
 
     // When the app initializes (migration should not overwrite cloud)
     migrateTripIfNeeded(localTripStorage, cloudTripStorage);
