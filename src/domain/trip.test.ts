@@ -182,9 +182,6 @@ describe('TripService.subscribe', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 2 },
       },
     ]);
-    // Persist initial state
-    tripService.checkOff('Milk');
-    tripService.uncheckItem('Milk');
 
     const notifications: number[] = [];
     tripService.subscribe(() => notifications.push(1));
@@ -217,9 +214,6 @@ describe('TripService.subscribe', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 2 },
       },
     ]);
-    // Persist current state
-    tripService.checkOff('Milk');
-    tripService.uncheckItem('Milk');
 
     const notifications: number[] = [];
     tripService.subscribe(() => notifications.push(1));
