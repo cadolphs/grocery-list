@@ -1,4 +1,4 @@
-# ADR-003: Email Link (Passwordless) Authentication
+# ADR-017: Email Link (Passwordless) Authentication
 
 ## Status
 
