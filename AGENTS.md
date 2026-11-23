@@ -96,3 +96,14 @@ Every issue agents file gets one priority label — `P0` (broken now), `P1`
 `needs-decision` when it needs a product or one-way-door call. Work the
 highest priority first; skip `needs-decision` issues until the maintainer
 answers and removes the label.
+
+A weekly code-health sweep (`.github/workflows/code-health.yml`, Monday,
+keyless like the review) files at most one `Code health <date>` issue
+(`cleanup` + `P3`): up to 10 verified findings on missed reuse, dead code
+knip cannot see, the same logic in two layers, and convention drift no lint
+rule covers, plus the size outliers `node scripts/check-complexity.mjs`
+measures. Nothing is filed when nothing is new; an open `cleanup` issue by
+the maintainer, a collaborator or the sweep suppresses repeats. Triage:
+promote an accepted row to its own `Cleanup:` issue with the `cleanup` label
+(the ship-pr step 7 convention, priority label as usual), strike dropped
+rows, close the sweep issue when every row is handled.
