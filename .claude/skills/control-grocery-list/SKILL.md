@@ -12,7 +12,7 @@ for `health`. Add `--json` to any command for machine-readable output.
 
 ```sh
 npm run control -- doctor                       # env check, prints the fix for each failure
-npm run control -- dev                          # start or reuse Expo web on http://localhost:8081
+npm run control -- dev                          # start or reuse Expo web on http://localhost:8081 (restarts one it started at another commit)
 npm run control -- browse --anonymous --contains "Sign In"     # signed-out proof
 npm run control -- login                        # test-account session (needs env, below)
 npm run control -- browse --path / --click settings-button --contains "Section Order" --record
@@ -22,6 +22,11 @@ npm run control -- map --check                  # feature map vs src/ui (in veri
 npm run control -- health --sha <merge-sha>     # production serves that commit
 npm run control -- dev --stop
 ```
+
+`dev` records the commit it started the server at. After a branch switch it
+restarts that server, and `doctor`, `browse` and `execute` warn while the
+running server was started at another commit: a server left running can keep
+serving the old bundle (#103).
 
 Artifacts (screenshots, `--record` videos, sessions, `dev.log`) go to
 `.control/`, which git ignores.

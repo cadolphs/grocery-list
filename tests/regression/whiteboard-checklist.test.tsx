@@ -4,7 +4,8 @@
  * StapleChecklist renders an alphabetically sorted list of all staples.
  * Each staple shows its name and a toggle button.
  * Staples already on the trip show as checked.
- * Tapping unchecked staple calls onAddStaple; tapping checked calls onRemoveStaple.
+ * Tapping unchecked staple calls onAddStaple; tapping checked calls onRemoveStaple
+ * with that staple (keyed by staple id, not name: #104).
  *
  * Integration: when all areas are complete in HomeView, StapleChecklist appears
  * below the whiteboard prompt. Adding/removing staples updates the trip.
@@ -55,7 +56,7 @@ describe('staple checklist renders sorted list with toggle', () => {
     render(
       <StapleChecklist
         staples={STAPLES}
-        tripItemNames={new Set<string>()}
+        neededStapleIds={new Set<string>()}
         onAddStaple={onAddStaple}
         onRemoveStaple={onRemoveStaple}
       />,
@@ -77,7 +78,7 @@ describe('staple checklist renders sorted list with toggle', () => {
     render(
       <StapleChecklist
         staples={STAPLES}
-        tripItemNames={new Set<string>()}
+        neededStapleIds={new Set<string>()}
         onAddStaple={jest.fn()}
         onRemoveStaple={jest.fn()}
       />,
@@ -89,12 +90,12 @@ describe('staple checklist renders sorted list with toggle', () => {
   });
 
   it('marks staples on the trip with green text; staples not on trip with strikethrough', () => {
-    const tripItemNames = new Set(['Milk', 'Bread']);
+    const neededStapleIds = new Set(['id-milk', 'id-bread']);
 
     render(
       <StapleChecklist
         staples={STAPLES}
-        tripItemNames={tripItemNames}
+        neededStapleIds={neededStapleIds}
         onAddStaple={jest.fn()}
         onRemoveStaple={jest.fn()}
       />,
@@ -116,12 +117,12 @@ describe('staple checklist renders sorted list with toggle', () => {
 
   it('calls onAddStaple when tapping an unchecked staple', () => {
     const onAddStaple = jest.fn();
-    const tripItemNames = new Set(['Milk']);
+    const neededStapleIds = new Set(['id-milk']);
 
     render(
       <StapleChecklist
         staples={STAPLES}
-        tripItemNames={tripItemNames}
+        neededStapleIds={neededStapleIds}
         onAddStaple={onAddStaple}
         onRemoveStaple={jest.fn()}
       />,
@@ -137,12 +138,12 @@ describe('staple checklist renders sorted list with toggle', () => {
 
   it('calls onRemoveStaple when tapping a checked staple', () => {
     const onRemoveStaple = jest.fn();
-    const tripItemNames = new Set(['Milk']);
+    const neededStapleIds = new Set(['id-milk']);
 
     render(
       <StapleChecklist
         staples={STAPLES}
-        tripItemNames={tripItemNames}
+        neededStapleIds={neededStapleIds}
         onAddStaple={jest.fn()}
         onRemoveStaple={onRemoveStaple}
       />,
@@ -151,7 +152,9 @@ describe('staple checklist renders sorted list with toggle', () => {
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
 
     expect(onRemoveStaple).toHaveBeenCalledTimes(1);
-    expect(onRemoveStaple).toHaveBeenCalledWith('Milk');
+    expect(onRemoveStaple).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'id-milk', name: 'Milk' }),
+    );
   });
 });
 
@@ -309,5 +312,78 @@ describe('checklist mode shows staple checklist', () => {
     // Now tap Milk again to make it Needed again
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
     expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
+  });
+});
+
+// #104: the library allows one name in several house areas; the checklist
+// must act on the row the user touched, not every staple of that name.
+describe('same-named staples in different areas', () => {
+  const renderTwoMilks = () => {
+    const stapleStorage = createNullStapleStorage([
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Milk',
+        houseArea: 'Pantry',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const tripStorage = createNullTripStorage();
+    const tripAreas = ['Fridge', 'Pantry'];
+    const tripService = createTrip(tripStorage, tripAreas);
+    tripService.initializeFromStorage(stapleLibrary.listAll());
+    tripService
+      .getItems()
+      .forEach((item) => tripService.setDecision(item.id, 'needed'));
+    const areaManagement = createAreaManagement(
+      createNullAreaStorage(tripAreas),
+      stapleStorage,
+      tripStorage,
+    );
+    render(
+      <ServiceProvider
+        stapleLibrary={stapleLibrary}
+        tripService={tripService}
+        areaManagement={areaManagement}
+      >
+        <AppShell />
+      </ServiceProvider>,
+    );
+    fireEvent.press(screen.getByTestId('home-mode-checklist'));
+    return tripService;
+  };
+
+  const decisionIn = (
+    tripService: ReturnType<typeof createTrip>,
+    houseArea: string,
+  ) =>
+    tripService.getItems().find((item) => item.houseArea === houseArea)
+      ?.decision;
+
+  it('unticking one Milk leaves the other Milk Needed', () => {
+    const tripService = renderTwoMilks();
+
+    // Rows sort by name; the Fridge staple was added first.
+    fireEvent.press(screen.getAllByTestId('staple-row-Milk')[0]!);
+
+    expect([
+      decisionIn(tripService, 'Fridge'),
+      decisionIn(tripService, 'Pantry'),
+    ]).toEqual(['not-needed', 'needed']);
+  });
+
+  it('a Not needed Milk shows unticked while the other Milk stays ticked', () => {
+    const tripService = renderTwoMilks();
+
+    fireEvent.press(screen.getAllByTestId('staple-row-Milk')[0]!);
+
+    const [fridgeMilk, pantryMilk] = screen.getAllByText('Milk');
+    expect(fridgeMilk).toHaveStyle({ textDecorationLine: 'line-through' });
+    expect(pantryMilk).not.toHaveStyle({ textDecorationLine: 'line-through' });
+    expect(decisionIn(tripService, 'Pantry')).toBe('needed');
   });
 });

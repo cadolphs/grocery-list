@@ -36,6 +36,8 @@ yarn-error.*
 
 # Claude Code local settings
 .claude/settings.local.json
+# Agent worktrees (each its own checkout; Jest and lint skip them too)
+.claude/worktrees/
 
 # typescript
 *.tsbuildinfo

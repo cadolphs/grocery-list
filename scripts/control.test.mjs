@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   checkFeatureMap,
+  devServerStaleness,
   isScreenFile,
   parseArgs,
   parseFeatureMap,
@@ -170,5 +171,33 @@ describe('checkFeatureMap', () => {
       () => true,
     );
     assert.deepEqual(problems, ['src/ui/NewView.tsx has no feature-map entry']);
+  });
+});
+
+// #103: a dev server started at another commit can serve a stale bundle.
+describe('devServerStaleness', () => {
+  const OLD = '591c8e1340ed3d4d46fc8eceb6ba5268d99d19ab';
+  const NEW = '76a50d5aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+
+  it('is null when the server started at the checkout HEAD', () => {
+    assert.equal(
+      devServerStaleness({ startedHead: NEW, currentHead: NEW }),
+      null,
+    );
+  });
+
+  it('is null when control did not record where the server started', () => {
+    assert.equal(
+      devServerStaleness({ startedHead: null, currentHead: NEW }),
+      null,
+    );
+  });
+
+  it('names both commits and the restart command when HEAD moved', () => {
+    assert.equal(
+      devServerStaleness({ startedHead: OLD, currentHead: NEW }),
+      'dev server started at 591c8e1, checkout is at 76a50d5: ' +
+        'restart with `npm run control -- dev --stop` then `npm run control -- dev`',
+    );
   });
 });

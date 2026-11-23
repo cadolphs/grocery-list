@@ -11,13 +11,16 @@
     "test:watch": "jest --watch",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx,.mjs --max-warnings 0",
+    "lint": "git ls-files -z --cached --others --exclude-standard -- '*.ts' '*.tsx' '*.mjs' '*.js' | xargs -0 -r eslint --max-warnings 0 --no-warn-ignored --no-error-on-unmatched-pattern",
+    "lint:staged": "git diff --cached --name-only --diff-filter=ACMR -z -- '*.ts' '*.tsx' '*.mjs' '*.js' | xargs -0 -r eslint --max-warnings 0 --no-warn-ignored",
+    "format:staged": "git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 -r prettier --check --ignore-unknown",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "check:install": "node scripts/check-install.mjs",
     "check:siblings": "node scripts/check-domain-test-siblings.mjs",
     "check:map": "node scripts/control.mjs map --check",
     "check:dead": "knip --no-progress",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run check:siblings && npm run check:map && npm run check:dead && npm run test:scripts && jest --ci --coverage --bail",
+    "verify": "npm run check:install && npm run typecheck && npm run lint && npm run format:check && npm run check:siblings && npm run check:map && npm run check:dead && npm run test:scripts && jest --ci --coverage --bail",
     "control": "node --env-file-if-exists=.env scripts/control.mjs",
     "mutation": "node scripts/mutation.mjs",
     "board": "npx --yes github:cadolphs/cad-skills board",
@@ -71,12 +74,16 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/web/",
-      "/scripts/"
+      "/scripts/",
+      "<rootDir>/.claude/worktrees/"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/.claude/worktrees/"
     ]
   },
   "private": true,
   "simple-git-hooks": {
-    "pre-commit": "npm run lint && npm run format:check",
+    "pre-commit": "npm run lint:staged && npm run format:staged",
     "pre-push": "npm run typecheck && npm run check:map && npm run check:dead"
   },
   "overrides": {

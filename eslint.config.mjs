@@ -182,7 +182,11 @@ export default tseslint.config(
     },
   },
   {
+    // Lint runs on git-tracked files plus untracked ones .gitignore allows
+    // (package.json "lint"), so gitignored scratch such as .control/ is never
+    // linted. docs/ holds prose and history, as in .prettierignore (#106).
     ignores: [
+      'docs/',
       'node_modules/',
       'dist/',
       'web/',

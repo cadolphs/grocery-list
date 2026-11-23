@@ -5,12 +5,16 @@ household: staples library, trip sweep at home, store view by section, synced
 through Firestore. Web deploys to https://grocery-list-cad.web.app from CI on
 `main`. Functional, ports-and-adapters code — no classes.
 
-`npm run verify` is the single local gate (typecheck, lint, prettier check,
+`npm run verify` is the single local gate (install check, typecheck, lint, prettier check,
 domain sibling-test check, feature-map check, dead-code check, script tests,
 jest). CI runs the same command. Git hooks (simple-git-hooks, installed by `npm install`) run
-lint + format on commit and typecheck + map check + dead-code check on push.
+lint + format of the staged files on commit and typecheck + map check + dead-code check on push.
 Lint enforces no classes (ADR-009) and the layer boundaries; `knip`
 (`npm run check:dead`) fails on unused files, exports, and dependencies.
+A git worktree (agent worktrees live in `.claude/worktrees/`) has no
+`node_modules` of its own: run `npm ci` in it first, or packages resolve from
+the main checkout. `verify` fails fast on a missing or mismatched install
+(`npm run check:install`, #102).
 
 This file is a map. Open the page that owns the task:
 
