@@ -43,12 +43,28 @@ const changedPaths = (base) => {
   ];
 };
 
+const USAGE = 'Usage: npm run mutation [-- <base-ref> | --all]';
+
+const resolveFiles = (arg) =>
+  arg === '--all'
+    ? 'all'
+    : selectMutateFiles(changedPaths(arg ?? 'origin/main'));
+
 const main = () => {
-  const arg = process.argv[2];
-  const files =
-    arg === '--all'
-      ? 'all'
-      : selectMutateFiles(changedPaths(arg ?? 'origin/main'));
+  const [arg, ...rest] = process.argv.slice(2);
+  if (rest.length > 0 || (arg?.startsWith('-') && arg !== '--all')) {
+    console.error(USAGE);
+    return 2;
+  }
+  let files;
+  try {
+    files = resolveFiles(arg);
+  } catch {
+    console.error(
+      `Cannot diff against ${arg ?? 'origin/main'} (try git fetch origin).\n${USAGE}`,
+    );
+    return 2;
+  }
   if (files !== 'all' && files.length === 0) {
     console.log(
       'No src/domain or src/ports source file changed; nothing to mutate.',

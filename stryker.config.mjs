@@ -1,7 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
   // Full scope (`npm run mutation -- --all`). `npm run mutation` narrows it to
-  // the files changed versus main with `--mutate` (see scripts/mutation.mjs).
+  // the files changed versus origin/main with `--mutate` (see scripts/mutation.mjs).
   mutate: ['src/domain/**/*.ts', 'src/ports/**/*.ts', '!src/**/*.test.ts'],
   testRunner: 'jest',
   jest: {
