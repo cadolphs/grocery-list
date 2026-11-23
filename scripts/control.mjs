@@ -78,17 +78,16 @@ const currentHead = () =>
     encoding: 'utf8',
   }).stdout?.trim() ?? '';
 
-// The pid control recorded, while that process is still running. A dead pid
-// means whatever serves the port now was not started by control.
+// The pid control recorded, while that process is still the Expo dev server
+// control started (`npm exec expo start ...`). A dead pid, or one reused by
+// another program after a reboot, means control does not own the port.
 const runningDevPid = () => {
   if (!existsSync(devPidFile())) return null;
   const pid = Number(readFileSync(devPidFile(), 'utf8'));
-  try {
-    process.kill(pid, 0);
-    return pid;
-  } catch {
-    return null;
-  }
+  const command = spawnSync('ps', ['-p', String(pid), '-o', 'command='], {
+    encoding: 'utf8',
+  }).stdout;
+  return /\bexpo start\b/.test(command ?? '') ? pid : null;
 };
 
 const recordedDevHead = () =>
@@ -412,7 +411,14 @@ const dev = async (flags) => {
   if (restarting) {
     console.error(`restarting: ${stale}`);
     stopStarted();
-    await waitFor(async () => !(await isUp(origin)), 30_000);
+    const released = await waitFor(async () => !(await isUp(origin)), 30_000);
+    if (!released) {
+      return report(flags, {
+        ok: false,
+        origin,
+        error: `old dev server still serves ${origin} after stopping it; free the port and run dev again`,
+      });
+    }
   }
   if (await isUp(origin)) {
     return report(flags, {
