@@ -80,6 +80,11 @@ services from `ServiceProvider`. No classes (ADR-009).
   `useViewMode`, `useIsWeb`). adrs: []
 - **ServiceProvider** (`ui/ServiceProvider.tsx`): dependency injection for
   hooks. adrs: []
+- **Sweep row swipe** (`ui/SweepRowSwipe.native.tsx`, root in
+  `ui/GestureRoot.native.tsx`): on iOS / Android a pan steps a sweep row's
+  decision; the plain `.tsx` twins keep gesture-handler out of web, which
+  uses the row's ✓ / ✗ buttons. Jest renders everything inside a gesture root
+  (`jest.setup.js`). adrs: [adrs/ADR-014-swipe-via-gesture-handler.md]
 - **Screens**: see [feature-map.md](feature-map.md). adrs:
   [adrs/ADR-004-bottom-sheet-implementation.md,
   adrs/ADR-014-swipe-via-gesture-handler.md]

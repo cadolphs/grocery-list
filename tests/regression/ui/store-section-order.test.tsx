@@ -71,9 +71,11 @@ describe('StoreView section ordering integration', () => {
     // Use getAllByTestId to find aisle section headers
     const sectionHeaders = screen.getAllByTestId(/^aisle-section-/);
     expect(sectionHeaders).toHaveLength(3);
-    expect(sectionHeaders[0].props.testID).toBe('aisle-section-Deli');
-    expect(sectionHeaders[1].props.testID).toBe('aisle-section-Dairy');
-    expect(sectionHeaders[2].props.testID).toBe('aisle-section-Bakery');
+    expect(sectionHeaders.map((node) => node.props.testID)).toEqual([
+      'aisle-section-Deli',
+      'aisle-section-Dairy',
+      'aisle-section-Bakery',
+    ]);
   });
 
   it('renders sections in default order when no custom order is set', () => {
@@ -82,8 +84,10 @@ describe('StoreView section ordering integration', () => {
     const sectionHeaders = screen.getAllByTestId(/^aisle-section-/);
     expect(sectionHeaders).toHaveLength(3);
     // Default: numbered aisles first (Bakery aisle 1, Dairy aisle 3), then named (Deli null)
-    expect(sectionHeaders[0].props.testID).toBe('aisle-section-Bakery');
-    expect(sectionHeaders[1].props.testID).toBe('aisle-section-Dairy');
-    expect(sectionHeaders[2].props.testID).toBe('aisle-section-Deli');
+    expect(sectionHeaders.map((node) => node.props.testID)).toEqual([
+      'aisle-section-Bakery',
+      'aisle-section-Dairy',
+      'aisle-section-Deli',
+    ]);
   });
 });

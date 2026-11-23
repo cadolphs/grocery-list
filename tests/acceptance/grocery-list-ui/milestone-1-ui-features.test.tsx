@@ -101,7 +101,7 @@ describe('US-07: Skip staple from home screen', () => {
   afterEach(() => mockedUseIsWeb.mockReturnValue(false));
 
   // Flattens a Text node's style array so individual properties can be asserted.
-  const flatStyle = (node: { props: { style: unknown } }) =>
+  const flatStyle = (node: { props: { style?: unknown } }) =>
     Array.isArray(node.props.style)
       ? Object.assign({}, ...node.props.style.filter(Boolean))
       : node.props.style;

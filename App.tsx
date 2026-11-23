@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAppInitialization } from './src/hooks/useAppInitialization';
 import { useAuth } from './src/hooks/useAuth';
@@ -8,6 +8,7 @@ import { createAuthService } from './src/auth/AuthService';
 import { ServiceProvider } from './src/ui/ServiceProvider';
 import { AppShell } from './src/ui/AppShell';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
+import { GestureRoot } from './src/ui/GestureRoot';
 import { LoadingScreen } from './src/ui/LoadingScreen';
 import { LoginScreen } from './src/ui/LoginScreen';
 import { theme } from './src/ui/theme';
@@ -44,7 +45,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <View style={styles.container}>
+      <GestureRoot style={styles.container}>
         <ServiceProvider
           stapleLibrary={services.stapleLibrary}
           tripService={services.tripService}
@@ -56,7 +57,7 @@ export default function App() {
           </ErrorBoundary>
         </ServiceProvider>
         <StatusBar style="auto" />
-      </View>
+      </GestureRoot>
     </SafeAreaProvider>
   );
 }
