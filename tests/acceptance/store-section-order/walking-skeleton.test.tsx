@@ -59,6 +59,7 @@ const tripItem = (
   stapleId: null,
   source: 'preloaded',
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
 });

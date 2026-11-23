@@ -35,6 +35,9 @@ export type AddStapleResult =
 
 // Trip domain types
 
+// A staple's sweep status on the current trip (ADR-013, GLOSSARY.md).
+export type SweepDecision = 'undecided' | 'needed' | 'not-needed';
+
 export type ItemSource = 'preloaded' | 'quick-add' | 'whiteboard' | 'carryover';
 
 export type TripItem = {
@@ -45,7 +48,10 @@ export type TripItem = {
   readonly itemType: ItemType;
   readonly stapleId: string | null;
   readonly source: ItemSource;
+  // Legacy flag, kept in sync with decision until the contract step of #90:
+  // needed is true exactly when decision is 'needed'.
   readonly needed: boolean;
+  readonly decision: SweepDecision;
   readonly checked: boolean;
   readonly checkedAt: string | null;
 };

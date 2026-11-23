@@ -1,0 +1,73 @@
+// ADR-013 migration rule for stored trip items (#92).
+
+import { readStoredTrip, StoredTripItem } from './stored-trip';
+import { SweepDecision } from './types';
+
+const storedItem = (
+  needed: boolean,
+  decision?: SweepDecision,
+): StoredTripItem => ({
+  id: 'item-1',
+  name: 'Milk',
+  houseArea: 'Fridge',
+  storeLocation: { section: 'Dairy', aisleNumber: 3 },
+  itemType: 'staple',
+  stapleId: 'staple-1',
+  source: 'preloaded',
+  needed,
+  ...(decision === undefined ? {} : { decision }),
+  checked: false,
+  checkedAt: null,
+});
+
+const readDecision = (item: StoredTripItem) =>
+  readStoredTrip({
+    id: 'trip-1',
+    items: [item],
+    status: 'active',
+    createdAt: '2026-11-23T00:00:00.000Z',
+  }).items[0]!.decision;
+
+describe('readStoredTrip', () => {
+  test.each<[string, boolean, SweepDecision | undefined, SweepDecision]>([
+    ['legacy needed', true, undefined, 'needed'],
+    ['legacy not needed', false, undefined, 'not-needed'],
+    ['agreeing Needed', true, 'needed', 'needed'],
+    ['agreeing Not needed', false, 'not-needed', 'not-needed'],
+    ['agreeing Undecided', false, 'undecided', 'undecided'],
+    [
+      'stale Needed after an old build un-needed it',
+      false,
+      'needed',
+      'not-needed',
+    ],
+    [
+      'stale Undecided after an old build needed it',
+      true,
+      'undecided',
+      'needed',
+    ],
+    [
+      'stale Not needed after an old build needed it',
+      true,
+      'not-needed',
+      'needed',
+    ],
+  ])('%s reads as the expected decision', (_case, needed, stored, expected) => {
+    expect(readDecision(storedItem(needed, stored))).toBe(expected);
+  });
+
+  test('keeps every other field of the trip and its items', () => {
+    const trip = {
+      id: 'trip-1',
+      items: [storedItem(true)],
+      status: 'completed' as const,
+      createdAt: '2026-11-23T00:00:00.000Z',
+    };
+
+    expect(readStoredTrip(trip)).toEqual({
+      ...trip,
+      items: [{ ...storedItem(true), decision: 'needed' }],
+    });
+  });
+});

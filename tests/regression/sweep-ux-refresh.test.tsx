@@ -36,6 +36,7 @@ const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   stapleId: 'staple-1',
   source: 'preloaded',
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
   ...overrides,
@@ -115,6 +116,7 @@ describe('home mode long-press opens edit and no skip section', () => {
       id: 'item-2',
       name: 'Butter',
       needed: false,
+      decision: 'not-needed',
     });
     const areaGroup = createAreaGroup([createTripItem(), skippedItem]);
 
@@ -129,11 +131,13 @@ describe('home mode long-press opens edit and no skip section', () => {
       id: 'item-1',
       name: 'Milk',
       needed: true,
+      decision: 'needed',
     });
     const skippedItem = createTripItem({
       id: 'item-2',
       name: 'Butter',
       needed: false,
+      decision: 'not-needed',
     });
     const areaGroup = createAreaGroup([neededItem, skippedItem]);
 
@@ -186,6 +190,7 @@ describe('groupByArea excludes one-offs from area groups', () => {
     stapleId: 'staple-1',
     source: 'preloaded',
     needed: true,
+    decision: 'needed',
     checked: false,
     checkedAt: null,
     ...overrides,

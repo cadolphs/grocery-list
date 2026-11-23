@@ -5,6 +5,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
+import {
+  StoredTrip,
+  StoredTripItem,
+  readStoredCarryover,
+  readStoredTrip,
+} from '../../domain/stored-trip';
 
 const TRIP_KEY = '@grocery/active_trip';
 const CARRYOVER_KEY = '@grocery/trip_carryover';
@@ -16,7 +22,7 @@ export type AsyncTripStorage = TripStorage & {
 const parseTrip = (raw: string | null): Trip | null => {
   if (raw === null) return null;
   try {
-    return JSON.parse(raw) as Trip;
+    return readStoredTrip(JSON.parse(raw) as StoredTrip);
   } catch {
     return null;
   }
@@ -25,7 +31,7 @@ const parseTrip = (raw: string | null): Trip | null => {
 const parseCarryover = (raw: string | null): readonly TripItem[] => {
   if (raw === null) return [];
   try {
-    return JSON.parse(raw) as TripItem[];
+    return readStoredCarryover(JSON.parse(raw) as StoredTripItem[]);
   } catch {
     return [];
   }

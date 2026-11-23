@@ -23,6 +23,12 @@ import { Firestore } from 'firebase/firestore';
 import { Trip, TripItem } from '../../domain/types';
 import { TripStorage } from '../../ports/trip-storage';
 import {
+  StoredTrip,
+  StoredTripItem,
+  readStoredCarryover,
+  readStoredTrip,
+} from '../../domain/stored-trip';
+import {
   DocumentWatermark,
   UNSTAMPED,
   buildRawJsonV1Parser,
@@ -43,9 +49,13 @@ export type FirestoreTripStorage = TripStorage & {
   readonly unsubscribe: () => void;
 };
 
-type TripDocumentData = { readonly trip?: Trip; readonly writtenAt?: number };
+// Stored shapes: documents and mirrors saved before ADR-013 lack decision.
+type TripDocumentData = {
+  readonly trip?: StoredTrip;
+  readonly writtenAt?: number;
+};
 type CarryoverDocumentData = {
-  readonly items?: TripItem[];
+  readonly items?: StoredTripItem[];
   readonly writtenAt?: number;
 };
 
@@ -85,18 +95,24 @@ const persistCarryoverInBackground = (
 const isRecord = (candidate: unknown): candidate is Record<string, unknown> =>
   typeof candidate === 'object' && candidate !== null;
 
-const isTripItemList = (candidate: unknown): candidate is readonly TripItem[] =>
-  Array.isArray(candidate);
+const isTripItemList = (
+  candidate: unknown,
+): candidate is readonly StoredTripItem[] => Array.isArray(candidate);
 
-const isTrip = (candidate: unknown): candidate is Trip =>
+const isTrip = (candidate: unknown): candidate is StoredTrip =>
   isRecord(candidate) && isTripItemList(candidate.items);
 
 // Pre-upgrade v1 mirrors hold the raw JSON value under the v1 key.
 const readTripMirror = (uid: string) =>
-  readMirrorEnvelope<Trip>(uid, 'trip', buildRawJsonV1Parser(isTrip), isTrip);
+  readMirrorEnvelope<StoredTrip>(
+    uid,
+    'trip',
+    buildRawJsonV1Parser(isTrip),
+    isTrip,
+  );
 
 const readCarryoverMirror = (uid: string) =>
-  readMirrorEnvelope<readonly TripItem[]>(
+  readMirrorEnvelope<readonly StoredTripItem[]>(
     uid,
     'carryover',
     buildRawJsonV1Parser(isTripItemList),
@@ -156,7 +172,11 @@ export const createFirestoreTripStorage = (
     snapshot: DocumentSnapshot<TripDocumentData>,
   ): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
-    const incomingTrip: Trip | null = data?.trip ?? null;
+    // Shape-checked like the mirror: a malformed trip reads as no trip rather
+    // than throwing inside the snapshot callback.
+    const incomingTrip: Trip | null = isTrip(data?.trip)
+      ? readStoredTrip(data.trip)
+      : null;
     const serverWrittenAt = extractWrittenAt(data);
 
     if (!isTripInitialized) {
@@ -203,7 +223,7 @@ export const createFirestoreTripStorage = (
   ): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
     const incomingItems: readonly TripItem[] | null = snapshot.exists()
-      ? (data?.items ?? [])
+      ? readStoredCarryover(isTripItemList(data?.items) ? data.items : [])
       : null;
     const serverWrittenAt = extractWrittenAt(data);
 
@@ -254,13 +274,13 @@ export const createFirestoreTripStorage = (
       ]);
 
       if (tripMirror !== null) {
-        cachedTrip = tripMirror.value;
+        cachedTrip = readStoredTrip(tripMirror.value);
         tripWatermark = observeStamp(tripWatermark, tripMirror.writtenAt);
         isTripInitialized = true;
         tripHydratedFromLocal = true;
       }
       if (carryoverMirror !== null) {
-        cachedCarryover = carryoverMirror.value;
+        cachedCarryover = readStoredCarryover(carryoverMirror.value);
         carryoverWatermark = observeStamp(
           carryoverWatermark,
           carryoverMirror.writtenAt,

@@ -318,6 +318,7 @@ const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   stapleId: 'staple-1',
   source: 'preloaded',
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
   ...overrides,

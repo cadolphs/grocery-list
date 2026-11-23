@@ -21,6 +21,7 @@ const makeTripItem = (
   stapleId: overrides.stapleId ?? null,
   source: overrides.source ?? 'preloaded',
   needed: overrides.needed ?? true,
+  decision: (overrides.needed ?? true) ? 'needed' : 'not-needed',
   checked: overrides.checked ?? false,
   checkedAt: overrides.checkedAt ?? null,
 });

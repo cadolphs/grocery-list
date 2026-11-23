@@ -85,7 +85,10 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   itemType: 'staple',
   stapleId: staple.id ?? null,
   source: 'preloaded',
+  // Expand step of #90: staples still start Needed so the app behaves as
+  // before; ADR-013's Undecided start lands in a later slice.
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
 });
@@ -197,6 +200,7 @@ export const createTrip = (
         stapleId: request.stapleId ?? null,
         source: request.source,
         needed: true,
+        decision: 'needed',
         checked: false,
         checkedAt: null,
       };
@@ -220,11 +224,11 @@ export const createTrip = (
     },
 
     skipItem: (name: string) => {
-      updateItemByName(name, { needed: false });
+      updateItemByName(name, { needed: false, decision: 'not-needed' });
     },
 
     unskipItem: (name: string) => {
-      updateItemByName(name, { needed: true });
+      updateItemByName(name, { needed: true, decision: 'needed' });
     },
 
     completeArea: (area: HouseArea) => {
