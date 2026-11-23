@@ -7,6 +7,7 @@ import { SweepDecision, TripItem } from '../domain/types';
 import { ViewMode } from '../hooks/useViewMode';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
+import { SweepRowSwipe } from './SweepRowSwipe';
 
 type TripItemRowProps = {
   readonly item: TripItem;
@@ -16,6 +17,10 @@ type TripItemRowProps = {
   readonly onLongPress?: (name: string, area: string) => void;
   // Sweep rows only (#93): web shows ✓ / ✗ buttons that set the decision.
   readonly onSetDecision?: (name: string, decision: SweepDecision) => void;
+  // Sweep rows only (#94): on iOS / Android a swipe right / left steps the
+  // decision one position toward Needed / Not needed.
+  readonly onStepTowardNeeded?: (name: string) => void;
+  readonly onStepTowardNotNeeded?: (name: string) => void;
 };
 
 // A staple on the Home sweep shows its decision: Undecided, Needed or
@@ -33,6 +38,8 @@ export const TripItemRow = ({
   onSkip,
   onLongPress,
   onSetDecision,
+  onStepTowardNeeded,
+  onStepTowardNotNeeded,
 }: TripItemRowProps): React.JSX.Element => {
   const isWeb = useIsWeb();
   const isSweepRow = mode === 'home' && item.itemType === 'staple';
@@ -60,7 +67,7 @@ export const TripItemRow = ({
     }
   };
 
-  return (
+  const row = (
     <View
       style={[styles.row, isSweepRow && styles[sweepRowStyle[item.decision]]]}
       testID={
@@ -134,6 +141,18 @@ export const TripItemRow = ({
       )}
     </View>
   );
+
+  if (isSweepRow && onStepTowardNeeded && onStepTowardNotNeeded) {
+    return (
+      <SweepRowSwipe
+        onSwipeRight={() => onStepTowardNeeded(item.name)}
+        onSwipeLeft={() => onStepTowardNotNeeded(item.name)}
+      >
+        {row}
+      </SweepRowSwipe>
+    );
+  }
+  return row;
 };
 
 const styles = StyleSheet.create({

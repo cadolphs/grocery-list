@@ -39,3 +39,29 @@ jest.mock('firebase/firestore', () => ({
   getDoc: jest.fn(),
   setDoc: jest.fn(),
 }));
+
+// Production wraps the app root in GestureHandlerRootView (App.tsx); a sweep
+// row's GestureDetector throws outside one. Every render gets the same root,
+// so tests that render a screen directly match the app (ADR-014).
+jest.mock('@testing-library/react-native', () => {
+  const React = require('react');
+  const actual = jest.requireActual('@testing-library/react-native');
+  const { GestureHandlerRootView } = require('react-native-gesture-handler');
+  const withGestureRoot =
+    (Inner) =>
+    ({ children }) =>
+      React.createElement(
+        GestureHandlerRootView,
+        null,
+        Inner ? React.createElement(Inner, null, children) : children,
+      );
+  const render = (ui, options = {}) =>
+    actual.render(ui, {
+      ...options,
+      wrapper: withGestureRoot(options.wrapper),
+    });
+  // A proxy, not a spread: `screen` is a live getter set by each render.
+  return new Proxy(actual, {
+    get: (target, key) => (key === 'render' ? render : target[key]),
+  });
+});

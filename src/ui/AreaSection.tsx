@@ -19,6 +19,8 @@ type AreaSectionProps = {
   readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
   readonly onSetItemDecision?: (name: string, decision: SweepDecision) => void;
+  readonly onStepItemTowardNeeded?: (name: string) => void;
+  readonly onStepItemTowardNotNeeded?: (name: string) => void;
   readonly isCompleted?: boolean;
   readonly isActive?: boolean;
 };
@@ -34,6 +36,8 @@ export const AreaSection = ({
   onItemPress,
   onItemLongPress,
   onSetItemDecision,
+  onStepItemTowardNeeded,
+  onStepItemTowardNotNeeded,
   isCompleted,
   isActive,
 }: AreaSectionProps): React.JSX.Element => {
@@ -78,6 +82,8 @@ export const AreaSection = ({
             onPress={onItemPress ? () => onItemPress(item.name) : undefined}
             onLongPress={onItemLongPress}
             onSetDecision={onSetItemDecision}
+            onStepTowardNeeded={onStepItemTowardNeeded}
+            onStepTowardNotNeeded={onStepItemTowardNotNeeded}
           />
         </View>
       ))}

@@ -98,9 +98,11 @@ describe('SectionOrderSettingsScreen', () => {
 
     const sectionRows = screen.getAllByTestId(/^section-row-/);
     expect(sectionRows).toHaveLength(3);
-    expect(sectionRows[0].props.testID).toBe('section-row-Deli');
-    expect(sectionRows[1].props.testID).toBe('section-row-Dairy');
-    expect(sectionRows[2].props.testID).toBe('section-row-Bakery');
+    expect(sectionRows.map((node) => node.props.testID)).toEqual([
+      'section-row-Deli',
+      'section-row-Dairy',
+      'section-row-Bakery',
+    ]);
   });
 
   it('moves a section down when down button is pressed', () => {
@@ -111,9 +113,11 @@ describe('SectionOrderSettingsScreen', () => {
     fireEvent.press(screen.getByTestId('move-down-Deli'));
 
     const sectionRows = screen.getAllByTestId(/^section-row-/);
-    expect(sectionRows[0].props.testID).toBe('section-row-Dairy');
-    expect(sectionRows[1].props.testID).toBe('section-row-Deli');
-    expect(sectionRows[2].props.testID).toBe('section-row-Bakery');
+    expect(sectionRows.map((node) => node.props.testID)).toEqual([
+      'section-row-Dairy',
+      'section-row-Deli',
+      'section-row-Bakery',
+    ]);
   });
 
   it('moves a section up when up button is pressed', () => {
@@ -124,9 +128,11 @@ describe('SectionOrderSettingsScreen', () => {
     fireEvent.press(screen.getByTestId('move-up-Bakery'));
 
     const sectionRows = screen.getAllByTestId(/^section-row-/);
-    expect(sectionRows[0].props.testID).toBe('section-row-Deli');
-    expect(sectionRows[1].props.testID).toBe('section-row-Bakery');
-    expect(sectionRows[2].props.testID).toBe('section-row-Dairy');
+    expect(sectionRows.map((node) => node.props.testID)).toEqual([
+      'section-row-Deli',
+      'section-row-Bakery',
+      'section-row-Dairy',
+    ]);
   });
 
   it('resets to default order and persists', () => {
@@ -173,10 +179,12 @@ describe('SectionOrderSettingsScreen', () => {
 
     const sectionRows = screen.getAllByTestId(/^section-row-/);
     expect(sectionRows).toHaveLength(4);
-    expect(sectionRows[0].props.testID).toBe('section-row-Deli');
-    expect(sectionRows[1].props.testID).toBe('section-row-Dairy');
-    expect(sectionRows[2].props.testID).toBe('section-row-Bakery');
-    expect(sectionRows[3].props.testID).toBe('section-row-Sushi Bar');
+    expect(sectionRows.map((node) => node.props.testID)).toEqual([
+      'section-row-Deli',
+      'section-row-Dairy',
+      'section-row-Bakery',
+      'section-row-Sushi Bar',
+    ]);
 
     // Read-time merge only: opening the screen must NOT have written to storage.
     expect(storage.loadOrder()).toEqual(savedOrder);
