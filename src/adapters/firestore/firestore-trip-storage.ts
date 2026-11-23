@@ -172,7 +172,9 @@ export const createFirestoreTripStorage = (
     snapshot: DocumentSnapshot<TripDocumentData>,
   ): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
-    const incomingTrip: Trip | null = data?.trip
+    // Shape-checked like the mirror: a malformed trip reads as no trip rather
+    // than throwing inside the snapshot callback.
+    const incomingTrip: Trip | null = isTrip(data?.trip)
       ? readStoredTrip(data.trip)
       : null;
     const serverWrittenAt = extractWrittenAt(data);
@@ -221,7 +223,7 @@ export const createFirestoreTripStorage = (
   ): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
     const incomingItems: readonly TripItem[] | null = snapshot.exists()
-      ? readStoredCarryover(data?.items ?? [])
+      ? readStoredCarryover(isTripItemList(data?.items) ? data.items : [])
       : null;
     const serverWrittenAt = extractWrittenAt(data);
 

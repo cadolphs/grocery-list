@@ -377,6 +377,16 @@ describe('firestore trip storage sweep decision', () => {
     expect(decisionsOf(storage.loadCarryover())).toEqual(expectedDecisions);
   });
 
+  // Before #92 the server trip was cached as-is; reading it must not throw
+  // inside the snapshot callback, or initialize() never resolves.
+  test('a server trip without an item list reads as no trip', async () => {
+    mockStore[TRIP_DOC_PATH] = { trip: {} };
+
+    const storage = await createFreshStorage();
+
+    expect(storage.loadTrip()).toBeNull();
+  });
+
   test('a saved decision reads back unchanged in the next session', async () => {
     const trip = makeTrip({
       items: [makeTripItem({ needed: false, decision: 'undecided' })],
