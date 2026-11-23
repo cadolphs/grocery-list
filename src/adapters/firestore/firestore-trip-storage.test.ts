@@ -67,6 +67,7 @@ const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   stapleId: null,
   source: 'preloaded',
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
   ...overrides,
@@ -306,5 +307,89 @@ describe('firestore trip storage onChange callback', () => {
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 
     expect(storage.loadTrip()!.items[0]!.checked).toBe(true);
+  });
+});
+
+// ADR-013 expand (#92): trips saved before the sweep decision existed carry
+// only the needed flag, on the server and in the local mirror alike. They read
+// as Needed (true) or Not needed (false); saved decisions read back unchanged.
+describe('firestore trip storage sweep decision', () => {
+  const legacyItem = (name: string, needed: boolean) => {
+    const { decision: _decision, ...item } = makeTripItem({ name });
+    return { ...item, id: `item-${name}`, needed };
+  };
+
+  const legacyItems = () => [
+    legacyItem('Milk', true),
+    legacyItem('Eggs', false),
+  ];
+
+  const expectedDecisions = [
+    { name: 'Milk', needed: true, decision: 'needed' },
+    { name: 'Eggs', needed: false, decision: 'not-needed' },
+  ];
+
+  const decisionsOf = (items: readonly TripItem[]) =>
+    items.map(({ name, needed, decision }) => ({ name, needed, decision }));
+
+  const seedMirror = async (doc: 'trip' | 'carryover', value: unknown) => {
+    await AsyncStorage.setItem(
+      `firestore-cache:v2:${TEST_UID}:${doc}`,
+      JSON.stringify({ value, writtenAt: 1 }),
+    );
+  };
+
+  test('reads a legacy trip from the server by its needed flag', async () => {
+    mockStore[TRIP_DOC_PATH] = {
+      trip: { ...makeTrip(), items: legacyItems() },
+    };
+
+    const storage = await createFreshStorage();
+
+    expect(decisionsOf(storage.loadTrip()!.items)).toEqual(expectedDecisions);
+  });
+
+  test('reads a legacy trip arriving in a later snapshot by its needed flag', async () => {
+    const storage = await createFreshStorage();
+
+    simulateRemoteSnapshot(TRIP_DOC_PATH, {
+      trip: { ...makeTrip(), items: legacyItems() },
+    });
+
+    expect(decisionsOf(storage.loadTrip()!.items)).toEqual(expectedDecisions);
+  });
+
+  test('reads legacy carryover from the server by its needed flag', async () => {
+    mockStore[CARRYOVER_DOC_PATH] = { items: legacyItems() };
+
+    const storage = await createFreshStorage();
+
+    expect(decisionsOf(storage.loadCarryover())).toEqual(expectedDecisions);
+  });
+
+  test('reads a legacy trip and carryover from the local mirror by their needed flag', async () => {
+    await seedMirror('trip', { ...makeTrip(), items: legacyItems() });
+    await seedMirror('carryover', legacyItems());
+
+    const storage = await createFreshStorage();
+
+    expect(decisionsOf(storage.loadTrip()!.items)).toEqual(expectedDecisions);
+    expect(decisionsOf(storage.loadCarryover())).toEqual(expectedDecisions);
+  });
+
+  test('a saved decision reads back unchanged in the next session', async () => {
+    const trip = makeTrip({
+      items: [makeTripItem({ needed: false, decision: 'undecided' })],
+    });
+    const carryover = [makeTripItem({ id: 'carried', source: 'carryover' })];
+    const previousSession = await createFreshStorage();
+    previousSession.saveTrip(trip);
+    previousSession.saveCarryover(carryover);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const storage = await createFreshStorage();
+
+    expect(storage.loadTrip()).toEqual(trip);
+    expect(storage.loadCarryover()).toEqual(carryover);
   });
 });

@@ -137,6 +137,7 @@ describe('migration service', () => {
       stapleId: null,
       source: 'preloaded',
       needed: true,
+      decision: 'needed',
       checked: false,
       checkedAt: null,
     });

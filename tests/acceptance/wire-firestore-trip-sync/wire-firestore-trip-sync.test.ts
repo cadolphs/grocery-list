@@ -46,6 +46,7 @@ const createActiveTripWithItems = (): Trip => ({
       stapleId: 'staple-1',
       source: 'preloaded' as const,
       needed: true,
+      decision: 'needed',
       checked: false,
       checkedAt: null,
     },
@@ -58,6 +59,7 @@ const createActiveTripWithItems = (): Trip => ({
       stapleId: 'staple-2',
       source: 'preloaded' as const,
       needed: true,
+      decision: 'needed',
       checked: false,
       checkedAt: null,
     },
@@ -190,6 +192,7 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
         stapleId: null,
         source: 'quick-add' as const,
         needed: true,
+        decision: 'needed' as const,
         checked: false,
         checkedAt: null,
       };

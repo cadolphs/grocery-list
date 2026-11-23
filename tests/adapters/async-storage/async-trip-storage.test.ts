@@ -1,7 +1,7 @@
 // Tests for AsyncStorage-backed TripStorage adapter with cache
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncTripStorage } from '../../../src/adapters/async-storage/async-trip-storage';
-import { Trip } from '../../../src/domain/types';
+import { Trip, TripItem } from '../../../src/domain/types';
 
 const TRIP_KEY = '@grocery/active_trip';
 
@@ -17,6 +17,7 @@ const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
       stapleId: 'staple-1',
       source: 'preloaded',
       needed: true,
+      decision: 'needed',
       checked: false,
       checkedAt: null,
     },
@@ -114,5 +115,99 @@ describe('createAsyncTripStorage', () => {
 
       expect(storage.loadTrip()).toEqual(trip2);
     });
+  });
+});
+
+// ADR-013 expand (#92): a trip saved before the sweep decision existed has
+// only the needed flag; it reads back as Needed (true) or Not needed (false).
+describe('sweep decision', () => {
+  const CARRYOVER_KEY = '@grocery/trip_carryover';
+
+  const legacyItem = (name: string, needed: boolean) => {
+    const { decision: _decision, ...item } = makeTrip().items[0]!;
+    return { ...item, id: `item-${name}`, name, needed };
+  };
+
+  const storeRaw = (values: Record<string, unknown>) => {
+    (AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) =>
+      Promise.resolve(key in values ? JSON.stringify(values[key]) : null),
+    );
+  };
+
+  const decisionsOf = (items: readonly TripItem[]) =>
+    items.map(({ name, needed, decision }) => ({ name, needed, decision }));
+
+  it('reads a legacy trip as Needed or Not needed from its needed flag', async () => {
+    storeRaw({
+      [TRIP_KEY]: {
+        ...makeTrip(),
+        items: [legacyItem('Milk', true), legacyItem('Eggs', false)],
+      },
+    });
+
+    const storage = createAsyncTripStorage();
+    await storage.initialize();
+
+    expect(decisionsOf(storage.loadTrip()!.items)).toEqual([
+      { name: 'Milk', needed: true, decision: 'needed' },
+      { name: 'Eggs', needed: false, decision: 'not-needed' },
+    ]);
+  });
+
+  it('reads legacy carryover as Needed or Not needed from its needed flag', async () => {
+    storeRaw({
+      [CARRYOVER_KEY]: [legacyItem('Milk', true), legacyItem('Eggs', false)],
+    });
+
+    const storage = createAsyncTripStorage();
+    await storage.initialize();
+
+    expect(decisionsOf(storage.loadCarryover())).toEqual([
+      { name: 'Milk', needed: true, decision: 'needed' },
+      { name: 'Eggs', needed: false, decision: 'not-needed' },
+    ]);
+  });
+
+  // An app build from before the decision rewrites only needed, leaving the
+  // decision it read stale; needed is the fact both builds agree on.
+  it('reads a decision that disagrees with its needed flag from the needed flag', async () => {
+    const item = makeTrip().items[0]!;
+    storeRaw({
+      [TRIP_KEY]: {
+        ...makeTrip(),
+        items: [
+          { ...item, name: 'Milk', needed: false, decision: 'needed' },
+          { ...item, name: 'Eggs', needed: true, decision: 'undecided' },
+        ],
+      },
+    });
+
+    const storage = createAsyncTripStorage();
+    await storage.initialize();
+
+    expect(decisionsOf(storage.loadTrip()!.items)).toEqual([
+      { name: 'Milk', needed: false, decision: 'not-needed' },
+      { name: 'Eggs', needed: true, decision: 'needed' },
+    ]);
+  });
+
+  it('round-trips a saved decision unchanged through disk', async () => {
+    const saved = makeTrip({
+      items: [
+        { ...makeTrip().items[0]!, needed: false, decision: 'undecided' },
+      ],
+    });
+    const writer = createAsyncTripStorage();
+    await writer.initialize();
+    writer.saveTrip(saved);
+    const written = (AsyncStorage.setItem as jest.Mock).mock.calls.find(
+      ([key]) => key === TRIP_KEY,
+    )![1];
+    storeRaw({ [TRIP_KEY]: JSON.parse(written) });
+
+    const reader = createAsyncTripStorage();
+    await reader.initialize();
+
+    expect(reader.loadTrip()).toEqual(saved);
   });
 });

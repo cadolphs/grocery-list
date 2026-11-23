@@ -25,6 +25,7 @@ const makeItem = (
   stapleId: null,
   source: 'preloaded',
   needed: true,
+  decision: 'needed',
   checked,
   checkedAt: null,
 });

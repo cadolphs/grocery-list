@@ -266,6 +266,7 @@ describe('TripService.subscribe', () => {
           stapleId: null,
           source: 'preloaded',
           needed: true,
+          decision: 'needed',
           checked: true,
           checkedAt: '2026-04-12T10:00:00Z',
         },
@@ -286,6 +287,7 @@ describe('TripService.subscribe', () => {
         stapleId: null,
         source: 'carryover',
         needed: true,
+        decision: 'needed',
         checked: false,
         checkedAt: null,
       },
@@ -482,6 +484,7 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           stapleId: null,
           source: 'preloaded',
           needed: true,
+          decision: 'needed',
           checked: false,
           checkedAt: null,
         },
@@ -579,6 +582,7 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           stapleId: null,
           source: 'preloaded',
           needed: true,
+          decision: 'needed',
           checked: false,
           checkedAt: null,
         },
@@ -591,6 +595,7 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           stapleId: null,
           source: 'quick-add',
           needed: true,
+          decision: 'needed',
           checked: false,
           checkedAt: null,
         },
@@ -916,6 +921,7 @@ const storedTripItem: TripItem = {
   stapleId: 'staple-milk',
   source: 'preloaded',
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
 };
@@ -929,6 +935,7 @@ const carryoverTripItem: TripItem = {
   stapleId: null,
   source: 'carryover',
   needed: true,
+  decision: 'needed',
   checked: false,
   checkedAt: null,
 };
@@ -1226,5 +1233,95 @@ describe('initializeFromStorage refuses a completed-trip rebuild that would eras
     expect(outcome.visibleItemNames).toEqual(['StoredMilk']);
     expect(outcome.saveTripCalls).toBe(0);
     expect(outcome.storedTripItemNames).toEqual(['StoredMilk']);
+  });
+});
+
+// ADR-013 expand (#92): every trip item carries a sweep decision beside the
+// legacy needed flag, and the two always agree.
+describe('TripService sweep decision', () => {
+  const bread = {
+    name: 'Bread',
+    houseArea: 'Kitchen Cabinets',
+    storeLocation: { section: 'Bakery', aisleNumber: 1 },
+    itemType: 'staple' as const,
+    source: 'preloaded' as const,
+    stapleId: 'staple-1',
+  };
+
+  const decisionsOf = (tripService: TripService) =>
+    tripService
+      .getItems()
+      .map(({ name, needed, decision }) => ({ name, needed, decision }));
+
+  test('an added staple is Needed', () => {
+    const tripService = createTestTripService();
+
+    tripService.addItem(bread);
+
+    expect(decisionsOf(tripService)).toEqual([
+      { name: 'Bread', needed: true, decision: 'needed' },
+    ]);
+  });
+
+  test('skipItem makes an item Not needed, unskipItem makes it Needed again', () => {
+    const tripService = createTestTripService();
+    tripService.addItem(bread);
+
+    tripService.skipItem('Bread');
+    const afterSkip = decisionsOf(tripService);
+    tripService.unskipItem('Bread');
+
+    expect(afterSkip).toEqual([
+      { name: 'Bread', needed: false, decision: 'not-needed' },
+    ]);
+    expect(decisionsOf(tripService)).toEqual([
+      { name: 'Bread', needed: true, decision: 'needed' },
+    ]);
+  });
+
+  test('decision agrees with needed through start, check, complete, carryover and reset', () => {
+    const storage = createNullTripStorage();
+    const staples = [
+      { ...bread, id: 'staple-1' },
+      {
+        id: 'staple-2',
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      },
+    ];
+    const firstTrip = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
+    firstTrip.initializeFromStorage(staples);
+    firstTrip.addItem({
+      name: 'Candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Home', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+    firstTrip.checkOff('Bread');
+    const afterCheck = decisionsOf(firstTrip);
+    firstTrip.complete();
+
+    const nextTrip = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
+    nextTrip.initializeFromStorage(staples);
+    const afterCarryover = decisionsOf(nextTrip);
+    nextTrip.skipItem('Milk');
+    nextTrip.resetSweep(staples);
+
+    const needed = (name: string) => ({
+      name,
+      needed: true,
+      decision: 'needed',
+    });
+    expect(afterCheck).toEqual([
+      needed('Bread'),
+      needed('Milk'),
+      needed('Candles'),
+    ]);
+    // Unbought Milk and Candles carry over still Needed.
+    expect(afterCarryover).toContainEqual(needed('Milk'));
+    expect(afterCarryover).toContainEqual(needed('Candles'));
+    expect(decisionsOf(nextTrip)).toEqual([needed('Bread'), needed('Milk')]);
   });
 });

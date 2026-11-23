@@ -403,6 +403,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         itemType: 'staple',
         checked: false,
         needed: true,
+        decision: 'needed',
       },
       {
         name: 'Butter',
@@ -411,6 +412,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         itemType: 'staple',
         checked: false,
         needed: true,
+        decision: 'needed',
       },
       {
         name: 'Canned beans',
@@ -419,6 +421,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         itemType: 'staple',
         checked: false,
         needed: true,
+        decision: 'needed',
       },
       {
         name: 'Deli turkey',
@@ -427,6 +430,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         itemType: 'one-off',
         checked: false,
         needed: true,
+        decision: 'needed',
       },
     ];
 
@@ -450,12 +454,14 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         name: 'Whole milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         needed: true,
+        decision: 'needed',
         checked: false,
       },
       {
         name: 'Deli turkey',
         storeLocation: { section: 'Deli', aisleNumber: null },
         needed: true,
+        decision: 'needed',
         checked: false,
       },
     ];
@@ -594,6 +600,7 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: false,
         needed: true,
+        decision: 'needed',
       },
       {
         name: 'Butter',
@@ -601,6 +608,7 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: false,
         needed: true,
+        decision: 'needed',
       },
       {
         name: 'Yogurt',
@@ -608,6 +616,7 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: true,
         needed: true,
+        decision: 'needed',
       },
       {
         name: 'Cheese',
@@ -615,6 +624,7 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: true,
         needed: true,
+        decision: 'needed',
       },
     ];
 
@@ -715,6 +725,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
         stapleId: null,
         source: 'carryover',
         needed: true,
+        decision: 'needed',
         checked: false,
         checkedAt: null,
       },

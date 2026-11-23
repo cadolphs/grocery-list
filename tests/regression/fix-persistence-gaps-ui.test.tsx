@@ -21,6 +21,7 @@ const skippedItem: TripItem = {
   stapleId: null,
   source: 'preloaded' as const,
   needed: false,
+  decision: 'not-needed',
   checked: false,
   checkedAt: null,
 };
