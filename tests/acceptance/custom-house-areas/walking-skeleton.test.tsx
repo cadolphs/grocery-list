@@ -9,7 +9,7 @@
  * then enable the next. All tests after the first use it.skip().
  *
  * Driving Ports:
- * - Domain: createAreaManagement, validateAreaName, groupByArea, createTrip
+ * - Domain: createAreaManagement, groupByArea, createTrip
  * - Domain: createStapleLibrary (existing)
  * - Null adapters: createNullAreaStorage, createNullStapleStorage, createNullTripStorage
  *
