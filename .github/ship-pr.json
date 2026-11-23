@@ -1,4 +1,10 @@
 {
+  // Disabled 2026-11-23 (#89): the Claude review workflow needs API credits
+  // the account does not have yet. Re-enable with
+  // `gh workflow enable claude-review.yml` and put "Claude review" back in
+  // each tier below. Until then the pr-review subagent (AGENTS.md) is the
+  // only pre-merge review.
+  //
   // The Claude review workflow (.github/workflows/claude-review.yml). Matched
   // by check name, not by login: a review with no findings posts only an issue
   // comment, which the autopilot does not count as a review. Findings arrive as
@@ -6,9 +12,9 @@
   // and fork PRs skip the job, and a skipped check counts as present. Drafts are
   // reviewed too: skipping them left a skipped check beside the real one.
   "reviewers": {
-    "low": ["Claude review"],
-    "medium": ["Claude review"],
-    "high": ["Claude review"]
+    "low": [],
+    "medium": [],
+    "high": []
   },
   // Medium and high always wait for the maintainer (AGENTS.md risk tiers).
   "humanApprovalFor": ["medium", "high"],

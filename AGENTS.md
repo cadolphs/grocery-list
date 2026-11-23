@@ -55,10 +55,12 @@ with a reason and an expiry date (`scripts/check-audit.mjs`). Fix the
 dependency first; an expired entry fails CI again, so each exception gets
 rechecked. CI also runs weekly, since advisories appear without commits.
 
-Every PR gets an independent Claude review (`.github/workflows/claude-review.yml`,
-keyless via workload identity); Dependabot and fork PRs are not reviewed. No
-preview environment is configured. When unsure, pick
-the higher tier.
+The Claude review workflow (`.github/workflows/claude-review.yml`, keyless via
+workload identity) is **disabled** until the account has API credits (#89);
+re-enable it with `gh workflow enable claude-review.yml` and restore the
+`reviewers` in `.github/ship-pr.json`. Until then the pr-review subagent is
+the only pre-merge review. No preview environment is configured. When unsure,
+pick the higher tier.
 
 ## Native builds
 
