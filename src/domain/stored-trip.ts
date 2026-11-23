@@ -11,8 +11,11 @@ export type StoredTripItem = Omit<TripItem, 'decision'> & {
   readonly decision?: SweepDecision;
 };
 
+// Before #95 a trip stored the set of areas marked complete. Completion is now
+// derived from decisions, so a legacy set is read and dropped.
 export type StoredTrip = Omit<Trip, 'items'> & {
   readonly items: readonly StoredTripItem[];
+  readonly completedAreas?: readonly string[];
 };
 
 // needed is true exactly when the decision is Needed.
@@ -39,7 +42,10 @@ export const readStoredCarryover = (
   items: readonly StoredTripItem[],
 ): TripItem[] => items.map(readStoredTripItem);
 
-export const readStoredTrip = (trip: StoredTrip): Trip => ({
+export const readStoredTrip = ({
+  completedAreas: _legacyCompletedAreas,
+  ...trip
+}: StoredTrip): Trip => ({
   ...trip,
   items: readStoredCarryover(trip.items),
 });

@@ -735,7 +735,6 @@ describe('WS-6: Complete Trip with Carryover', () => {
       items: [],
       status: 'completed',
       createdAt: '2026-01-01T00:00:00.000Z',
-      completedAreas: [],
     });
     tripStorage.saveCarryover(carryover);
     trip.initializeFromStorage([]);

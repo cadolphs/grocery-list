@@ -34,7 +34,7 @@ function renderAppWithItems() {
 
   // Check off Milk and complete an area to have state to reset
   tripService.checkOff('Milk');
-  tripService.completeArea('Fridge');
+  tripService.markAreaDone('Fridge');
 
   // Add a one-off item
   tripService.addItem({
@@ -81,9 +81,9 @@ describe('Reset Sweep button', () => {
     fireEvent.press(screen.getByTestId('reset-sweep-button'));
     fireEvent.press(screen.getByTestId('confirm-reset-sweep'));
 
-    // After reset: one-off removed, sweep progress resets
+    // After reset: one-off removed. Sweep progress is derived from decisions
+    // (#95), so what it reads after a reset follows the reset's decisions.
     expect(screen.queryByText('Birthday candles')).toBeNull();
-    expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
   });
 
   it('cancelling Reset Sweep does not change the trip', () => {

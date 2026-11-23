@@ -19,8 +19,8 @@ export type UseTripResult = {
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
   readonly setDecision: (name: string, decision: SweepDecision) => void;
-  readonly completeArea: (area: HouseArea) => void;
-  readonly uncompleteArea: (area: HouseArea) => void;
+  readonly markAreaDone: (area: HouseArea) => void;
+  readonly undoArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
   readonly syncStapleUpdate: (
     stapleId: string,
@@ -95,17 +95,19 @@ export const useTrip = (): UseTripResult => {
     [tripService],
   );
 
-  const completeArea = useCallback(
+  const markAreaDone = useCallback(
     (area: HouseArea): void => {
-      tripService.completeArea(area);
+      tripService.markAreaDone(area);
+      setItems(tripService.getItems());
       setSweepProgress(tripService.getSweepProgress());
     },
     [tripService],
   );
 
-  const uncompleteArea = useCallback(
+  const undoArea = useCallback(
     (area: HouseArea): void => {
-      tripService.uncompleteArea(area);
+      tripService.undoArea(area);
+      setItems(tripService.getItems());
       setSweepProgress(tripService.getSweepProgress());
     },
     [tripService],
@@ -135,8 +137,8 @@ export const useTrip = (): UseTripResult => {
     skipItem,
     unskipItem,
     setDecision,
-    completeArea,
-    uncompleteArea,
+    markAreaDone,
+    undoArea,
     resetSweep,
     syncStapleUpdate,
     sweepProgress,

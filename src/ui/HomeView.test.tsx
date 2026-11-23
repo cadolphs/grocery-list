@@ -173,11 +173,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     );
 
     // AND no reset-sweep occurred (the trip was edited in place; reset would
-    // have rebuilt items from staples and cleared completedAreas).
-    // Verify by inspecting the trip's persisted state — completedAreas
-    // remains the empty set we started with, but the items list shrank
-    // strictly (a reset would have left an empty items list AND triggered
-    // a notify with rebuilt staple items).
+    // have rebuilt items from staples). The items list shrank strictly (a
+    // reset would have left an empty items list AND triggered a notify with
+    // rebuilt staple items).
     expect(services.tripService.getItems()).toEqual([]); // only Milk was seeded; deletion removed it
   });
 
@@ -313,6 +311,12 @@ describe('HomeView staple-add flow (fix-staple-add-duplicate 01-01)', () => {
     });
     await act(async () => {
       fireEvent(quickAddInput, 'submitEditing');
+    });
+
+    // An empty trip has every area complete (#95), so the sheet defaults to
+    // One-off; pick Staple, the flow under test.
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('type-toggle-Staple'));
     });
 
     // The bottom sheet is now visible. Select the Kitchen Cabinets area
@@ -545,5 +549,125 @@ describe('HomeView tri-state sweep row (#93)', () => {
     fireEvent(tree.getByText('Eggs'), 'longPress');
 
     expect(tree.getByText("Edit 'Eggs'")).toBeTruthy();
+  });
+});
+
+describe('HomeView derived area completion, Done and Undo (#95)', () => {
+  const dairy = { section: 'Dairy', aisleNumber: 2 };
+  // Fridge: Milk, Eggs, Butter. Bathroom: Soap. Freezer is empty.
+  const staples: AddStapleRequest[] = [
+    { name: 'Milk', houseArea: 'Fridge', storeLocation: dairy },
+    { name: 'Eggs', houseArea: 'Fridge', storeLocation: dairy },
+    { name: 'Butter', houseArea: 'Fridge', storeLocation: dairy },
+    { name: 'Soap', houseArea: 'Bathroom', storeLocation: dairy },
+  ];
+
+  const renderSweepWith = async (
+    decisions: Record<string, SweepDecision>,
+  ): Promise<{ services: AppServices; tree: ReturnType<typeof render> }> => {
+    const services = await initServicesWith(staples, [
+      'Fridge',
+      'Bathroom',
+      'Freezer',
+    ]);
+    Object.entries(decisions).forEach(([name, decision]) =>
+      services.tripService.setDecision(name, decision),
+    );
+    return { services, tree: renderHomeView(services) };
+  };
+
+  const decisionsOf = (services: AppServices) =>
+    Object.fromEntries(
+      services.tripService.getItems().map((i) => [i.name, i.decision]),
+    );
+
+  test('progress counts complete areas, the empty one included', async () => {
+    const { tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+    expect(tree.getByTestId('complete-Fridge')).toBeTruthy();
+    expect(tree.getByTestId('badge-Bathroom')).toBeTruthy();
+    expect(tree.getByTestId('badge-Freezer')).toBeTruthy();
+  });
+
+  test('an incomplete area shows how many staples are still Undecided', async () => {
+    const { tree } = await renderSweepWith({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+    });
+
+    expect(tree.getByTestId('undecided-count-Fridge')).toHaveTextContent(
+      '2 undecided',
+    );
+    expect(tree.queryByTestId('undecided-count-Bathroom')).toBeNull();
+  });
+
+  test('Done moves the whole area to Not needed, leaving Needed and other areas alone', async () => {
+    const { services, tree } = await renderSweepWith({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Soap: 'undecided',
+    });
+
+    fireEvent.press(tree.getByTestId('complete-Fridge'));
+
+    expect(decisionsOf(services)).toEqual({
+      Milk: 'not-needed',
+      Eggs: 'not-needed',
+      Butter: 'needed',
+      Soap: 'undecided',
+    });
+    expect(tree.getByTestId('sweep-row-not-needed-Milk')).toBeTruthy();
+    expect(tree.getByTestId('badge-Fridge')).toBeTruthy();
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+  });
+
+  test('Undo returns the whole area to Undecided, leaving Needed and other areas alone', async () => {
+    const { services, tree } = await renderSweepWith({
+      Milk: 'not-needed',
+      Eggs: 'not-needed',
+      Soap: 'not-needed',
+    });
+
+    fireEvent.press(tree.getByTestId('badge-Fridge'));
+
+    expect(decisionsOf(services)).toEqual({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Butter: 'needed',
+      Soap: 'not-needed',
+    });
+    expect(tree.getByTestId('sweep-row-undecided-Milk')).toBeTruthy();
+    expect(tree.getByTestId('complete-Fridge')).toBeTruthy();
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+  });
+
+  test('progress follows a row stepping back to Undecided', async () => {
+    const { services, tree } = await renderSweepWith({});
+    const before = tree.getByText('3 of 3 areas complete');
+
+    await act(async () => {
+      services.tripService.stepTowardNotNeeded('Soap');
+    });
+
+    expect(before).toBeTruthy();
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+    expect(tree.getByTestId('complete-Bathroom')).toBeTruthy();
+  });
+
+  test('with every area complete, quick-add defaults to a one-off', async () => {
+    const { tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    fireEvent.press(tree.getByTestId('complete-Fridge'));
+    const quickAddInput = tree.getByPlaceholderText('Add an item...');
+    await act(async () => {
+      fireEvent.changeText(quickAddInput, 'Candles');
+    });
+    await act(async () => {
+      fireEvent(quickAddInput, 'submitEditing');
+    });
+
+    expect(tree.getByText('3 of 3 areas complete')).toBeTruthy();
+    expect(tree.getByTestId('type-toggle-One-off-active')).toBeTruthy();
   });
 });

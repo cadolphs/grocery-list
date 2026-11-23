@@ -73,5 +73,4 @@ export type Trip = {
   readonly items: TripItem[];
   readonly status: 'active' | 'completed';
   readonly createdAt: string;
-  readonly completedAreas?: readonly string[];
 };

@@ -161,7 +161,7 @@ describe('WS-3: New staple auto-adds to active trip', () => {
     trip.initializeFromStorage(library.listAll());
 
     // And the "Bathroom" area sweep is completed
-    trip.completeArea('Bathroom');
+    trip.markAreaDone('Bathroom');
     expect(trip.getSweepProgress().completedAreas).toContain('Bathroom');
 
     // When Clemens adds "Paper Towels" (area: "Bathroom") as a new staple

@@ -35,7 +35,6 @@ const createActiveTripWithItems = (): Trip => ({
   id: 'trip-active-1',
   createdAt: '2026-04-13T08:00:00Z',
   status: 'active' as const,
-  completedAreas: [],
   items: [
     {
       id: 'trip-item-1',

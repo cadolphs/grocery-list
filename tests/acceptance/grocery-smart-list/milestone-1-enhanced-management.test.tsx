@@ -214,14 +214,20 @@ describe('US-08: Navigate Areas During Sweep', () => {
         storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
       },
     ]);
+    // Completion is derived (#95): Bathroom is incomplete while it holds
+    // Undecided staples; the empty areas already count as complete.
+    trip.getItems().forEach((item) => trip.setDecision(item.name, 'undecided'));
+    const before = trip.getSweepProgress();
 
     // When Carlos marks "Bathroom" as done
-    trip.completeArea('Bathroom');
+    trip.markAreaDone('Bathroom');
 
-    // Then progress shows 1 of 5 areas complete
+    // Then Bathroom joins the complete areas
     const progress = trip.getSweepProgress();
+    expect(before.completedAreas).not.toContain('Bathroom');
+    expect(before.completedCount).toBe(4);
     expect(progress.completedAreas).toContain('Bathroom');
-    expect(progress.completedCount).toBe(1);
+    expect(progress.completedCount).toBe(5);
     expect(progress.totalAreas).toBe(5);
   });
 
@@ -241,16 +247,17 @@ describe('US-08: Navigate Areas During Sweep', () => {
         storeLocation: { section: 'Frozen', aisleNumber: null },
       },
     ]);
-    trip.completeArea('Bathroom');
+    trip.getItems().forEach((item) => trip.setDecision(item.name, 'undecided'));
+    trip.markAreaDone('Freezer');
 
-    // When Carlos jumps to Freezer (skipping suggested order)
-    trip.completeArea('Freezer');
+    // When Carlos goes back to Bathroom (skipping suggested order)
+    trip.markAreaDone('Bathroom');
 
     // Then both areas are complete, no progress lost
     const progress = trip.getSweepProgress();
     expect(progress.completedAreas).toContain('Bathroom');
     expect(progress.completedAreas).toContain('Freezer');
-    expect(progress.completedCount).toBe(2);
+    expect(progress.allAreasComplete).toBe(true);
   });
 
   it('all areas complete triggers whiteboard consolidation', () => {
@@ -264,7 +271,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
       'Kitchen Cabinets',
       'Fridge',
       'Freezer',
-    ].forEach((area) => trip.completeArea(area));
+    ].forEach((area) => trip.markAreaDone(area));
 
     // When Carlos checks sweep progress
     const progress = trip.getSweepProgress();

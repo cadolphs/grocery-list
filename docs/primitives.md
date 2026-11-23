@@ -16,9 +16,11 @@ services from `ServiceProvider`. No classes (ADR-009).
   `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Trip service** (`trip.ts`: `createTrip`): the current trip, sweep
-  progress, carryover on completion (`initializeFromStorage`, `complete`),
-  a sweep row's decision (`stepTowardNeeded`, `stepTowardNotNeeded`,
-  `setDecision`).
+  progress derived from decisions (`getSweepProgress`: area complete when it
+  holds no Undecided staple), carryover on completion
+  (`initializeFromStorage`, `complete`), a sweep row's decision
+  (`stepTowardNeeded`, `stepTowardNotNeeded`, `setDecision`), and an area's
+  Done / Undo (`markAreaDone`, `undoArea`).
   adrs: [product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring

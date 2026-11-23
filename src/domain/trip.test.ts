@@ -90,8 +90,8 @@ describe('TripService.subscribe', () => {
   // Sweep progress (completed areas) and the reset also feed every useTrip
   // instance, so these must notify as well.
   test.each([
-    ['completeArea', (t: TripService) => t.completeArea('Fridge')],
-    ['uncompleteArea', (t: TripService) => t.uncompleteArea('Fridge')],
+    ['markAreaDone', (t: TripService) => t.markAreaDone('Fridge')],
+    ['undoArea', (t: TripService) => t.undoArea('Fridge')],
     [
       'resetSweep',
       (t: TripService) =>
@@ -105,7 +105,7 @@ describe('TripService.subscribe', () => {
     ],
   ])('subscriber is notified when %s is called', (_name, mutate) => {
     const tripService = createTestTripService();
-    tripService.completeArea('Fridge');
+    tripService.markAreaDone('Fridge');
 
     const notifications: number[] = [];
     tripService.subscribe(() => notifications.push(1));
@@ -273,7 +273,6 @@ describe('TripService.subscribe', () => {
       ],
       status: 'completed',
       createdAt: '2026-04-12T09:00:00Z',
-      completedAreas: [],
     });
 
     // Set up carryover items
@@ -491,7 +490,6 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
       ],
       status: 'active',
       createdAt: '2026-04-27T10:00:00Z',
-      completedAreas: [],
     });
     tripService.loadFromStorage();
     expect(tripService.getItems()).toHaveLength(1);
@@ -602,7 +600,6 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
       ],
       status: 'active',
       createdAt: '2026-04-27T10:00:00Z',
-      completedAreas: [],
     });
     tripService.loadFromStorage();
     expect(tripService.getItems()).toHaveLength(2);
@@ -685,11 +682,17 @@ describe('TripService.getSweepProgress reads areas live via getter', () => {
   test('allAreasComplete uses the live getter-reported total', () => {
     const areas: string[] = ['Fridge'];
     const tripService = createTrip(createNullTripStorage(), () => areas);
-
-    tripService.completeArea('Fridge');
+    tripService.addItem({
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+      itemType: 'staple',
+      source: 'preloaded',
+    });
+    tripService.setDecision('Bread', 'undecided');
     expect(tripService.getSweepProgress().allAreasComplete).toBe(true);
 
-    // Add a new area to the source — completion should now be incomplete
+    // Add the area holding an Undecided staple — completion is now incomplete
     areas.push('Kitchen Cabinets');
     expect(tripService.getSweepProgress().allAreasComplete).toBe(false);
     expect(tripService.getSweepProgress().totalAreas).toBe(2);
@@ -961,7 +964,6 @@ const storedTripFor = (state: StoredTripState): Trip | null => {
         items: [storedTripItem],
         status: 'completed',
         createdAt: '2026-04-12T09:00:00Z',
-        completedAreas: ['Fridge'],
       };
     case 'completed-empty':
       return {
@@ -969,7 +971,6 @@ const storedTripFor = (state: StoredTripState): Trip | null => {
         items: [],
         status: 'completed',
         createdAt: '2026-04-12T09:00:00Z',
-        completedAreas: [],
       };
     case 'active':
       return {
@@ -977,7 +978,6 @@ const storedTripFor = (state: StoredTripState): Trip | null => {
         items: [storedTripItem],
         status: 'active',
         createdAt: '2026-04-12T09:00:00Z',
-        completedAreas: ['Fridge'],
       };
   }
 };
@@ -986,7 +986,6 @@ const storedTripFor = (state: StoredTripState): Trip | null => {
 // sees, what was written to the durable mirror, and how often it was written.
 type InitializeOutcome = {
   readonly visibleItemNames: readonly string[];
-  readonly visibleCompletedAreas: readonly string[];
   readonly saveTripCalls: number;
   readonly clearCarryoverCalls: number;
   readonly storedTripIdentity: 'none' | 'same-as-stored' | 'newly-generated';
@@ -1035,7 +1034,6 @@ const runInitializeFromStorage = (
 
   return {
     visibleItemNames: tripService.getItems().map((item) => item.name),
-    visibleCompletedAreas: [...tripService.getSweepProgress().completedAreas],
     saveTripCalls,
     clearCarryoverCalls,
     storedTripIdentity: identity(),
@@ -1054,7 +1052,6 @@ const rebuiltTrip = (
   remainingCarryoverNames: readonly string[],
 ): InitializeOutcome => ({
   visibleItemNames: itemNames,
-  visibleCompletedAreas: [],
   saveTripCalls: 1,
   clearCarryoverCalls,
   storedTripIdentity: 'newly-generated',
@@ -1067,12 +1064,10 @@ const rebuiltTrip = (
 // the mirror keeps its id, status and items.
 const storedTripAdoptedUntouched = (
   itemNames: readonly string[],
-  completedAreas: readonly string[],
   storedTripStatus: 'active' | 'completed',
   remainingCarryoverNames: readonly string[],
 ): InitializeOutcome => ({
   visibleItemNames: itemNames,
-  visibleCompletedAreas: completedAreas,
   saveTripCalls: 0,
   clearCarryoverCalls: 0,
   storedTripIdentity: 'same-as-stored',
@@ -1120,12 +1115,7 @@ const initializeCases: readonly InitializeCase[] = [
     storedTrip: 'completed-with-items',
     staples: 'empty',
     carryover: 'empty',
-    expected: storedTripAdoptedUntouched(
-      ['StoredMilk'],
-      ['Fridge'],
-      'completed',
-      [],
-    ),
+    expected: storedTripAdoptedUntouched(['StoredMilk'], 'completed', []),
   },
   {
     storedTrip: 'completed-with-items',
@@ -1177,18 +1167,13 @@ const initializeCases: readonly InitializeCase[] = [
     storedTrip: 'active',
     staples: 'empty',
     carryover: 'empty',
-    expected: storedTripAdoptedUntouched(
-      ['StoredMilk'],
-      ['Fridge'],
-      'active',
-      [],
-    ),
+    expected: storedTripAdoptedUntouched(['StoredMilk'], 'active', []),
   },
   {
     storedTrip: 'active',
     staples: 'empty',
     carryover: 'non-empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', [
+    expected: storedTripAdoptedUntouched(['StoredMilk'], 'active', [
       'Leftover',
     ]),
   },
@@ -1196,18 +1181,13 @@ const initializeCases: readonly InitializeCase[] = [
     storedTrip: 'active',
     staples: 'non-empty',
     carryover: 'empty',
-    expected: storedTripAdoptedUntouched(
-      ['StoredMilk'],
-      ['Fridge'],
-      'active',
-      [],
-    ),
+    expected: storedTripAdoptedUntouched(['StoredMilk'], 'active', []),
   },
   {
     storedTrip: 'active',
     staples: 'non-empty',
     carryover: 'non-empty',
-    expected: storedTripAdoptedUntouched(['StoredMilk'], ['Fridge'], 'active', [
+    expected: storedTripAdoptedUntouched(['StoredMilk'], 'active', [
       'Leftover',
     ]),
   },
@@ -1414,5 +1394,144 @@ describe('TripService step and set decision', () => {
 
     const milk = tripService.getItems().find((i) => i.name === 'Milk');
     expect(milk).toMatchObject(state('needed'));
+  });
+});
+
+// #95: an area is complete exactly when it holds no Undecided staple; nothing
+// is stored for it. Done and Undo move a whole area between Undecided and Not
+// needed and never touch Needed staples or other areas.
+describe('TripService derived area completion, Done and Undo', () => {
+  const staple = (name: string, houseArea: string) => ({
+    name,
+    houseArea,
+    storeLocation: { section: 'Aisle', aisleNumber: 1 },
+    itemType: 'staple' as const,
+    source: 'preloaded' as const,
+    stapleId: `staple-${name}`,
+  });
+
+  // Fridge: Milk, Eggs, Butter. Kitchen Cabinets: Bread. Bathroom is empty.
+  const sweepWith = (
+    decisions: Readonly<Record<string, SweepDecision>>,
+  ): TripService => {
+    const tripService = createTrip(createNullTripStorage(), () => [
+      'Fridge',
+      'Kitchen Cabinets',
+      'Bathroom',
+    ]);
+    tripService.addItem(staple('Milk', 'Fridge'));
+    tripService.addItem(staple('Eggs', 'Fridge'));
+    tripService.addItem(staple('Butter', 'Fridge'));
+    tripService.addItem(staple('Bread', 'Kitchen Cabinets'));
+    Object.entries(decisions).forEach(([name, decision]) =>
+      tripService.setDecision(name, decision),
+    );
+    return tripService;
+  };
+
+  const decisionsOf = (tripService: TripService) =>
+    Object.fromEntries(
+      tripService.getItems().map((item) => [item.name, item.decision]),
+    );
+
+  test('an area with an Undecided staple is incomplete; empty and fully decided areas are complete', () => {
+    const tripService = sweepWith({ Milk: 'undecided', Bread: 'not-needed' });
+
+    expect(tripService.getSweepProgress()).toMatchObject({
+      completedAreas: ['Kitchen Cabinets', 'Bathroom'],
+      completedCount: 2,
+      totalAreas: 3,
+      allAreasComplete: false,
+    });
+  });
+
+  test('an area flips to incomplete the moment a row returns to Undecided', () => {
+    const tripService = sweepWith({});
+    const before = tripService.getSweepProgress().completedAreas;
+
+    tripService.stepTowardNotNeeded('Eggs');
+
+    expect(before).toEqual(['Fridge', 'Kitchen Cabinets', 'Bathroom']);
+    expect(tripService.getSweepProgress().completedAreas).toEqual([
+      'Kitchen Cabinets',
+      'Bathroom',
+    ]);
+  });
+
+  test('every area complete reads as all areas complete', () => {
+    const tripService = sweepWith({ Milk: 'not-needed' });
+
+    expect(tripService.getSweepProgress()).toMatchObject({
+      completedCount: 3,
+      allAreasComplete: true,
+    });
+  });
+
+  test('progress counts the Undecided staples in each area', () => {
+    const tripService = sweepWith({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Bread: 'undecided',
+    });
+
+    expect(tripService.getSweepProgress().undecidedCountByArea).toEqual({
+      Fridge: 2,
+      'Kitchen Cabinets': 1,
+      Bathroom: 0,
+    });
+  });
+
+  test('Done makes every Undecided staple in the area Not needed and leaves Needed and other areas alone', () => {
+    const tripService = sweepWith({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Bread: 'undecided',
+    });
+
+    tripService.markAreaDone('Fridge');
+
+    expect(decisionsOf(tripService)).toEqual({
+      Milk: 'not-needed',
+      Eggs: 'not-needed',
+      Butter: 'needed',
+      Bread: 'undecided',
+    });
+    expect(tripService.getSweepProgress().completedAreas).toContain('Fridge');
+  });
+
+  test('Undo returns every Not needed staple in the area to Undecided and leaves Needed and other areas alone', () => {
+    const tripService = sweepWith({
+      Milk: 'not-needed',
+      Eggs: 'not-needed',
+      Bread: 'not-needed',
+    });
+
+    tripService.undoArea('Fridge');
+
+    expect(decisionsOf(tripService)).toEqual({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Butter: 'needed',
+      Bread: 'not-needed',
+    });
+    expect(tripService.getSweepProgress().completedAreas).not.toContain(
+      'Fridge',
+    );
+  });
+
+  test('Done keeps needed in sync and persists the decisions it writes', () => {
+    const storage = createNullTripStorage();
+    const tripService = createTrip(storage, () => ['Fridge']);
+    tripService.addItem(staple('Milk', 'Fridge'));
+    tripService.setDecision('Milk', 'undecided');
+
+    tripService.markAreaDone('Fridge');
+
+    const stored = storage.loadTrip();
+    expect(stored?.items[0]).toMatchObject({
+      needed: false,
+      decision: 'not-needed',
+    });
+    expect(stored).not.toHaveProperty('completedAreas');
   });
 });

@@ -48,8 +48,8 @@ export const HomeView = (): React.JSX.Element => {
     skipItem,
     unskipItem,
     setDecision,
-    completeArea,
-    uncompleteArea,
+    markAreaDone,
+    undoArea,
     resetSweep,
     syncStapleUpdate,
     sweepProgress,
@@ -385,13 +385,16 @@ export const HomeView = (): React.JSX.Element => {
               areaGroup={areaGroup}
               onItemLongPress={handleEditStaple}
               onSetItemDecision={setDecision}
-              onCompleteArea={completeArea}
-              onUncompleteArea={uncompleteArea}
+              onMarkAreaDone={markAreaDone}
+              onUndoArea={undoArea}
               onSelectArea={handleSelectArea}
               isCompleted={sweepProgress.completedAreas.includes(
                 areaGroup.area,
               )}
               isActive={activeArea === areaGroup.area}
+              undecidedCount={
+                sweepProgress.undecidedCountByArea[areaGroup.area] ?? 0
+              }
             />
           ))}
           {oneOffItems.length > 0 && (

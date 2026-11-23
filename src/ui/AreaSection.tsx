@@ -13,14 +13,15 @@ type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
   readonly onSkipItem?: (name: string) => void;
   readonly onUnskipItem?: (name: string) => void;
-  readonly onCompleteArea?: (area: string) => void;
-  readonly onUncompleteArea?: (area: string) => void;
+  readonly onMarkAreaDone?: (area: string) => void;
+  readonly onUndoArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
   readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
   readonly onSetItemDecision?: (name: string, decision: SweepDecision) => void;
   readonly isCompleted?: boolean;
   readonly isActive?: boolean;
+  readonly undecidedCount?: number;
 };
 
 const formatAreaHeading = (area: string, neededCount: number): string =>
@@ -28,14 +29,15 @@ const formatAreaHeading = (area: string, neededCount: number): string =>
 
 export const AreaSection = ({
   areaGroup,
-  onCompleteArea,
-  onUncompleteArea,
+  onMarkAreaDone,
+  onUndoArea,
   onSelectArea,
   onItemPress,
   onItemLongPress,
   onSetItemDecision,
   isCompleted,
   isActive,
+  undecidedCount = 0,
 }: AreaSectionProps): React.JSX.Element => {
   const neededCount = areaGroup.items.filter((item) => item.needed).length;
 
@@ -54,16 +56,24 @@ export const AreaSection = ({
             {formatAreaHeading(areaGroup.area, neededCount)}
           </Text>
         </Pressable>
-        {isCompleted && onUncompleteArea && (
+        {undecidedCount > 0 && (
+          <Text
+            style={styles.undecidedCount}
+            testID={`undecided-count-${areaGroup.area}`}
+          >
+            {`${undecidedCount} undecided`}
+          </Text>
+        )}
+        {isCompleted && onUndoArea && (
           <Pressable
             style={styles.badge}
             testID={`badge-${areaGroup.area}`}
-            onPress={() => onUncompleteArea(areaGroup.area)}
+            onPress={() => onUndoArea(areaGroup.area)}
           >
             <Text style={styles.badgeText}>Undo</Text>
           </Pressable>
         )}
-        {isCompleted && !onUncompleteArea && (
+        {isCompleted && !onUndoArea && (
           <View style={styles.badge} testID={`badge-${areaGroup.area}`}>
             <Text style={styles.badgeText}>Complete</Text>
           </View>
@@ -81,11 +91,11 @@ export const AreaSection = ({
           />
         </View>
       ))}
-      {onCompleteArea && !isCompleted && (
+      {onMarkAreaDone && !isCompleted && (
         <Pressable
           style={styles.doneButton}
           testID={`complete-${areaGroup.area}`}
-          onPress={() => onCompleteArea(areaGroup.area)}
+          onPress={() => onMarkAreaDone(areaGroup.area)}
         >
           <Text style={styles.doneText}>Done</Text>
         </Pressable>
@@ -110,6 +120,10 @@ const styles = StyleSheet.create({
     fontSize: theme.font.size.lg,
     fontWeight: theme.font.weight.bold,
     color: theme.color.text,
+  },
+  undecidedCount: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.textMuted,
   },
   badge: {
     backgroundColor: theme.color.inverse,

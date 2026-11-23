@@ -387,6 +387,23 @@ describe('firestore trip storage sweep decision', () => {
     expect(storage.loadTrip()).toBeNull();
   });
 
+  // #95: area completion is derived from decisions; a stored completed-areas
+  // set is dropped on read and never written back.
+  test('a legacy completed-areas set is dropped on read and not written back', async () => {
+    mockStore[TRIP_DOC_PATH] = {
+      trip: { ...makeTrip(), completedAreas: ['Fridge'] },
+    };
+    await seedMirror('trip', { ...makeTrip(), completedAreas: ['Fridge'] });
+    const storage = await createFreshStorage();
+    const loaded = storage.loadTrip();
+
+    storage.updateItemArea('Fridge', 'Cold Storage');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(loaded).not.toHaveProperty('completedAreas');
+    expect(mockStore[TRIP_DOC_PATH]!.trip).not.toHaveProperty('completedAreas');
+  });
+
   test('a saved decision reads back unchanged in the next session', async () => {
     const trip = makeTrip({
       items: [makeTripItem({ needed: false, decision: 'undecided' })],

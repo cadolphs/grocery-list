@@ -180,10 +180,23 @@ describe('US-08: Area completion and sweep progress in UI', () => {
   // AC: Marking an area complete shows a badge
   // AC: Progress bar reflects completed area count
   // AC: All areas complete shows whiteboard prompt
+  //
+  // #95: completion is derived. An area is complete once it holds no
+  // Undecided staple, so the empty Kitchen Cabinets and Freezer start
+  // complete and the swept areas start with every staple Undecided.
+  const createUndecidedSweep = () => {
+    const services = createTestServices();
+    services.tripService
+      .getItems()
+      .forEach((item) =>
+        services.tripService.setDecision(item.name, 'undecided'),
+      );
+    return services;
+  };
 
   it('shows completion badge and progress bar after marking area done', () => {
     // Given Carlos is sweeping the "Bathroom" area
-    const { library, tripService } = createTestServices();
+    const { library, tripService } = createUndecidedSweep();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
@@ -196,13 +209,13 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     // Then "Bathroom" shows a completion badge
     expect(screen.getByTestId('badge-Bathroom')).toBeTruthy();
 
-    // And the sweep progress bar shows "1 of 5 areas complete"
-    expect(screen.getByText('1 of 5 areas complete')).toBeTruthy();
+    // And the sweep progress bar counts it with the empty areas
+    expect(screen.getByText('3 of 5 areas complete')).toBeTruthy();
   });
 
   it('navigates to a different area out of order', () => {
     // Given the suggested next area is "Garage Pantry"
-    const { library, tripService } = createTestServices();
+    const { library, tripService } = createUndecidedSweep();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
@@ -216,7 +229,7 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     expect(screen.getByTestId('active-area-Freezer')).toBeTruthy();
 
     // And sweep progress is unchanged
-    expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
+    expect(screen.getByText('2 of 5 areas complete')).toBeTruthy();
   });
 
   it('checklist mode shows staple checklist without needing to complete all areas', () => {

@@ -168,6 +168,21 @@ describe('sweep decision', () => {
     ]);
   });
 
+  // #95: area completion is derived from decisions; a stored completed-areas
+  // set is dropped on read and never written back.
+  it('drops a legacy completed-areas set on read and does not write it back', async () => {
+    storeRaw({ [TRIP_KEY]: { ...makeTrip(), completedAreas: ['Fridge'] } });
+    const storage = createAsyncTripStorage();
+    await storage.initialize();
+    const loaded = storage.loadTrip();
+
+    storage.updateItemArea('Fridge', 'Cold Storage');
+
+    const [, written] = (AsyncStorage.setItem as jest.Mock).mock.calls.at(-1)!;
+    expect(loaded).not.toHaveProperty('completedAreas');
+    expect(JSON.parse(written)).not.toHaveProperty('completedAreas');
+  });
+
   // An app build from before the decision rewrites only needed, leaving the
   // decision it read stale; needed is the fact both builds agree on.
   it('reads a decision that disagrees with its needed flag from the needed flag', async () => {

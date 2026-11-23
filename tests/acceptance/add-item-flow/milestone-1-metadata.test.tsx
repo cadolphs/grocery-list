@@ -60,6 +60,11 @@ function createTestServices(
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
+  // ADR-013: a sweep starts with every staple Undecided, so no area is
+  // complete yet (#95 derives completion from decisions).
+  tripService
+    .getItems()
+    .forEach((item) => tripService.setDecision(item.name, 'undecided'));
 
   // Mirror the production composition root (initializeApp in
   // useAppInitialization.ts): when the staple library changes, diff against
@@ -109,7 +114,7 @@ function completeAllAreas(tripService: ReturnType<typeof createTrip>): void {
     'Freezer',
   ] as const;
   for (const area of allAreas) {
-    tripService.completeArea(area);
+    tripService.markAreaDone(area);
   }
 }
 
