@@ -10,6 +10,7 @@ import {
   openSync,
   readFileSync,
   readdirSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
@@ -54,6 +55,35 @@ const sessionFile = (origin) =>
     stateDir,
     `session-${createHash('sha1').update(origin).digest('hex').slice(0, 10)}.json`,
   );
+
+// ---------- dev server freshness (#103) ----------
+
+// `dev` records the commit it started the server at. A server left running
+// across a branch switch can keep serving the old bundle, so a moved HEAD
+// means restart. Null when control did not start the server (nothing known).
+export const devServerStaleness = ({ startedHead, currentHead }) =>
+  startedHead === null || startedHead === currentHead
+    ? null
+    : `dev server started at ${startedHead.slice(0, 7)}, checkout is at ` +
+      `${currentHead.slice(0, 7)}: restart with ` +
+      '`npm run control -- dev --stop` then `npm run control -- dev`';
+
+const devHeadFile = () => path.join(stateDir, 'dev.head');
+
+const currentHead = () =>
+  spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: root,
+    encoding: 'utf8',
+  }).stdout.trim();
+
+const recordedDevHead = () =>
+  existsSync(devHeadFile()) ? readFileSync(devHeadFile(), 'utf8').trim() : null;
+
+const devStaleness = () =>
+  devServerStaleness({
+    startedHead: recordedDevHead(),
+    currentHead: currentHead(),
+  });
 
 // ---------- output ----------
 
@@ -198,6 +228,8 @@ const withPage = async (flags, origin, fn) => {
   if (resolved.note && !flags.json) {
     console.error(`chromium: using ${resolved.note}`);
   }
+  const stale = devStaleness();
+  if (stale) console.error(`warning: ${stale}`);
   const browser = await chromium.launch({
     headless: !flags.headed,
     ...(resolved.executablePath
@@ -304,6 +336,12 @@ const doctor = async (flags) => {
       optional: true,
     },
     {
+      name: 'dev server built from this checkout',
+      ok: devStaleness() === null,
+      fix: 'npm run control -- dev --stop && npm run control -- dev',
+      optional: true,
+    },
+    {
       name: 'session for dev origin',
       ok: existsSync(sessionFile(origin)),
       fix: 'npm run control -- login (needs CONTROL_EMAIL / CONTROL_PASSWORD)',
@@ -324,27 +362,44 @@ const doctor = async (flags) => {
 const dev = async (flags) => {
   const port = Number(flags.port ?? DEFAULT_PORT);
   const origin = `http://localhost:${port}`;
-  if (flags.stop) {
-    const pidFile = path.join(stateDir, 'dev.pid');
-    if (!existsSync(pidFile)) {
-      return report(flags, {
-        ok: true,
-        lines: ['no dev server started by control'],
-      });
-    }
+  const pidFile = path.join(stateDir, 'dev.pid');
+  const stopStarted = () => {
     const pid = Number(readFileSync(pidFile, 'utf8'));
     try {
       process.kill(-pid);
     } catch {
       /* already gone */
     }
+    rmSync(pidFile, { force: true });
+    rmSync(devHeadFile(), { force: true });
+    return pid;
+  };
+  if (flags.stop) {
+    if (!existsSync(pidFile)) {
+      return report(flags, {
+        ok: true,
+        lines: ['no dev server started by control'],
+      });
+    }
     return report(flags, {
       ok: true,
-      lines: [`stopped dev server (pid ${pid})`],
+      lines: [`stopped dev server (pid ${stopStarted()})`],
     });
   }
+  const stale = devStaleness();
+  const restarting = stale !== null && existsSync(pidFile);
+  if (restarting) {
+    console.error(`restarting: ${stale}`);
+    stopStarted();
+    await waitFor(async () => !(await isUp(origin)), 30_000);
+  }
   if (await isUp(origin)) {
-    return report(flags, { ok: true, origin, reused: true, lines: [origin] });
+    return report(flags, {
+      ok: true,
+      origin,
+      reused: true,
+      lines: [origin, ...(stale ? [`warning: ${stale}`] : [])],
+    });
   }
   mkdirSync(stateDir, { recursive: true });
   const logPath = path.join(stateDir, 'dev.log');
@@ -360,7 +415,8 @@ const dev = async (flags) => {
     },
   );
   child.unref();
-  writeFileSync(path.join(stateDir, 'dev.pid'), String(child.pid));
+  writeFileSync(pidFile, String(child.pid));
+  writeFileSync(devHeadFile(), currentHead());
   const up = await waitFor(() => isUp(origin), 180_000);
   return report(flags, {
     ok: up,
@@ -533,12 +589,7 @@ const buildWeb = async (flags) => {
   if (exported.status !== 0) {
     return report(flags, { ok: false, error: 'expo export failed' });
   }
-  const sha =
-    flags.sha ??
-    spawnSync('git', ['rev-parse', 'HEAD'], {
-      cwd: root,
-      encoding: 'utf8',
-    }).stdout.trim();
+  const sha = flags.sha ?? currentHead();
   writeFileSync(
     path.join(root, 'dist', 'version.json'),
     JSON.stringify({ sha }) + '\n',
