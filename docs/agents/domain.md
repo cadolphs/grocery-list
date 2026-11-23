@@ -4,11 +4,11 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repo root (does not exist yet; see below).
+- **`GLOSSARY.md`** at the repo root: the ubiquitous language (sweep decision, trip, carryover, ...). Use its terms and avoid the synonyms it lists.
 - **`docs/adrs/`**: read ADRs that touch the area you're about to work in. `docs/adrs/README.md` is the index, including the "never" decisions (no classes, no pushes to `main`, no agent production-data access). This repo spells the folder `adrs` and names files `ADR-NNN-<slug>.md`; wherever a skill says `docs/adr/`, read `docs/adrs/`.
-- **`docs/primitives.md`**: the architecture and the primitives features compose. Not a glossary, but the closest thing to one until `GLOSSARY.md` exists.
+- **`docs/primitives.md`**: the architecture and the primitives features compose. Architecture, not vocabulary; `GLOSSARY.md` has the words.
 
-If `GLOSSARY.md` doesn't exist, **proceed silently**. Don't flag its absence; don't suggest creating it upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates it lazily when terms actually get resolved. New ADRs go in `docs/adrs/` with the next free number, and get a line in `docs/adrs/README.md`.
+The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) adds terms to `GLOSSARY.md` as they get resolved. New ADRs go in `docs/adrs/` with the next free number, and get a line in `docs/adrs/README.md`.
 
 ## File structure
 
@@ -16,7 +16,7 @@ Single-context repo (this one):
 
 ```
 /
-├── GLOSSARY.md                        ← created lazily by /domain-modeling
+├── GLOSSARY.md                        ← maintained by /domain-modeling
 ├── docs/adrs/
 │   ├── README.md                      ← index
 │   ├── ADR-009-no-classes-fp-only.md

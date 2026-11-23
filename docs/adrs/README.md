@@ -1,7 +1,7 @@
 # Decision records
 
 Read these before proposing a change that spans several PRs. New records use
-the next free number in `docs/adrs/` (currently **ADR-013**), follow the
+the next free number in `docs/adrs/` (currently **ADR-015**), follow the
 template in ADR-009, end with **Revisit if**, and are listed here in the same
 PR. Supersede instead of rewriting history. A PR that writes or supersedes a
 record also updates the `adrs` lists in [`docs/primitives.md`](../primitives.md).
@@ -34,6 +34,8 @@ Numbers below 009 collide (two sets were written in parallel). Cite records by
 | [ADR-007-email-password-auth-migration](ADR-007-email-password-auth-migration.md) | Email/password auth |
 | [ADR-008-signout-listener-lifecycle](ADR-008-signout-listener-lifecycle.md) | Sign-out listener lifecycle invariant |
 | [ADR-012](ADR-012-no-mandated-feature-workflow.md) | No mandated feature workflow; nWave retired |
+| [ADR-013](ADR-013-tri-state-sweep-decision.md) | Tri-state sweep decision (undecided / needed / not-needed); area completion derived, not stored |
+| [ADR-014](ADR-014-swipe-via-gesture-handler.md) | Row swipe as a 3-position slider via react-native-gesture-handler |
 | [product/adr-001-realtime-listener-integration](../product/architecture/adr-001-realtime-listener-integration.md) | Real-time listener integration |
 | [product/adr-002-firestore-trip-storage](../product/architecture/adr-002-firestore-trip-storage.md) | Firestore trip storage adapter |
 | [product/adr-004-legacy-section-order-wipe-migration](../product/architecture/adr-004-legacy-section-order-wipe-migration.md) | Wipe-on-detect for legacy section orders |

@@ -13,10 +13,12 @@ services from `ServiceProvider`. No classes (ADR-009).
 ## Domain (`src/domain/`)
 
 - **Types** (`types.ts`): `StapleItem`, `TripItem`, `Trip`, `HouseArea`,
-  `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md]
+  `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md,
+  adrs/ADR-013-tri-state-sweep-decision.md]
 - **Trip service** (`trip.ts`: `createTrip`, `completeTrip`): the current trip,
   sweep progress, carryover on completion. adrs:
-  [product/architecture/adr-002-firestore-trip-storage.md]
+  [product/architecture/adr-002-firestore-trip-storage.md,
+  adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring
   items and their metadata. adrs: []
 - **Area management** (`area-management.ts`, `area-validation.ts`): add,
@@ -73,4 +75,5 @@ services from `ServiceProvider`. No classes (ADR-009).
 - **ServiceProvider** (`ui/ServiceProvider.tsx`): dependency injection for
   hooks. adrs: []
 - **Screens**: see [feature-map.md](feature-map.md). adrs:
-  [adrs/ADR-004-bottom-sheet-implementation.md]
+  [adrs/ADR-004-bottom-sheet-implementation.md,
+  adrs/ADR-014-swipe-via-gesture-handler.md]
