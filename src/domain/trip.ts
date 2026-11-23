@@ -97,10 +97,11 @@ const isSweepable = (item: TripItem): boolean => item.itemType === 'staple';
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-// Predicate factory: returns the matching rule shared by removeItemsByStaple.
+// Predicate factory: returns the matching rule shared by removeItemsByStaple
+// and the Home checklist, which must find the one trip item for a staple.
 // Resolution: prefer stapleId equality; fall back to (name, houseArea) only
 // for staple-typed items (one-offs that share a name+area must NOT be removed).
-const matchesStapleIdentity =
+export const matchesStapleIdentity =
   (staple: StapleIdentity) =>
   (item: TripItem): boolean => {
     if (item.stapleId != null) return item.stapleId === staple.id;

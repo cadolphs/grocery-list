@@ -14,6 +14,7 @@ import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { groupByArea, getOneOffItems, isNeeded } from '../domain/item-grouping';
+import { matchesStapleIdentity } from '../domain/trip';
 import {
   HouseArea,
   StapleItem,
@@ -73,9 +74,18 @@ export const HomeView = (): React.JSX.Element => {
     () => [...new Set(allStaples.map((s) => s.storeLocation.section))],
     [allStaples],
   );
-  const tripItemNameSet = useMemo(
-    () => new Set(items.filter(isNeeded).map((i) => i.name)),
-    [items],
+  const neededStapleIds = useMemo(
+    () =>
+      new Set(
+        checklistStaples
+          .filter((staple) =>
+            items.some(
+              (item) => matchesStapleIdentity(staple)(item) && isNeeded(item),
+            ),
+          )
+          .map((staple) => staple.id),
+      ),
+    [checklistStaples, items],
   );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
   const [metadataSheetVisible, setMetadataSheetVisible] = useState(false);
@@ -184,11 +194,7 @@ export const HomeView = (): React.JSX.Element => {
 
   const handleAddFromChecklist = useCallback(
     (staple: StapleItem): void => {
-      const existingItem = items.find(
-        (i) =>
-          i.stapleId === staple.id ||
-          (i.name === staple.name && i.houseArea === staple.houseArea),
-      );
+      const existingItem = items.find(matchesStapleIdentity(staple));
       if (existingItem && !isNeeded(existingItem)) {
         setDecision(existingItem.id, 'needed');
       } else if (!existingItem) {
@@ -205,12 +211,12 @@ export const HomeView = (): React.JSX.Element => {
     [items, addItem, setDecision],
   );
 
-  // The checklist is keyed by name, so this still unticks every row of that
-  // name, as it did before decisions took a trip item id.
+  // Unticks only this staple's own trip item: another staple with the same
+  // name in a different house area keeps its decision (#104).
   const handleRemoveFromChecklist = useCallback(
-    (name: string): void => {
+    (staple: StapleItem): void => {
       items
-        .filter((i) => i.name === name)
+        .filter(matchesStapleIdentity(staple))
         .forEach((i) => setDecision(i.id, 'not-needed'));
     },
     [items, setDecision],
@@ -352,7 +358,7 @@ export const HomeView = (): React.JSX.Element => {
       {homeMode === 'checklist' && (
         <StapleChecklist
           staples={checklistStaples}
-          tripItemNames={tripItemNameSet}
+          neededStapleIds={neededStapleIds}
           onAddStaple={handleAddFromChecklist}
           onRemoveStaple={handleRemoveFromChecklist}
           onLongPress={handleEditStaple}

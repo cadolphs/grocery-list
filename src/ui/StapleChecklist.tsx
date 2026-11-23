@@ -21,9 +21,11 @@ export const filterStaples = (
 
 type StapleChecklistProps = {
   readonly staples: readonly StapleItem[];
-  readonly tripItemNames: ReadonlySet<string>;
+  // Ids of the staples whose own trip item is Needed. Keyed by staple, not by
+  // name: one name can be a staple in several house areas (#104).
+  readonly neededStapleIds: ReadonlySet<string>;
   readonly onAddStaple: (staple: StapleItem) => void;
-  readonly onRemoveStaple: (name: string) => void;
+  readonly onRemoveStaple: (staple: StapleItem) => void;
   readonly onLongPress?: (name: string, area: string) => void;
 };
 
@@ -83,7 +85,7 @@ const StapleRow = ({
 
 export const StapleChecklist = ({
   staples,
-  tripItemNames,
+  neededStapleIds,
   onAddStaple,
   onRemoveStaple,
   onLongPress,
@@ -94,8 +96,8 @@ export const StapleChecklist = ({
   const visibleStaples = filterStaples(sortedStaples, searchQuery);
 
   const handleToggle = (staple: StapleItem): void => {
-    if (tripItemNames.has(staple.name)) {
-      onRemoveStaple(staple.name);
+    if (neededStapleIds.has(staple.id)) {
+      onRemoveStaple(staple);
     } else {
       onAddStaple(staple);
     }
@@ -133,7 +135,7 @@ export const StapleChecklist = ({
         <StapleRow
           key={item.id}
           staple={item}
-          isChecked={tripItemNames.has(item.name)}
+          isChecked={neededStapleIds.has(item.id)}
           onToggle={() => handleToggle(item)}
           onLongPress={
             onLongPress
