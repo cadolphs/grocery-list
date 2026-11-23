@@ -29,6 +29,7 @@ npm test              # Run all tests
 npm run test:watch    # Run tests in watch mode
 npm test -- path/to/file.test.ts   # Run a single test file
 npm run test:scripts  # Unit tests for scripts/*.mjs (node --test)
+npm run mutation      # Stryker on changed src/domain + src/ports files (local only)
 ```
 
 Upgrading a dependency: follow **Dependency upgrades** in [AGENTS.md](AGENTS.md) (`npm install -D` for dev-only packages, `npx expo install` only for runtime Expo/React Native packages).
@@ -61,13 +62,13 @@ This project follows the **functional programming** paradigm. Factory functions,
 ## Mutation Testing Strategy
 
 - **Strategy**: Per-feature (scoped to modified files in `src/domain/` and `src/ports/`)
+- **Command**: `npm run mutation` (files changed versus `origin/main`, including uncommitted work; fetch first); `npm run mutation -- --all` for the whole scope
 - **Tool**: Stryker (`@stryker-mutator/core` + `@stryker-mutator/jest-runner`)
 - **Kill rate threshold**: >= 80%
 - **Scope**: Domain logic and port interfaces only. UI components and adapters excluded (low mutation testing value).
-- **Trigger**: On push to `main` when `src/domain/**` or `src/ports/**` files change
+- **Trigger**: Run locally before opening a PR that changes `src/domain/**` or `src/ports/**`, and put the kill rate under **Testing**. Not in CI and not in `npm run verify`: a full run is too slow for either
 - **Duration target**: 5-15 minutes per delivery
-- **Config file**: `stryker.config.mjs`
-- **CI workflow**: `.github/workflows/mutation.yml`
+- **Config file**: `stryker.config.mjs`; runner `scripts/mutation.mjs`
 
 ## Agent skills
 
