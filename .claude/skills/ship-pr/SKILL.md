@@ -16,7 +16,9 @@ description:
    it in the PR body. Re-run it after fixes, at most `maxLocalReviewPasses`
    (2, `.github/ship-pr.json`) passes in all; a finding still open after the
    last pass parks the PR as in step 5. Write `pr-review: N passes` under
-   **Testing**.
+   **Testing**. Drafts get no Claude review, so this pass is the only review
+   until the PR is marked ready; mark it ready once, when the pass is done,
+   since the Claude review then runs on every push.
 3. Run `npx kcd-skills@latest autopilot ship-pr <pr-number> --risk <tier> --json`
    (reads state with `gh`; config in `.github/ship-pr.json`).
 4. Do the one action it returns: fix CI, address review threads (fix, or reply
