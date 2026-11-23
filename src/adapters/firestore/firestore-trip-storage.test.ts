@@ -142,54 +142,6 @@ describe('firestore trip storage implements TripStorage port', () => {
     );
   });
 
-  test('loadCheckoffs derives from trip items checked/checkedAt fields', async () => {
-    const checkedItem = makeTripItem({
-      id: 'item-1',
-      name: 'Milk',
-      checked: true,
-      checkedAt: '2026-04-10T11:00:00.000Z',
-    });
-    const uncheckedItem = makeTripItem({
-      id: 'item-2',
-      name: 'Eggs',
-      checked: false,
-      checkedAt: null,
-    });
-    const trip = makeTrip({ items: [checkedItem, uncheckedItem] });
-    mockStore[TRIP_DOC_PATH] = { trip };
-
-    const storage = await createFreshStorage();
-    const checkoffs = storage.loadCheckoffs();
-
-    expect(checkoffs.get('Milk')).toBe('2026-04-10T11:00:00.000Z');
-    expect(checkoffs.has('Eggs')).toBe(false);
-    expect(checkoffs.size).toBe(1);
-  });
-
-  test('saveCheckoffs updates checked/checkedAt on trip items and persists', async () => {
-    const trip = makeTrip({
-      items: [
-        makeTripItem({ id: 'item-1', name: 'Milk' }),
-        makeTripItem({ id: 'item-2', name: 'Eggs' }),
-      ],
-    });
-    mockStore[TRIP_DOC_PATH] = { trip };
-
-    const storage = await createFreshStorage();
-    const checkoffs = new Map<string, string>();
-    checkoffs.set('Milk', '2026-04-10T12:00:00.000Z');
-
-    storage.saveCheckoffs(checkoffs);
-
-    const loaded = storage.loadTrip();
-    const milk = loaded!.items.find((i) => i.name === 'Milk');
-    const eggs = loaded!.items.find((i) => i.name === 'Eggs');
-    expect(milk?.checked).toBe(true);
-    expect(milk?.checkedAt).toBe('2026-04-10T12:00:00.000Z');
-    expect(eggs?.checked).toBe(false);
-    expect(eggs?.checkedAt).toBeNull();
-  });
-
   test('updateItemArea renames area for matching items in trip', async () => {
     const trip = makeTrip({
       items: [

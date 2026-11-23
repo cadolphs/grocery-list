@@ -10,7 +10,7 @@ describe('Regression: skip state persists across reload', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
 
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -50,7 +50,7 @@ describe('Regression: completed areas lost on reload', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
 
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',

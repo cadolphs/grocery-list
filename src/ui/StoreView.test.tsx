@@ -37,7 +37,7 @@ const renderStoreViewWithGroups = (
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   // Seed the trip with items so groupBySection has groups to render
-  tripService.start(staples);
+  tripService.initializeFromStorage(staples);
 
   const element = (
     <ServiceProvider

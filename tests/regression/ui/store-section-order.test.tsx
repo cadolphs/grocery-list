@@ -37,7 +37,7 @@ function renderAppWithCustomOrder(customOrder: string[] | null) {
   const stapleLibrary = createStapleLibrary(stapleStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
-  tripService.start(stapleLibrary.listAll());
+  tripService.initializeFromStorage(stapleLibrary.listAll());
 
   const sectionOrderStorage = createNullSectionOrderStorage(customOrder);
 

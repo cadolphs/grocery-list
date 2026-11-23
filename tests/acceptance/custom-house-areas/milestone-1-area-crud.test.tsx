@@ -118,7 +118,7 @@ describe('US-CHA-04: Rename a House Area', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, DEFAULT_AREAS);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     // Persist the trip so rename can update items in storage
     tripStorage.saveTrip({
       id: 'test-trip',
@@ -277,7 +277,7 @@ describe('US-CHA-05: Delete a House Area', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, DEFAULT_AREAS);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
     // Persist the trip so delete can update items in storage
     tripStorage.saveTrip({
       id: 'test-trip',
@@ -423,7 +423,7 @@ describe('US-CHA-06: Reorder Areas', () => {
     });
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, newOrder);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // When Carlos views the home screen
     const grouped = groupByArea(trip.getItems(), newOrder);

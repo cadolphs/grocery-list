@@ -10,7 +10,6 @@ import {
   HouseArea,
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
-import { StapleLibrary } from './staple-library';
 import { UpdateStapleChanges } from './staple-library';
 
 export type StapleInput = AddStapleRequest & { readonly id?: string };
@@ -18,14 +17,6 @@ export type StapleInput = AddStapleRequest & { readonly id?: string };
 // Extended request for auto-add: includes stapleId for duplicate prevention
 export type AddTripItemWithStapleId = AddTripItemRequest & {
   readonly stapleId?: string;
-};
-
-export type TripSummary = {
-  readonly totalItems: number;
-  readonly stapleCount: number;
-  readonly oneOffCount: number;
-  readonly sweepCount: number;
-  readonly whiteboardCount: number;
 };
 
 export type SweepProgress = {
@@ -44,11 +35,6 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 ];
 
 export type TripService = {
-  readonly start: (
-    staples: ReadonlyArray<StapleInput>,
-    carryover?: readonly TripItem[],
-  ) => void;
-  readonly startWithCarryover: (staples: ReadonlyArray<StapleInput>) => void;
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
@@ -58,7 +44,6 @@ export type TripService = {
   readonly completeArea: (area: HouseArea) => void;
   readonly uncompleteArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
-  readonly getSummary: () => TripSummary;
   readonly loadFromStorage: () => void;
   readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
   readonly complete: () => CompleteTripResult;
@@ -177,21 +162,6 @@ export const createTrip = (
   };
 
   return {
-    start: (
-      staples: ReadonlyArray<StapleInput>,
-      carryover: readonly TripItem[] = [],
-    ) => {
-      const stapleItems = staples.map(stapleInputToTripItem);
-      items = [...stapleItems, ...carryover];
-    },
-
-    startWithCarryover: (staples: ReadonlyArray<StapleInput>) => {
-      const carryover = storage.loadCarryover();
-      const stapleItems = staples.map(stapleInputToTripItem);
-      items = [...stapleItems, ...carryover];
-      storage.clearCarryover();
-    },
-
     addItem: (request: AddTripItemWithStapleId): AddTripItemResult => {
       if (!request.houseArea || request.houseArea.trim() === '') {
         return { success: false, error: 'area is required' };
@@ -277,22 +247,6 @@ export const createTrip = (
         completedCount: completed.length,
         totalAreas,
         allAreasComplete: completed.length === totalAreas,
-      };
-    },
-
-    getSummary: (): TripSummary => {
-      const neededItems = items.filter((item) => item.needed);
-      return {
-        totalItems: neededItems.length,
-        stapleCount: neededItems.filter((item) => item.itemType === 'staple')
-          .length,
-        oneOffCount: neededItems.filter((item) => item.itemType === 'one-off')
-          .length,
-        sweepCount: neededItems.filter((item) => item.source !== 'whiteboard')
-          .length,
-        whiteboardCount: neededItems.filter(
-          (item) => item.source === 'whiteboard',
-        ).length,
       };
     },
 
@@ -440,8 +394,7 @@ const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
 const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 
 // Pure categorization: split items into purchased staples / one-offs / unbought.
-// Shared by the inline `complete()` (which also persists carryover and trip
-// status) and the standalone `completeTrip` (which only categorizes).
+// Used by `complete()`, which also persists carryover and trip status.
 const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
   const checkedItems = items.filter(isChecked);
   const uncheckedItems = items.filter((item) => !isChecked(item));
@@ -451,8 +404,3 @@ const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
     unboughtItems: uncheckedItems,
   };
 };
-
-export const completeTrip = (
-  trip: TripService,
-  _library: StapleLibrary,
-): CompleteTripResult => categorizeItems(trip.getItems());

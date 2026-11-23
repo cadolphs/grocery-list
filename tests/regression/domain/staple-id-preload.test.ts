@@ -29,7 +29,7 @@ describe('Regression: staple ID preserved on trip preload', () => {
 
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
-    tripService.start(allStaples);
+    tripService.initializeFromStorage(allStaples);
 
     const tripItems = tripService.getItems();
     expect(tripItems).toHaveLength(2);

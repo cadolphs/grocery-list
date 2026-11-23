@@ -10,7 +10,7 @@ describe('uncompleteArea removes area from completed set', () => {
     const storage = createNullTripStorage();
     const trip = createTrip(storage);
 
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -32,7 +32,7 @@ describe('uncompleteArea removes area from completed set', () => {
     const storage = createNullTripStorage();
     const trip = createTrip(storage);
 
-    trip.start([
+    trip.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -65,7 +65,6 @@ describe('useTrip exposes uncompleteArea', () => {
     const requiredKeys: (keyof UseTripResult)[] = [
       'items',
       'addItem',
-      'checkOff',
       'toggleCheckOff',
       'skipItem',
       'unskipItem',
@@ -84,7 +83,7 @@ describe('useTrip exposes uncompleteArea', () => {
     const storage = createNullTripStorage();
     const tripService = createTrip(storage);
 
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',

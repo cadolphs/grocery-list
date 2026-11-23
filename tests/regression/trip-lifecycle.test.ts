@@ -1,16 +1,14 @@
 // Trip lifecycle: complete() persists trip and saves carryover items
 
-import { createTrip, completeTrip } from '../../src/domain/trip';
-import { createStapleLibrary } from '../../src/domain/staple-library';
+import { createTrip } from '../../src/domain/trip';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
 
 describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
   it('complete() marks trip as completed, persists to storage, saves unbought as carryover, returns CompleteTripResult', () => {
     const storage = createNullTripStorage();
     const trip = createTrip(storage);
 
-    trip.start([
+    trip.initializeFromStorage([
       {
         id: 'staple-1',
         name: 'Milk',
@@ -68,7 +66,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const trip1 = createTrip(storage);
 
     // Start first trip with two staples
-    trip1.start([
+    trip1.initializeFromStorage([
       {
         id: 'staple-1',
         name: 'Milk',
@@ -91,7 +89,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // Start a new trip from the same storage
     const trip2 = createTrip(storage);
-    trip2.startWithCarryover([
+    trip2.initializeFromStorage([
       {
         id: 'staple-1',
         name: 'Milk',
@@ -143,7 +141,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // --- Trip 1: start with 3 staples ---
     const trip1 = createTrip(storage);
-    trip1.start(staples);
+    trip1.initializeFromStorage(staples);
 
     const trip1Items = trip1.getItems();
     expect(trip1Items).toHaveLength(3);
@@ -160,7 +158,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // --- Trip 2: start new trip with same staples + carryover ---
     const trip2 = createTrip(storage);
-    trip2.startWithCarryover(staples);
+    trip2.initializeFromStorage(staples);
 
     const trip2Items = trip2.getItems();
 
@@ -196,7 +194,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // --- Setup: simulate a previous session that completed a trip ---
     const previousTrip = createTrip(storage);
-    previousTrip.start([
+    previousTrip.initializeFromStorage([
       {
         id: 'staple-1',
         name: 'Milk',
@@ -280,7 +278,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     // Setup: simulate a previous session with an active (in-progress) trip
     const previousTrip = createTrip(storage);
-    previousTrip.start([
+    previousTrip.initializeFromStorage([
       {
         id: 'staple-1',
         name: 'Milk',
@@ -330,14 +328,13 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
   });
 
   it('finish trip button triggers domain completion', () => {
-    // Regression: StoreView must call tripService.complete() (which persists)
-    // not the standalone completeTrip() (which only categorizes items).
-    // This test documents the contract difference.
+    // Regression: StoreView must call tripService.complete(), which both
+    // categorizes the items and persists the completed trip plus carryover.
 
     const storage = createNullTripStorage();
     const tripService = createTrip(storage);
 
-    tripService.start([
+    tripService.initializeFromStorage([
       {
         id: 'staple-1',
         name: 'Milk',
@@ -373,28 +370,5 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(carryover).toHaveLength(1);
     expect(carryover[0]!.name).toBe('Bread');
     expect(carryover[0]!.source).toBe('carryover');
-
-    // Contrast: standalone completeTrip() does NOT persist
-    const storage2 = createNullTripStorage();
-    const tripService2 = createTrip(storage2);
-    tripService2.start([
-      {
-        id: 'staple-1',
-        name: 'Milk',
-        houseArea: 'Fridge',
-        storeLocation: { section: 'Dairy', aisleNumber: 3 },
-      },
-    ]);
-    tripService2.checkOff('Milk');
-
-    const stapleLibrary = createStapleLibrary(createNullStapleStorage());
-    const standaloneResult = completeTrip(tripService2, stapleLibrary);
-
-    // Standalone function returns correct categorization...
-    expect(standaloneResult.purchasedStaples).toHaveLength(1);
-
-    // ...but does NOT persist trip or save carryover
-    const savedTrip2 = storage2.loadTrip();
-    expect(savedTrip2?.status).not.toBe('completed');
   });
 });

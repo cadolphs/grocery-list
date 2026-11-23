@@ -52,7 +52,9 @@ function createTestServices(
   const tripAreas = ['Fridge', 'Kitchen Cabinets'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
+  tripService.initializeFromStorage(
+    stapleLibrary.listAll().filter((s) => s.type === 'staple'),
+  );
 
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(

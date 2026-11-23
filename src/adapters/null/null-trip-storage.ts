@@ -19,7 +19,6 @@ export const createNullTripStorage = (
   options: NullTripStorageOptions = {},
 ): NullTripStorageWithSync => {
   let storedTrip: Trip | null = null;
-  let storedCheckoffs: Map<string, string> = new Map();
   let storedCarryover: readonly TripItem[] = [];
   let onChange = options.onChange;
 
@@ -27,10 +26,6 @@ export const createNullTripStorage = (
     loadTrip: () => storedTrip,
     saveTrip: (trip: Trip) => {
       storedTrip = trip;
-    },
-    loadCheckoffs: () => new Map(storedCheckoffs),
-    saveCheckoffs: (checkoffs: ReadonlyMap<string, string>) => {
-      storedCheckoffs = new Map(checkoffs);
     },
     updateItemArea: (oldName: string, newName: string) => {
       if (storedTrip) {

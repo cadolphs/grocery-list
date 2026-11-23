@@ -15,9 +15,9 @@ services from `ServiceProvider`. No classes (ADR-009).
 - **Types** (`types.ts`): `StapleItem`, `TripItem`, `Trip`, `HouseArea`,
   `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
-- **Trip service** (`trip.ts`: `createTrip`, `completeTrip`): the current trip,
-  sweep progress, carryover on completion. adrs:
-  [product/architecture/adr-002-firestore-trip-storage.md,
+- **Trip service** (`trip.ts`: `createTrip`): the current trip, sweep
+  progress, carryover on completion (`initializeFromStorage`, `complete`).
+  adrs: [product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring
   items and their metadata. adrs: []
@@ -35,7 +35,8 @@ services from `ServiceProvider`. No classes (ADR-009).
 
 ## Ports (`src/ports/`)
 
-- **Storage ports**: `StapleStorage`, `TripStorage`, `AreaStorage`,
+- **Storage ports**: `StapleStorage`, `TripStorage` (trip and carryover
+  documents; check-offs live on the trip items), `AreaStorage`,
   `SectionOrderStorage`. adrs: [adrs/ADR-003-async-sync-port-bridge.md,
   adrs/ADR-002-local-storage-strategy.md]
 

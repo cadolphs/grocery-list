@@ -61,7 +61,7 @@ describe('M1-1: Staple checklist excludes one-off items', () => {
     const tripAreas = ['Fridge', 'Kitchen Cabinets'];
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage, tripAreas);
-    tripService.start(
+    tripService.initializeFromStorage(
       stapleLibrary.listAll().filter((s) => s.type === 'staple'),
     );
 
@@ -123,7 +123,7 @@ describe('M1-2: New trip preloads only staples', () => {
     const tripService = createTrip(tripStorage, tripAreas);
 
     // When a new trip is created with preloaded staples (filtered to type 'staple')
-    tripService.start(
+    tripService.initializeFromStorage(
       stapleLibrary.listAll().filter((s) => s.type === 'staple'),
     );
 
@@ -157,7 +157,7 @@ describe('M1-3: Empty checklist when only one-offs exist', () => {
     const tripAreas = ['Fridge'];
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage, tripAreas);
-    tripService.start([]);
+    tripService.initializeFromStorage([]);
 
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(

@@ -44,7 +44,9 @@ function createServicesWithOneOff() {
   const tripAreas = ['Fridge'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
-  tripService.start(stapleLibrary.listAll().filter((s) => s.type === 'staple'));
+  tripService.initializeFromStorage(
+    stapleLibrary.listAll().filter((s) => s.type === 'staple'),
+  );
 
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
@@ -142,7 +144,7 @@ describe('M2-3: Same-name items: only one-off suggestion appears', () => {
     const tripAreas = ['Fridge'];
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage, tripAreas);
-    tripService.start(
+    tripService.initializeFromStorage(
       stapleLibrary.listAll().filter((s) => s.type === 'staple'),
     );
 

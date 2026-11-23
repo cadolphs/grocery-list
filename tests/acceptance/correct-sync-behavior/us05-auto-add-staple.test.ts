@@ -34,7 +34,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // And a real-time listener is active on the staple library
     const oldStapleIds = new Set(library.listAll().map((s) => s.id));
@@ -95,7 +95,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // Verify Soda is in the trip with its stapleId
     const sodaInTrip = trip.getItems().find((i) => i.name === 'Soda');
@@ -135,7 +135,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
     const library = createStapleLibrary(stapleStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start(library.listAll());
+    trip.initializeFromStorage(library.listAll());
 
     // When Clemens adds "Paper Towels" as a new staple
     const result = library.addStaple({
