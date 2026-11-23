@@ -48,9 +48,6 @@ export type TripItem = {
   readonly itemType: ItemType;
   readonly stapleId: string | null;
   readonly source: ItemSource;
-  // Legacy flag, kept in sync with decision until the contract step of #90:
-  // needed is true exactly when decision is 'needed'.
-  readonly needed: boolean;
   readonly decision: SweepDecision;
   readonly checked: boolean;
   readonly checkedAt: string | null;

@@ -205,7 +205,7 @@ describe('WS-3: Toggle staple from filtered results', () => {
       color: theme.color.text,
     });
 
-    // When he taps "Cheddar Cheese" to skip it
+    // When he taps "Cheddar Cheese" to mark it Not needed
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
 
     // Then it shows strikethrough (removed from trip)
@@ -216,10 +216,10 @@ describe('WS-3: Toggle staple from filtered results', () => {
   });
 
   it('toggles a staple back onto the trip from filtered results', () => {
-    // Given Clemens has skipped "Cheddar Cheese" and then filtered to show it
+    // Given Clemens has marked "Cheddar Cheese" Not needed and then filtered to show it
     renderInChecklistMode();
 
-    // First skip it
+    // First mark it Not needed
     fireEvent.press(screen.getByTestId('staple-row-Cheddar Cheese'));
     expect(screen.getByText('Cheddar Cheese')).toHaveStyle({
       textDecorationLine: 'line-through',

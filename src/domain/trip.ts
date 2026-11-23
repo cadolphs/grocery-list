@@ -46,8 +46,6 @@ export type TripService = {
   readonly getItems: () => TripItem[];
   readonly checkOff: (name: string) => void;
   readonly uncheckItem: (name: string) => void;
-  readonly skipItem: (name: string) => void;
-  readonly unskipItem: (name: string) => void;
   readonly stepTowardNeeded: (name: string) => void;
   readonly stepTowardNotNeeded: (name: string) => void;
   readonly setDecision: (name: string, decision: SweepDecision) => void;
@@ -90,14 +88,6 @@ const stepDecision = (
   return DECISION_SLIDER[clamped]!;
 };
 
-// Expand phase of #90: needed mirrors decision on every write.
-const decisionPatch = (
-  decision: SweepDecision,
-): Pick<TripItem, 'decision' | 'needed'> => ({
-  decision,
-  needed: decision === 'needed',
-});
-
 // One-offs are always Needed (ADR-013): decision operations leave them alone.
 const isSweepable = (item: TripItem): boolean => item.itemType === 'staple';
 
@@ -124,7 +114,7 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   stapleId: staple.id ?? null,
   source: 'preloaded',
   // ADR-013: a staple starts the trip Undecided until the sweep decides it.
-  ...decisionPatch('undecided'),
+  decision: 'undecided',
   checked: false,
   checkedAt: null,
 });
@@ -199,10 +189,11 @@ export const createTrip = (
   };
 
   // Apply a partial patch to every item matching `name`, then notify and
-  // persist. Used by check/uncheck/skip/unskip — all share this shape.
+  // persist. Used by check/uncheck, which share this shape.
   // Notifying matters because HomeView and StoreView are mounted at the same
   // time (AppShell) and each holds its own useTrip state: without it, an item
-  // skipped on Home stays listed on Store until something else notifies.
+  // checked on one view stays stale on the other until something else
+  // notifies.
   const updateItemByName = (name: string, patch: Partial<TripItem>): void => {
     items = items.map((item) =>
       item.name === name ? { ...item, ...patch } : item,
@@ -222,7 +213,7 @@ export const createTrip = (
       item.houseArea === area &&
       item.itemType === 'staple' &&
       item.decision === from
-        ? { ...item, ...decisionPatch(to) }
+        ? { ...item, decision: to }
         : item,
     );
     notify();
@@ -235,7 +226,7 @@ export const createTrip = (
   ): void => {
     items = items.map((item) =>
       item.name === name && isSweepable(item)
-        ? { ...item, ...decisionPatch(decide(item.decision)) }
+        ? { ...item, decision: decide(item.decision) }
         : item,
     );
     notify();
@@ -289,11 +280,10 @@ export const createTrip = (
         itemType: request.itemType,
         stapleId: request.stapleId ?? null,
         source: request.source,
-        ...decisionPatch(
+        decision:
           request.itemType === 'one-off'
             ? 'needed'
             : (request.decision ?? 'needed'),
-        ),
         checked: false,
         checkedAt: null,
       };
@@ -314,14 +304,6 @@ export const createTrip = (
 
     uncheckItem: (name: string) => {
       updateItemByName(name, { checked: false, checkedAt: null });
-    },
-
-    skipItem: (name: string) => {
-      decideItemByName(name, () => 'not-needed');
-    },
-
-    unskipItem: (name: string) => {
-      decideItemByName(name, () => 'needed');
     },
 
     stepTowardNeeded: (name: string) => {

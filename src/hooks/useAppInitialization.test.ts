@@ -627,9 +627,8 @@ describe('initializeApp', () => {
       const result = await initializeApp(authUser, factories);
       const tripService = result.services!.tripService;
 
-      // Sweep an area: Milk is decided by Done (#95 derives completion from
-      // decisions)
-      tripService.setDecision('Milk', 'undecided');
+      // Sweep an area: Milk starts Undecided and is decided by Done (#95
+      // derives completion from decisions)
       tripService.markAreaDone('Fridge');
       expect(tripService.getSweepProgress().completedAreas).toContain('Fridge');
 
@@ -755,7 +754,6 @@ describe('initializeApp', () => {
             itemType: 'staple',
             stapleId: cinnamonStaple.id,
             source: 'preloaded',
-            needed: true,
             decision: 'needed',
             checked: false,
             checkedAt: null,
@@ -768,7 +766,6 @@ describe('initializeApp', () => {
             itemType: 'staple',
             stapleId: null,
             source: 'carryover',
-            needed: true,
             decision: 'needed',
             checked: false,
             checkedAt: null,

@@ -1,6 +1,6 @@
 Feature: Milestone 1 - UI for Enhanced Item Management and Navigation
   As Carlos, a household grocery planner
-  I want the mobile interface to support skipping, navigation, suggestions, and summaries
+  I want the mobile interface to support Not needed decisions, navigation, suggestions, and summaries
   So that my sweep and shopping experience is smooth and efficient
 
   Background:
@@ -14,21 +14,21 @@ Feature: Milestone 1 - UI for Enhanced Item Management and Navigation
       | Canned beans  | Garage Pantry | Canned Goods  | 5     |
     And Carlos starts a new trip
 
-  # --- US-07: Skip button on home screen ---
+  # --- US-07: Not needed on home screen ---
 
-  Scenario: Skip a staple removes it from the home view
+  Scenario: Marking a staple Not needed removes it from the home view
     Given Carlos is viewing the home screen
-    When Carlos taps "skip" on "Shampoo"
+    When Carlos marks Not needed "Shampoo"
     Then "Shampoo" is no longer visible in the "Bathroom" area
     And the "Bathroom" area shows 1 item remaining
 
-  Scenario: Skipped item does not appear in store view
-    Given Carlos has skipped "Shampoo" on the home screen
+  Scenario: Not needed item does not appear in store view
+    Given Carlos has marked "Shampoo" Not needed on the home screen
     When Carlos switches to the store view
     Then "Shampoo" is not visible in any store section
 
-  Scenario: Re-add a skipped staple on the home screen
-    Given Carlos has skipped "Butter" in the "Fridge" area
+  Scenario: Re-add a Not needed staple on the home screen
+    Given Carlos has marked "Butter" Not needed in the "Fridge" area
     When Carlos taps "re-add" on "Butter"
     Then "Butter" reappears in the "Fridge" area
 
@@ -93,7 +93,7 @@ Feature: Milestone 1 - UI for Enhanced Item Management and Navigation
   # --- US-11: Trip summary screen ---
 
   Scenario: Trip summary displays total and breakdown
-    Given Carlos has completed the trip with 5 items purchased and 1 skipped
+    Given Carlos has completed the trip with 5 items purchased and 1 Not needed
     When the trip summary screen appears
     Then Carlos sees "5 items purchased"
     And breakdown shows staple and one-off counts

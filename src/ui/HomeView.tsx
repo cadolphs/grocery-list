@@ -45,7 +45,6 @@ export const HomeView = (): React.JSX.Element => {
   const {
     items,
     addItem,
-    skipItem,
     setDecision,
     stepTowardNeeded,
     stepTowardNotNeeded,
@@ -75,7 +74,8 @@ export const HomeView = (): React.JSX.Element => {
     [allStaples],
   );
   const tripItemNameSet = useMemo(
-    () => new Set(items.filter((i) => i.needed).map((i) => i.name)),
+    () =>
+      new Set(items.filter((i) => i.decision === 'needed').map((i) => i.name)),
     [items],
   );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
@@ -219,9 +219,9 @@ export const HomeView = (): React.JSX.Element => {
 
   const handleRemoveFromChecklist = useCallback(
     (name: string): void => {
-      skipItem(name);
+      setDecision(name, 'not-needed');
     },
-    [skipItem],
+    [setDecision],
   );
 
   const handleSelectSuggestion = useCallback(

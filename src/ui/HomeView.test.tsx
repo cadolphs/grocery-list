@@ -398,7 +398,7 @@ describe('StoreView existingSections reactivity (fix-staple-delete-trip-sync 01-
   });
 });
 
-// #96: one-offs are always Needed, so the skipped one-off this test once
+// #96: one-offs are always Needed, so the Not needed one-off this test once
 // started from cannot exist; what remains is the no-duplicate rule.
 describe('HomeView QuickAdd suggestion for a one-off already in the trip (#74 finding 4)', () => {
   test('picking a suggestion for a one-off that is already in the trip keeps it Needed without a duplicate', async () => {
@@ -443,7 +443,7 @@ describe('HomeView QuickAdd suggestion for a one-off already in the trip (#74 fi
       .getItems()
       .filter((i) => i.name === 'Tahini');
     expect(after).toHaveLength(1);
-    expect(after[0]!.needed).toBe(true);
+    expect(after[0]!.decision).toBe('needed');
   });
 });
 

@@ -11,12 +11,9 @@ import { surfaces } from './surfaces';
 
 type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
-  readonly onSkipItem?: (name: string) => void;
-  readonly onUnskipItem?: (name: string) => void;
   readonly onMarkAreaDone?: (area: string) => void;
   readonly onUndoArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
-  readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
   readonly onSetItemDecision?: (name: string, decision: SweepDecision) => void;
   readonly onStepItemTowardNeeded?: (name: string) => void;
@@ -34,7 +31,6 @@ export const AreaSection = ({
   onMarkAreaDone,
   onUndoArea,
   onSelectArea,
-  onItemPress,
   onItemLongPress,
   onSetItemDecision,
   onStepItemTowardNeeded,
@@ -43,7 +39,9 @@ export const AreaSection = ({
   isActive,
   undecidedCount = 0,
 }: AreaSectionProps): React.JSX.Element => {
-  const neededCount = areaGroup.items.filter((item) => item.needed).length;
+  const neededCount = areaGroup.items.filter(
+    (item) => item.decision === 'needed',
+  ).length;
 
   return (
     <View
@@ -89,7 +87,6 @@ export const AreaSection = ({
           <TripItemRow
             item={item}
             mode="home"
-            onPress={onItemPress ? () => onItemPress(item.name) : undefined}
             onLongPress={onItemLongPress}
             onSetDecision={onSetItemDecision}
             onStepTowardNeeded={onStepItemTowardNeeded}
@@ -144,27 +141,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 0,
-  },
-  skippedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.space.xs,
-  },
-  skippedName: {
-    color: theme.color.textMuted,
-    textDecorationLine: 'line-through',
-    fontSize: theme.font.size.sm,
-  },
-  readdButton: {
-    minHeight: theme.target.min,
-    paddingHorizontal: theme.space.md,
-    justifyContent: 'center',
-  },
-  readdText: {
-    textDecorationLine: 'underline',
-    color: theme.color.text,
-    fontWeight: theme.font.weight.bold,
   },
   doneButton: {
     ...surfaces.darkButton,

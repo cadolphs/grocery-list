@@ -402,7 +402,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         itemType: 'staple',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -411,7 +410,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         itemType: 'staple',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -420,7 +418,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
         itemType: 'staple',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -429,7 +426,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Deli', aisleNumber: null },
         itemType: 'one-off',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
     ];
@@ -453,14 +449,12 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
       {
         name: 'Whole milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        needed: true,
         decision: 'needed',
         checked: false,
       },
       {
         name: 'Deli turkey',
         storeLocation: { section: 'Deli', aisleNumber: null },
-        needed: true,
         decision: 'needed',
         checked: false,
       },
@@ -599,7 +593,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -607,7 +600,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -615,7 +607,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: true,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -623,7 +614,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: true,
-        needed: true,
         decision: 'needed',
       },
     ];
@@ -724,7 +714,6 @@ describe('WS-6: Complete Trip with Carryover', () => {
         itemType: 'one-off',
         stapleId: null,
         source: 'carryover',
-        needed: true,
         decision: 'needed',
         checked: false,
         checkedAt: null,

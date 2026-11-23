@@ -7,7 +7,7 @@
  * - Assertions: screen queries (getByText, queryByText, getByTestId)
  *
  * Story Trace:
- * - US-07: Skip button on home screen
+ * - US-07: Not needed on home screen
  * - US-08: Area completion and sweep progress
  * - US-09: Type-ahead suggestions in quick-add
  * - US-10: Store section navigation and progress
@@ -85,10 +85,10 @@ function createTestServices() {
 }
 
 // =============================================================================
-// US-07: Skip button on home screen
+// US-07: Not needed on home screen
 // =============================================================================
 
-describe('US-07: Skip staple from home screen', () => {
+describe('US-07: Mark a staple Not needed from home screen', () => {
   // AC: Marking an item Not needed on the home screen drops it from the needed count
   // AC: A Not needed item does not appear in store view
   // AC: A Not needed item can be marked Needed again
@@ -106,7 +106,7 @@ describe('US-07: Skip staple from home screen', () => {
       ? Object.assign({}, ...node.props.style.filter(Boolean))
       : node.props.style;
 
-  it('removes skipped item from the home view area', () => {
+  it('removes Not needed item from the home view area', () => {
     // Given Carlos is viewing the home screen with Bathroom items
     const { library, tripService } = createTestServices();
     render(
@@ -123,12 +123,12 @@ describe('US-07: Skip staple from home screen', () => {
     expect(screen.getByText('Bathroom (1)')).toBeTruthy();
     expect(screen.queryByText('Bathroom (2)')).toBeNull();
 
-    // And "Shampoo" still appears in the area as a skipped item (strikethrough)
+    // And "Shampoo" still appears in the area as a Not needed item (strikethrough)
     const shampoo = screen.getByText('Shampoo');
     expect(flatStyle(shampoo).textDecorationLine).toBe('line-through');
   });
 
-  it('skipped item does not appear in store view', () => {
+  it('Not needed item does not appear in store view', () => {
     // Given Carlos has marked "Shampoo" Not needed on the home screen
     const { library, tripService } = createTestServices();
     render(
@@ -148,7 +148,7 @@ describe('US-07: Skip staple from home screen', () => {
     expect(screen.getByText('Toilet paper')).toBeTruthy();
   });
 
-  it('re-adds a skipped staple on the home screen', () => {
+  it('re-adds a Not needed staple on the home screen', () => {
     // Given Carlos has marked "Butter" Not needed in the "Fridge" area
     const { library, tripService } = createTestServices();
     render(
@@ -461,7 +461,7 @@ describe('US-11: Trip summary screen in UI', () => {
   // AC: Store view transition is available
 
   it('displays total purchased and item breakdown', () => {
-    // Given Carlos has completed the trip with 5 items purchased and 1 skipped
+    // Given Carlos has completed the trip with 5 items purchased and 1 Not needed
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
@@ -472,7 +472,7 @@ describe('US-11: Trip summary screen in UI', () => {
     ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans'].forEach(
       (name) => fireEvent.press(screen.getByText(name)),
     );
-    tripService.skipItem('Shampoo');
+    tripService.setDecision('Shampoo', 'not-needed');
 
     // When the trip summary screen appears
     fireEvent.press(screen.getByText('Finish Trip'));

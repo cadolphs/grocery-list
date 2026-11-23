@@ -61,9 +61,6 @@ function createTestServices() {
   );
   // ADR-013: a sweep starts with every staple Undecided, so no area is
   // complete yet (#95 derives completion from decisions).
-  tripService
-    .getItems()
-    .forEach((item) => tripService.setDecision(item.name, 'undecided'));
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
     areaStorage,

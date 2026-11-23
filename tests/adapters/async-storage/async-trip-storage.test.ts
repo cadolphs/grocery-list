@@ -16,7 +16,6 @@ const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
       itemType: 'staple',
       stapleId: 'staple-1',
       source: 'preloaded',
-      needed: true,
       decision: 'needed',
       checked: false,
       checkedAt: null,
@@ -135,7 +134,7 @@ describe('sweep decision', () => {
   };
 
   const decisionsOf = (items: readonly TripItem[]) =>
-    items.map(({ name, needed, decision }) => ({ name, needed, decision }));
+    items.map(({ name, decision }) => ({ name, decision }));
 
   it('reads a legacy trip as Needed or Not needed from its needed flag', async () => {
     storeRaw({
@@ -149,8 +148,8 @@ describe('sweep decision', () => {
     await storage.initialize();
 
     expect(decisionsOf(storage.loadTrip()!.items)).toEqual([
-      { name: 'Milk', needed: true, decision: 'needed' },
-      { name: 'Eggs', needed: false, decision: 'not-needed' },
+      { name: 'Milk', decision: 'needed' },
+      { name: 'Eggs', decision: 'not-needed' },
     ]);
   });
 
@@ -163,9 +162,32 @@ describe('sweep decision', () => {
     await storage.initialize();
 
     expect(decisionsOf(storage.loadCarryover())).toEqual([
-      { name: 'Milk', needed: true, decision: 'needed' },
-      { name: 'Eggs', needed: false, decision: 'not-needed' },
+      { name: 'Milk', decision: 'needed' },
+      { name: 'Eggs', decision: 'not-needed' },
     ]);
+  });
+
+  // #97: new writes carry only the decision, so a legacy item read and
+  // written back loses its needed flag.
+  it('writes a legacy trip back with only the decision', async () => {
+    storeRaw({
+      [TRIP_KEY]: {
+        ...makeTrip(),
+        items: [legacyItem('Milk', true), legacyItem('Eggs', false)],
+      },
+    });
+    const storage = createAsyncTripStorage();
+    await storage.initialize();
+
+    storage.saveTrip(storage.loadTrip()!);
+
+    const [, written] = (AsyncStorage.setItem as jest.Mock).mock.calls.at(-1)!;
+    const items: Record<string, unknown>[] = JSON.parse(written).items;
+    expect(items.map((item) => item.decision)).toEqual([
+      'needed',
+      'not-needed',
+    ]);
+    items.forEach((item) => expect(item).not.toHaveProperty('needed'));
   });
 
   // #95: area completion is derived from decisions; a stored completed-areas
@@ -201,16 +223,14 @@ describe('sweep decision', () => {
     await storage.initialize();
 
     expect(decisionsOf(storage.loadTrip()!.items)).toEqual([
-      { name: 'Milk', needed: false, decision: 'not-needed' },
-      { name: 'Eggs', needed: true, decision: 'needed' },
+      { name: 'Milk', decision: 'not-needed' },
+      { name: 'Eggs', decision: 'needed' },
     ]);
   });
 
   it('round-trips a saved decision unchanged through disk', async () => {
     const saved = makeTrip({
-      items: [
-        { ...makeTrip().items[0]!, needed: false, decision: 'undecided' },
-      ],
+      items: [{ ...makeTrip().items[0]!, decision: 'undecided' }],
     });
     const writer = createAsyncTripStorage();
     await writer.initialize();

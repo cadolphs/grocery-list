@@ -28,7 +28,7 @@ describe('Trip: addItem', () => {
         storeLocation: { section: 'Baking', aisleNumber: 12 },
         itemType: 'one-off',
         source: 'quick-add',
-        needed: true,
+        decision: 'needed',
         checked: false,
       }),
     );
@@ -170,7 +170,7 @@ describe('Trip: loadFromStorage', () => {
   });
 });
 
-describe('Trip: skipItem', () => {
+describe('Trip: setDecision Not needed', () => {
   it('sets needed to false for the matching item', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
@@ -187,13 +187,13 @@ describe('Trip: skipItem', () => {
       },
     ]);
 
-    trip.skipItem('Shampoo');
+    trip.setDecision('Shampoo', 'not-needed');
 
     const items = trip.getItems();
     const shampoo = items.find((i) => i.name === 'Shampoo');
     const soap = items.find((i) => i.name === 'Soap');
-    expect(shampoo?.needed).toBe(false);
-    // #96: staples start Undecided; skipping Shampoo leaves Soap untouched.
+    expect(shampoo?.decision).toBe('not-needed');
+    // #96: staples start Undecided; marking Shampoo Not needed leaves Soap untouched.
     expect(soap?.decision).toBe('undecided');
   });
 
@@ -208,7 +208,7 @@ describe('Trip: skipItem', () => {
       },
     ]);
 
-    trip.skipItem('Butter');
+    trip.setDecision('Butter', 'not-needed');
 
     expect(trip.getItems()).toHaveLength(1);
     expect(trip.getItems()[0]!.name).toBe('Butter');
@@ -233,7 +233,7 @@ describe('Trip: resetSweep', () => {
     ];
     trip.initializeFromStorage(staples);
     trip.checkOff('Milk');
-    trip.skipItem('Butter');
+    trip.setDecision('Butter', 'not-needed');
 
     trip.resetSweep(staples);
 

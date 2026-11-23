@@ -16,8 +16,6 @@ export type UseTripResult = {
   readonly items: TripItem[];
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly toggleCheckOff: (name: string) => void;
-  readonly skipItem: (name: string) => void;
-  readonly unskipItem: (name: string) => void;
   readonly setDecision: (name: string, decision: SweepDecision) => void;
   readonly stepTowardNeeded: (name: string) => void;
   readonly stepTowardNotNeeded: (name: string) => void;
@@ -68,22 +66,6 @@ export const useTrip = (): UseTripResult => {
       } else {
         tripService.checkOff(name);
       }
-      setItems(tripService.getItems());
-    },
-    [tripService],
-  );
-
-  const skipItem = useCallback(
-    (name: string): void => {
-      tripService.skipItem(name);
-      setItems(tripService.getItems());
-    },
-    [tripService],
-  );
-
-  const unskipItem = useCallback(
-    (name: string): void => {
-      tripService.unskipItem(name);
       setItems(tripService.getItems());
     },
     [tripService],
@@ -152,8 +134,6 @@ export const useTrip = (): UseTripResult => {
     items,
     addItem,
     toggleCheckOff,
-    skipItem,
-    unskipItem,
     setDecision,
     stepTowardNeeded,
     stepTowardNotNeeded,

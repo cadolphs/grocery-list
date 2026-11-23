@@ -61,11 +61,17 @@ describe('TripService.subscribe', () => {
   });
 
   // HomeView and StoreView are mounted together (AppShell) with separate
-  // useTrip state, so every needed/checked mutation must notify or the other
-  // view goes stale (#61: "skipped item does not appear in store view").
+  // useTrip state, so every decision/checked mutation must notify or the other
+  // view goes stale (#61: a Not needed item still listed in store view).
   test.each([
-    ['skipItem', (t: TripService) => t.skipItem('Bread')],
-    ['unskipItem', (t: TripService) => t.unskipItem('Bread')],
+    [
+      'setDecision Not needed',
+      (t: TripService) => t.setDecision('Bread', 'not-needed'),
+    ],
+    [
+      'setDecision Needed',
+      (t: TripService) => t.setDecision('Bread', 'needed'),
+    ],
     ['checkOff', (t: TripService) => t.checkOff('Bread')],
     ['uncheckItem', (t: TripService) => t.uncheckItem('Bread')],
   ])('subscriber is notified when %s is called', (_name, mutate) => {
@@ -265,7 +271,6 @@ describe('TripService.subscribe', () => {
           itemType: 'staple',
           stapleId: null,
           source: 'preloaded',
-          needed: true,
           decision: 'needed',
           checked: true,
           checkedAt: '2026-04-12T10:00:00Z',
@@ -285,7 +290,6 @@ describe('TripService.subscribe', () => {
         itemType: 'one-off',
         stapleId: null,
         source: 'carryover',
-        needed: true,
         decision: 'needed',
         checked: false,
         checkedAt: null,
@@ -337,7 +341,7 @@ describe('TripService.subscribe', () => {
     expect(tripService.getItems()).toHaveLength(1);
   });
 
-  test('addItem rejects duplicate stapleId even when existing item is skipped', () => {
+  test('addItem rejects duplicate stapleId even when existing item is Not needed', () => {
     const tripService = createTestTripService();
 
     tripService.addItem({
@@ -349,9 +353,9 @@ describe('TripService.subscribe', () => {
       stapleId: 'staple-milk',
     });
 
-    // Skip the item (simulates unchecking in checklist)
-    tripService.skipItem('Milk');
-    expect(tripService.getItems()[0]!.needed).toBe(false);
+    // Mark it Not needed (simulates unchecking in checklist)
+    tripService.setDecision('Milk', 'not-needed');
+    expect(tripService.getItems()[0]!.decision).toBe('not-needed');
 
     // Attempting to add the same stapleId again should be rejected
     const duplicateResult = tripService.addItem({
@@ -482,7 +486,6 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           itemType: 'staple',
           stapleId: null,
           source: 'preloaded',
-          needed: true,
           decision: 'needed',
           checked: false,
           checkedAt: null,
@@ -579,7 +582,6 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           itemType: 'staple',
           stapleId: null,
           source: 'preloaded',
-          needed: true,
           decision: 'needed',
           checked: false,
           checkedAt: null,
@@ -592,7 +594,6 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           itemType: 'one-off',
           stapleId: null,
           source: 'quick-add',
-          needed: true,
           decision: 'needed',
           checked: false,
           checkedAt: null,
@@ -923,7 +924,6 @@ const storedTripItem: TripItem = {
   itemType: 'staple',
   stapleId: 'staple-milk',
   source: 'preloaded',
-  needed: true,
   decision: 'needed',
   checked: false,
   checkedAt: null,
@@ -937,7 +937,6 @@ const carryoverTripItem: TripItem = {
   itemType: 'one-off',
   stapleId: null,
   source: 'carryover',
-  needed: true,
   decision: 'needed',
   checked: false,
   checkedAt: null,
@@ -1216,8 +1215,7 @@ describe('initializeFromStorage refuses a completed-trip rebuild that would eras
   });
 });
 
-// ADR-013 expand (#92): every trip item carries a sweep decision beside the
-// legacy needed flag, and the two always agree.
+// ADR-013: every trip item carries a sweep decision.
 describe('TripService sweep decision', () => {
   const bread = {
     name: 'Bread',
@@ -1229,9 +1227,7 @@ describe('TripService sweep decision', () => {
   };
 
   const decisionsOf = (tripService: TripService) =>
-    tripService
-      .getItems()
-      .map(({ name, needed, decision }) => ({ name, needed, decision }));
+    tripService.getItems().map(({ name, decision }) => ({ name, decision }));
 
   test('an added staple is Needed', () => {
     const tripService = createTestTripService();
@@ -1239,27 +1235,11 @@ describe('TripService sweep decision', () => {
     tripService.addItem(bread);
 
     expect(decisionsOf(tripService)).toEqual([
-      { name: 'Bread', needed: true, decision: 'needed' },
+      { name: 'Bread', decision: 'needed' },
     ]);
   });
 
-  test('skipItem makes an item Not needed, unskipItem makes it Needed again', () => {
-    const tripService = createTestTripService();
-    tripService.addItem(bread);
-
-    tripService.skipItem('Bread');
-    const afterSkip = decisionsOf(tripService);
-    tripService.unskipItem('Bread');
-
-    expect(afterSkip).toEqual([
-      { name: 'Bread', needed: false, decision: 'not-needed' },
-    ]);
-    expect(decisionsOf(tripService)).toEqual([
-      { name: 'Bread', needed: true, decision: 'needed' },
-    ]);
-  });
-
-  test('decision agrees with needed through start, check, complete, carryover and reset', () => {
+  test('decision holds through start, check, complete, carryover and reset', () => {
     const storage = createNullTripStorage();
     const staples = [
       { ...bread, id: 'staple-1' },
@@ -1289,12 +1269,11 @@ describe('TripService sweep decision', () => {
     const nextTrip = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
     nextTrip.initializeFromStorage(staples);
     const afterCarryover = decisionsOf(nextTrip);
-    nextTrip.skipItem('Milk');
+    nextTrip.setDecision('Milk', 'not-needed');
     nextTrip.resetSweep(staples);
 
     const needed = (name: string) => ({
       name,
-      needed: true,
       decision: 'needed',
     });
     expect(afterCheck).toEqual([
@@ -1308,7 +1287,6 @@ describe('TripService sweep decision', () => {
     // #96: Reset Sweep returns every staple to Undecided.
     const undecided = (name: string) => ({
       name,
-      needed: false,
       decision: 'undecided',
     });
     expect(decisionsOf(nextTrip)).toEqual([
@@ -1342,13 +1320,10 @@ describe('TripService step and set decision', () => {
 
   const breadState = (tripService: TripService) => {
     const item = tripService.getItems().find((i) => i.name === 'Bread');
-    return { needed: item?.needed, decision: item?.decision };
+    return { decision: item?.decision };
   };
 
-  const state = (decision: SweepDecision) => ({
-    needed: decision === 'needed',
-    decision,
-  });
+  const state = (decision: SweepDecision) => ({ decision });
 
   test.each<[SweepDecision, SweepDecision]>([
     ['not-needed', 'undecided'],
@@ -1465,7 +1440,6 @@ describe('TripService lifecycle on decisions (#96)', () => {
       Milk: 'undecided',
       Bread: 'undecided',
     });
-    expect(tripService.getItems().every((i) => i.needed === false)).toBe(true);
   });
 
   test('a one-off is Needed and stays Needed whatever the sweep does to it', () => {
@@ -1475,11 +1449,11 @@ describe('TripService lifecycle on decisions (#96)', () => {
 
     tripService.setDecision('Candles', 'not-needed');
     tripService.stepTowardNotNeeded('Candles');
-    tripService.skipItem('Candles');
+    tripService.setDecision('Candles', 'not-needed');
 
     expect(onAdd).toEqual({ Candles: 'needed' });
     expect(decisions(tripService)).toEqual({ Candles: 'needed' });
-    expect(tripService.getItems()[0]!.needed).toBe(true);
+    expect(tripService.getItems()[0]!.decision).toBe('needed');
   });
 
   const finishTripWith = () => {
@@ -1568,7 +1542,6 @@ describe('TripService lifecycle on decisions (#96)', () => {
       Butter: 'needed',
       Jam: 'undecided',
     });
-    expect(tripService.getItems().map((i) => i.needed)).toEqual([true, false]);
   });
 
   test.each<SweepDecision>(['undecided', 'needed', 'not-needed'])(
@@ -1710,7 +1683,7 @@ describe('TripService derived area completion, Done and Undo', () => {
     );
   });
 
-  test('Done keeps needed in sync and persists the decisions it writes', () => {
+  test('Done persists the decisions it writes', () => {
     const storage = createNullTripStorage();
     const tripService = createTrip(storage, () => ['Fridge']);
     tripService.addItem(staple('Milk', 'Fridge'));
@@ -1720,7 +1693,6 @@ describe('TripService derived area completion, Done and Undo', () => {
 
     const stored = storage.loadTrip();
     expect(stored?.items[0]).toMatchObject({
-      needed: false,
       decision: 'not-needed',
     });
     expect(stored).not.toHaveProperty('completedAreas');

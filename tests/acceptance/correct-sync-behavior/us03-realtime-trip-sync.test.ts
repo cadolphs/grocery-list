@@ -12,10 +12,10 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 
 describe('US-03: Real-time listeners on trip data', () => {
   // =============================================================================
-  // S-09: Skipped item syncs in real-time
+  // S-09: Not needed item syncs in real-time
   // =============================================================================
 
-  it('S-09: skipped item on one device reflected on the other', () => {
+  it('S-09: Not needed item on one device reflected on the other', () => {
     // Given Clemens has an active trip with "Butter" marked as needed
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
@@ -29,7 +29,7 @@ describe('US-03: Real-time listeners on trip data', () => {
     // #96: staples start Undecided; the sweep marks Butter Needed.
     trip.setDecision('Butter', 'needed');
     const butter = trip.getItems().find((i) => i.name === 'Butter');
-    expect(butter?.needed).toBe(true);
+    expect(butter?.decision).toBe('needed');
 
     // And a real-time listener is active on the trip
     let onChangeCallCount = 0;
@@ -37,14 +37,14 @@ describe('US-03: Real-time listeners on trip data', () => {
       onChangeCallCount++;
     };
 
-    // When "Butter" is marked as skipped from a remote device
-    // (Simulated: remote device skips Butter, trip is persisted, arrives via onSnapshot)
-    trip.skipItem('Butter');
+    // When "Butter" is marked Not needed from a remote device
+    // (Simulated: remote device marks Butter Not needed, trip is persisted, arrives via onSnapshot)
+    trip.setDecision('Butter', 'not-needed');
     onChange();
 
     // Then the local trip shows "Butter" as not needed
     const updatedButter = trip.getItems().find((i) => i.name === 'Butter');
-    expect(updatedButter?.needed).toBe(false);
+    expect(updatedButter?.decision).toBe('not-needed');
 
     // And the onChange callback fires
     expect(onChangeCallCount).toBe(1);

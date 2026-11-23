@@ -35,7 +35,6 @@ const makeItem = (
   itemType: 'staple',
   stapleId: null,
   source: 'preloaded',
-  needed: true,
   decision: 'needed',
   checked,
   checkedAt: null,

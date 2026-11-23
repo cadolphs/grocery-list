@@ -13,7 +13,6 @@ type TripItemRowProps = {
   readonly item: TripItem;
   readonly mode: ViewMode;
   readonly onPress?: () => void;
-  readonly onSkip?: () => void;
   readonly onLongPress?: (name: string, area: string) => void;
   // Sweep rows only (#93): web shows ✓ / ✗ buttons that set the decision.
   readonly onSetDecision?: (name: string, decision: SweepDecision) => void;
@@ -35,7 +34,6 @@ export const TripItemRow = ({
   item,
   mode,
   onPress,
-  onSkip,
   onLongPress,
   onSetDecision,
   onStepTowardNeeded,
@@ -84,23 +82,16 @@ export const TripItemRow = ({
           style={[
             styles.itemName,
             item.checked && mode === 'store' && styles.checkedText,
-            mode === 'home' && item.needed && styles.neededText,
-            mode === 'home' && !item.needed && styles.skippedText,
+            mode === 'home' && item.decision === 'needed' && styles.neededText,
+            mode === 'home' &&
+              item.decision !== 'needed' &&
+              styles.notNeededText,
             isSweepRow && item.decision === 'undecided' && styles.undecidedText,
           ]}
         >
           {item.name}
         </Text>
       </Pressable>
-      {mode === 'store' && onSkip && (
-        <Pressable
-          style={styles.skipButton}
-          onPress={onSkip}
-          testID={`skip-${item.name}`}
-        >
-          <Text style={styles.skipText}>Skip</Text>
-        </Pressable>
-      )}
       {isWeb && isSweepRow && onSetDecision && (
         <>
           <Pressable
@@ -162,7 +153,7 @@ const styles = StyleSheet.create({
     minHeight: theme.target.min,
   },
   // Undecided is still to look at: highlighted. Needed carries an ink bar.
-  // Not needed is plain, its name struck through (skippedText).
+  // Not needed is plain, its name struck through (notNeededText).
   rowUndecided: {
     backgroundColor: theme.color.accentSoft,
     paddingLeft: theme.space.md,
@@ -209,17 +200,9 @@ const styles = StyleSheet.create({
   neededText: {
     color: theme.color.text,
   },
-  skippedText: {
+  notNeededText: {
     color: theme.color.textMuted,
     textDecorationLine: 'line-through',
-  },
-  skipButton: {
-    paddingVertical: theme.space.sm,
-    paddingHorizontal: theme.space.md,
-  },
-  skipText: {
-    color: theme.color.textMuted,
-    fontWeight: theme.font.weight.bold,
   },
   editButton: {
     minHeight: theme.target.min,

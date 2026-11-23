@@ -1,12 +1,12 @@
-// Regression: skip state lost on reload
-// Bug: skipItem() does not call persistTrip(), so skipped items revert
-// to needed=true when the trip is reloaded from storage.
+// Regression: a Not needed decision lost on reload
+// Bug: marking an item Not needed did not call persistTrip(), so it reverted
+// to Needed when the trip is reloaded from storage.
 
 import { createTrip } from '../../src/domain/trip';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 
-describe('Regression: skip state persists across reload', () => {
-  it('skip state persists across reload', () => {
+describe('Regression: a Not needed decision persists across reload', () => {
+  it('a Not needed decision persists across reload', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
 
@@ -25,8 +25,6 @@ describe('Regression: skip state persists across reload', () => {
 
     // Completion is derived from decisions (#95): both areas start with an
     // Undecided staple, and Done on Fridge decides its staple.
-    trip.setDecision('Milk', 'undecided');
-    trip.setDecision('Bread', 'undecided');
     trip.markAreaDone('Fridge');
 
     const progressBeforeReload = trip.getSweepProgress().completedAreas;

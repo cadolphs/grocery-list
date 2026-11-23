@@ -58,7 +58,6 @@ const tripItem = (
   itemType: 'staple',
   stapleId: null,
   source: 'preloaded',
-  needed: true,
   decision: 'needed',
   checked: false,
   checkedAt: null,

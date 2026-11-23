@@ -193,7 +193,7 @@ function renderAppInChecklistMode() {
 }
 
 describe('preloaded staples show as already on trip', () => {
-  it('preloaded staples that are needed show green; skipped staples show strikethrough', () => {
+  it('preloaded staples that are needed show green; Not needed staples show strikethrough', () => {
     const stapleStorage = createNullStapleStorage([
       {
         name: 'Milk',
@@ -221,8 +221,8 @@ describe('preloaded staples show as already on trip', () => {
       .listAll()
       .forEach((s) => tripService.setDecision(s.name, 'needed'));
 
-    // Skip Eggs during the sweep phase (needed becomes false)
-    tripService.skipItem('Eggs');
+    // Mark Eggs Not needed during the sweep phase
+    tripService.setDecision('Eggs', 'not-needed');
 
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(
@@ -248,7 +248,7 @@ describe('preloaded staples show as already on trip', () => {
     expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
     expect(screen.getByText('Bread')).toHaveStyle({ color: theme.color.text });
 
-    // Preloaded but skipped (needed=false) -> strikethrough
+    // Preloaded but Not needed -> strikethrough
     expect(screen.getByText('Eggs')).toHaveStyle({
       color: theme.color.textMuted,
       textDecorationLine: 'line-through',
@@ -273,29 +273,29 @@ describe('checklist mode shows staple checklist', () => {
     expect(screen.getByText('Bread')).toHaveStyle({ color: theme.color.text });
   });
 
-  it('tapping a checked staple skips it and shows strikethrough', () => {
+  it('tapping a checked staple marks it Not needed and shows strikethrough', () => {
     renderAppInChecklistMode();
 
-    // Tap Milk (already on trip = green) to skip it
+    // Tap Milk (already on trip = green) to mark it Not needed
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
 
-    // After skip, Milk should show strikethrough
+    // After marking it Not needed, Milk should show strikethrough
     expect(screen.getByText('Milk')).toHaveStyle({
       color: theme.color.textMuted,
       textDecorationLine: 'line-through',
     });
   });
 
-  it('tapping a skipped staple unskips it and shows green', () => {
+  it('tapping a Not needed staple makes it Needed and shows green', () => {
     renderAppInChecklistMode();
 
-    // First skip Milk
+    // First mark Milk Not needed
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
     expect(screen.getByText('Milk')).toHaveStyle({
       textDecorationLine: 'line-through',
     });
 
-    // Now tap Milk again to unskip it
+    // Now tap Milk again to make it Needed again
     fireEvent.press(screen.getByTestId('staple-row-Milk'));
     expect(screen.getByText('Milk')).toHaveStyle({ color: theme.color.text });
   });

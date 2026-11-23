@@ -20,8 +20,7 @@ const makeTripItem = (
   itemType: overrides.itemType ?? 'staple',
   stapleId: overrides.stapleId ?? null,
   source: overrides.source ?? 'preloaded',
-  needed: overrides.needed ?? true,
-  decision: (overrides.needed ?? true) ? 'needed' : 'not-needed',
+  decision: overrides.decision ?? 'needed',
   checked: overrides.checked ?? false,
   checkedAt: overrides.checkedAt ?? null,
 });
@@ -77,11 +76,19 @@ describe('groupByArea', () => {
     expect(result.find((g) => g.area === 'Bathroom')!.totalCount).toBe(0);
   });
 
-  it('computes neededCount as number of items with needed=true', () => {
+  it('computes neededCount as the number of Needed items', () => {
     const items = [
-      makeTripItem({ name: 'Whole milk', houseArea: 'Fridge', needed: true }),
-      makeTripItem({ name: 'Butter', houseArea: 'Fridge', needed: false }),
-      makeTripItem({ name: 'Yogurt', houseArea: 'Fridge', needed: true }),
+      makeTripItem({
+        name: 'Whole milk',
+        houseArea: 'Fridge',
+        decision: 'needed',
+      }),
+      makeTripItem({
+        name: 'Butter',
+        houseArea: 'Fridge',
+        decision: 'not-needed',
+      }),
+      makeTripItem({ name: 'Yogurt', houseArea: 'Fridge', decision: 'needed' }),
     ];
 
     const result = groupByArea(items, ALL_HOUSE_AREAS);

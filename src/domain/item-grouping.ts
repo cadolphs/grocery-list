@@ -14,7 +14,7 @@ const createAreaGroup = (area: HouseArea, items: TripItem[]): AreaGroup => ({
   area,
   items,
   totalCount: items.length,
-  neededCount: items.filter((item) => item.needed).length,
+  neededCount: items.filter((item) => item.decision === 'needed').length,
 });
 
 export type SectionGroup = {
