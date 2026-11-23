@@ -14,12 +14,16 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../src/ui/MetadataBottomSheet';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
-import { createStapleLibrary } from '../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
-import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage';
-import { createTrip } from '../../src/domain/trip';
-import { createAreaManagement } from '../../src/domain/area-management';
+import {
+  initializeApp,
+  AppServices,
+} from '../../src/hooks/useAppInitialization';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../acceptance/helpers/null-adapter-factories';
 import { HouseArea } from '../../src/domain/types';
 
 const AREAS: readonly HouseArea[] = ['Bathroom', 'Fridge', 'Freezer'];
@@ -130,42 +134,48 @@ describe('edit mode shows delete button that calls onDeleteStaple', () => {
 
 const WIRING_AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
-function createWiringTestServices() {
-  const stapleStorage = createNullStapleStorage([
-    {
-      name: 'Butter',
-      houseArea: 'Fridge',
-      storeLocation: { section: 'Dairy', aisleNumber: 3 },
-    },
-    {
-      name: 'Shampoo',
-      houseArea: 'Bathroom',
-      storeLocation: { section: 'Personal Care', aisleNumber: 7 },
-    },
-  ]);
-  const tripStorage = createNullTripStorage();
-  const areaStorage = createNullAreaStorage(WIRING_AREAS);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
-  const tripService = createTrip(tripStorage, WIRING_AREAS);
-  const areaManagement = createAreaManagement(
-    areaStorage,
-    stapleStorage,
-    tripStorage,
+// Wires services through initializeApp (the production composition root) so
+// that stapleLibrary.remove drives trip cleanup via stapleLibrary.subscribe ->
+// handleStapleChange, exactly as in the running app. Only the storages that
+// carry seeded state are overridden; the rest come from the shared helper.
+async function createWiringTestServices(): Promise<AppServices> {
+  const stapleStorage = withInitialize(
+    createNullStapleStorage([
+      {
+        name: 'Butter',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+      {
+        name: 'Shampoo',
+        houseArea: 'Bathroom',
+        storeLocation: { section: 'Personal Care', aisleNumber: 7 },
+      },
+    ]),
   );
-  tripService.start(stapleLibrary.listAll());
-  return { stapleLibrary, tripService, areaManagement };
+  const areaStorage = withInitialize(createNullAreaStorage(WIRING_AREAS));
+  const factories = createNullAdapterFactories({
+    createStapleStorage: () => stapleStorage,
+    createAreaStorage: () => areaStorage,
+  });
+  const result = await initializeApp({ uid: 'test', email: null }, factories);
+  if (!result.isReady || result.services === null) {
+    throw new Error(`initializeApp failed: ${result.error ?? 'unknown'}`);
+  }
+  return result.services;
 }
 
 describe('deleting staple removes from library and trip', () => {
-  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('tapping Delete Staple in edit mode removes the staple from library and trip items list', () => {
-    const services = createWiringTestServices();
+  // sweep-ux-refresh replaced tap-to-edit with long-press (pencil icon on web),
+  // so the edit sheet is opened with a longPress here.
+  it('long-pressing a staple and tapping Delete Staple removes it from library and trip items list', async () => {
+    const services = await createWiringTestServices();
     render(
       <ServiceProvider
         stapleLibrary={services.stapleLibrary}
         tripService={services.tripService}
         areaManagement={services.areaManagement}
+        sectionOrderStorage={services.sectionOrderStorage}
       >
         <AppShell />
       </ServiceProvider>,
@@ -175,8 +185,9 @@ describe('deleting staple removes from library and trip', () => {
     expect(screen.getByText('Butter')).toBeTruthy();
     expect(screen.getByText('Shampoo')).toBeTruthy();
 
-    // Tap "Butter" to open edit sheet
-    fireEvent.press(screen.getByText('Butter'));
+    // Long-press "Butter" to open edit sheet
+    fireEvent(screen.getByText('Butter'), 'longPress');
+    expect(screen.getByText("Edit 'Butter'")).toBeTruthy();
 
     // Edit sheet should show Delete Staple button
     expect(screen.getByText('Delete Staple')).toBeTruthy();

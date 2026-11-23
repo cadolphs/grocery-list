@@ -30,7 +30,7 @@
  *   - UAT-1     : ENABLED
  *   - UAT-2     : ENABLED
  *   - UAT-3     : ENABLED
- *   - UAT-4     : skipped (@pending — no error UI in v1, see feature file)
+ *   - UAT-4     : todo (no error UI in v1, see describe block)
  *   - UAT-5     : ENABLED
  */
 
@@ -352,22 +352,18 @@ describe('UAT-3: Signing out releases all per-user data subscriptions', () => {
 });
 
 // =============================================================================
-// UAT-4: Sign Out fails due to network error — @pending
+// UAT-4: Sign Out fails due to network error — todo
 // =============================================================================
 
 describe('UAT-4: Sign Out fails due to a network error and Maria can retry', () => {
   // Trace: US-01, AC-6 (actionable error surface).
-  // @pending — DESIGN wave v1 deliberately scopes out the error-banner UI;
-  // the null auth service does not reject signOut. This scenario is captured
-  // as living documentation and will be activated when the error-surface
-  // component is designed (see docs/feature/logout-button/discuss/user-stories.md,
-  // scenario 4).
-
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('(PENDING) keeps Maria on the authenticated shell and surfaces a retryable error message', async () => {
-    // Intentionally unimplemented — see describe block comment.
-    expect(true).toBe(true);
-  });
+  // DESIGN wave v1 deliberately scoped out the error-banner UI: SignOutButton
+  // fires-and-forgets and the null auth service does not reject signOut, so
+  // there is no behaviour to assert yet. Kept as a todo (not a skipped test
+  // with a placeholder body) until the error surface is designed.
+  it.todo(
+    'keeps Maria on the authenticated shell and surfaces a retryable error message',
+  );
 });
 
 // =============================================================================

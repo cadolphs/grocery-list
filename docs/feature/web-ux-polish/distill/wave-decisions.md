@@ -12,7 +12,7 @@ Reconciliation passed -- 0 contradictions between DISCUSS and DESIGN wave decisi
 
 | Test File | Stories | Scenarios | Status |
 |-----------|---------|-----------|--------|
-| `walking-skeleton.test.tsx` | US-01, US-02, US-03, US-05 | 7 scenarios (WS-1 through WS-5) | 4 RED, 2 trivially pass, 1 skipped |
+| `walking-skeleton.test.tsx` | US-01, US-02, US-03 | 6 scenarios (WS-1 through WS-4) | 4 RED, 2 trivially pass; WS-5 (US-05) was never built and was dropped with #61 |
 | `milestone-1-focus-management.test.tsx` | US-04 | 2 scenarios (M1-1) | All skipped |
 | `milestone-2-edit-icon.test.tsx` | US-06 | 5 scenarios (M2-1 through M2-3) | All skipped |
 
@@ -35,7 +35,7 @@ Every web behavior has a paired mobile test that asserts the behavior is ABSENT 
 
 React Native Testing Library doesn't reliably simulate focus state in jsdom. Tests verify focus-related behavior via:
 - `autoFocus` prop presence (checked via `input.props.autoFocus`)
-- For imperative refocus (US-05), the test is `.skip`'d pending implementation decision on how to expose an observable marker. The crafter may choose to expose via a `focusTrigger` counter state, an `onFocus` callback, or a testID-addressable focus method. The acceptance test will be filled in once the implementation pattern is chosen.
+- Imperative refocus (US-05) was never implemented; its skipped WS-5 test was removed with #61 (maintainer decision). If revisited, expose an observable marker (`onFocus` callback or a testID-addressable focus method) before writing the test.
 
 ## Adapter Coverage
 
@@ -49,4 +49,4 @@ No new adapters. No real I/O required.
 ## Open for DELIVER
 
 - Decide exact pencil icon character (✎ U+270E or ✏️ U+270F) — tested via testID `edit-button-{name}` so the glyph is flexible
-- Decide WS-5 focus-return implementation (imperative handle vs counter trigger) and fill in the skipped test with the chosen observable
+- WS-5 focus-return: dropped with #61, never built; revisit only if US-05 comes back

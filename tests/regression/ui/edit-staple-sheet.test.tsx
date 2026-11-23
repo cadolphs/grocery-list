@@ -1,9 +1,10 @@
 /**
  * Regression test for Edit Staple via MetadataBottomSheet.
  *
- * Verifies that tapping a staple item name on HomeView opens the
+ * Verifies that long-pressing a staple item name on HomeView opens the
  * MetadataBottomSheet in edit mode with pre-filled values, "Save Changes"
- * button, and no type toggle or skip button.
+ * button, and no type toggle or skip button, and that saving moves the
+ * trip item along with the staple.
  */
 
 import React from 'react';
@@ -47,7 +48,7 @@ function createTestServices() {
 
 function renderApp() {
   const services = createTestServices();
-  return render(
+  render(
     <ServiceProvider
       stapleLibrary={services.stapleLibrary}
       tripService={services.tripService}
@@ -56,16 +57,18 @@ function renderApp() {
       <AppShell />
     </ServiceProvider>,
   );
+  return services;
 }
 
 describe('Edit Staple via MetadataBottomSheet', () => {
-  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('tapping a staple name opens edit sheet with pre-filled values and Save Changes button', () => {
+  // sweep-ux-refresh replaced tap-to-edit with long-press (a tap now toggles
+  // needed; web additionally shows a pencil icon, covered in
+  // tests/acceptance/web-ux-polish/milestone-2-edit-icon.test.tsx).
+  it('long-pressing a staple name opens edit sheet with pre-filled values and Save Changes button', () => {
     renderApp();
 
-    // Tap the "Butter" item name to open edit sheet
-    fireEvent.press(screen.getByText('Butter'));
+    // Long-press the "Butter" item name to open edit sheet
+    fireEvent(screen.getByText('Butter'), 'longPress');
 
     // Edit sheet is visible with "Edit 'Butter'" title
     expect(screen.getByText("Edit 'Butter'")).toBeTruthy();
@@ -90,13 +93,13 @@ describe('Edit Staple via MetadataBottomSheet', () => {
     expect(screen.getByDisplayValue('3')).toBeTruthy();
   });
 
-  // Tap-to-edit removed in sweep-ux-refresh (01-01). Long-press edit wired in step 01-02.
-  // eslint-disable-next-line jest/no-disabled-tests -- skipped, burn-down tracked in #61
-  it.skip('Save Changes updates the staple and syncs the trip', () => {
-    renderApp();
+  it('Save Changes updates the staple and syncs the trip', () => {
+    const services = renderApp();
+    expect(screen.getByText('Fridge (1)')).toBeTruthy();
+    expect(screen.getByText('Freezer (0)')).toBeTruthy();
 
-    // Tap "Butter" to open edit sheet
-    fireEvent.press(screen.getByText('Butter'));
+    // Long-press "Butter" to open edit sheet
+    fireEvent(screen.getByText('Butter'), 'longPress');
 
     // Change area to "Freezer"
     fireEvent.press(screen.getByTestId('area-button-Freezer'));
@@ -107,9 +110,14 @@ describe('Edit Staple via MetadataBottomSheet', () => {
     // Sheet dismisses -- "Edit 'Butter'" gone
     expect(screen.queryByText("Edit 'Butter'")).toBeNull();
 
-    // Butter now appears under Freezer on the trip
-    // (Freezer section should contain Butter)
-    const freezerSection = screen.getByText(/Freezer/);
-    expect(freezerSection).toBeTruthy();
+    // The trip item moved from Fridge to Freezer (area counts follow)
+    expect(screen.getByText('Freezer (1)')).toBeTruthy();
+    expect(screen.getByText('Fridge (0)')).toBeTruthy();
+
+    // And the staple itself was updated in the library
+    const butter = services.stapleLibrary
+      .listAll()
+      .find((s) => s.name === 'Butter');
+    expect(butter?.houseArea).toBe('Freezer');
   });
 });
