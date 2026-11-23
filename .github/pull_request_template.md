@@ -18,6 +18,7 @@ Commands run and their results: `npm run verify`, then control CLI proof, e.g.
 or `npm run control -- execute --code-file <fixture.mjs>`.
 Attach or link the --record video for UI changes. What data you used.
 Why any test expectation changed. What you could not verify.
+Review counts: `pr-review: N passes` / `Claude review: N rounds` (caps in .github/ship-pr.json).
 -->
 
 ## System recap
