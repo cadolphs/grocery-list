@@ -43,6 +43,13 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 // NEW null adapter:
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 // UI components (for UI-level walking skeleton tests):
 // import { render, fireEvent, waitFor } from '@testing-library/react-native';
 // import { ServiceProvider } from '../../../src/ui/ServiceProvider';
@@ -163,15 +170,34 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
   // AC: getSweepProgress uses dynamic area count (no hardcoded constant)
   // Trace: US-CHA-03, AC-2
 
+  // Area completion is derived (#95): an area is complete once it holds no
+  // Undecided staple, so each area gets one Undecided staple to sweep.
+  const sweepOneUndecidedStapleIn = (
+    trip: ReturnType<typeof createTrip>,
+    areas: readonly string[],
+  ): void => {
+    areas.forEach((area) => {
+      trip.addItem({
+        name: `${area} staple`,
+        houseArea: area,
+        storeLocation: { section: 'Misc', aisleNumber: null },
+        itemType: 'staple',
+        source: 'preloaded',
+      });
+      trip.setDecision(itemIdNamed(trip, `${area} staple`), 'undecided');
+    });
+  };
+
   it('shows progress out of 6 when Carlos has 6 areas', () => {
     // Given Carlos has 6 configured areas
     const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, customAreas);
     trip.initializeFromStorage([]);
+    sweepOneUndecidedStapleIn(trip, customAreas);
 
     // When Carlos completes "Bathroom"
-    trip.completeArea('Bathroom');
+    trip.markAreaDone('Bathroom');
 
     // Then sweep progress shows 1 of 6
     const progress = trip.getSweepProgress();
@@ -186,7 +212,8 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage, customAreas);
     trip.initializeFromStorage([]);
-    DEFAULT_AREAS.forEach((area) => trip.completeArea(area));
+    sweepOneUndecidedStapleIn(trip, customAreas);
+    DEFAULT_AREAS.forEach((area) => trip.markAreaDone(area));
 
     // When Carlos has not yet completed "Laundry Room"
     const progress = trip.getSweepProgress();
@@ -196,7 +223,7 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
     expect(progress.allAreasComplete).toBe(false);
 
     // When Carlos completes "Laundry Room"
-    trip.completeArea('Laundry Room');
+    trip.markAreaDone('Laundry Room');
     const finalProgress = trip.getSweepProgress();
 
     // Then all-areas-complete is true

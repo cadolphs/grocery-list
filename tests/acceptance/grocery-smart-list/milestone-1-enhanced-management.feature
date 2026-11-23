@@ -3,29 +3,29 @@ Feature: Milestone 1 - Enhanced Item Management and Navigation
   I want efficient sweep navigation, smart suggestions, and trip summaries
   So that my entire grocery workflow is fast and reliable
 
-  # --- US-07: Skip Staple This Trip ---
+  # --- US-07: Mark a Staple Not Needed This Trip ---
 
-  Scenario: Skip a staple without deleting from library
+  Scenario: Mark a staple Not needed without deleting from library
     Given "Shampoo" is pre-loaded as a staple in "Bathroom"
-    When Carlos skips "Shampoo" for this trip
+    When Carlos marks "Shampoo" Not needed for this trip
     Then "Shampoo" is removed from the current trip
     And "Shampoo" remains in the staple library
     And the "Bathroom" item count decreases by 1
 
-  Scenario: Skipped staple reappears on next trip
-    Given Carlos skipped "Shampoo" on the current trip
+  Scenario: Not needed staple reappears on next trip
+    Given Carlos marked "Shampoo" Not needed on the current trip
     When Carlos starts the next sweep
     Then "Shampoo" appears pre-loaded in "Bathroom" again
 
-  Scenario: Re-add a skipped staple within the same trip
-    Given Carlos skipped "Butter" in "Fridge"
+  Scenario: Re-add a Not needed staple within the same trip
+    Given Carlos marked "Butter" Not needed in "Fridge"
     When Carlos re-adds "Butter" to this trip
     Then "Butter" is back on the current trip
     And the "Fridge" item count increases by 1
 
-  Scenario: Skip multiple staples across different areas
+  Scenario: Mark multiple staples Not needed across different areas
     Given Carlos has 3 staples in "Bathroom" and 4 in "Fridge"
-    When Carlos skips 1 item in "Bathroom" and 2 items in "Fridge"
+    When Carlos marks 1 item in "Bathroom" and 2 items in "Fridge" Not needed
     Then "Bathroom" shows 2 items needed
     And "Fridge" shows 2 items needed
 
@@ -127,8 +127,8 @@ Feature: Milestone 1 - Enhanced Item Management and Navigation
     And breakdown shows 17 staples and 5 one-offs
     And breakdown shows 19 from sweep and 3 from whiteboard
 
-  Scenario: Summary reflects skipped staples
-    Given Carlos started with 21 pre-loaded staples and skipped 3
+  Scenario: Summary reflects Not needed staples
+    Given Carlos started with 21 pre-loaded staples and marked 3 Not needed
     And Carlos added 2 one-offs during sweep
     When Carlos views the trip summary
     Then it shows 20 total items

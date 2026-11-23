@@ -66,7 +66,6 @@ const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   itemType: 'staple',
   stapleId: null,
   source: 'preloaded',
-  needed: true,
   decision: 'needed',
   checked: false,
   checkedAt: null,
@@ -325,12 +324,12 @@ describe('firestore trip storage sweep decision', () => {
   ];
 
   const expectedDecisions = [
-    { name: 'Milk', needed: true, decision: 'needed' },
-    { name: 'Eggs', needed: false, decision: 'not-needed' },
+    { name: 'Milk', decision: 'needed' },
+    { name: 'Eggs', decision: 'not-needed' },
   ];
 
   const decisionsOf = (items: readonly TripItem[]) =>
-    items.map(({ name, needed, decision }) => ({ name, needed, decision }));
+    items.map(({ name, decision }) => ({ name, decision }));
 
   const seedMirror = async (doc: 'trip' | 'carryover', value: unknown) => {
     await AsyncStorage.setItem(
@@ -377,6 +376,27 @@ describe('firestore trip storage sweep decision', () => {
     expect(decisionsOf(storage.loadCarryover())).toEqual(expectedDecisions);
   });
 
+  // #97: new writes carry only the decision, so a legacy item read and
+  // written back loses its needed flag.
+  test('a legacy trip written back carries only the decision', async () => {
+    mockStore[TRIP_DOC_PATH] = {
+      trip: { ...makeTrip(), items: legacyItems() },
+    };
+    const storage = await createFreshStorage();
+
+    storage.saveTrip(storage.loadTrip()!);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const written = mockStore[TRIP_DOC_PATH]!.trip as {
+      items: Record<string, unknown>[];
+    };
+    expect(written.items.map((item) => item.decision)).toEqual([
+      'needed',
+      'not-needed',
+    ]);
+    written.items.forEach((item) => expect(item).not.toHaveProperty('needed'));
+  });
+
   // Before #92 the server trip was cached as-is; reading it must not throw
   // inside the snapshot callback, or initialize() never resolves.
   test('a server trip without an item list reads as no trip', async () => {
@@ -387,9 +407,26 @@ describe('firestore trip storage sweep decision', () => {
     expect(storage.loadTrip()).toBeNull();
   });
 
+  // #95: area completion is derived from decisions; a stored completed-areas
+  // set is dropped on read and never written back.
+  test('a legacy completed-areas set is dropped on read and not written back', async () => {
+    mockStore[TRIP_DOC_PATH] = {
+      trip: { ...makeTrip(), completedAreas: ['Fridge'] },
+    };
+    await seedMirror('trip', { ...makeTrip(), completedAreas: ['Fridge'] });
+    const storage = await createFreshStorage();
+    const loaded = storage.loadTrip();
+
+    storage.updateItemArea('Fridge', 'Cold Storage');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(loaded).not.toHaveProperty('completedAreas');
+    expect(mockStore[TRIP_DOC_PATH]!.trip).not.toHaveProperty('completedAreas');
+  });
+
   test('a saved decision reads back unchanged in the next session', async () => {
     const trip = makeTrip({
-      items: [makeTripItem({ needed: false, decision: 'undecided' })],
+      items: [makeTripItem({ decision: 'undecided' })],
     });
     const carryover = [makeTripItem({ id: 'carried', source: 'carryover' })];
     const previousSession = await createFreshStorage();

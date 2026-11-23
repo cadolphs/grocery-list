@@ -3,6 +3,13 @@
 
 import { TripItem, HouseArea } from './types';
 
+export const isNeeded = (item: TripItem): boolean => item.decision === 'needed';
+
+// The shopping list: Needed items plus one-offs (always Needed, ADR-013).
+// Checking into the cart leaves the decision alone, so a row stays listed.
+export const isOnShoppingList = (item: TripItem): boolean =>
+  isNeeded(item) || item.itemType === 'one-off';
+
 export type AreaGroup = {
   readonly area: HouseArea;
   readonly items: TripItem[];
@@ -14,7 +21,7 @@ const createAreaGroup = (area: HouseArea, items: TripItem[]): AreaGroup => ({
   area,
   items,
   totalCount: items.length,
-  neededCount: items.filter((item) => item.needed).length,
+  neededCount: items.filter(isNeeded).length,
 });
 
 export type SectionGroup = {

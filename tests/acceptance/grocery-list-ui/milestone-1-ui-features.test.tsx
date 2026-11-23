@@ -7,12 +7,17 @@
  * - Assertions: screen queries (getByText, queryByText, getByTestId)
  *
  * Story Trace:
- * - US-07: Skip button on home screen
+ * - US-07: Not needed on home screen
  * - US-08: Area completion and sweep progress
  * - US-09: Type-ahead suggestions in quick-add
  * - US-10: Store section navigation and progress
  * - US-11: Trip summary screen
  */
+
+// Native by default; US-07 drives the web ✓ / ✗ buttons (#93).
+jest.mock('../../../src/hooks/useIsWeb', () => ({
+  useIsWeb: jest.fn(() => false),
+}));
 
 // --- Driving port imports ---
 // Domain ports (already implemented):
@@ -31,6 +36,14 @@ import {
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { theme } from '../../../src/ui/theme';
+import { useIsWeb } from '../../../src/hooks/useIsWeb';
+
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
 
 // =============================================================================
 // Shared test setup
@@ -73,29 +86,38 @@ function createTestServices() {
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
+  // #96: staples start Undecided; mark them Needed as a finished sweep would.
+  library
+    .listAll()
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
   return { library, tripService, stapleStorage, tripStorage };
 }
 
 // =============================================================================
-// US-07: Skip button on home screen
+// US-07: Not needed on home screen
 // =============================================================================
 
-describe('US-07: Skip staple from home screen', () => {
-  // AC: Tapping an item on the home screen skips it (drops it from the needed count)
-  // AC: Skipped item does not appear in store view
-  // AC: Skipped item can be re-added
+describe('US-07: Mark a staple Not needed from home screen', () => {
+  // AC: Marking an item Not needed on the home screen drops it from the needed count
+  // AC: A Not needed item does not appear in store view
+  // AC: A Not needed item can be marked Needed again
   //
-  // sweep-ux-refresh replaced the per-row Skip / Re-add buttons with
-  // tap-to-toggle: tapping a needed item skips it (grey strikethrough), tapping
-  // a skipped item re-adds it. The scenarios below drive that affordance.
+  // #93 replaced tap-to-toggle with the tri-state sweep row: on web the ✗
+  // button sets Not needed (grey strikethrough) and ✓ sets Needed. A tap on
+  // the row does nothing. The scenarios below drive the web buttons.
+  const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
+  beforeEach(() => mockedUseIsWeb.mockReturnValue(true));
+  afterEach(() => mockedUseIsWeb.mockReturnValue(false));
 
   // Flattens a Text node's style array so individual properties can be asserted.
-  const flatStyle = (node: { props: { style: unknown } }) =>
+  const flatStyle = (node: { props: { style?: unknown } }) =>
     Array.isArray(node.props.style)
       ? Object.assign({}, ...node.props.style.filter(Boolean))
       : node.props.style;
 
-  it('removes skipped item from the home view area', () => {
+  it('removes Not needed item from the home view area', () => {
     // Given Carlos is viewing the home screen with Bathroom items
     const { library, tripService } = createTestServices();
     render(
@@ -105,27 +127,27 @@ describe('US-07: Skip staple from home screen', () => {
     );
     expect(screen.getByText('Bathroom (2)')).toBeTruthy();
 
-    // When Carlos taps "Shampoo" to skip it
-    fireEvent.press(screen.getByText('Shampoo'));
+    // When Carlos marks "Shampoo" Not needed
+    fireEvent.press(screen.getByTestId('mark-not-needed-Shampoo'));
 
     // Then "Shampoo" is removed from the needed items (area count drops)
     expect(screen.getByText('Bathroom (1)')).toBeTruthy();
     expect(screen.queryByText('Bathroom (2)')).toBeNull();
 
-    // And "Shampoo" still appears in the area as a skipped item (strikethrough)
+    // And "Shampoo" still appears in the area as a Not needed item (strikethrough)
     const shampoo = screen.getByText('Shampoo');
     expect(flatStyle(shampoo).textDecorationLine).toBe('line-through');
   });
 
-  it('skipped item does not appear in store view', () => {
-    // Given Carlos has skipped "Shampoo" on the home screen
+  it('Not needed item does not appear in store view', () => {
+    // Given Carlos has marked "Shampoo" Not needed on the home screen
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
       </ServiceProvider>,
     );
-    fireEvent.press(screen.getByText('Shampoo'));
+    fireEvent.press(screen.getByTestId('mark-not-needed-Shampoo'));
 
     // When Carlos switches to the store view
     fireEvent.press(screen.getByText('Store'));
@@ -137,22 +159,22 @@ describe('US-07: Skip staple from home screen', () => {
     expect(screen.getByText('Toilet paper')).toBeTruthy();
   });
 
-  it('re-adds a skipped staple on the home screen', () => {
-    // Given Carlos has skipped "Butter" in the "Fridge" area
+  it('re-adds a Not needed staple on the home screen', () => {
+    // Given Carlos has marked "Butter" Not needed in the "Fridge" area
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
       </ServiceProvider>,
     );
-    fireEvent.press(screen.getByText('Butter'));
+    fireEvent.press(screen.getByTestId('mark-not-needed-Butter'));
     expect(screen.getByText('Fridge (2)')).toBeTruthy();
     expect(flatStyle(screen.getByText('Butter')).textDecorationLine).toBe(
       'line-through',
     );
 
-    // When Carlos taps the skipped "Butter" again
-    fireEvent.press(screen.getByText('Butter'));
+    // When Carlos marks "Butter" Needed again
+    fireEvent.press(screen.getByTestId('mark-needed-Butter'));
 
     // Then "Butter" is needed again in the "Fridge" area, in the needed
     // style (no strikethrough, regular text color)
@@ -171,10 +193,26 @@ describe('US-08: Area completion and sweep progress in UI', () => {
   // AC: Marking an area complete shows a badge
   // AC: Progress bar reflects completed area count
   // AC: All areas complete shows whiteboard prompt
+  //
+  // #95: completion is derived. An area is complete once it holds no
+  // Undecided staple, so the empty Kitchen Cabinets and Freezer start
+  // complete and the swept areas start with every staple Undecided.
+  const createUndecidedSweep = () => {
+    const services = createTestServices();
+    services.tripService
+      .getItems()
+      .forEach((item) =>
+        services.tripService.setDecision(
+          itemIdNamed(services.tripService, item.name),
+          'undecided',
+        ),
+      );
+    return services;
+  };
 
   it('shows completion badge and progress bar after marking area done', () => {
     // Given Carlos is sweeping the "Bathroom" area
-    const { library, tripService } = createTestServices();
+    const { library, tripService } = createUndecidedSweep();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
@@ -187,13 +225,13 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     // Then "Bathroom" shows a completion badge
     expect(screen.getByTestId('badge-Bathroom')).toBeTruthy();
 
-    // And the sweep progress bar shows "1 of 5 areas complete"
-    expect(screen.getByText('1 of 5 areas complete')).toBeTruthy();
+    // And the sweep progress bar counts it with the empty areas
+    expect(screen.getByText('3 of 5 areas complete')).toBeTruthy();
   });
 
   it('navigates to a different area out of order', () => {
     // Given the suggested next area is "Garage Pantry"
-    const { library, tripService } = createTestServices();
+    const { library, tripService } = createUndecidedSweep();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
@@ -207,7 +245,7 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     expect(screen.getByTestId('active-area-Freezer')).toBeTruthy();
 
     // And sweep progress is unchanged
-    expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
+    expect(screen.getByText('2 of 5 areas complete')).toBeTruthy();
   });
 
   it('checklist mode shows staple checklist without needing to complete all areas', () => {
@@ -437,7 +475,7 @@ describe('US-11: Trip summary screen in UI', () => {
   // AC: Store view transition is available
 
   it('displays total purchased and item breakdown', () => {
-    // Given Carlos has completed the trip with 5 items purchased and 1 skipped
+    // Given Carlos has completed the trip with 5 items purchased and 1 Not needed
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
@@ -448,7 +486,7 @@ describe('US-11: Trip summary screen in UI', () => {
     ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans'].forEach(
       (name) => fireEvent.press(screen.getByText(name)),
     );
-    tripService.skipItem('Shampoo');
+    tripService.setDecision(itemIdNamed(tripService, 'Shampoo'), 'not-needed');
 
     // When the trip summary screen appears
     fireEvent.press(screen.getByText('Finish Trip'));
@@ -469,7 +507,9 @@ describe('US-11: Trip summary screen in UI', () => {
       </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
-    tripService.getItems().forEach((i) => tripService.checkOff(i.name));
+    tripService
+      .getItems()
+      .forEach((i) => tripService.checkOff(itemIdNamed(tripService, i.name)));
     fireEvent.press(screen.getByText('Finish Trip'));
 
     // When Carlos taps "Switch to Store View"

@@ -12,11 +12,21 @@ services from `ServiceProvider`. No classes (ADR-009).
 
 ## Domain (`src/domain/`)
 
-- **Types** (`types.ts`): `StapleItem`, `TripItem`, `Trip`, `HouseArea`,
+- **Types** (`types.ts`): `StapleItem`, `TripItem` (its `decision` is a
+  `SweepDecision`: Undecided, Needed or Not needed), `Trip`, `HouseArea`,
   `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Trip service** (`trip.ts`: `createTrip`): the current trip, sweep
-  progress, carryover on completion (`initializeFromStorage`, `complete`).
+  progress derived from decisions (`getSweepProgress`: area complete when it
+  holds no Undecided staple), carryover on completion
+  (`initializeFromStorage`, `complete`), a sweep row's decision
+  (`stepTowardNeeded`, `stepTowardNotNeeded`, `setDecision`, each by trip
+  item id, as are `checkOff` / `uncheckItem`), and an area's
+  Done / Undo (`markAreaDone`: Undecided staples become Not needed;
+  `undoArea`: Not needed staples become Undecided; Needed is never touched).
+  Staples start Undecided (an `addItem` request may pass `decision`; it
+  defaults to Needed), one-offs are always Needed, and `complete` carries
+  over exactly the Needed items not in the cart.
   adrs: [product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring
@@ -25,6 +35,11 @@ services from `ServiceProvider`. No classes (ADR-009).
   rename, reorder, delete-and-move house areas; add and rename reject empty
   and case-insensitive duplicate names. adrs:
   [adrs/ADR-005-house-area-type-migration.md]
+- **Stored trip read** (`stored-trip.ts`: `readStoredTrip`,
+  `readStoredCarryover`): the one read rule both trip adapters use. A legacy
+  item with only `needed` reads as Needed / Not needed, a legacy
+  completed-areas set is dropped, and writes carry only `decision`. adrs:
+  [adrs/ADR-013-tri-state-sweep-decision.md]
 - **Item grouping** (`item-grouping.ts`: `groupByArea`, `groupBySection`,
   `partitionSectionByAisle`): pure view grouping. adrs:
   [product/architecture/adr-005-aisle-subgrouping-domain-helper.md]
@@ -76,6 +91,15 @@ services from `ServiceProvider`. No classes (ADR-009).
   `useViewMode`, `useIsWeb`). adrs: []
 - **ServiceProvider** (`ui/ServiceProvider.tsx`): dependency injection for
   hooks. adrs: []
-- **Screens**: see [feature-map.md](feature-map.md). adrs:
+- **Sweep row swipe** (`ui/SweepRowSwipe.native.tsx`, root in
+  `ui/GestureRoot.native.tsx`): on iOS / Android a pan steps a sweep row's
+  decision; the plain `.tsx` twins keep gesture-handler out of web, which
+  uses the row's ✓ / ✗ buttons (✓ sets Needed, ✗ sets Not needed). Jest renders everything inside a gesture root
+  (`jest.setup.js`). adrs: [adrs/ADR-014-swipe-via-gesture-handler.md]
+- **Screens**: see [feature-map.md](feature-map.md). On Home's sweep each
+  staple row shows its decision (Undecided, Needed, Not needed); an area's
+  Done / Undo moves the whole area and the progress line counts areas
+  complete. The Store view lists Needed items and one-offs; checking one into
+  the cart leaves its decision alone. adrs:
   [adrs/ADR-004-bottom-sheet-implementation.md,
   adrs/ADR-014-swipe-via-gesture-handler.md]

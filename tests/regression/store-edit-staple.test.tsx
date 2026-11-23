@@ -22,6 +22,13 @@ import { createTrip } from '../../src/domain/trip';
 import { createAreaManagement } from '../../src/domain/area-management';
 import { TripItem } from '../../src/domain/types';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const createStapleTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   id: 'item-1',
   name: 'Butter',
@@ -30,7 +37,6 @@ const createStapleTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   itemType: 'staple',
   stapleId: 'staple-1',
   source: 'preloaded',
-  needed: true,
   decision: 'needed',
   checked: false,
   checkedAt: null,
@@ -104,6 +110,12 @@ function createStoreEditTestServices() {
     tripStorage,
   );
   tripService.initializeFromStorage(stapleLibrary.listAll());
+  // #96: staples start Undecided; mark them Needed as a finished sweep would.
+  stapleLibrary
+    .listAll()
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
   return { stapleLibrary, tripService, areaManagement };
 }
 

@@ -9,7 +9,7 @@
  * - UI: React components via @testing-library/react-native
  *
  * Story Trace:
- * - US-07: Skip Staple This Trip
+ * - US-07: Mark a Staple Not Needed This Trip
  * - US-08: Navigate Areas During Sweep
  * - US-09: Auto-Suggest from Staple Library
  * - US-10: Navigate Store Sections
@@ -25,6 +25,13 @@ import { groupBySection } from '../../../src/domain/item-grouping';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const DEFAULT_AREAS: readonly string[] = [
   'Bathroom',
   'Garage Pantry',
@@ -34,16 +41,16 @@ const DEFAULT_AREAS: readonly string[] = [
 ];
 
 // =============================================================================
-// US-07: Skip Staple This Trip
+// US-07: Mark a Staple Not Needed This Trip
 // =============================================================================
 
-describe('US-07: Skip Staple This Trip', () => {
-  // AC: Pre-loaded staples can be unchecked to skip this trip
+describe('US-07: Mark a Staple Not Needed This Trip', () => {
+  // AC: Pre-loaded staples can be unchecked to mark them Not needed this trip
   // AC: Unchecking does not remove the item from the staple library
-  // AC: Skipped staples reappear on the next trip
-  // AC: Skipped staples can be re-added by checking again
+  // AC: Not needed staples reappear on the next trip
+  // AC: Not needed staples can be re-added by checking again
 
-  it('skips a staple without removing from the library', () => {
+  it('marks a staple Not needed without removing from the library', () => {
     // Given "Shampoo" is pre-loaded as a staple in "Bathroom"
     const stapleStorage = createNullStapleStorage([
       {
@@ -61,13 +68,17 @@ describe('US-07: Skip Staple This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    library
+      .listAll()
+      .forEach((s) => trip.setDecision(itemIdNamed(trip, s.name), 'needed'));
 
-    // When Carlos skips "Shampoo" for this trip
-    trip.skipItem('Shampoo');
+    // When Carlos marks "Shampoo" Not needed for this trip
+    trip.setDecision(itemIdNamed(trip, 'Shampoo'), 'not-needed');
 
     // Then "Shampoo" is removed from the current trip (needed = false)
     const shampoo = trip.getItems().find((i) => i.name === 'Shampoo');
-    expect(shampoo?.needed).toBe(false);
+    expect(shampoo?.decision).toBe('not-needed');
     // And "Shampoo" remains in the staple library
     expect(library.listAll()).toContainEqual(
       expect.objectContaining({ name: 'Shampoo' }),
@@ -78,8 +89,8 @@ describe('US-07: Skip Staple This Trip', () => {
     expect(bathroom?.neededCount).toBe(1);
   });
 
-  it('skipped staple reappears on next trip', () => {
-    // Given Carlos skipped "Shampoo" on the current trip
+  it('Not needed staple reappears on next trip', () => {
+    // Given Carlos marked "Shampoo" Not needed on the current trip
     const stapleStorage = createNullStapleStorage([
       {
         name: 'Shampoo',
@@ -91,22 +102,22 @@ describe('US-07: Skip Staple This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
     trip1.initializeFromStorage(library.listAll());
-    trip1.skipItem('Shampoo');
+    trip1.setDecision(itemIdNamed(trip1, 'Shampoo'), 'not-needed');
     trip1.complete();
 
     // When Carlos starts the next sweep
     const trip2 = createTrip(tripStorage);
     trip2.initializeFromStorage(library.listAll());
 
-    // Then "Shampoo" appears pre-loaded again with needed = true
+    // Then "Shampoo" appears pre-loaded again, Undecided for the new sweep (#96)
     const shampoo = trip2
       .getItems()
       .find((i) => i.name === 'Shampoo' && i.source === 'preloaded');
-    expect(shampoo?.needed).toBe(true);
+    expect(shampoo?.decision).toBe('undecided');
   });
 
-  it('re-adds a skipped staple within the same trip', () => {
-    // Given Carlos skipped "Butter" in "Fridge"
+  it('re-adds a Not needed staple within the same trip', () => {
+    // Given Carlos marked "Butter" Not needed in "Fridge"
     const stapleStorage = createNullStapleStorage([
       {
         name: 'Butter',
@@ -118,17 +129,17 @@ describe('US-07: Skip Staple This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
-    trip.skipItem('Butter');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
 
     // When Carlos re-adds "Butter"
-    trip.unskipItem('Butter');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'needed');
 
     // Then "Butter" is back on the current trip
     const butter = trip.getItems().find((i) => i.name === 'Butter');
-    expect(butter?.needed).toBe(true);
+    expect(butter?.decision).toBe('needed');
   });
 
-  it('skip multiple staples across different areas', () => {
+  it('mark multiple staples Not needed across different areas', () => {
     // Given Carlos has staples in Bathroom and Fridge
     const stapleStorage = createNullStapleStorage([
       {
@@ -171,13 +182,17 @@ describe('US-07: Skip Staple This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    library
+      .listAll()
+      .forEach((s) => trip.setDecision(itemIdNamed(trip, s.name), 'needed'));
 
-    // When Carlos skips 1 in Bathroom and 2 in Fridge
-    trip.skipItem('Shampoo');
-    trip.skipItem('Butter');
-    trip.skipItem('Eggs');
+    // When Carlos marks 1 in Bathroom and 2 in Fridge Not needed
+    trip.setDecision(itemIdNamed(trip, 'Shampoo'), 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Eggs'), 'not-needed');
 
-    // Then area counts reflect skips
+    // Then area counts reflect the Not needed staples
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);
     expect(grouped.find((g) => g.area === 'Bathroom')?.neededCount).toBe(2);
     expect(grouped.find((g) => g.area === 'Fridge')?.neededCount).toBe(2);
@@ -214,14 +229,19 @@ describe('US-08: Navigate Areas During Sweep', () => {
         storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
       },
     ]);
+    // Completion is derived (#95): Bathroom is incomplete while it holds
+    // Undecided staples; the empty areas already count as complete.
+    const before = trip.getSweepProgress();
 
     // When Carlos marks "Bathroom" as done
-    trip.completeArea('Bathroom');
+    trip.markAreaDone('Bathroom');
 
-    // Then progress shows 1 of 5 areas complete
+    // Then Bathroom joins the complete areas
     const progress = trip.getSweepProgress();
+    expect(before.completedAreas).not.toContain('Bathroom');
+    expect(before.completedCount).toBe(4);
     expect(progress.completedAreas).toContain('Bathroom');
-    expect(progress.completedCount).toBe(1);
+    expect(progress.completedCount).toBe(5);
     expect(progress.totalAreas).toBe(5);
   });
 
@@ -241,16 +261,16 @@ describe('US-08: Navigate Areas During Sweep', () => {
         storeLocation: { section: 'Frozen', aisleNumber: null },
       },
     ]);
-    trip.completeArea('Bathroom');
+    trip.markAreaDone('Freezer');
 
-    // When Carlos jumps to Freezer (skipping suggested order)
-    trip.completeArea('Freezer');
+    // When Carlos goes back to Bathroom (skipping suggested order)
+    trip.markAreaDone('Bathroom');
 
     // Then both areas are complete, no progress lost
     const progress = trip.getSweepProgress();
     expect(progress.completedAreas).toContain('Bathroom');
     expect(progress.completedAreas).toContain('Freezer');
-    expect(progress.completedCount).toBe(2);
+    expect(progress.allAreasComplete).toBe(true);
   });
 
   it('all areas complete triggers whiteboard consolidation', () => {
@@ -264,7 +284,7 @@ describe('US-08: Navigate Areas During Sweep', () => {
       'Kitchen Cabinets',
       'Fridge',
       'Freezer',
-    ].forEach((area) => trip.completeArea(area));
+    ].forEach((area) => trip.markAreaDone(area));
 
     // When Carlos checks sweep progress
     const progress = trip.getSweepProgress();

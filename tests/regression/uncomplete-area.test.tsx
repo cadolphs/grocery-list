@@ -1,4 +1,4 @@
-// Regression: completed area shows Undo button that calls onUncompleteArea
+// Regression: completed area shows Undo button that calls onUndoArea
 // Feature: allow users to uncomplete a sweep area from the UI
 
 import React from 'react';
@@ -14,8 +14,8 @@ const createTestItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   storeLocation: { section: 'Dairy', aisleNumber: 3 },
   itemType: 'staple',
   stapleId: 'staple-1',
-  source: 'preload',
-  needed: true,
+  source: 'preloaded',
+  decision: 'needed',
   checked: false,
   checkedAt: null,
   ...overrides,
@@ -30,44 +30,44 @@ const createTestAreaGroup = (): AreaGroup => ({
 
 describe('completed area shows undo button', () => {
   it('shows Undo affordance when area is completed', () => {
-    const onUncompleteArea = jest.fn();
+    const onUndoArea = jest.fn();
 
     render(
       <AreaSection
         areaGroup={createTestAreaGroup()}
-        isCompleted={true}
-        onUncompleteArea={onUncompleteArea}
+        undecidedCount={0}
+        onUndoArea={onUndoArea}
       />,
     );
 
     expect(screen.getByText('Undo')).toBeTruthy();
   });
 
-  it('calls onUncompleteArea with area name when Undo is tapped', () => {
-    const onUncompleteArea = jest.fn();
+  it('calls onUndoArea with area name when Undo is tapped', () => {
+    const onUndoArea = jest.fn();
 
     render(
       <AreaSection
         areaGroup={createTestAreaGroup()}
-        isCompleted={true}
-        onUncompleteArea={onUncompleteArea}
+        undecidedCount={0}
+        onUndoArea={onUndoArea}
       />,
     );
 
     fireEvent.press(screen.getByText('Undo'));
 
-    expect(onUncompleteArea).toHaveBeenCalledWith('Fridge');
-    expect(onUncompleteArea).toHaveBeenCalledTimes(1);
+    expect(onUndoArea).toHaveBeenCalledWith('Fridge');
+    expect(onUndoArea).toHaveBeenCalledTimes(1);
   });
 
   it('does not show Undo when area is not completed', () => {
-    const onUncompleteArea = jest.fn();
+    const onUndoArea = jest.fn();
 
     render(
       <AreaSection
         areaGroup={createTestAreaGroup()}
-        isCompleted={false}
-        onUncompleteArea={onUncompleteArea}
+        undecidedCount={1}
+        onUndoArea={onUndoArea}
       />,
     );
 

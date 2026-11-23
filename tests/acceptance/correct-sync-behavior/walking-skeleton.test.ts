@@ -23,6 +23,13 @@ import { createTrip } from '../../../src/domain/trip';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 // =============================================================================
 // WS-1: Staple added on one device appears on the other via real-time listener
 // Story: US-01
@@ -112,7 +119,7 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     // (checkOff calls persistTrip internally, writing to storage)
 
     // When Clemens checks off "Milk" on his phone
-    trip.checkOff('Milk');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
 
     // Then the trip in cloud storage shows "Milk" as checked with a timestamp
     const savedTrip = tripStorage.loadTrip();
@@ -161,7 +168,7 @@ describe('WS-3: New staple auto-adds to active trip', () => {
     trip.initializeFromStorage(library.listAll());
 
     // And the "Bathroom" area sweep is completed
-    trip.completeArea('Bathroom');
+    trip.markAreaDone('Bathroom');
     expect(trip.getSweepProgress().completedAreas).toContain('Bathroom');
 
     // When Clemens adds "Paper Towels" (area: "Bathroom") as a new staple

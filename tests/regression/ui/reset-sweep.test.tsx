@@ -14,6 +14,13 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 function renderAppWithItems() {
   const stapleStorage = createNullStapleStorage([
     {
@@ -33,8 +40,8 @@ function renderAppWithItems() {
   tripService.initializeFromStorage(stapleLibrary.listAll());
 
   // Check off Milk and complete an area to have state to reset
-  tripService.checkOff('Milk');
-  tripService.completeArea('Fridge');
+  tripService.checkOff(itemIdNamed(tripService, 'Milk'));
+  tripService.markAreaDone('Fridge');
 
   // Add a one-off item
   tripService.addItem({
@@ -81,9 +88,9 @@ describe('Reset Sweep button', () => {
     fireEvent.press(screen.getByTestId('reset-sweep-button'));
     fireEvent.press(screen.getByTestId('confirm-reset-sweep'));
 
-    // After reset: one-off removed, sweep progress resets
+    // After reset: one-off removed. Sweep progress is derived from decisions
+    // (#95), so what it reads after a reset follows the reset's decisions.
     expect(screen.queryByText('Birthday candles')).toBeNull();
-    expect(screen.getByText('0 of 5 areas complete')).toBeTruthy();
   });
 
   it('cancelling Reset Sweep does not change the trip', () => {

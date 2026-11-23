@@ -206,6 +206,9 @@ export const applyAddedStaplesToTrip = (
       itemType: 'staple',
       source: 'preloaded',
       stapleId: staple.id,
+      // A staple added through the library joins the sweep Undecided; the
+      // quick-add screens mark their own additions Needed (#96).
+      decision: 'undecided',
     });
   }
 };

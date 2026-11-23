@@ -109,7 +109,9 @@ describe('checklist mode shows alphabetic list and quick add', () => {
     renderApp();
 
     // Default is sweep mode -- area sections should be visible (complete buttons exist)
-    expect(screen.queryAllByTestId(/^complete-/).length).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByTestId(/^(complete|badge)-/).length,
+    ).toBeGreaterThan(0);
 
     // Sweep progress should be visible
     expect(screen.getByText(/areas complete/)).toBeTruthy();

@@ -8,22 +8,30 @@ import {
   AddTripItemResult,
   AddStapleRequest,
   HouseArea,
+  SweepDecision,
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import { UpdateStapleChanges } from './staple-library';
+import { isNeeded } from './item-grouping';
 
 export type StapleInput = AddStapleRequest & { readonly id?: string };
 
-// Extended request for auto-add: includes stapleId for duplicate prevention
+// Extended request for auto-add: includes stapleId for duplicate prevention.
+// decision defaults to Needed (quick-add); the library-add diff path passes
+// Undecided. A one-off is always Needed, whatever is passed.
 export type AddTripItemWithStapleId = AddTripItemRequest & {
   readonly stapleId?: string;
+  readonly decision?: SweepDecision;
 };
 
+// Derived from decisions alone (ADR-013): an area is complete exactly when it
+// holds no Undecided staple, so an empty area counts as complete.
 export type SweepProgress = {
   readonly completedAreas: readonly HouseArea[];
   readonly completedCount: number;
   readonly totalAreas: number;
   readonly allAreasComplete: boolean;
+  readonly undecidedCountByArea: Readonly<Record<HouseArea, number>>;
 };
 
 const DEFAULT_HOUSE_AREAS: readonly string[] = [
@@ -37,12 +45,15 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 export type TripService = {
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly getItems: () => TripItem[];
-  readonly checkOff: (name: string) => void;
-  readonly uncheckItem: (name: string) => void;
-  readonly skipItem: (name: string) => void;
-  readonly unskipItem: (name: string) => void;
-  readonly completeArea: (area: HouseArea) => void;
-  readonly uncompleteArea: (area: HouseArea) => void;
+  readonly checkOff: (itemId: string) => void;
+  readonly uncheckItem: (itemId: string) => void;
+  // Decision operations target one trip item by its id: the library allows
+  // one name in several house areas (spec #90 story 35).
+  readonly stepTowardNeeded: (itemId: string) => void;
+  readonly stepTowardNotNeeded: (itemId: string) => void;
+  readonly setDecision: (itemId: string, decision: SweepDecision) => void;
+  readonly markAreaDone: (area: HouseArea) => void;
+  readonly undoArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
   readonly loadFromStorage: () => void;
   readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
@@ -62,6 +73,26 @@ export type StapleIdentity = {
   readonly name: string;
   readonly houseArea: HouseArea;
 };
+
+// The sweep row is a 3-position slider (ADR-013): a step moves one position
+// along this order and stops at either end.
+const DECISION_SLIDER: readonly SweepDecision[] = [
+  'not-needed',
+  'undecided',
+  'needed',
+];
+
+const stepDecision = (
+  decision: SweepDecision,
+  direction: 1 | -1,
+): SweepDecision => {
+  const position = DECISION_SLIDER.indexOf(decision) + direction;
+  const clamped = Math.min(Math.max(position, 0), DECISION_SLIDER.length - 1);
+  return DECISION_SLIDER[clamped]!;
+};
+
+// One-offs are always Needed (ADR-013): decision operations leave them alone.
+const isSweepable = (item: TripItem): boolean => item.itemType === 'staple';
 
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -85,10 +116,8 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   itemType: 'staple',
   stapleId: staple.id ?? null,
   source: 'preloaded',
-  // Expand step of #90: staples still start Needed so the app behaves as
-  // before; ADR-013's Undecided start lands in a later slice.
-  needed: true,
-  decision: 'needed',
+  // ADR-013: a staple starts the trip Undecided until the sweep decides it.
+  decision: 'undecided',
   checked: false,
   checkedAt: null,
 });
@@ -100,14 +129,38 @@ const buildTrip = (
   tripId: string,
   items: TripItem[],
   createdAt: string,
-  completed: ReadonlySet<HouseArea>,
 ): Trip => ({
   id: tripId,
   items: [...items],
   status: 'active',
   createdAt,
-  completedAreas: [...completed],
 });
+
+const isUndecidedStaple = (item: TripItem): boolean =>
+  item.itemType === 'staple' && item.decision === 'undecided';
+
+const deriveSweepProgress = (
+  items: readonly TripItem[],
+  areas: readonly HouseArea[],
+): SweepProgress => {
+  const undecidedCountByArea = Object.fromEntries(
+    areas.map((area) => [
+      area,
+      items.filter((item) => item.houseArea === area && isUndecidedStaple(item))
+        .length,
+    ]),
+  );
+  const completedAreas = areas.filter(
+    (area) => undecidedCountByArea[area] === 0,
+  );
+  return {
+    completedAreas,
+    completedCount: completedAreas.length,
+    totalAreas: areas.length,
+    allAreasComplete: completedAreas.length === areas.length,
+    undecidedCountByArea,
+  };
+};
 
 // Accepts a getter so getSweepProgress().totalAreas reads the live area
 // list each call, avoiding a build-time-frozen snapshot. A plain array is
@@ -131,22 +184,53 @@ export const createTrip = (
   let items: TripItem[] = [];
   let tripId: string = generateTripId();
   let createdAt: string = new Date().toISOString();
-  const completedAreas = new Set<HouseArea>();
   const listeners = new Set<() => void>();
   const notify = (): void => listeners.forEach((l) => l());
 
   const persistTrip = (): void => {
-    storage.saveTrip(buildTrip(tripId, items, createdAt, completedAreas));
+    storage.saveTrip(buildTrip(tripId, items, createdAt));
   };
 
-  // Apply a partial patch to every item matching `name`, then notify and
-  // persist. Used by check/uncheck/skip/unskip — all share this shape.
+  // Apply a partial patch to the item with `itemId`, then notify and
+  // persist. Used by check/uncheck, which share this shape.
   // Notifying matters because HomeView and StoreView are mounted at the same
   // time (AppShell) and each holds its own useTrip state: without it, an item
-  // skipped on Home stays listed on Store until something else notifies.
-  const updateItemByName = (name: string, patch: Partial<TripItem>): void => {
+  // checked on one view stays stale on the other until something else
+  // notifies.
+  const updateItem = (itemId: string, patch: Partial<TripItem>): void => {
     items = items.map((item) =>
-      item.name === name ? { ...item, ...patch } : item,
+      item.id === itemId ? { ...item, ...patch } : item,
+    );
+    notify();
+    persistTrip();
+  };
+
+  // Done / Undo: move every staple in the area whose decision is `from` to
+  // `to`. Needed staples and other areas are never touched.
+  const moveAreaDecisions = (
+    area: HouseArea,
+    from: SweepDecision,
+    to: SweepDecision,
+  ): void => {
+    items = items.map((item) =>
+      item.houseArea === area &&
+      item.itemType === 'staple' &&
+      item.decision === from
+        ? { ...item, decision: to }
+        : item,
+    );
+    notify();
+    persistTrip();
+  };
+
+  const decideItem = (
+    itemId: string,
+    decide: (current: SweepDecision) => SweepDecision,
+  ): void => {
+    items = items.map((item) =>
+      item.id === itemId && isSweepable(item)
+        ? { ...item, decision: decide(item.decision) }
+        : item,
     );
     notify();
     persistTrip();
@@ -199,8 +283,10 @@ export const createTrip = (
         itemType: request.itemType,
         stapleId: request.stapleId ?? null,
         source: request.source,
-        needed: true,
-        decision: 'needed',
+        decision:
+          request.itemType === 'one-off'
+            ? 'needed'
+            : (request.decision ?? 'needed'),
         checked: false,
         checkedAt: null,
       };
@@ -212,64 +298,49 @@ export const createTrip = (
 
     getItems: () => [...items],
 
-    checkOff: (name: string) => {
-      updateItemByName(name, {
+    checkOff: (itemId: string) => {
+      updateItem(itemId, {
         checked: true,
         checkedAt: new Date().toISOString(),
       });
     },
 
-    uncheckItem: (name: string) => {
-      updateItemByName(name, { checked: false, checkedAt: null });
+    uncheckItem: (itemId: string) => {
+      updateItem(itemId, { checked: false, checkedAt: null });
     },
 
-    skipItem: (name: string) => {
-      updateItemByName(name, { needed: false, decision: 'not-needed' });
+    stepTowardNeeded: (itemId: string) => {
+      decideItem(itemId, (current) => stepDecision(current, 1));
     },
 
-    unskipItem: (name: string) => {
-      updateItemByName(name, { needed: true, decision: 'needed' });
+    stepTowardNotNeeded: (itemId: string) => {
+      decideItem(itemId, (current) => stepDecision(current, -1));
     },
 
-    completeArea: (area: HouseArea) => {
-      completedAreas.add(area);
-      notify();
-      persistTrip();
+    setDecision: (itemId: string, decision: SweepDecision) => {
+      decideItem(itemId, () => decision);
     },
 
-    uncompleteArea: (area: HouseArea) => {
-      completedAreas.delete(area);
-      notify();
-      persistTrip();
+    markAreaDone: (area: HouseArea) => {
+      moveAreaDecisions(area, 'undecided', 'not-needed');
     },
 
-    getSweepProgress: (): SweepProgress => {
-      const completed = [...completedAreas];
-      const totalAreas = getTripAreas().length;
-      return {
-        completedAreas: completed,
-        completedCount: completed.length,
-        totalAreas,
-        allAreasComplete: completed.length === totalAreas,
-      };
+    undoArea: (area: HouseArea) => {
+      moveAreaDecisions(area, 'not-needed', 'undecided');
     },
+
+    getSweepProgress: (): SweepProgress =>
+      deriveSweepProgress(items, getTripAreas()),
 
     loadFromStorage: () => {
       const savedTrip = storage.loadTrip();
       if (savedTrip) {
         const previousItems = items;
-        const previousCompleted = [...completedAreas];
         tripId = savedTrip.id;
         createdAt = savedTrip.createdAt;
         items = [...savedTrip.items];
-        completedAreas.clear();
-        (savedTrip.completedAreas ?? []).forEach((a) => completedAreas.add(a));
 
-        const stateChanged =
-          JSON.stringify(previousItems) !== JSON.stringify(items) ||
-          JSON.stringify(previousCompleted) !==
-            JSON.stringify([...completedAreas]);
-        if (stateChanged) {
+        if (JSON.stringify(previousItems) !== JSON.stringify(items)) {
           notify();
         }
       }
@@ -278,7 +349,6 @@ export const createTrip = (
     resetSweep: (staples: ReadonlyArray<StapleInput>) => {
       const stapleItems = staples.map(stapleInputToTripItem);
       items = stapleItems;
-      completedAreas.clear();
       notify();
       persistTrip();
     },
@@ -335,13 +405,23 @@ export const createTrip = (
           staples.length === 0 &&
           carryover.length === 0;
         if (!rebuildWouldEraseStoredItems) {
-          // Completed trip: start new trip with carryover
-          const stapleItems = staples.map(stapleInputToTripItem);
+          // Completed trip: start new trip with carryover. A carried-over
+          // staple arrives Needed in place of its fresh Undecided copy.
+          const isCarried = (staple: StapleInput): boolean =>
+            carryover.some(
+              matchesStapleIdentity({
+                id: staple.id ?? '',
+                name: staple.name,
+                houseArea: staple.houseArea,
+              }),
+            );
+          const stapleItems = staples
+            .filter((staple) => !isCarried(staple))
+            .map(stapleInputToTripItem);
           items = [...stapleItems, ...carryover];
           storage.clearCarryover();
           tripId = generateTripId();
           createdAt = new Date().toISOString();
-          completedAreas.clear();
           persistTrip();
           return;
         }
@@ -350,8 +430,6 @@ export const createTrip = (
       tripId = savedTrip.id;
       createdAt = savedTrip.createdAt;
       items = [...savedTrip.items];
-      completedAreas.clear();
-      (savedTrip.completedAreas ?? []).forEach((a) => completedAreas.add(a));
     },
 
     subscribe: (listener: () => void): (() => void) => {
@@ -377,7 +455,6 @@ export const createTrip = (
         items: [...items],
         status: 'completed',
         createdAt,
-        completedAreas: [...completedAreas],
       });
 
       return result;
@@ -394,6 +471,9 @@ export type CompleteTripResult = {
 };
 
 const isChecked = (item: TripItem): boolean => item.checked;
+// Finish Trip carries over exactly the Needed items not in the cart (ADR-013).
+const carriesOver = (item: TripItem): boolean =>
+  isNeeded(item) && !item.checked;
 const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
 const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 
@@ -401,10 +481,9 @@ const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 // Used by `complete()`, which also persists carryover and trip status.
 const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
   const checkedItems = items.filter(isChecked);
-  const uncheckedItems = items.filter((item) => !isChecked(item));
   return {
     purchasedStaples: checkedItems.filter(isStaple),
     purchasedOneOffs: checkedItems.filter(isOneOff),
-    unboughtItems: uncheckedItems,
+    unboughtItems: items.filter(carriesOver),
   };
 };

@@ -32,6 +32,13 @@ import { TripItem } from '../../../src/domain/types';
 // Null adapters for testing:
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
+
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
 //
 // UI components (for UI-level walking skeleton tests):
 // import { render, fireEvent, waitFor } from '@testing-library/react-native';
@@ -402,7 +409,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         itemType: 'staple',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -411,7 +417,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         itemType: 'staple',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -420,7 +425,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
         itemType: 'staple',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -429,7 +433,6 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Deli', aisleNumber: null },
         itemType: 'one-off',
         checked: false,
-        needed: true,
         decision: 'needed',
       },
     ];
@@ -453,14 +456,12 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
       {
         name: 'Whole milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        needed: true,
         decision: 'needed',
         checked: false,
       },
       {
         name: 'Deli turkey',
         storeLocation: { section: 'Deli', aisleNumber: null },
-        needed: true,
         decision: 'needed',
         checked: false,
       },
@@ -484,7 +485,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    trip.checkOff('Whole milk');
+    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
 
     // When Carlos views the items (toggle does not change data, only grouping)
     const items = trip.getItems();
@@ -519,7 +520,7 @@ describe('WS-5: Check Off Items in Store', () => {
     ]);
 
     // When Carlos checks off "Whole milk"
-    trip.checkOff('Whole milk');
+    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
 
     // Then "Whole milk" shows as in the cart
     const milk = trip.getItems().find((i) => i.name === 'Whole milk');
@@ -542,10 +543,10 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    trip.checkOff('Butter');
+    trip.checkOff(itemIdNamed(trip, 'Butter'));
 
     // When Carlos taps "Butter" again
-    trip.uncheckItem('Butter');
+    trip.uncheckItem(itemIdNamed(trip, 'Butter'));
 
     // Then "Butter" is unchecked
     const butter = trip.getItems().find((i) => i.name === 'Butter');
@@ -578,9 +579,9 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Bakery', aisleNumber: null },
       },
     ]);
-    trip1.checkOff('Milk');
-    trip1.checkOff('Eggs');
-    trip1.checkOff('Bread');
+    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
+    trip1.checkOff(itemIdNamed(trip1, 'Eggs'));
+    trip1.checkOff(itemIdNamed(trip1, 'Bread'));
 
     // When the app restarts (simulate by creating new trip instance with same storage)
     const trip2 = createTrip(tripStorage);
@@ -599,7 +600,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -607,7 +607,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: false,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -615,7 +614,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: true,
-        needed: true,
         decision: 'needed',
       },
       {
@@ -623,7 +621,6 @@ describe('WS-5: Check Off Items in Store', () => {
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         checked: true,
-        needed: true,
         decision: 'needed',
       },
     ];
@@ -676,8 +673,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
       itemType: 'one-off',
       source: 'quick-add',
     });
-    trip.checkOff('Whole milk');
-    trip.checkOff('Birthday candles');
+    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
+    trip.checkOff(itemIdNamed(trip, 'Birthday candles'));
     // Avocados left unchecked
 
     // When Carlos finishes the trip
@@ -724,7 +721,6 @@ describe('WS-6: Complete Trip with Carryover', () => {
         itemType: 'one-off',
         stapleId: null,
         source: 'carryover',
-        needed: true,
         decision: 'needed',
         checked: false,
         checkedAt: null,
@@ -735,7 +731,6 @@ describe('WS-6: Complete Trip with Carryover', () => {
       items: [],
       status: 'completed',
       createdAt: '2026-01-01T00:00:00.000Z',
-      completedAreas: [],
     });
     tripStorage.saveCarryover(carryover);
     trip.initializeFromStorage([]);
@@ -787,8 +782,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
-    trip.checkOff('Milk');
-    trip.checkOff('Eggs');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.checkOff(itemIdNamed(trip, 'Eggs'));
 
     // When Carlos finishes the trip
     trip.complete();
@@ -836,7 +831,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
       source: 'quick-add',
     });
     // Check all items
-    trip.getItems().forEach((i) => trip.checkOff(i.name));
+    trip.getItems().forEach((i) => trip.checkOff(itemIdNamed(trip, i.name)));
 
     // When Carlos finishes the trip
     trip.complete();

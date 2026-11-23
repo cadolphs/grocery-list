@@ -627,11 +627,10 @@ describe('initializeApp', () => {
       const result = await initializeApp(authUser, factories);
       const tripService = result.services!.tripService;
 
-      // Complete an area
-      tripService.completeArea('Bathroom');
-      expect(tripService.getSweepProgress().completedAreas).toContain(
-        'Bathroom',
-      );
+      // Sweep an area: Milk starts Undecided and is decided by Done (#95
+      // derives completion from decisions)
+      tripService.markAreaDone('Fridge');
+      expect(tripService.getSweepProgress().completedAreas).toContain('Fridge');
 
       // Simulate remote staple add
       sharedStorage!.save({
@@ -644,10 +643,8 @@ describe('initializeApp', () => {
       });
       capturedOnChange!();
 
-      // Sweep progress preserved
-      expect(tripService.getSweepProgress().completedAreas).toContain(
-        'Bathroom',
-      );
+      // Sweep progress preserved: the swept area stays complete
+      expect(tripService.getSweepProgress().completedAreas).toContain('Fridge');
       // New item added
       expect(tripService.getItems().map((i) => i.name)).toContain('Soap');
     });
@@ -757,7 +754,6 @@ describe('initializeApp', () => {
             itemType: 'staple',
             stapleId: cinnamonStaple.id,
             source: 'preloaded',
-            needed: true,
             decision: 'needed',
             checked: false,
             checkedAt: null,
@@ -770,7 +766,6 @@ describe('initializeApp', () => {
             itemType: 'staple',
             stapleId: null,
             source: 'carryover',
-            needed: true,
             decision: 'needed',
             checked: false,
             checkedAt: null,
@@ -778,7 +773,6 @@ describe('initializeApp', () => {
         ],
         status: 'active',
         createdAt: new Date().toISOString(),
-        completedAreas: [],
       });
       tripService.loadFromStorage();
 

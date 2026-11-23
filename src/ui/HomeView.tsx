@@ -13,11 +13,10 @@ import {
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
-import { groupByArea, getOneOffItems } from '../domain/item-grouping';
+import { groupByArea, getOneOffItems, isNeeded } from '../domain/item-grouping';
 import {
   HouseArea,
   StapleItem,
-  AddStapleRequest,
   AddOneOffRequest,
   AddTripItemRequest,
 } from '../domain/types';
@@ -45,10 +44,12 @@ export const HomeView = (): React.JSX.Element => {
   const {
     items,
     addItem,
-    skipItem,
-    unskipItem,
-    completeArea,
-    uncompleteArea,
+    setDecision,
+    stepTowardNeeded,
+    stepTowardNotNeeded,
+    addStapleAsNeeded,
+    markAreaDone,
+    undoArea,
     resetSweep,
     syncStapleUpdate,
     sweepProgress,
@@ -73,7 +74,7 @@ export const HomeView = (): React.JSX.Element => {
     [allStaples],
   );
   const tripItemNameSet = useMemo(
-    () => new Set(items.filter((i) => i.needed).map((i) => i.name)),
+    () => new Set(items.filter(isNeeded).map((i) => i.name)),
     [items],
   );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
@@ -125,13 +126,6 @@ export const HomeView = (): React.JSX.Element => {
     setEditStapleId(null);
     setEditInitialValues(null);
   }, []);
-
-  const handleSubmitStaple = useCallback(
-    (request: AddStapleRequest): void => {
-      stapleLibrary.addStaple(request);
-    },
-    [stapleLibrary],
-  );
 
   const handleSubmitOneOff = useCallback(
     (request: AddOneOffRequest): void => {
@@ -195,8 +189,8 @@ export const HomeView = (): React.JSX.Element => {
           i.stapleId === staple.id ||
           (i.name === staple.name && i.houseArea === staple.houseArea),
       );
-      if (existingItem && !existingItem.needed) {
-        unskipItem(existingItem.name);
+      if (existingItem && !isNeeded(existingItem)) {
+        setDecision(existingItem.id, 'needed');
       } else if (!existingItem) {
         addItem({
           name: staple.name,
@@ -208,24 +202,18 @@ export const HomeView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem, unskipItem],
+    [items, addItem, setDecision],
   );
 
+  // The checklist is keyed by name, so this still unticks every row of that
+  // name, as it did before decisions took a trip item id.
   const handleRemoveFromChecklist = useCallback(
     (name: string): void => {
-      skipItem(name);
+      items
+        .filter((i) => i.name === name)
+        .forEach((i) => setDecision(i.id, 'not-needed'));
     },
-    [skipItem],
-  );
-
-  // Single source of truth for "tap toggles needed" used by sweep tiles
-  // and one-off rows. Both paths previously inlined the same if/else.
-  const toggleItemNeeded = useCallback(
-    (name: string, currentlyNeeded: boolean): void => {
-      if (currentlyNeeded) skipItem(name);
-      else unskipItem(name);
-    },
-    [skipItem, unskipItem],
+    [items, setDecision],
   );
 
   const handleSelectSuggestion = useCallback(
@@ -240,10 +228,10 @@ export const HomeView = (): React.JSX.Element => {
               item.name === staple.name && item.houseArea === staple.houseArea,
           );
       // Same rule as StoreView.handleSelectSuggestion and
-      // handleAddFromChecklist above: a skipped row is un-skipped, a missing
-      // row is added, and a needed row is left alone (no duplicate).
-      if (existing && !existing.needed) {
-        unskipItem(existing.name);
+      // handleAddFromChecklist above: a row not yet Needed is set Needed, a
+      // missing row is added, and a Needed row is left alone (no duplicate).
+      if (existing && !isNeeded(existing)) {
+        setDecision(existing.id, 'needed');
       } else if (!existing) {
         const houseArea =
           isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
@@ -257,7 +245,7 @@ export const HomeView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem, unskipItem],
+    [items, addItem, setDecision],
   );
 
   if (settingsView === 'section-order') {
@@ -382,18 +370,17 @@ export const HomeView = (): React.JSX.Element => {
             <AreaSection
               key={areaGroup.area}
               areaGroup={areaGroup}
-              onItemPress={(name: string) => {
-                const item = areaGroup.items.find((i) => i.name === name);
-                if (item) toggleItemNeeded(name, item.needed);
-              }}
               onItemLongPress={handleEditStaple}
-              onCompleteArea={completeArea}
-              onUncompleteArea={uncompleteArea}
+              onSetItemDecision={setDecision}
+              onStepItemTowardNeeded={stepTowardNeeded}
+              onStepItemTowardNotNeeded={stepTowardNotNeeded}
+              onMarkAreaDone={markAreaDone}
+              onUndoArea={undoArea}
               onSelectArea={handleSelectArea}
-              isCompleted={sweepProgress.completedAreas.includes(
-                areaGroup.area,
-              )}
               isActive={activeArea === areaGroup.area}
+              undecidedCount={
+                sweepProgress.undecidedCountByArea[areaGroup.area] ?? 0
+              }
             />
           ))}
           {oneOffItems.length > 0 && (
@@ -402,12 +389,7 @@ export const HomeView = (): React.JSX.Element => {
                 One-offs ({oneOffItems.length})
               </Text>
               {oneOffItems.map((item) => (
-                <TripItemRow
-                  key={item.id}
-                  item={item}
-                  mode="home"
-                  onPress={() => toggleItemNeeded(item.name, item.needed)}
-                />
+                <TripItemRow key={item.id} item={item} mode="home" />
               ))}
             </View>
           )}
@@ -466,7 +448,7 @@ export const HomeView = (): React.JSX.Element => {
         existingSections={existingSections}
         onFindDuplicate={handleFindDuplicate}
         onDismiss={handleDismissMetadataSheet}
-        onSubmitStaple={handleSubmitStaple}
+        onSubmitStaple={addStapleAsNeeded}
         onSubmitOneOff={handleSubmitOneOff}
         onSubmitTripItem={handleSubmitTripItem}
         onSaveEdit={handleSaveEdit}

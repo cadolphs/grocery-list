@@ -7,7 +7,11 @@ import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { useServices } from './ServiceProvider';
-import { groupBySection } from '../domain/item-grouping';
+import {
+  groupBySection,
+  isNeeded,
+  isOnShoppingList,
+} from '../domain/item-grouping';
 import {
   sortByCustomOrder,
   appendNewSections,
@@ -16,7 +20,6 @@ import { CompleteTripResult } from '../domain/trip';
 import {
   HouseArea,
   StapleItem,
-  AddStapleRequest,
   AddOneOffRequest,
   AddTripItemRequest,
 } from '../domain/types';
@@ -29,8 +32,14 @@ import { theme } from './theme';
 import { surfaces } from './surfaces';
 
 export const StoreView = (): React.JSX.Element => {
-  const { items, addItem, toggleCheckOff, unskipItem, syncStapleUpdate } =
-    useTrip();
+  const {
+    items,
+    addItem,
+    toggleCheckOff,
+    setDecision,
+    addStapleAsNeeded,
+    syncStapleUpdate,
+  } = useTrip();
   const { tripService, stapleLibrary } = useServices();
   const { areas } = useAreas();
   const { order: sectionOrder } = useSectionOrder();
@@ -94,13 +103,6 @@ export const StoreView = (): React.JSX.Element => {
     setEditInitialValues(null);
   }, []);
 
-  const handleSubmitStaple = useCallback(
-    (request: AddStapleRequest): void => {
-      stapleLibrary.addStaple(request);
-    },
-    [stapleLibrary],
-  );
-
   const handleSubmitOneOff = useCallback(
     (request: AddOneOffRequest): void => {
       stapleLibrary.addOneOff(request);
@@ -140,8 +142,8 @@ export const StoreView = (): React.JSX.Element => {
             (item) =>
               item.name === staple.name && item.houseArea === staple.houseArea,
           );
-      if (existing && !existing.needed) {
-        unskipItem(existing.name);
+      if (existing && !isNeeded(existing)) {
+        setDecision(existing.id, 'needed');
       } else if (!existing) {
         const houseArea =
           isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
@@ -155,7 +157,7 @@ export const StoreView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem, unskipItem],
+    [items, addItem, setDecision],
   );
 
   if (tripResult !== null && showSummary) {
@@ -167,8 +169,8 @@ export const StoreView = (): React.JSX.Element => {
     );
   }
 
-  const neededItems = items.filter((item) => item.needed);
-  const groups = groupBySection(neededItems);
+  const listedItems = items.filter(isOnShoppingList);
+  const groups = groupBySection(listedItems);
   const knownSectionNames = groups.map((group) => group.section);
   const effectiveOrder =
     sectionOrder !== null
@@ -210,7 +212,7 @@ export const StoreView = (): React.JSX.Element => {
         areas={areas as HouseArea[]}
         existingSections={existingSections}
         onDismiss={handleDismissMetadataSheet}
-        onSubmitStaple={handleSubmitStaple}
+        onSubmitStaple={addStapleAsNeeded}
         onSubmitOneOff={handleSubmitOneOff}
         onSubmitTripItem={handleSubmitTripItem}
         onSaveEdit={handleSaveEdit}

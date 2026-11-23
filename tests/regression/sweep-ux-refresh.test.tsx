@@ -1,16 +1,17 @@
 /**
  * Sweep UX Refresh - Steps 01-01 and 01-02
  *
- * 01-01: Home mode tap toggles needed state with green/grey styling.
- * 01-02: Home mode long-press opens edit sheet; no skip section in AreaSection.
+ * 01-01: Home mode rows style Needed and Not needed items apart.
+ * 01-02: Home mode long-press opens edit sheet; no Not needed section in
+ * AreaSection.
  *
- * New behavior:
+ * Behavior:
  * - Tap calls onPress
- * - No Skip button in home mode
- * - Needed items: green text (#4CAF50)
- * - Skipped items: grey text (#999999) with strikethrough
+ * - Needed items: text color
+ * - Not needed items: muted text with strikethrough
  * - Long-press calls onLongPress in home mode (same as store mode)
- * - AreaSection renders all items inline (no separate skipped section or Re-add buttons)
+ * - AreaSection renders all items inline (no separate Not needed section or
+ *   Re-add buttons)
  */
 
 import React from 'react';
@@ -27,6 +28,13 @@ import { createNullStapleStorage } from '../../src/adapters/null/null-staple-sto
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../src/domain/trip';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   id: 'item-1',
   name: 'Milk',
@@ -35,14 +43,13 @@ const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   itemType: 'staple',
   stapleId: 'staple-1',
   source: 'preloaded',
-  needed: true,
   decision: 'needed',
   checked: false,
   checkedAt: null,
   ...overrides,
 });
 
-describe('home mode tap toggles needed state with green/grey', () => {
+describe('home mode rows style Needed and Not needed apart', () => {
   it('tap calls onPress for staple items in home mode', () => {
     const onPress = jest.fn();
     const item = createTripItem();
@@ -54,17 +61,8 @@ describe('home mode tap toggles needed state with green/grey', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('does not render a Skip button in home mode', () => {
-    const onSkip = jest.fn();
-    const item = createTripItem();
-
-    render(<TripItemRow item={item} mode="home" onSkip={onSkip} />);
-
-    expect(screen.queryByText('Skip')).toBeNull();
-  });
-
   it('renders needed item with green text color', () => {
-    const item = createTripItem({ needed: true });
+    const item = createTripItem({ decision: 'needed' });
 
     render(<TripItemRow item={item} mode="home" />);
 
@@ -76,8 +74,8 @@ describe('home mode tap toggles needed state with green/grey', () => {
     expect(flatStyle.color).toBe(theme.color.text);
   });
 
-  it('renders skipped item with grey strikethrough text', () => {
-    const item = createTripItem({ needed: false });
+  it('renders Not needed item with muted strikethrough text', () => {
+    const item = createTripItem({ decision: 'not-needed' });
 
     render(<TripItemRow item={item} mode="home" />);
 
@@ -91,11 +89,11 @@ describe('home mode tap toggles needed state with green/grey', () => {
   });
 });
 
-describe('home mode long-press opens edit and no skip section', () => {
+describe('home mode long-press opens edit and no Not needed section', () => {
   const createAreaGroup = (items: TripItem[]): AreaGroup => ({
     area: 'Fridge',
     items,
-    neededCount: items.filter((i) => i.needed).length,
+    neededCount: items.filter((i) => i.decision === 'needed').length,
     totalCount: items.length,
   });
 
@@ -112,13 +110,12 @@ describe('home mode long-press opens edit and no skip section', () => {
   });
 
   it('AreaSection does not render Re-add buttons', () => {
-    const skippedItem = createTripItem({
+    const notNeededItem = createTripItem({
       id: 'item-2',
       name: 'Butter',
-      needed: false,
       decision: 'not-needed',
     });
-    const areaGroup = createAreaGroup([createTripItem(), skippedItem]);
+    const areaGroup = createAreaGroup([createTripItem(), notNeededItem]);
 
     render(<AreaSection areaGroup={areaGroup} />);
 
@@ -126,20 +123,18 @@ describe('home mode long-press opens edit and no skip section', () => {
     expect(screen.queryByTestId('readd-Butter')).toBeNull();
   });
 
-  it('AreaSection renders both needed and skipped items inline', () => {
+  it('AreaSection renders both Needed and Not needed items inline', () => {
     const neededItem = createTripItem({
       id: 'item-1',
       name: 'Milk',
-      needed: true,
       decision: 'needed',
     });
-    const skippedItem = createTripItem({
+    const notNeededItem = createTripItem({
       id: 'item-2',
       name: 'Butter',
-      needed: false,
       decision: 'not-needed',
     });
-    const areaGroup = createAreaGroup([neededItem, skippedItem]);
+    const areaGroup = createAreaGroup([neededItem, notNeededItem]);
 
     render(<AreaSection areaGroup={areaGroup} />);
 
@@ -161,18 +156,6 @@ describe('home mode long-press opens edit and no skip section', () => {
 
     expect(onItemLongPress).toHaveBeenCalledWith('Milk', 'Fridge');
   });
-
-  it('AreaSection passes onItemPress for toggle', () => {
-    const onItemPress = jest.fn();
-    const item = createTripItem();
-    const areaGroup = createAreaGroup([item]);
-
-    render(<AreaSection areaGroup={areaGroup} onItemPress={onItemPress} />);
-
-    fireEvent.press(screen.getByText('Milk'));
-
-    expect(onItemPress).toHaveBeenCalledWith('Milk');
-  });
 });
 
 describe('groupByArea excludes one-offs from area groups', () => {
@@ -189,7 +172,6 @@ describe('groupByArea excludes one-offs from area groups', () => {
     itemType: 'staple',
     stapleId: 'staple-1',
     source: 'preloaded',
-    needed: true,
     decision: 'needed',
     checked: false,
     checkedAt: null,
@@ -269,6 +251,12 @@ describe('sweep mode shows one-offs section separately', () => {
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    stapleLibrary
+      .listAll()
+      .forEach((s) =>
+        tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+      );
 
     tripService.addItem({
       name: 'Birthday Candles',
@@ -306,6 +294,12 @@ describe('sweep mode shows one-offs section separately', () => {
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    stapleLibrary
+      .listAll()
+      .forEach((s) =>
+        tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+      );
 
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
@@ -316,17 +310,18 @@ describe('sweep mode shows one-offs section separately', () => {
     expect(screen.queryByText(/One-offs/)).toBeNull();
   });
 
-  it('one-off item tap toggles needed state', () => {
+  // #96: one-offs are always Needed, so a tap leaves one Needed.
+  it('one-off item tap leaves it Needed', () => {
     renderAppWithOneOff();
 
     const item = screen.getByText('Birthday Candles');
     fireEvent.press(item);
 
-    // After tap, item should be skipped (grey strikethrough)
     const flatStyle = Array.isArray(item.props.style)
       ? Object.assign({}, ...item.props.style.filter(Boolean))
       : item.props.style;
 
-    expect(flatStyle.color).toBe(theme.color.textMuted);
+    expect(flatStyle.color).not.toBe(theme.color.textMuted);
+    expect(flatStyle.textDecorationLine).not.toBe('line-through');
   });
 });

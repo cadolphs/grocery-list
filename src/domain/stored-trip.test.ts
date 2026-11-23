@@ -4,7 +4,7 @@ import { readStoredTrip, StoredTripItem } from './stored-trip';
 import { SweepDecision } from './types';
 
 const storedItem = (
-  needed: boolean,
+  needed: boolean | undefined,
   decision?: SweepDecision,
 ): StoredTripItem => ({
   id: 'item-1',
@@ -14,7 +14,7 @@ const storedItem = (
   itemType: 'staple',
   stapleId: 'staple-1',
   source: 'preloaded',
-  needed,
+  ...(needed === undefined ? {} : { needed }),
   ...(decision === undefined ? {} : { decision }),
   checked: false,
   checkedAt: null,
@@ -29,7 +29,12 @@ const readDecision = (item: StoredTripItem) =>
   }).items[0]!.decision;
 
 describe('readStoredTrip', () => {
-  test.each<[string, boolean, SweepDecision | undefined, SweepDecision]>([
+  test.each<
+    [string, boolean | undefined, SweepDecision | undefined, SweepDecision]
+  >([
+    ['decision only, Needed', undefined, 'needed', 'needed'],
+    ['decision only, Not needed', undefined, 'not-needed', 'not-needed'],
+    ['decision only, Undecided', undefined, 'undecided', 'undecided'],
     ['legacy needed', true, undefined, 'needed'],
     ['legacy not needed', false, undefined, 'not-needed'],
     ['agreeing Needed', true, 'needed', 'needed'],
@@ -57,6 +62,17 @@ describe('readStoredTrip', () => {
     expect(readDecision(storedItem(needed, stored))).toBe(expected);
   });
 
+  test('reads an item without the legacy needed flag', () => {
+    const trip = {
+      id: 'trip-1',
+      items: [storedItem(true, 'needed')],
+      status: 'active' as const,
+      createdAt: '2026-11-23T00:00:00.000Z',
+    };
+
+    expect(readStoredTrip(trip).items[0]).not.toHaveProperty('needed');
+  });
+
   test('keeps every other field of the trip and its items', () => {
     const trip = {
       id: 'trip-1',
@@ -67,7 +83,7 @@ describe('readStoredTrip', () => {
 
     expect(readStoredTrip(trip)).toEqual({
       ...trip,
-      items: [{ ...storedItem(true), decision: 'needed' }],
+      items: [{ ...storedItem(undefined), decision: 'needed' }],
     });
   });
 });

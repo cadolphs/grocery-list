@@ -10,6 +10,13 @@
 import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 describe('US-02: Firestore trip storage adapter', () => {
   // =============================================================================
   // S-05: Trip state persists to cloud on checkoff
@@ -38,7 +45,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     ]);
 
     // When Clemens checks off "Milk"
-    trip.checkOff('Milk');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
 
     // Then the trip in cloud storage contains "Milk" as checked
     const savedTrip = tripStorage.loadTrip();
@@ -75,9 +82,14 @@ describe('US-02: Firestore trip storage adapter', () => {
       },
     ]);
 
+    // #96: staples start Undecided; the sweep marks all three Needed.
+    ['Milk', 'Eggs', 'Olive Oil'].forEach((name) =>
+      trip.setDecision(itemIdNamed(trip, name), 'needed'),
+    );
+
     // And "Milk" and "Eggs" are checked off
-    trip.checkOff('Milk');
-    trip.checkOff('Eggs');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.checkOff(itemIdNamed(trip, 'Eggs'));
 
     // When Clemens completes the trip
     trip.complete();
@@ -143,9 +155,9 @@ describe('US-02: Firestore trip storage adapter', () => {
       },
     ];
     setupTrip.initializeFromStorage(staples);
-    setupTrip.checkOff('Milk');
-    setupTrip.checkOff('Eggs');
-    setupTrip.checkOff('Bread');
+    setupTrip.checkOff(itemIdNamed(setupTrip, 'Milk'));
+    setupTrip.checkOff(itemIdNamed(setupTrip, 'Eggs'));
+    setupTrip.checkOff(itemIdNamed(setupTrip, 'Bread'));
 
     // When the app initializes and reads from cloud storage
     const loadedTrip = createTrip(tripStorage);
@@ -180,7 +192,7 @@ describe('US-02: Firestore trip storage adapter', () => {
 
     // When Clemens checks off "Eggs"
     // (Even if the background persist fails, the local state is updated first)
-    trip.checkOff('Eggs');
+    trip.checkOff(itemIdNamed(trip, 'Eggs'));
 
     // Then "Eggs" appears checked in the local view immediately
     const eggs = trip.getItems().find((i) => i.name === 'Eggs');

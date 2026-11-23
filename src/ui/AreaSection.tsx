@@ -4,21 +4,25 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { AreaGroup } from '../domain/item-grouping';
+import { SweepDecision } from '../domain/types';
 import { TripItemRow } from './TripItemRow';
 import { theme } from './theme';
 import { surfaces } from './surfaces';
 
 type AreaSectionProps = {
   readonly areaGroup: AreaGroup;
-  readonly onSkipItem?: (name: string) => void;
-  readonly onUnskipItem?: (name: string) => void;
-  readonly onCompleteArea?: (area: string) => void;
-  readonly onUncompleteArea?: (area: string) => void;
+  readonly onMarkAreaDone?: (area: string) => void;
+  readonly onUndoArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
-  readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
-  readonly isCompleted?: boolean;
+  readonly onSetItemDecision?: (
+    itemId: string,
+    decision: SweepDecision,
+  ) => void;
+  readonly onStepItemTowardNeeded?: (itemId: string) => void;
+  readonly onStepItemTowardNotNeeded?: (itemId: string) => void;
   readonly isActive?: boolean;
+  readonly undecidedCount?: number;
 };
 
 const formatAreaHeading = (area: string, neededCount: number): string =>
@@ -26,15 +30,18 @@ const formatAreaHeading = (area: string, neededCount: number): string =>
 
 export const AreaSection = ({
   areaGroup,
-  onCompleteArea,
-  onUncompleteArea,
+  onMarkAreaDone,
+  onUndoArea,
   onSelectArea,
-  onItemPress,
   onItemLongPress,
-  isCompleted,
+  onSetItemDecision,
+  onStepItemTowardNeeded,
+  onStepItemTowardNotNeeded,
   isActive,
+  undecidedCount = 0,
 }: AreaSectionProps): React.JSX.Element => {
-  const neededCount = areaGroup.items.filter((item) => item.needed).length;
+  // An area is complete when it holds no Undecided staple (ADR-013).
+  const isCompleted = undecidedCount === 0;
 
   return (
     <View
@@ -48,19 +55,27 @@ export const AreaSection = ({
           }
         >
           <Text style={styles.heading}>
-            {formatAreaHeading(areaGroup.area, neededCount)}
+            {formatAreaHeading(areaGroup.area, areaGroup.neededCount)}
           </Text>
         </Pressable>
-        {isCompleted && onUncompleteArea && (
+        {undecidedCount > 0 && (
+          <Text
+            style={styles.undecidedCount}
+            testID={`undecided-count-${areaGroup.area}`}
+          >
+            {`${undecidedCount} undecided`}
+          </Text>
+        )}
+        {isCompleted && onUndoArea && (
           <Pressable
             style={styles.badge}
             testID={`badge-${areaGroup.area}`}
-            onPress={() => onUncompleteArea(areaGroup.area)}
+            onPress={() => onUndoArea(areaGroup.area)}
           >
             <Text style={styles.badgeText}>Undo</Text>
           </Pressable>
         )}
-        {isCompleted && !onUncompleteArea && (
+        {isCompleted && !onUndoArea && (
           <View style={styles.badge} testID={`badge-${areaGroup.area}`}>
             <Text style={styles.badgeText}>Complete</Text>
           </View>
@@ -72,16 +87,18 @@ export const AreaSection = ({
           <TripItemRow
             item={item}
             mode="home"
-            onPress={onItemPress ? () => onItemPress(item.name) : undefined}
             onLongPress={onItemLongPress}
+            onSetDecision={onSetItemDecision}
+            onStepTowardNeeded={onStepItemTowardNeeded}
+            onStepTowardNotNeeded={onStepItemTowardNotNeeded}
           />
         </View>
       ))}
-      {onCompleteArea && !isCompleted && (
+      {onMarkAreaDone && !isCompleted && (
         <Pressable
           style={styles.doneButton}
           testID={`complete-${areaGroup.area}`}
-          onPress={() => onCompleteArea(areaGroup.area)}
+          onPress={() => onMarkAreaDone(areaGroup.area)}
         >
           <Text style={styles.doneText}>Done</Text>
         </Pressable>
@@ -107,6 +124,10 @@ const styles = StyleSheet.create({
     fontWeight: theme.font.weight.bold,
     color: theme.color.text,
   },
+  undecidedCount: {
+    fontSize: theme.font.size.sm,
+    color: theme.color.textMuted,
+  },
   badge: {
     backgroundColor: theme.color.inverse,
     borderRadius: theme.radius.pill,
@@ -120,27 +141,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 0,
-  },
-  skippedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.space.xs,
-  },
-  skippedName: {
-    color: theme.color.textMuted,
-    textDecorationLine: 'line-through',
-    fontSize: theme.font.size.sm,
-  },
-  readdButton: {
-    minHeight: theme.target.min,
-    paddingHorizontal: theme.space.md,
-    justifyContent: 'center',
-  },
-  readdText: {
-    textDecorationLine: 'underline',
-    color: theme.color.text,
-    fontWeight: theme.font.weight.bold,
   },
   doneButton: {
     ...surfaces.darkButton,

@@ -26,7 +26,7 @@ import { surfaces } from './surfaces';
 
 type AisleSectionProps = {
   readonly sectionGroup: SectionGroup;
-  readonly onItemPress?: (name: string) => void;
+  readonly onItemPress?: (itemId: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
@@ -47,7 +47,7 @@ const aisleBadgeLabel = (aisleKey: AisleKey): string =>
   aisleKey === null ? 'No aisle' : String(aisleKey);
 
 type ItemHandlers = {
-  readonly onItemPress?: (name: string) => void;
+  readonly onItemPress?: (itemId: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
@@ -62,9 +62,7 @@ const renderItemRow = (
       item={item}
       mode="store"
       onPress={
-        handlers.onItemPress
-          ? () => handlers.onItemPress!(item.name)
-          : undefined
+        handlers.onItemPress ? () => handlers.onItemPress!(item.id) : undefined
       }
       onLongPress={
         handlers.onItemLongPress

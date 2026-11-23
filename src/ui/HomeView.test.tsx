@@ -21,8 +21,13 @@
 // boundary (the production handler does exactly stapleLibrary.remove(id)
 // after step 01-03).
 
+// Native by default, as before; the sweep row web tests switch it to web.
+jest.mock('../hooks/useIsWeb', () => ({ useIsWeb: jest.fn(() => false) }));
+
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
+import { useIsWeb } from '../hooks/useIsWeb';
+import { SweepDecision } from '../domain/types';
 import { HomeView } from './HomeView';
 import { StoreView } from './StoreView';
 import { ServiceProvider } from './ServiceProvider';
@@ -36,6 +41,13 @@ import { AreaStorage } from '../ports/area-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { TripStorage } from '../ports/trip-storage';
 import { AddStapleRequest } from '../domain/types';
+
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
 
 // --- Test infrastructure: initializable storage wrappers (matching the
 // production InitializableStorage<T> shape used by initializeApp). ---
@@ -168,11 +180,9 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
     );
 
     // AND no reset-sweep occurred (the trip was edited in place; reset would
-    // have rebuilt items from staples and cleared completedAreas).
-    // Verify by inspecting the trip's persisted state — completedAreas
-    // remains the empty set we started with, but the items list shrank
-    // strictly (a reset would have left an empty items list AND triggered
-    // a notify with rebuilt staple items).
+    // have rebuilt items from staples). The items list shrank strictly (a
+    // reset would have left an empty items list AND triggered a notify with
+    // rebuilt staple items).
     expect(services.tripService.getItems()).toEqual([]); // only Milk was seeded; deletion removed it
   });
 
@@ -310,6 +320,12 @@ describe('HomeView staple-add flow (fix-staple-add-duplicate 01-01)', () => {
       fireEvent(quickAddInput, 'submitEditing');
     });
 
+    // An empty trip has every area complete (#95), so the sheet defaults to
+    // One-off; pick Staple, the flow under test.
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('type-toggle-Staple'));
+    });
+
     // The bottom sheet is now visible. Select the Kitchen Cabinets area
     // chip (it should already be the default, but tap to be explicit).
     const areaButton =
@@ -389,9 +405,11 @@ describe('StoreView existingSections reactivity (fix-staple-delete-trip-sync 01-
   });
 });
 
-describe('HomeView QuickAdd suggestion un-skips a skipped item (#74 finding 4)', () => {
-  test('picking a suggestion for a one-off that is in the trip but skipped marks it needed again without a duplicate', async () => {
-    // GIVEN "Tahini" is a persisted one-off, already in the trip, and skipped.
+// #96: one-offs are always Needed, so the Not needed one-off this test once
+// started from cannot exist; what remains is the no-duplicate rule.
+describe('HomeView QuickAdd suggestion for a one-off already in the trip (#74 finding 4)', () => {
+  test('picking a suggestion for a one-off that is already in the trip keeps it Needed without a duplicate', async () => {
+    // GIVEN "Tahini" is a persisted one-off, already in the trip.
     const services = await initServicesWith([], ['Kitchen Cabinets']);
     services.stapleLibrary.addOneOff({
       name: 'Tahini',
@@ -409,15 +427,13 @@ describe('HomeView QuickAdd suggestion un-skips a skipped item (#74 finding 4)',
       source: 'quick-add',
       stapleId: tahini.id,
     });
-    services.tripService.skipItem('Tahini');
     const tree = renderHomeView(services);
 
-    // Sanity: it is in the trip exactly once and not needed.
+    // Sanity: it is in the trip exactly once.
     const before = services.tripService
       .getItems()
       .filter((i) => i.name === 'Tahini');
     expect(before).toHaveLength(1);
-    expect(before[0]!.needed).toBe(false);
 
     // WHEN the user types into QuickAdd on Home and taps the suggestion.
     const quickAddInput = tree.getByPlaceholderText('Add an item...');
@@ -428,12 +444,495 @@ describe('HomeView QuickAdd suggestion un-skips a skipped item (#74 finding 4)',
       fireEvent.press(tree.getByText(/Tahini.*International/));
     });
 
-    // THEN the existing row is needed again, and no duplicate was added:
+    // THEN the existing row is still Needed, and no duplicate was added:
     // the same behaviour StoreView.handleSelectSuggestion already has.
     const after = services.tripService
       .getItems()
       .filter((i) => i.name === 'Tahini');
     expect(after).toHaveLength(1);
-    expect(after[0]!.needed).toBe(true);
+    expect(after[0]!.decision).toBe('needed');
+  });
+});
+
+// #93: a sweep row shows which of Undecided / Needed / Not needed it is in.
+// On web, ✓ sets Needed and ✗ sets Not needed. A tap does nothing; a
+// long-press still opens the edit sheet.
+describe('HomeView tri-state sweep row (#93)', () => {
+  const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
+
+  const fridgeStaples: AddStapleRequest[] = [
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+    {
+      name: 'Eggs',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+  ];
+
+  const decisionOf = (services: AppServices, name: string) =>
+    services.tripService.getItems().find((i) => i.name === name)?.decision;
+
+  const renderSweepWith = async (
+    decisions: Record<string, SweepDecision>,
+  ): Promise<{ services: AppServices; tree: ReturnType<typeof render> }> => {
+    const services = await initServicesWith(fridgeStaples, ['Fridge']);
+    Object.entries(decisions).forEach(([name, decision]) =>
+      services.tripService.setDecision(
+        itemIdNamed(services.tripService, name),
+        decision,
+      ),
+    );
+    return { services, tree: renderHomeView(services) };
+  };
+
+  afterEach(() => {
+    mockedUseIsWeb.mockReturnValue(false);
+  });
+
+  test('a row in each state carries that state’s test ID and a distinct look', async () => {
+    const { tree } = await renderSweepWith({
+      Milk: 'needed',
+      Eggs: 'undecided',
+      Butter: 'not-needed',
+    });
+
+    const rows = [
+      tree.getByTestId('sweep-row-needed-Milk'),
+      tree.getByTestId('sweep-row-undecided-Eggs'),
+      tree.getByTestId('sweep-row-not-needed-Butter'),
+    ];
+    const looks = rows.map((row) => JSON.stringify(row.props.style));
+    expect(new Set(looks).size).toBe(3);
+  });
+
+  test('on web, ✓ sets Needed and ✗ sets Not needed, and the row re-renders', async () => {
+    mockedUseIsWeb.mockReturnValue(true);
+    const { services, tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    fireEvent.press(tree.getByTestId('mark-not-needed-Milk'));
+    const afterCross = decisionOf(services, 'Milk');
+    const crossRowShown = tree.queryByTestId('sweep-row-not-needed-Milk');
+    fireEvent.press(tree.getByTestId('mark-needed-Milk'));
+
+    expect(afterCross).toBe('not-needed');
+    expect(crossRowShown).not.toBeNull();
+    expect(decisionOf(services, 'Milk')).toBe('needed');
+    expect(tree.queryByTestId('sweep-row-needed-Milk')).not.toBeNull();
+    expect(tree.queryByTestId('sweep-row-not-needed-Milk')).toBeNull();
+  });
+
+  test('on native, a row has no ✓ / ✗ buttons', async () => {
+    const { tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    expect(tree.queryByTestId('mark-needed-Milk')).toBeNull();
+    expect(tree.queryByTestId('mark-not-needed-Milk')).toBeNull();
+  });
+
+  test('tapping a row changes nothing', async () => {
+    const { services, tree } = await renderSweepWith({
+      Milk: 'needed',
+      Eggs: 'undecided',
+      Butter: 'not-needed',
+    });
+
+    fireEvent.press(tree.getByText('Milk'));
+    fireEvent.press(tree.getByText('Eggs'));
+    fireEvent.press(tree.getByText('Butter'));
+
+    expect(decisionOf(services, 'Milk')).toBe('needed');
+    expect(decisionOf(services, 'Eggs')).toBe('undecided');
+    expect(decisionOf(services, 'Butter')).toBe('not-needed');
+  });
+
+  test('long-pressing a row opens the edit sheet', async () => {
+    const { tree } = await renderSweepWith({ Eggs: 'undecided' });
+
+    fireEvent(tree.getByText('Eggs'), 'longPress');
+
+    expect(tree.getByText("Edit 'Eggs'")).toBeTruthy();
+  });
+});
+
+// #96: the trip lifecycle runs on decisions, seen through the rendered views.
+describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => {
+  const pantry: AddStapleRequest[] = [
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+    {
+      name: 'Eggs',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+  ];
+
+  const decisionOf = (services: AppServices, name: string) =>
+    services.tripService.getItems().find((i) => i.name === name)?.decision;
+
+  const addCandles = (services: AppServices) =>
+    services.tripService.addItem({
+      name: 'Candles',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Home', aisleNumber: null },
+      itemType: 'one-off',
+      source: 'quick-add',
+    });
+
+  const submitNewStapleThroughQuickAdd = async (
+    tree: ReturnType<typeof render>,
+    name: string,
+  ) => {
+    const quickAddInput = tree.getByPlaceholderText('Add an item...');
+    await act(async () => {
+      fireEvent.changeText(quickAddInput, name);
+    });
+    await act(async () => {
+      fireEvent(quickAddInput, 'submitEditing');
+    });
+    const stapleToggle = tree.queryByTestId('type-toggle-Staple');
+    if (stapleToggle) {
+      await act(async () => {
+        fireEvent.press(stapleToggle);
+      });
+    }
+    const areaButton =
+      tree.queryByTestId('area-button-Fridge-active') ??
+      tree.getByTestId('area-button-Fridge');
+    await act(async () => {
+      fireEvent.press(areaButton);
+    });
+    await act(async () => {
+      fireEvent.changeText(
+        tree.getByPlaceholderText('Store section...'),
+        'Dairy',
+      );
+    });
+    await act(async () => {
+      fireEvent.press(tree.getByText('Add Item'));
+    });
+  };
+
+  test('the store lists Needed staples and one-offs only', async () => {
+    const services = await initServicesWith(pantry, ['Fridge']);
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Milk'),
+      'needed',
+    );
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Butter'),
+      'not-needed',
+    );
+    addCandles(services);
+
+    const tree = renderStoreView(services);
+
+    expect(tree.queryByText('Milk')).not.toBeNull();
+    expect(tree.queryByText('Candles')).not.toBeNull();
+    expect(tree.queryByText('Eggs')).toBeNull();
+    expect(tree.queryByText('Butter')).toBeNull();
+  });
+
+  test('checking an item into the cart keeps it on the list and keeps its decision', async () => {
+    const services = await initServicesWith(pantry, ['Fridge']);
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Milk'),
+      'needed',
+    );
+    const tree = renderStoreView(services);
+
+    fireEvent.press(tree.getByText('Milk'));
+
+    expect(tree.queryByTestId('checked-Milk')).not.toBeNull();
+    expect(decisionOf(services, 'Milk')).toBe('needed');
+  });
+
+  test('a new staple quick-added in the store is Needed and listed at once', async () => {
+    const services = await initServicesWith([], ['Fridge']);
+    const tree = renderStoreView(services);
+
+    await submitNewStapleThroughQuickAdd(tree, 'Yogurt');
+
+    expect(decisionOf(services, 'Yogurt')).toBe('needed');
+    expect(tree.queryByText('Yogurt')).not.toBeNull();
+  });
+
+  test.each<SweepDecision>(['undecided', 'not-needed'])(
+    'picking a store suggestion for a staple that is %s sets it Needed without a duplicate',
+    async (decision) => {
+      const services = await initServicesWith(pantry, ['Fridge']);
+      services.tripService.setDecision(
+        itemIdNamed(services.tripService, 'Eggs'),
+        decision,
+      );
+      const tree = renderStoreView(services);
+
+      await act(async () => {
+        fireEvent.changeText(
+          tree.getByPlaceholderText('Add an item...'),
+          'Egg',
+        );
+      });
+      await act(async () => {
+        fireEvent.press(tree.getByText(/Eggs.*Dairy/));
+      });
+
+      const eggs = services.tripService
+        .getItems()
+        .filter((i) => i.name === 'Eggs');
+      expect(eggs.map((i) => i.decision)).toEqual(['needed']);
+      expect(tree.queryByText('Eggs')).not.toBeNull();
+    },
+  );
+
+  test('a new staple quick-added on Home is Needed', async () => {
+    const services = await initServicesWith([], ['Fridge']);
+    const tree = renderHomeView(services);
+
+    await submitNewStapleThroughQuickAdd(tree, 'Yogurt');
+
+    expect(decisionOf(services, 'Yogurt')).toBe('needed');
+  });
+
+  test('a staple added to the library outside quick-add joins the trip Undecided', async () => {
+    const services = await initServicesWith([], ['Fridge']);
+    const tree = renderHomeView(services);
+
+    act(() => {
+      services.stapleLibrary.addStaple(pantry[0]!);
+    });
+
+    expect(decisionOf(services, 'Milk')).toBe('undecided');
+    expect(tree.queryByTestId('sweep-row-undecided-Milk')).not.toBeNull();
+  });
+
+  test('Reset Sweep returns every row to Undecided', async () => {
+    const services = await initServicesWith(pantry, ['Fridge']);
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Milk'),
+      'needed',
+    );
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Butter'),
+      'not-needed',
+    );
+    addCandles(services);
+    const tree = renderHomeView(services);
+
+    fireEvent.press(tree.getByTestId('reset-sweep-button'));
+    fireEvent.press(tree.getByTestId('confirm-reset-sweep'));
+
+    expect(tree.queryByTestId('sweep-row-undecided-Milk')).not.toBeNull();
+    expect(tree.queryByTestId('sweep-row-undecided-Eggs')).not.toBeNull();
+    expect(tree.queryByTestId('sweep-row-undecided-Butter')).not.toBeNull();
+    expect(tree.queryByText('Candles')).toBeNull();
+  });
+
+  test('tapping a one-off on Home leaves it Needed', async () => {
+    const services = await initServicesWith([], ['Fridge']);
+    addCandles(services);
+    const tree = renderHomeView(services);
+
+    fireEvent.press(tree.getByText('Candles'));
+
+    expect(decisionOf(services, 'Candles')).toBe('needed');
+  });
+
+  // Spec #90 story 35: the same name in two house areas is two rows, and a
+  // decision on one row leaves the other alone.
+  describe('a name kept in two house areas', () => {
+    const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
+    const milkIn = (houseArea: string): AddStapleRequest => ({
+      name: 'Milk',
+      houseArea,
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    });
+    const milkDecisions = (services: AppServices) =>
+      services.tripService
+        .getItems()
+        .filter((i) => i.name === 'Milk')
+        .map((i) => [i.houseArea, i.decision]);
+
+    afterEach(() => {
+      mockedUseIsWeb.mockReturnValue(false);
+    });
+
+    test('✓ on the Fridge row sets only the Fridge row Needed', async () => {
+      mockedUseIsWeb.mockReturnValue(true);
+      const services = await initServicesWith(
+        [milkIn('Fridge'), milkIn('Freezer')],
+        ['Fridge', 'Freezer'],
+      );
+      const tree = renderHomeView(services);
+
+      fireEvent.press(tree.getAllByTestId('mark-needed-Milk')[0]!);
+
+      expect(milkDecisions(services)).toEqual([
+        ['Fridge', 'needed'],
+        ['Freezer', 'undecided'],
+      ]);
+    });
+
+    test('quick-adding Milk to the Fridge marks only the new row Needed', async () => {
+      const services = await initServicesWith(
+        [milkIn('Freezer')],
+        ['Fridge', 'Freezer'],
+      );
+      const tree = renderHomeView(services);
+
+      await submitNewStapleThroughQuickAdd(tree, 'Milk');
+
+      expect(milkDecisions(services)).toEqual([
+        ['Freezer', 'undecided'],
+        ['Fridge', 'needed'],
+      ]);
+    });
+  });
+});
+
+describe('HomeView derived area completion, Done and Undo (#95)', () => {
+  const dairy = { section: 'Dairy', aisleNumber: 2 };
+  // Fridge: Milk, Eggs, Butter. Bathroom: Soap. Freezer is empty.
+  const staples: AddStapleRequest[] = [
+    { name: 'Milk', houseArea: 'Fridge', storeLocation: dairy },
+    { name: 'Eggs', houseArea: 'Fridge', storeLocation: dairy },
+    { name: 'Butter', houseArea: 'Fridge', storeLocation: dairy },
+    { name: 'Soap', houseArea: 'Bathroom', storeLocation: dairy },
+  ];
+
+  const renderSweepWith = async (
+    decisions: Record<string, SweepDecision>,
+  ): Promise<{ services: AppServices; tree: ReturnType<typeof render> }> => {
+    const services = await initServicesWith(staples, [
+      'Fridge',
+      'Bathroom',
+      'Freezer',
+    ]);
+    // Every staple is Needed unless the test names another decision.
+    const all: Record<string, SweepDecision> = {
+      Milk: 'needed',
+      Eggs: 'needed',
+      Butter: 'needed',
+      Soap: 'needed',
+    };
+    Object.entries({ ...all, ...decisions }).forEach(([name, decision]) =>
+      services.tripService.setDecision(
+        itemIdNamed(services.tripService, name),
+        decision,
+      ),
+    );
+    return { services, tree: renderHomeView(services) };
+  };
+
+  const decisionsOf = (services: AppServices) =>
+    Object.fromEntries(
+      services.tripService.getItems().map((i) => [i.name, i.decision]),
+    );
+
+  test('progress counts complete areas, the empty one included', async () => {
+    const { tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+    expect(tree.getByTestId('complete-Fridge')).toBeTruthy();
+    expect(tree.getByTestId('badge-Bathroom')).toBeTruthy();
+    expect(tree.getByTestId('badge-Freezer')).toBeTruthy();
+  });
+
+  test('an incomplete area shows how many staples are still Undecided', async () => {
+    const { tree } = await renderSweepWith({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+    });
+
+    expect(tree.getByTestId('undecided-count-Fridge')).toHaveTextContent(
+      '2 undecided',
+    );
+    expect(tree.queryByTestId('undecided-count-Bathroom')).toBeNull();
+  });
+
+  test('Done moves the whole area to Not needed, leaving Needed and other areas alone', async () => {
+    const { services, tree } = await renderSweepWith({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Soap: 'undecided',
+    });
+
+    fireEvent.press(tree.getByTestId('complete-Fridge'));
+
+    expect(decisionsOf(services)).toEqual({
+      Milk: 'not-needed',
+      Eggs: 'not-needed',
+      Butter: 'needed',
+      Soap: 'undecided',
+    });
+    expect(tree.getByTestId('sweep-row-not-needed-Milk')).toBeTruthy();
+    expect(tree.getByTestId('badge-Fridge')).toBeTruthy();
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+  });
+
+  test('Undo returns the whole area to Undecided, leaving Needed and other areas alone', async () => {
+    const { services, tree } = await renderSweepWith({
+      Milk: 'not-needed',
+      Eggs: 'not-needed',
+      Soap: 'not-needed',
+    });
+
+    fireEvent.press(tree.getByTestId('badge-Fridge'));
+
+    expect(decisionsOf(services)).toEqual({
+      Milk: 'undecided',
+      Eggs: 'undecided',
+      Butter: 'needed',
+      Soap: 'not-needed',
+    });
+    expect(tree.getByTestId('sweep-row-undecided-Milk')).toBeTruthy();
+    expect(tree.getByTestId('complete-Fridge')).toBeTruthy();
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+  });
+
+  test('progress follows a row stepping back to Undecided', async () => {
+    const { services, tree } = await renderSweepWith({});
+    const before = tree.getByText('3 of 3 areas complete');
+
+    await act(async () => {
+      services.tripService.stepTowardNotNeeded(
+        itemIdNamed(services.tripService, 'Soap'),
+      );
+    });
+
+    expect(before).toBeTruthy();
+    expect(tree.getByText('2 of 3 areas complete')).toBeTruthy();
+    expect(tree.getByTestId('complete-Bathroom')).toBeTruthy();
+  });
+
+  test('with every area complete, quick-add defaults to a one-off', async () => {
+    const { tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    fireEvent.press(tree.getByTestId('complete-Fridge'));
+    const quickAddInput = tree.getByPlaceholderText('Add an item...');
+    await act(async () => {
+      fireEvent.changeText(quickAddInput, 'Candles');
+    });
+    await act(async () => {
+      fireEvent(quickAddInput, 'submitEditing');
+    });
+
+    expect(tree.getByText('3 of 3 areas complete')).toBeTruthy();
+    expect(tree.getByTestId('type-toggle-One-off-active')).toBeTruthy();
   });
 });
