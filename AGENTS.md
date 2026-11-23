@@ -28,6 +28,7 @@ This file is a map. Open the page that owns the task:
 - Designing an MCP server or AI integration (board item "Connect the list to an AI"): [mcp-design skill](.claude/skills/mcp-design/SKILL.md), 17 rules distilled from Luca Rossi's Refactoring essay on MCP servers
 - Filing friction: [friction-log skill](.claude/skills/friction-log/SKILL.md). Every PR ends with a friction issue or the `friction-skipped` label, in every environment
 - Deploy, health check, rollback: [docs/deploy.md](docs/deploy.md)
+- Issue tracker, triage labels, and domain-doc rules the mattpocock engineering skills (`/triage`, `/to-tickets`, `/to-spec`, `/domain-modeling`) read: [docs/agents/](docs/agents/), summarised under **Agent skills** in [CLAUDE.md](CLAUDE.md)
 - Feature and product work: ideas, open questions, decisions, and specs live as draft items on the [planning board](https://github.com/users/cadolphs/projects/4), not in issues; see [docs/planning-board.md](docs/planning-board.md) and the [planning-board skill](.claude/skills/planning-board/SKILL.md) (`npm run board`). No fixed workflow ([ADR-012](docs/adrs/ADR-012-no-mandated-feature-workflow.md)); `docs/feature/` and `docs/evolution/` are history
 
 ## Never
