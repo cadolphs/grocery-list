@@ -109,6 +109,24 @@ export const matchesStapleIdentity =
     return item.name === staple.name && item.houseArea === staple.houseArea;
   };
 
+// Ids of the staples whose own trip item is Needed: the Home checklist's
+// ticked rows. Keyed by staple, since one name can be a staple in several
+// house areas (#104).
+export const neededStapleIds = (
+  staples: readonly StapleIdentity[],
+  items: readonly TripItem[],
+): ReadonlySet<string> =>
+  new Set(
+    staples
+      .filter((staple) =>
+        items.some(
+          (item) =>
+            matchesStapleIdentity(staple)(item) && item.decision === 'needed',
+        ),
+      )
+      .map((staple) => staple.id),
+  );
+
 const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   id: generateTripItemId(),
   name: staple.name,

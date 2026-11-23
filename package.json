@@ -11,7 +11,9 @@
     "test:watch": "jest --watch",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "typecheck": "tsc --noEmit",
-    "lint": "git ls-files -z --cached --others --exclude-standard -- '*.ts' '*.tsx' '*.mjs' '*.js' | xargs -0 eslint --max-warnings 0 --no-warn-ignored",
+    "lint": "git ls-files -z --cached --others --exclude-standard -- '*.ts' '*.tsx' '*.mjs' '*.js' | xargs -0 -r eslint --max-warnings 0 --no-warn-ignored --no-error-on-unmatched-pattern",
+    "lint:staged": "git diff --cached --name-only --diff-filter=ACMR -z -- '*.ts' '*.tsx' '*.mjs' '*.js' | xargs -0 -r eslint --max-warnings 0 --no-warn-ignored",
+    "format:staged": "git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 -r prettier --check --ignore-unknown",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:install": "node scripts/check-install.mjs",
@@ -73,15 +75,15 @@
       "/node_modules/",
       "/web/",
       "/scripts/",
-      "/.claude/worktrees/"
+      "<rootDir>/.claude/worktrees/"
     ],
     "modulePathIgnorePatterns": [
-      "/.claude/worktrees/"
+      "<rootDir>/.claude/worktrees/"
     ]
   },
   "private": true,
   "simple-git-hooks": {
-    "pre-commit": "npm run lint && npm run format:check",
+    "pre-commit": "npm run lint:staged && npm run format:staged",
     "pre-push": "npm run typecheck && npm run check:map && npm run check:dead"
   },
   "overrides": {

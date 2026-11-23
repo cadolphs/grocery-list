@@ -70,20 +70,40 @@ export const devServerStaleness = ({ startedHead, currentHead }) =>
 
 const devHeadFile = () => path.join(stateDir, 'dev.head');
 
+const devPidFile = () => path.join(stateDir, 'dev.pid');
+
 const currentHead = () =>
   spawnSync('git', ['rev-parse', 'HEAD'], {
     cwd: root,
     encoding: 'utf8',
-  }).stdout.trim();
+  }).stdout?.trim() ?? '';
+
+// The pid control recorded, while that process is still running. A dead pid
+// means whatever serves the port now was not started by control.
+const runningDevPid = () => {
+  if (!existsSync(devPidFile())) return null;
+  const pid = Number(readFileSync(devPidFile(), 'utf8'));
+  try {
+    process.kill(pid, 0);
+    return pid;
+  } catch {
+    return null;
+  }
+};
 
 const recordedDevHead = () =>
-  existsSync(devHeadFile()) ? readFileSync(devHeadFile(), 'utf8').trim() : null;
+  runningDevPid() !== null && existsSync(devHeadFile())
+    ? readFileSync(devHeadFile(), 'utf8').trim()
+    : null;
 
-const devStaleness = () =>
-  devServerStaleness({
-    startedHead: recordedDevHead(),
-    currentHead: currentHead(),
-  });
+// Null when git cannot say where the checkout is, or when control's own
+// server is not running (nothing known about what serves the port).
+const devStaleness = () => {
+  const head = currentHead();
+  return head === ''
+    ? null
+    : devServerStaleness({ startedHead: recordedDevHead(), currentHead: head });
+};
 
 // ---------- output ----------
 
@@ -362,7 +382,7 @@ const doctor = async (flags) => {
 const dev = async (flags) => {
   const port = Number(flags.port ?? DEFAULT_PORT);
   const origin = `http://localhost:${port}`;
-  const pidFile = path.join(stateDir, 'dev.pid');
+  const pidFile = devPidFile();
   const stopStarted = () => {
     const pid = Number(readFileSync(pidFile, 'utf8'));
     try {
@@ -387,7 +407,8 @@ const dev = async (flags) => {
     });
   }
   const stale = devStaleness();
-  const restarting = stale !== null && existsSync(pidFile);
+  // devStaleness is only non-null while control's own server is running.
+  const restarting = stale !== null;
   if (restarting) {
     console.error(`restarting: ${stale}`);
     stopStarted();

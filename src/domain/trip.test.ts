@@ -2,7 +2,7 @@
 // Bug: adding an item during sweep via handleStapleChange doesn't update React state
 // because tripService has no subscription mechanism for external consumers
 
-import { createTrip, StapleInput, TripService } from './trip';
+import { createTrip, neededStapleIds, StapleInput, TripService } from './trip';
 import { SweepDecision, Trip, TripItem } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import {
@@ -1754,5 +1754,68 @@ describe('TripService derived area completion, Done and Undo', () => {
       decision: 'not-needed',
     });
     expect(stored).not.toHaveProperty('completedAreas');
+  });
+});
+
+// #104: the Home checklist ticks a staple when its own trip item is Needed.
+describe('neededStapleIds', () => {
+  const staple = (id: string, name: string, houseArea: string) => ({
+    id,
+    name,
+    houseArea,
+    storeLocation: { section: 'Dairy', aisleNumber: null },
+    type: 'staple' as const,
+    createdAt: '2026-11-23T00:00:00.000Z',
+  });
+  const item = (
+    overrides: Partial<TripItem> & Pick<TripItem, 'name' | 'houseArea'>,
+  ): TripItem => ({
+    id: `item-${overrides.name}-${overrides.houseArea}`,
+    storeLocation: { section: 'Dairy', aisleNumber: null },
+    itemType: 'staple',
+    stapleId: null,
+    source: 'preloaded',
+    decision: 'needed',
+    checked: false,
+    checkedAt: null,
+    ...overrides,
+  });
+
+  test('lists only staples whose own item is Needed, by staple id', () => {
+    const fridgeMilk = staple('s-1', 'Milk', 'Fridge');
+    const pantryMilk = staple('s-2', 'Milk', 'Pantry');
+
+    const ids = neededStapleIds(
+      [fridgeMilk, pantryMilk],
+      [
+        item({
+          name: 'Milk',
+          houseArea: 'Fridge',
+          stapleId: 's-1',
+          decision: 'not-needed',
+        }),
+        item({ name: 'Milk', houseArea: 'Pantry', stapleId: 's-2' }),
+      ],
+    );
+
+    expect([...ids]).toEqual(['s-2']);
+  });
+
+  test('matches a legacy item without a staple id by name and area', () => {
+    const ids = neededStapleIds(
+      [staple('s-1', 'Milk', 'Fridge')],
+      [item({ name: 'Milk', houseArea: 'Fridge' })],
+    );
+
+    expect([...ids]).toEqual(['s-1']);
+  });
+
+  test('a Needed one-off of the same name does not tick the staple', () => {
+    const ids = neededStapleIds(
+      [staple('s-1', 'Milk', 'Fridge')],
+      [item({ name: 'Milk', houseArea: 'Fridge', itemType: 'one-off' })],
+    );
+
+    expect([...ids]).toEqual([]);
   });
 });

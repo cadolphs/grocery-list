@@ -26,7 +26,10 @@ services from `ServiceProvider`. No classes (ADR-009).
   `undoArea`: Not needed staples become Undecided; Needed is never touched).
   Staples start Undecided (an `addItem` request may pass `decision`; it
   defaults to Needed), one-offs are always Needed, and `complete` carries
-  over exactly the Needed items not in the cart.
+  over exactly the Needed items not in the cart. Staple identity
+  (`matchesStapleIdentity`: staple id, else name + area for staple items) is
+  how a staple finds its own trip item; `neededStapleIds` gives the staples
+  whose own item is Needed (the Home checklist's ticked rows).
   adrs: [product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring

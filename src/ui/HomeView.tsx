@@ -14,7 +14,7 @@ import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
 import { groupByArea, getOneOffItems, isNeeded } from '../domain/item-grouping';
-import { matchesStapleIdentity } from '../domain/trip';
+import { matchesStapleIdentity, neededStapleIds } from '../domain/trip';
 import {
   HouseArea,
   StapleItem,
@@ -74,17 +74,8 @@ export const HomeView = (): React.JSX.Element => {
     () => [...new Set(allStaples.map((s) => s.storeLocation.section))],
     [allStaples],
   );
-  const neededStapleIds = useMemo(
-    () =>
-      new Set(
-        checklistStaples
-          .filter((staple) =>
-            items.some(
-              (item) => matchesStapleIdentity(staple)(item) && isNeeded(item),
-            ),
-          )
-          .map((staple) => staple.id),
-      ),
+  const checklistNeededIds = useMemo(
+    () => neededStapleIds(checklistStaples, items),
     [checklistStaples, items],
   );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
@@ -358,7 +349,7 @@ export const HomeView = (): React.JSX.Element => {
       {homeMode === 'checklist' && (
         <StapleChecklist
           staples={checklistStaples}
-          neededStapleIds={neededStapleIds}
+          neededStapleIds={checklistNeededIds}
           onAddStaple={handleAddFromChecklist}
           onRemoveStaple={handleRemoveFromChecklist}
           onLongPress={handleEditStaple}
