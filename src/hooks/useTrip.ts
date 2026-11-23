@@ -19,6 +19,8 @@ export type UseTripResult = {
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
   readonly setDecision: (name: string, decision: SweepDecision) => void;
+  readonly stepTowardNeeded: (name: string) => void;
+  readonly stepTowardNotNeeded: (name: string) => void;
   readonly markAreaDone: (area: HouseArea) => void;
   readonly undoArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
@@ -95,6 +97,22 @@ export const useTrip = (): UseTripResult => {
     [tripService],
   );
 
+  const stepTowardNeeded = useCallback(
+    (name: string): void => {
+      tripService.stepTowardNeeded(name);
+      setItems(tripService.getItems());
+    },
+    [tripService],
+  );
+
+  const stepTowardNotNeeded = useCallback(
+    (name: string): void => {
+      tripService.stepTowardNotNeeded(name);
+      setItems(tripService.getItems());
+    },
+    [tripService],
+  );
+
   const markAreaDone = useCallback(
     (area: HouseArea): void => {
       tripService.markAreaDone(area);
@@ -137,6 +155,8 @@ export const useTrip = (): UseTripResult => {
     skipItem,
     unskipItem,
     setDecision,
+    stepTowardNeeded,
+    stepTowardNotNeeded,
     markAreaDone,
     undoArea,
     resetSweep,

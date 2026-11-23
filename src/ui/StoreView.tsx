@@ -29,7 +29,7 @@ import { theme } from './theme';
 import { surfaces } from './surfaces';
 
 export const StoreView = (): React.JSX.Element => {
-  const { items, addItem, toggleCheckOff, unskipItem, syncStapleUpdate } =
+  const { items, addItem, toggleCheckOff, setDecision, syncStapleUpdate } =
     useTrip();
   const { tripService, stapleLibrary } = useServices();
   const { areas } = useAreas();
@@ -94,11 +94,15 @@ export const StoreView = (): React.JSX.Element => {
     setEditInitialValues(null);
   }, []);
 
+  // The library diff path adds the new staple to the trip Undecided; a staple
+  // quick-added here is one the user wants, so it is marked Needed (#96).
   const handleSubmitStaple = useCallback(
     (request: AddStapleRequest): void => {
-      stapleLibrary.addStaple(request);
+      if (stapleLibrary.addStaple(request).success) {
+        setDecision(request.name, 'needed');
+      }
     },
-    [stapleLibrary],
+    [stapleLibrary, setDecision],
   );
 
   const handleSubmitOneOff = useCallback(
@@ -140,8 +144,8 @@ export const StoreView = (): React.JSX.Element => {
             (item) =>
               item.name === staple.name && item.houseArea === staple.houseArea,
           );
-      if (existing && !existing.needed) {
-        unskipItem(existing.name);
+      if (existing && existing.decision !== 'needed') {
+        setDecision(existing.name, 'needed');
       } else if (!existing) {
         const houseArea =
           isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
@@ -155,7 +159,7 @@ export const StoreView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem, unskipItem],
+    [items, addItem, setDecision],
   );
 
   if (tripResult !== null && showSummary) {
@@ -167,8 +171,12 @@ export const StoreView = (): React.JSX.Element => {
     );
   }
 
-  const neededItems = items.filter((item) => item.needed);
-  const groups = groupBySection(neededItems);
+  // The shopping list: Needed items plus one-offs (always Needed, ADR-013).
+  // Checking into the cart leaves the decision alone, so a row stays listed.
+  const listedItems = items.filter(
+    (item) => item.decision === 'needed' || item.itemType === 'one-off',
+  );
+  const groups = groupBySection(listedItems);
   const knownSectionNames = groups.map((group) => group.section);
   const effectiveOrder =
     sectionOrder !== null

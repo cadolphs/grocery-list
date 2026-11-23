@@ -20,7 +20,10 @@ services from `ServiceProvider`. No classes (ADR-009).
   holds no Undecided staple), carryover on completion
   (`initializeFromStorage`, `complete`), a sweep row's decision
   (`stepTowardNeeded`, `stepTowardNotNeeded`, `setDecision`), and an area's
-  Done / Undo (`markAreaDone`, `undoArea`).
+  Done / Undo (`markAreaDone`, `undoArea`). Staples start Undecided (an
+  `addItem` request may pass `decision`; it defaults to Needed), one-offs are
+  always Needed, and `complete` carries over exactly the Needed items not in
+  the cart.
   adrs: [product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring
@@ -80,6 +83,11 @@ services from `ServiceProvider`. No classes (ADR-009).
   `useViewMode`, `useIsWeb`). adrs: []
 - **ServiceProvider** (`ui/ServiceProvider.tsx`): dependency injection for
   hooks. adrs: []
+- **Sweep row swipe** (`ui/SweepRowSwipe.native.tsx`, root in
+  `ui/GestureRoot.native.tsx`): on iOS / Android a pan steps a sweep row's
+  decision; the plain `.tsx` twins keep gesture-handler out of web, which
+  uses the row's ✓ / ✗ buttons. Jest renders everything inside a gesture root
+  (`jest.setup.js`). adrs: [adrs/ADR-014-swipe-via-gesture-handler.md]
 - **Screens**: see [feature-map.md](feature-map.md). adrs:
   [adrs/ADR-004-bottom-sheet-implementation.md,
   adrs/ADR-014-swipe-via-gesture-handler.md]

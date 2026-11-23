@@ -166,6 +166,10 @@ function renderAppInChecklistMode() {
   const tripAreas = ['Fridge', 'Pantry'];
   const tripService = createTrip(tripStorage, tripAreas);
   tripService.initializeFromStorage(stapleLibrary.listAll());
+  // #96: staples start Undecided; mark them Needed as a finished sweep would.
+  stapleLibrary
+    .listAll()
+    .forEach((s) => tripService.setDecision(s.name, 'needed'));
 
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
@@ -212,6 +216,10 @@ describe('preloaded staples show as already on trip', () => {
     const tripAreas = ['Fridge', 'Pantry'];
     const tripService = createTrip(tripStorage, tripAreas);
     tripService.initializeFromStorage(stapleLibrary.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    stapleLibrary
+      .listAll()
+      .forEach((s) => tripService.setDecision(s.name, 'needed'));
 
     // Skip Eggs during the sweep phase (needed becomes false)
     tripService.skipItem('Eggs');

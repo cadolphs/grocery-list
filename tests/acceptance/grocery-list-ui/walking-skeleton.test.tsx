@@ -70,6 +70,8 @@ function createTestServices() {
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
+  // #96: staples start Undecided; mark them Needed as a finished sweep would.
+  library.listAll().forEach((s) => tripService.setDecision(s.name, 'needed'));
   return { library, tripService, stapleStorage, tripStorage };
 }
 

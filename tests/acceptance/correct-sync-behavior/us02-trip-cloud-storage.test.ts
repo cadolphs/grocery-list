@@ -75,6 +75,11 @@ describe('US-02: Firestore trip storage adapter', () => {
       },
     ]);
 
+    // #96: staples start Undecided; the sweep marks all three Needed.
+    ['Milk', 'Eggs', 'Olive Oil'].forEach((name) =>
+      trip.setDecision(name, 'needed'),
+    );
+
     // And "Milk" and "Eggs" are checked off
     trip.checkOff('Milk');
     trip.checkOff('Eggs');

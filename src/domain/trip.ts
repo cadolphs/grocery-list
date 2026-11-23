@@ -15,9 +15,12 @@ import { UpdateStapleChanges } from './staple-library';
 
 export type StapleInput = AddStapleRequest & { readonly id?: string };
 
-// Extended request for auto-add: includes stapleId for duplicate prevention
+// Extended request for auto-add: includes stapleId for duplicate prevention.
+// decision defaults to Needed (quick-add); the library-add diff path passes
+// Undecided. A one-off is always Needed, whatever is passed.
 export type AddTripItemWithStapleId = AddTripItemRequest & {
   readonly stapleId?: string;
+  readonly decision?: SweepDecision;
 };
 
 // Derived from decisions alone (ADR-013): an area is complete exactly when it
@@ -95,6 +98,9 @@ const decisionPatch = (
   needed: decision === 'needed',
 });
 
+// One-offs are always Needed (ADR-013): decision operations leave them alone.
+const isSweepable = (item: TripItem): boolean => item.itemType === 'staple';
+
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -117,10 +123,8 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   itemType: 'staple',
   stapleId: staple.id ?? null,
   source: 'preloaded',
-  // Expand step of #90: staples still start Needed so the app behaves as
-  // before; ADR-013's Undecided start lands in a later slice.
-  needed: true,
-  decision: 'needed',
+  // ADR-013: a staple starts the trip Undecided until the sweep decides it.
+  ...decisionPatch('undecided'),
   checked: false,
   checkedAt: null,
 });
@@ -225,10 +229,13 @@ export const createTrip = (
     persistTrip();
   };
 
-  const stepItemByName = (name: string, direction: 1 | -1): void => {
+  const decideItemByName = (
+    name: string,
+    decide: (current: SweepDecision) => SweepDecision,
+  ): void => {
     items = items.map((item) =>
-      item.name === name
-        ? { ...item, ...decisionPatch(stepDecision(item.decision, direction)) }
+      item.name === name && isSweepable(item)
+        ? { ...item, ...decisionPatch(decide(item.decision)) }
         : item,
     );
     notify();
@@ -282,8 +289,11 @@ export const createTrip = (
         itemType: request.itemType,
         stapleId: request.stapleId ?? null,
         source: request.source,
-        needed: true,
-        decision: 'needed',
+        ...decisionPatch(
+          request.itemType === 'one-off'
+            ? 'needed'
+            : (request.decision ?? 'needed'),
+        ),
         checked: false,
         checkedAt: null,
       };
@@ -307,23 +317,23 @@ export const createTrip = (
     },
 
     skipItem: (name: string) => {
-      updateItemByName(name, { needed: false, decision: 'not-needed' });
+      decideItemByName(name, () => 'not-needed');
     },
 
     unskipItem: (name: string) => {
-      updateItemByName(name, { needed: true, decision: 'needed' });
+      decideItemByName(name, () => 'needed');
     },
 
     stepTowardNeeded: (name: string) => {
-      stepItemByName(name, 1);
+      decideItemByName(name, (current) => stepDecision(current, 1));
     },
 
     stepTowardNotNeeded: (name: string) => {
-      stepItemByName(name, -1);
+      decideItemByName(name, (current) => stepDecision(current, -1));
     },
 
     setDecision: (name: string, decision: SweepDecision) => {
-      updateItemByName(name, decisionPatch(decision));
+      decideItemByName(name, () => decision);
     },
 
     markAreaDone: (area: HouseArea) => {
@@ -410,8 +420,19 @@ export const createTrip = (
           staples.length === 0 &&
           carryover.length === 0;
         if (!rebuildWouldEraseStoredItems) {
-          // Completed trip: start new trip with carryover
-          const stapleItems = staples.map(stapleInputToTripItem);
+          // Completed trip: start new trip with carryover. A carried-over
+          // staple arrives Needed in place of its fresh Undecided copy.
+          const isCarried = (staple: StapleInput): boolean =>
+            carryover.some(
+              matchesStapleIdentity({
+                id: staple.id ?? '',
+                name: staple.name,
+                houseArea: staple.houseArea,
+              }),
+            );
+          const stapleItems = staples
+            .filter((staple) => !isCarried(staple))
+            .map(stapleInputToTripItem);
           items = [...stapleItems, ...carryover];
           storage.clearCarryover();
           tripId = generateTripId();
@@ -465,6 +486,9 @@ export type CompleteTripResult = {
 };
 
 const isChecked = (item: TripItem): boolean => item.checked;
+// Finish Trip carries over exactly the Needed items not in the cart (ADR-013).
+const carriesOver = (item: TripItem): boolean =>
+  item.decision === 'needed' && !item.checked;
 const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
 const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 
@@ -472,10 +496,9 @@ const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 // Used by `complete()`, which also persists carryover and trip status.
 const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
   const checkedItems = items.filter(isChecked);
-  const uncheckedItems = items.filter((item) => !isChecked(item));
   return {
     purchasedStaples: checkedItems.filter(isStaple),
     purchasedOneOffs: checkedItems.filter(isOneOff),
-    unboughtItems: uncheckedItems,
+    unboughtItems: items.filter(carriesOver),
   };
 };

@@ -26,6 +26,8 @@ describe('US-03: Real-time listeners on trip data', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
+    // #96: staples start Undecided; the sweep marks Butter Needed.
+    trip.setDecision('Butter', 'needed');
     const butter = trip.getItems().find((i) => i.name === 'Butter');
     expect(butter?.needed).toBe(true);
 

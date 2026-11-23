@@ -61,6 +61,8 @@ describe('US-07: Skip Staple This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    library.listAll().forEach((s) => trip.setDecision(s.name, 'needed'));
 
     // When Carlos skips "Shampoo" for this trip
     trip.skipItem('Shampoo');
@@ -98,11 +100,11 @@ describe('US-07: Skip Staple This Trip', () => {
     const trip2 = createTrip(tripStorage);
     trip2.initializeFromStorage(library.listAll());
 
-    // Then "Shampoo" appears pre-loaded again with needed = true
+    // Then "Shampoo" appears pre-loaded again, Undecided for the new sweep (#96)
     const shampoo = trip2
       .getItems()
       .find((i) => i.name === 'Shampoo' && i.source === 'preloaded');
-    expect(shampoo?.needed).toBe(true);
+    expect(shampoo?.decision).toBe('undecided');
   });
 
   it('re-adds a skipped staple within the same trip', () => {
@@ -171,6 +173,8 @@ describe('US-07: Skip Staple This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    library.listAll().forEach((s) => trip.setDecision(s.name, 'needed'));
 
     // When Carlos skips 1 in Bathroom and 2 in Fridge
     trip.skipItem('Shampoo');
