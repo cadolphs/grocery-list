@@ -137,7 +137,7 @@ describe('US-07: Prevent duplicate trip items', () => {
     // Given Clemens has a trip with "Milk" (stapleId: "staple-milk-1", type: staple)
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         id: 'staple-milk-1',
         name: 'Milk',
@@ -172,7 +172,7 @@ describe('US-07: Prevent duplicate trip items', () => {
     // Given Clemens removed "Tahini" from staples (old trip item removed)
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
-    trip.start([
+    trip.initializeFromStorage([
       {
         id: 'staple-tahini-old',
         name: 'Tahini',
