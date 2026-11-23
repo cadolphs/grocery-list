@@ -11,7 +11,7 @@
     "test:watch": "jest --watch",
     "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx,.mjs --max-warnings 0",
+    "lint": "git ls-files -z --cached --others --exclude-standard -- '*.ts' '*.tsx' '*.mjs' '*.js' | xargs -0 eslint --max-warnings 0 --no-warn-ignored",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:siblings": "node scripts/check-domain-test-siblings.mjs",
