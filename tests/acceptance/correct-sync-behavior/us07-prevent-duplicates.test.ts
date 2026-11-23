@@ -7,44 +7,126 @@
  * All tests marked .skip -- enable one at a time during DELIVER.
  */
 
+import { initializeApp } from '../../../src/hooks/useAppInitialization';
+import { AuthUser } from '../../../src/auth/AuthService';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
+import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import {
+  createNullTripStorage,
+  NullTripStorageWithSync,
+} from '../../../src/adapters/null/null-trip-storage';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../helpers/null-adapter-factories';
+
+const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
+
+// Helper: factories over shared staple and trip storages, so a test can
+// deliver remote updates to them. The staple adapter's onChange is captured
+// (the null staple storage has no simulateRemoteChange); the trip adapter's
+// is wired into the storage's simulateRemoteChange.
+const createSyncFactories = (
+  stapleStorage: ReturnType<typeof createNullStapleStorage>,
+  tripStorage: NullTripStorageWithSync,
+) => {
+  let stapleOnChange: (() => void) | undefined;
+
+  const factories = createNullAdapterFactories({
+    createStapleStorage: (_uid, options) => {
+      stapleOnChange = options?.onChange;
+      return withInitialize(stapleStorage);
+    },
+    createTripStorage: (_uid, options) => {
+      if (options?.onChange) tripStorage.setOnChange(options.onChange);
+      return withInitialize(tripStorage);
+    },
+  });
+
+  return { factories, fireStapleOnChange: () => stapleOnChange?.() };
+};
 
 describe('US-07: Prevent duplicate trip items', () => {
   // =============================================================================
   // S-22: No duplicate when trip sync delivers item already added locally
   // =============================================================================
 
-  it('S-22: no duplicate when remote trip update contains locally added item', () => {
-    // Given Clemens has an active trip with "Tahini" (stapleId: "staple-tahini-abc")
-    const tripStorage = createNullTripStorage();
-    const trip = createTrip(tripStorage);
-    trip.start([
+  it('S-22: no duplicate when remote trip update contains locally added item', async () => {
+    // Given Clemens has an active trip with "Milk", and "Tahini"
+    // (stapleId: "staple-tahini-abc") was just added to it locally
+    const stapleStorage = createNullStapleStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    // Simulate auto-add of Tahini with stapleId
-    trip.addItem({
+    const tripStorage = createNullTripStorage();
+    const { factories, fireStapleOnChange } = createSyncFactories(
+      stapleStorage,
+      tripStorage,
+    );
+    const result = await initializeApp(testUser, factories);
+    expect(result.isReady).toBe(true);
+    const tripService = result.services!.tripService;
+    const tahini = {
       name: 'Tahini',
       houseArea: 'Kitchen Cabinets',
       storeLocation: { section: 'International', aisleNumber: 4 },
+    };
+    const localAdd = tripService.addItem({
+      ...tahini,
       itemType: 'staple',
       source: 'preloaded',
+      stapleId: 'staple-tahini-abc',
     });
-    expect(trip.getItems().filter((i) => i.name === 'Tahini')).toHaveLength(1);
+    expect(localAdd).toEqual({ success: true });
+    expect(tripService.getItems().map((i) => i.name)).toEqual([
+      'Milk',
+      'Tahini',
+    ]);
 
-    // When the trip listener receives an update also containing "Tahini" (same stapleId)
-    // (The onSnapshot approach replaces the entire trip state from the remote document.
-    //  This naturally prevents duplicates because the remote state IS the state.)
-    //
-    // Alternative: if merging, guard with a stapleId check before adding.
+    // When the trip listener delivers a remote update that also contains
+    // "Tahini" (same stapleId): the other device's auto-add reached the
+    // server first, so its trip item carries that device's item id
+    const localTrip = tripStorage.loadTrip()!;
+    tripStorage.simulateRemoteChange((s) => {
+      s.saveTrip({
+        ...localTrip,
+        items: localTrip.items.map((item) =>
+          item.name === 'Tahini'
+            ? { ...item, id: 'trip-item-remote-tahini' }
+            : item,
+        ),
+      });
+    });
 
-    // Then the trip contains exactly one "Tahini" item
-    // (Either by whole-state replacement or by duplicate guard)
-    expect(trip.getItems().filter((i) => i.name === 'Tahini')).toHaveLength(1);
+    // And the staple listener then delivers the "Tahini" staple behind it,
+    // so the auto-add path sees "Tahini" as a new staple
+    stapleStorage.save({
+      id: 'staple-tahini-abc',
+      ...tahini,
+      type: 'staple',
+      createdAt: '2026-04-10T10:00:00.000Z',
+    });
+    fireStapleOnChange();
+
+    // Then the trip contains exactly one "Tahini" item. Three guards overlap
+    // here, all keyed on the same stapleId: alreadyInTrip in
+    // applyAddedStaplesToTrip, then addItem's stapleId check, then its
+    // name+houseArea fallback. Any one of them keeps this passing, so the
+    // test protects the behaviour, not the outer guard on its own.
+    const items = tripService.getItems();
+    expect(items.map((i) => i.name)).toEqual(['Milk', 'Tahini']);
+
+    // And the surviving "Tahini" is the remote copy (whole-state replacement
+    // by loadFromStorage won; this is not what prevents the duplicate)
+    expect(items.filter((i) => i.name === 'Tahini')).toEqual([
+      expect.objectContaining({
+        id: 'trip-item-remote-tahini',
+        stapleId: 'staple-tahini-abc',
+      }),
+    ]);
   });
 
   // =============================================================================

@@ -9,82 +9,58 @@
  * all Firestore listeners and prevent stale callbacks from corrupting state.
  */
 
-import {
-  initializeApp,
-  AdapterFactories,
-} from '../../../src/hooks/useAppInitialization';
+import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { AuthUser } from '../../../src/auth/AuthService';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
-import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
+import {
+  createNullTripStorage,
+  NullTripStorageWithSync,
+} from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
+import {
+  createNullAdapterFactories,
+  withInitialize,
+} from '../helpers/null-adapter-factories';
 
-// Helper: create test factories that track unsubscribe calls and expose onChange triggers
-const createTrackingFactories = () => {
+// Helper: factories that record which adapters were unsubscribed and capture
+// each adapter's onChange so a test can fire it. Pass shared storages to read
+// or change them from a test.
+const createTrackingFactories = (
+  shared: {
+    stapleStorage?: ReturnType<typeof createNullStapleStorage>;
+    tripStorage?: NullTripStorageWithSync;
+  } = {},
+) => {
   const unsubscribeCalls: string[] = [];
   const onChangeCallbacks: Record<string, () => void> = {};
+  const tracked = <T extends object>(name: string, storage: T) => ({
+    ...withInitialize(storage),
+    unsubscribe: () => {
+      unsubscribeCalls.push(name);
+    },
+  });
 
-  const factories: AdapterFactories = {
-    createStapleStorage: (_uid: string) => {
-      const storage = createNullStapleStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('staples');
-        },
-      };
+  const factories = createNullAdapterFactories({
+    createStapleStorage: (_uid, options) => {
+      if (options?.onChange) onChangeCallbacks.staples = options.onChange;
+      return tracked(
+        'staples',
+        shared.stapleStorage ?? createNullStapleStorage(),
+      );
     },
-    createAreaStorage: (_uid: string) => {
-      const storage = createNullAreaStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('areas');
-        },
-      };
+    createAreaStorage: () => tracked('areas', createNullAreaStorage()),
+    createSectionOrderStorage: () =>
+      tracked('sectionOrder', createNullSectionOrderStorage()),
+    createTripStorage: (_uid, options) => {
+      const storage = shared.tripStorage ?? createNullTripStorage();
+      if (options?.onChange) {
+        storage.setOnChange(options.onChange);
+        onChangeCallbacks.trip = options.onChange;
+      }
+      return tracked('trip', storage);
     },
-    createSectionOrderStorage: (_uid: string) => {
-      const storage = createNullSectionOrderStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('sectionOrder');
-        },
-      };
-    },
-    createTripStorage: (_uid: string) => {
-      const storage = createNullTripStorage();
-      return {
-        ...storage,
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {
-          unsubscribeCalls.push('trip');
-        },
-      };
-    },
-    checkMigrationNeeded: () => false,
-    migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncAreaStorage: () => ({
-      ...createNullAreaStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncSectionOrderStorage: () => ({
-      ...createNullSectionOrderStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    createAsyncTripStorage: () => ({
-      ...createNullTripStorage(),
-      initialize: () => Promise.resolve(),
-    }),
-    migrateTripIfNeeded: () => {},
-  };
+  });
 
   return { factories, unsubscribeCalls, onChangeCallbacks };
 };
@@ -159,63 +135,108 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
   // =============================================================================
 
   it('S-14: delayed listener callback after logout does not update state', async () => {
-    // Given Clemens has logged out and listeners were cleaned up
-    const factories: AdapterFactories = {
-      createStapleStorage: (_uid: string) => {
-        const storage = createNullStapleStorage();
-        return {
-          ...storage,
-          initialize: () => Promise.resolve(),
-          unsubscribe: () => {},
-        };
+    // Given Clemens is logged in with "Milk" as a staple and an active trip
+    const stapleStorage = createNullStapleStorage([
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
-      createAreaStorage: (_uid: string) => ({
-        ...createNullAreaStorage(),
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      }),
-      createSectionOrderStorage: (_uid: string) => ({
-        ...createNullSectionOrderStorage(),
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      }),
-      createTripStorage: (_uid: string) => ({
-        ...createNullTripStorage(),
-        initialize: () => Promise.resolve(),
-        unsubscribe: () => {},
-      }),
-      checkMigrationNeeded: () => false,
-      migrateToFirestore: () => {},
-      createAsyncStapleStorage: () => ({
-        ...createNullStapleStorage(),
-        initialize: () => Promise.resolve(),
-      }),
-      createAsyncAreaStorage: () => ({
-        ...createNullAreaStorage(),
-        initialize: () => Promise.resolve(),
-      }),
-      createAsyncSectionOrderStorage: () => ({
-        ...createNullSectionOrderStorage(),
-        initialize: () => Promise.resolve(),
-      }),
-      createAsyncTripStorage: () => ({
-        ...createNullTripStorage(),
-        initialize: () => Promise.resolve(),
-      }),
-      migrateTripIfNeeded: () => {},
-    };
-
+    ]);
+    const tripStorage = createNullTripStorage();
+    const { factories, onChangeCallbacks } = createTrackingFactories({
+      stapleStorage,
+      tripStorage,
+    });
     const result = await initializeApp(testUser, factories);
+    expect(result.isReady).toBe(true);
+    const tripService = result.services!.tripService;
+    const tripBeforeLogout = tripService.getItems();
+    expect(tripBeforeLogout.map((i) => i.name)).toEqual(['Milk']);
+    const storedTripBeforeLogout = tripStorage.loadTrip();
+    expect(storedTripBeforeLogout).not.toBeNull();
 
-    // Cleanup (logout)
+    // And Clemens has logged out (listeners cleaned up)
     result.unsubscribeAll!();
 
-    // When a stale listener callback fires after cleanup
-    // The onChange registered with initializeApp should be guarded
-    // by the cancelled flag, so firing it should be a no-op
-    // This is verified by the fact that services are not re-created
-    // and the result remains unchanged after cleanup
-    expect(result.isReady).toBe(true);
+    // When a delayed staple adapter callback fires after logout
+    // (a remote add that was in flight when the listener was torn down)
+    stapleStorage.save({
+      id: 'staple-cheese-remote',
+      name: 'Cheese',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      type: 'staple',
+      createdAt: '2026-04-10T10:00:00.000Z',
+    });
+    onChangeCallbacks.staples!();
+
+    // And a delayed trip adapter callback fires after logout
+    tripStorage.simulateRemoteChange((s) => {
+      s.saveTrip({
+        ...storedTripBeforeLogout!,
+        items: storedTripBeforeLogout!.items.map((item) => ({
+          ...item,
+          checked: true,
+          checkedAt: '2026-04-13T10:00:00Z',
+        })),
+      });
+    });
+
+    // Then the old session's trip is unchanged in memory: neither callback
+    // reached the trip service (initializeApp's cancelled guard). This is the
+    // proof; without the guard the trip callback reloads Milk as checked.
     expect(result.services).not.toBeNull();
+    expect(tripService.getItems()).toEqual(tripBeforeLogout);
+
+    // And the remote write did land in storage: the callbacks fired for real
+    // and the guard dropped them, the fake did not swallow them.
+    expect(
+      tripStorage.loadTrip()!.items.map((i) => [i.name, i.checked]),
+    ).toEqual([['Milk', true]]);
+  });
+
+  // The listener initializeApp subscribes to itself (the staple library's
+  // change seam) is released by unsubscribeAll() as well.
+  it('local staple change after logout does not touch the trip', async () => {
+    // Given Clemens is logged in with "Milk" as a staple and an active trip
+    const stapleStorage = createNullStapleStorage([
+      {
+        name: 'Milk',
+        houseArea: 'Fridge',
+        storeLocation: { section: 'Dairy', aisleNumber: 3 },
+      },
+    ]);
+    const tripStorage = createNullTripStorage();
+    const { factories } = createTrackingFactories({
+      stapleStorage,
+      tripStorage,
+    });
+    const result = await initializeApp(testUser, factories);
+    expect(result.isReady).toBe(true);
+    const { stapleLibrary, tripService } = result.services!;
+    const tripBeforeLogout = tripService.getItems();
+    expect(tripBeforeLogout.map((i) => i.name)).toEqual(['Milk']);
+    const storedTripBeforeLogout = tripStorage.loadTrip();
+    expect(storedTripBeforeLogout).not.toBeNull();
+
+    // And Clemens has logged out (listeners cleaned up)
+    result.unsubscribeAll!();
+
+    // When a delayed staple-library listener callback fires after logout
+    // (an in-flight local add lands on the old session's services; the
+    // library's change seam is the listener initializeApp subscribed to)
+    const added = stapleLibrary.addStaple({
+      name: 'Bread',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Bakery', aisleNumber: 1 },
+    });
+    expect(added.success).toBe(true);
+
+    // Then the old session's services still exist but its trip is unchanged,
+    // in memory and in storage (nothing was written after logout)
+    expect(result.services).not.toBeNull();
+    expect(tripService.getItems()).toEqual(tripBeforeLogout);
+    expect(tripStorage.loadTrip()).toEqual(storedTripBeforeLogout);
   });
 });

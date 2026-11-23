@@ -831,6 +831,54 @@ describe('initializeApp', () => {
       expect(after[0]!.name).toBe('Soda');
     });
 
+    test('after unsubscribeAll, a stale staple storage onChange does NOT mutate tripService', async () => {
+      const authUser: AuthUser = { uid: 'user-stale', email: 'st@u.com' };
+
+      let capturedOnChange: (() => void) | undefined;
+      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+
+      const factories: AdapterFactories = {
+        ...defaultFactories,
+        createStapleStorage: (
+          _uid: string,
+          options?: { onChange?: () => void },
+        ) => {
+          sharedStorage = createNullStapleStorage([
+            {
+              name: 'Soda',
+              houseArea: 'Pantry',
+              storeLocation: { section: 'Beverages', aisleNumber: 6 },
+            },
+          ]);
+          capturedOnChange = options?.onChange;
+          return { ...sharedStorage, initialize: async () => {} };
+        },
+      };
+
+      const result = await initializeApp(authUser, factories);
+      expect(result.isReady).toBe(true);
+      const tripService = result.services!.tripService;
+      expect(tripService.getItems()).toHaveLength(1);
+
+      // Tear down all subscriptions, then an adapter callback that was in
+      // flight lands anyway (the null storage's unsubscribe is a no-op).
+      result.unsubscribeAll!();
+      sharedStorage!.save({
+        id: 'staple-bread-late',
+        name: 'Bread',
+        houseArea: 'Kitchen Cabinets',
+        storeLocation: { section: 'Bakery', aisleNumber: 1 },
+        type: 'staple',
+        createdAt: '2026-04-10T10:00:00.000Z',
+      });
+      capturedOnChange!();
+
+      // Trip is unchanged: the cancelled guard dropped the callback.
+      const after = tripService.getItems();
+      expect(after).toHaveLength(1);
+      expect(after[0]!.name).toBe('Soda');
+    });
+
     test('double-fire (delayed Firestore echo) is idempotent: stapleLibrary.remove + manual onChange replay does not double-mutate', async () => {
       const authUser: AuthUser = { uid: 'user-double', email: 'd@d.com' };
 
