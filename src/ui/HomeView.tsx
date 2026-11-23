@@ -47,6 +47,7 @@ export const HomeView = (): React.JSX.Element => {
     addItem,
     skipItem,
     unskipItem,
+    setDecision,
     completeArea,
     uncompleteArea,
     resetSweep,
@@ -382,11 +383,8 @@ export const HomeView = (): React.JSX.Element => {
             <AreaSection
               key={areaGroup.area}
               areaGroup={areaGroup}
-              onItemPress={(name: string) => {
-                const item = areaGroup.items.find((i) => i.name === name);
-                if (item) toggleItemNeeded(name, item.needed);
-              }}
               onItemLongPress={handleEditStaple}
+              onSetItemDecision={setDecision}
               onCompleteArea={completeArea}
               onUncompleteArea={uncompleteArea}
               onSelectArea={handleSelectArea}

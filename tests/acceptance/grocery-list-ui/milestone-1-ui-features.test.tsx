@@ -14,6 +14,11 @@
  * - US-11: Trip summary screen
  */
 
+// Native by default; US-07 drives the web ✓ / ✗ buttons (#93).
+jest.mock('../../../src/hooks/useIsWeb', () => ({
+  useIsWeb: jest.fn(() => false),
+}));
+
 // --- Driving port imports ---
 // Domain ports (already implemented):
 import { createStapleLibrary } from '../../../src/domain/staple-library';
@@ -31,6 +36,7 @@ import {
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { theme } from '../../../src/ui/theme';
+import { useIsWeb } from '../../../src/hooks/useIsWeb';
 
 // =============================================================================
 // Shared test setup
@@ -81,13 +87,16 @@ function createTestServices() {
 // =============================================================================
 
 describe('US-07: Skip staple from home screen', () => {
-  // AC: Tapping an item on the home screen skips it (drops it from the needed count)
-  // AC: Skipped item does not appear in store view
-  // AC: Skipped item can be re-added
+  // AC: Marking an item Not needed on the home screen drops it from the needed count
+  // AC: A Not needed item does not appear in store view
+  // AC: A Not needed item can be marked Needed again
   //
-  // sweep-ux-refresh replaced the per-row Skip / Re-add buttons with
-  // tap-to-toggle: tapping a needed item skips it (grey strikethrough), tapping
-  // a skipped item re-adds it. The scenarios below drive that affordance.
+  // #93 replaced tap-to-toggle with the tri-state sweep row: on web the ✗
+  // button sets Not needed (grey strikethrough) and ✓ sets Needed. A tap on
+  // the row does nothing. The scenarios below drive the web buttons.
+  const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
+  beforeEach(() => mockedUseIsWeb.mockReturnValue(true));
+  afterEach(() => mockedUseIsWeb.mockReturnValue(false));
 
   // Flattens a Text node's style array so individual properties can be asserted.
   const flatStyle = (node: { props: { style: unknown } }) =>
@@ -105,8 +114,8 @@ describe('US-07: Skip staple from home screen', () => {
     );
     expect(screen.getByText('Bathroom (2)')).toBeTruthy();
 
-    // When Carlos taps "Shampoo" to skip it
-    fireEvent.press(screen.getByText('Shampoo'));
+    // When Carlos marks "Shampoo" Not needed
+    fireEvent.press(screen.getByTestId('mark-not-needed-Shampoo'));
 
     // Then "Shampoo" is removed from the needed items (area count drops)
     expect(screen.getByText('Bathroom (1)')).toBeTruthy();
@@ -118,14 +127,14 @@ describe('US-07: Skip staple from home screen', () => {
   });
 
   it('skipped item does not appear in store view', () => {
-    // Given Carlos has skipped "Shampoo" on the home screen
+    // Given Carlos has marked "Shampoo" Not needed on the home screen
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
       </ServiceProvider>,
     );
-    fireEvent.press(screen.getByText('Shampoo'));
+    fireEvent.press(screen.getByTestId('mark-not-needed-Shampoo'));
 
     // When Carlos switches to the store view
     fireEvent.press(screen.getByText('Store'));
@@ -138,21 +147,21 @@ describe('US-07: Skip staple from home screen', () => {
   });
 
   it('re-adds a skipped staple on the home screen', () => {
-    // Given Carlos has skipped "Butter" in the "Fridge" area
+    // Given Carlos has marked "Butter" Not needed in the "Fridge" area
     const { library, tripService } = createTestServices();
     render(
       <ServiceProvider stapleLibrary={library} tripService={tripService}>
         <AppShell />
       </ServiceProvider>,
     );
-    fireEvent.press(screen.getByText('Butter'));
+    fireEvent.press(screen.getByTestId('mark-not-needed-Butter'));
     expect(screen.getByText('Fridge (2)')).toBeTruthy();
     expect(flatStyle(screen.getByText('Butter')).textDecorationLine).toBe(
       'line-through',
     );
 
-    // When Carlos taps the skipped "Butter" again
-    fireEvent.press(screen.getByText('Butter'));
+    // When Carlos marks "Butter" Needed again
+    fireEvent.press(screen.getByTestId('mark-needed-Butter'));
 
     // Then "Butter" is needed again in the "Fridge" area, in the needed
     // style (no strikethrough, regular text color)

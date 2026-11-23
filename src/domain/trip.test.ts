@@ -3,7 +3,7 @@
 // because tripService has no subscription mechanism for external consumers
 
 import { createTrip, StapleInput, TripService } from './trip';
-import { Trip, TripItem } from './types';
+import { SweepDecision, Trip, TripItem } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import {
   createNullTripStorage,
@@ -1323,5 +1323,96 @@ describe('TripService sweep decision', () => {
     expect(afterCarryover).toContainEqual(needed('Milk'));
     expect(afterCarryover).toContainEqual(needed('Candles'));
     expect(decisionsOf(nextTrip)).toEqual([needed('Bread'), needed('Milk')]);
+  });
+});
+
+// #93: a sweep row moves along Not needed ‹ Undecided › Needed, one position
+// per step, stopping at the ends; set decision lands directly. needed stays in
+// sync with decision while the expand phase is on.
+describe('TripService step and set decision', () => {
+  const bread = {
+    name: 'Bread',
+    houseArea: 'Kitchen Cabinets',
+    storeLocation: { section: 'Bakery', aisleNumber: 1 },
+    itemType: 'staple' as const,
+    source: 'preloaded' as const,
+    stapleId: 'staple-1',
+  };
+
+  const breadIn = (
+    decision: SweepDecision,
+  ): { tripService: TripService; storage: NullTripStorageWithSync } => {
+    const { tripService, storage } = createTestTripServiceWithStorage();
+    tripService.addItem(bread);
+    tripService.setDecision('Bread', decision);
+    return { tripService, storage };
+  };
+
+  const breadState = (tripService: TripService) => {
+    const item = tripService.getItems().find((i) => i.name === 'Bread');
+    return { needed: item?.needed, decision: item?.decision };
+  };
+
+  const state = (decision: SweepDecision) => ({
+    needed: decision === 'needed',
+    decision,
+  });
+
+  test.each<[SweepDecision, SweepDecision]>([
+    ['not-needed', 'undecided'],
+    ['undecided', 'needed'],
+    ['needed', 'needed'],
+  ])('step toward Needed from %s yields %s', (from, to) => {
+    const { tripService } = breadIn(from);
+
+    tripService.stepTowardNeeded('Bread');
+
+    expect(breadState(tripService)).toEqual(state(to));
+  });
+
+  test.each<[SweepDecision, SweepDecision]>([
+    ['needed', 'undecided'],
+    ['undecided', 'not-needed'],
+    ['not-needed', 'not-needed'],
+  ])('step toward Not needed from %s yields %s', (from, to) => {
+    const { tripService } = breadIn(from);
+
+    tripService.stepTowardNotNeeded('Bread');
+
+    expect(breadState(tripService)).toEqual(state(to));
+  });
+
+  test.each<[SweepDecision, SweepDecision]>([
+    ['not-needed', 'needed'],
+    ['needed', 'not-needed'],
+    ['needed', 'undecided'],
+  ])('set decision from %s lands directly on %s', (from, to) => {
+    const { tripService } = breadIn(from);
+
+    tripService.setDecision('Bread', to);
+
+    expect(breadState(tripService)).toEqual(state(to));
+  });
+
+  test('a step is persisted and notifies subscribers', () => {
+    const { tripService, storage } = breadIn('needed');
+    const notifications: number[] = [];
+    tripService.subscribe(() => notifications.push(1));
+
+    tripService.stepTowardNotNeeded('Bread');
+
+    expect(notifications).toHaveLength(1);
+    const stored = storage.loadTrip()?.items.find((i) => i.name === 'Bread');
+    expect(stored).toMatchObject(state('undecided'));
+  });
+
+  test('stepping one item leaves the others alone', () => {
+    const { tripService } = breadIn('needed');
+    tripService.addItem({ ...bread, name: 'Milk', stapleId: 'staple-2' });
+
+    tripService.stepTowardNotNeeded('Bread');
+
+    const milk = tripService.getItems().find((i) => i.name === 'Milk');
+    expect(milk).toMatchObject(state('needed'));
   });
 });

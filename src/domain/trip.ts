@@ -8,6 +8,7 @@ import {
   AddTripItemResult,
   AddStapleRequest,
   HouseArea,
+  SweepDecision,
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import { UpdateStapleChanges } from './staple-library';
@@ -41,6 +42,9 @@ export type TripService = {
   readonly uncheckItem: (name: string) => void;
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
+  readonly stepTowardNeeded: (name: string) => void;
+  readonly stepTowardNotNeeded: (name: string) => void;
+  readonly setDecision: (name: string, decision: SweepDecision) => void;
   readonly completeArea: (area: HouseArea) => void;
   readonly uncompleteArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
@@ -62,6 +66,31 @@ export type StapleIdentity = {
   readonly name: string;
   readonly houseArea: HouseArea;
 };
+
+// The sweep row is a 3-position slider (ADR-013): a step moves one position
+// along this order and stops at either end.
+const DECISION_SLIDER: readonly SweepDecision[] = [
+  'not-needed',
+  'undecided',
+  'needed',
+];
+
+const stepDecision = (
+  decision: SweepDecision,
+  direction: 1 | -1,
+): SweepDecision => {
+  const position = DECISION_SLIDER.indexOf(decision) + direction;
+  const clamped = Math.min(Math.max(position, 0), DECISION_SLIDER.length - 1);
+  return DECISION_SLIDER[clamped]!;
+};
+
+// Expand phase of #90: needed mirrors decision on every write.
+const decisionPatch = (
+  decision: SweepDecision,
+): Pick<TripItem, 'decision' | 'needed'> => ({
+  decision,
+  needed: decision === 'needed',
+});
 
 const generateTripItemId = (): string =>
   `trip-item-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -152,6 +181,16 @@ export const createTrip = (
     persistTrip();
   };
 
+  const stepItemByName = (name: string, direction: 1 | -1): void => {
+    items = items.map((item) =>
+      item.name === name
+        ? { ...item, ...decisionPatch(stepDecision(item.decision, direction)) }
+        : item,
+    );
+    notify();
+    persistTrip();
+  };
+
   // Remove items matching predicate. If nothing matched, this is a no-op
   // (no notify, no persist). Shared by removeItemByStapleId and
   // removeItemsByStaple — both want the same "filter, short-circuit when
@@ -229,6 +268,18 @@ export const createTrip = (
 
     unskipItem: (name: string) => {
       updateItemByName(name, { needed: true, decision: 'needed' });
+    },
+
+    stepTowardNeeded: (name: string) => {
+      stepItemByName(name, 1);
+    },
+
+    stepTowardNotNeeded: (name: string) => {
+      stepItemByName(name, -1);
+    },
+
+    setDecision: (name: string, decision: SweepDecision) => {
+      updateItemByName(name, decisionPatch(decision));
     },
 
     completeArea: (area: HouseArea) => {

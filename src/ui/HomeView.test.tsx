@@ -21,8 +21,13 @@
 // boundary (the production handler does exactly stapleLibrary.remove(id)
 // after step 01-03).
 
+// Native by default, as before; the sweep row web tests switch it to web.
+jest.mock('../hooks/useIsWeb', () => ({ useIsWeb: jest.fn(() => false) }));
+
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
+import { useIsWeb } from '../hooks/useIsWeb';
+import { SweepDecision } from '../domain/types';
 import { HomeView } from './HomeView';
 import { StoreView } from './StoreView';
 import { ServiceProvider } from './ServiceProvider';
@@ -435,5 +440,110 @@ describe('HomeView QuickAdd suggestion un-skips a skipped item (#74 finding 4)',
       .filter((i) => i.name === 'Tahini');
     expect(after).toHaveLength(1);
     expect(after[0]!.needed).toBe(true);
+  });
+});
+
+// #93: a sweep row shows which of Undecided / Needed / Not needed it is in.
+// On web, ✓ sets Needed and ✗ sets Not needed. A tap does nothing; a
+// long-press still opens the edit sheet.
+describe('HomeView tri-state sweep row (#93)', () => {
+  const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
+
+  const fridgeStaples: AddStapleRequest[] = [
+    {
+      name: 'Milk',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+    {
+      name: 'Eggs',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+    {
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    },
+  ];
+
+  const decisionOf = (services: AppServices, name: string) =>
+    services.tripService.getItems().find((i) => i.name === name)?.decision;
+
+  const renderSweepWith = async (
+    decisions: Record<string, SweepDecision>,
+  ): Promise<{ services: AppServices; tree: ReturnType<typeof render> }> => {
+    const services = await initServicesWith(fridgeStaples, ['Fridge']);
+    Object.entries(decisions).forEach(([name, decision]) =>
+      services.tripService.setDecision(name, decision),
+    );
+    return { services, tree: renderHomeView(services) };
+  };
+
+  afterEach(() => {
+    mockedUseIsWeb.mockReturnValue(false);
+  });
+
+  test('a row in each state carries that state’s test ID and a distinct look', async () => {
+    const { tree } = await renderSweepWith({
+      Milk: 'needed',
+      Eggs: 'undecided',
+      Butter: 'not-needed',
+    });
+
+    const rows = [
+      tree.getByTestId('sweep-row-needed-Milk'),
+      tree.getByTestId('sweep-row-undecided-Eggs'),
+      tree.getByTestId('sweep-row-not-needed-Butter'),
+    ];
+    const looks = rows.map((row) => JSON.stringify(row.props.style));
+    expect(new Set(looks).size).toBe(3);
+  });
+
+  test('on web, ✓ sets Needed and ✗ sets Not needed, and the row re-renders', async () => {
+    mockedUseIsWeb.mockReturnValue(true);
+    const { services, tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    fireEvent.press(tree.getByTestId('mark-not-needed-Milk'));
+    const afterCross = decisionOf(services, 'Milk');
+    const crossRowShown = tree.queryByTestId('sweep-row-not-needed-Milk');
+    fireEvent.press(tree.getByTestId('mark-needed-Milk'));
+
+    expect(afterCross).toBe('not-needed');
+    expect(crossRowShown).not.toBeNull();
+    expect(decisionOf(services, 'Milk')).toBe('needed');
+    expect(tree.queryByTestId('sweep-row-needed-Milk')).not.toBeNull();
+    expect(tree.queryByTestId('sweep-row-not-needed-Milk')).toBeNull();
+  });
+
+  test('on native, a row has no ✓ / ✗ buttons', async () => {
+    const { tree } = await renderSweepWith({ Milk: 'undecided' });
+
+    expect(tree.queryByTestId('mark-needed-Milk')).toBeNull();
+    expect(tree.queryByTestId('mark-not-needed-Milk')).toBeNull();
+  });
+
+  test('tapping a row changes nothing', async () => {
+    const { services, tree } = await renderSweepWith({
+      Milk: 'needed',
+      Eggs: 'undecided',
+      Butter: 'not-needed',
+    });
+
+    fireEvent.press(tree.getByText('Milk'));
+    fireEvent.press(tree.getByText('Eggs'));
+    fireEvent.press(tree.getByText('Butter'));
+
+    expect(decisionOf(services, 'Milk')).toBe('needed');
+    expect(decisionOf(services, 'Eggs')).toBe('undecided');
+    expect(decisionOf(services, 'Butter')).toBe('not-needed');
+  });
+
+  test('long-pressing a row opens the edit sheet', async () => {
+    const { tree } = await renderSweepWith({ Eggs: 'undecided' });
+
+    fireEvent(tree.getByText('Eggs'), 'longPress');
+
+    expect(tree.getByText("Edit 'Eggs'")).toBeTruthy();
   });
 });

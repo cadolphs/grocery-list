@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { AreaGroup } from '../domain/item-grouping';
+import { SweepDecision } from '../domain/types';
 import { TripItemRow } from './TripItemRow';
 import { theme } from './theme';
 import { surfaces } from './surfaces';
@@ -17,6 +18,7 @@ type AreaSectionProps = {
   readonly onSelectArea?: (area: string) => void;
   readonly onItemPress?: (name: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
+  readonly onSetItemDecision?: (name: string, decision: SweepDecision) => void;
   readonly isCompleted?: boolean;
   readonly isActive?: boolean;
 };
@@ -31,6 +33,7 @@ export const AreaSection = ({
   onSelectArea,
   onItemPress,
   onItemLongPress,
+  onSetItemDecision,
   isCompleted,
   isActive,
 }: AreaSectionProps): React.JSX.Element => {
@@ -74,6 +77,7 @@ export const AreaSection = ({
             mode="home"
             onPress={onItemPress ? () => onItemPress(item.name) : undefined}
             onLongPress={onItemLongPress}
+            onSetDecision={onSetItemDecision}
           />
         </View>
       ))}

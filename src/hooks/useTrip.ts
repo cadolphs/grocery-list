@@ -2,7 +2,12 @@
 // Reads items from context and exposes them as reactive state
 
 import { useState, useCallback, useEffect } from 'react';
-import { TripItem, AddTripItemResult, HouseArea } from '../domain/types';
+import {
+  TripItem,
+  AddTripItemResult,
+  HouseArea,
+  SweepDecision,
+} from '../domain/types';
 import { SweepProgress, AddTripItemWithStapleId } from '../domain/trip';
 import { UpdateStapleChanges } from '../domain/staple-library';
 import { useServices } from '../ui/ServiceProvider';
@@ -13,6 +18,7 @@ export type UseTripResult = {
   readonly toggleCheckOff: (name: string) => void;
   readonly skipItem: (name: string) => void;
   readonly unskipItem: (name: string) => void;
+  readonly setDecision: (name: string, decision: SweepDecision) => void;
   readonly completeArea: (area: HouseArea) => void;
   readonly uncompleteArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
@@ -81,6 +87,14 @@ export const useTrip = (): UseTripResult => {
     [tripService],
   );
 
+  const setDecision = useCallback(
+    (name: string, decision: SweepDecision): void => {
+      tripService.setDecision(name, decision);
+      setItems(tripService.getItems());
+    },
+    [tripService],
+  );
+
   const completeArea = useCallback(
     (area: HouseArea): void => {
       tripService.completeArea(area);
@@ -120,6 +134,7 @@ export const useTrip = (): UseTripResult => {
     toggleCheckOff,
     skipItem,
     unskipItem,
+    setDecision,
     completeArea,
     uncompleteArea,
     resetSweep,
