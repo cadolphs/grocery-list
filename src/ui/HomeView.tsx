@@ -46,7 +46,6 @@ export const HomeView = (): React.JSX.Element => {
     items,
     addItem,
     skipItem,
-    unskipItem,
     setDecision,
     completeArea,
     uncompleteArea,
@@ -127,11 +126,15 @@ export const HomeView = (): React.JSX.Element => {
     setEditInitialValues(null);
   }, []);
 
+  // The library diff path adds the new staple to the trip Undecided; a staple
+  // quick-added here is one the user wants, so it is marked Needed (#96).
   const handleSubmitStaple = useCallback(
     (request: AddStapleRequest): void => {
-      stapleLibrary.addStaple(request);
+      if (stapleLibrary.addStaple(request).success) {
+        setDecision(request.name, 'needed');
+      }
     },
-    [stapleLibrary],
+    [stapleLibrary, setDecision],
   );
 
   const handleSubmitOneOff = useCallback(
@@ -196,8 +199,8 @@ export const HomeView = (): React.JSX.Element => {
           i.stapleId === staple.id ||
           (i.name === staple.name && i.houseArea === staple.houseArea),
       );
-      if (existingItem && !existingItem.needed) {
-        unskipItem(existingItem.name);
+      if (existingItem && existingItem.decision !== 'needed') {
+        setDecision(existingItem.name, 'needed');
       } else if (!existingItem) {
         addItem({
           name: staple.name,
@@ -209,7 +212,7 @@ export const HomeView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem, unskipItem],
+    [items, addItem, setDecision],
   );
 
   const handleRemoveFromChecklist = useCallback(
@@ -217,16 +220,6 @@ export const HomeView = (): React.JSX.Element => {
       skipItem(name);
     },
     [skipItem],
-  );
-
-  // Single source of truth for "tap toggles needed" used by sweep tiles
-  // and one-off rows. Both paths previously inlined the same if/else.
-  const toggleItemNeeded = useCallback(
-    (name: string, currentlyNeeded: boolean): void => {
-      if (currentlyNeeded) skipItem(name);
-      else unskipItem(name);
-    },
-    [skipItem, unskipItem],
   );
 
   const handleSelectSuggestion = useCallback(
@@ -241,10 +234,10 @@ export const HomeView = (): React.JSX.Element => {
               item.name === staple.name && item.houseArea === staple.houseArea,
           );
       // Same rule as StoreView.handleSelectSuggestion and
-      // handleAddFromChecklist above: a skipped row is un-skipped, a missing
-      // row is added, and a needed row is left alone (no duplicate).
-      if (existing && !existing.needed) {
-        unskipItem(existing.name);
+      // handleAddFromChecklist above: a row not yet Needed is set Needed, a
+      // missing row is added, and a Needed row is left alone (no duplicate).
+      if (existing && existing.decision !== 'needed') {
+        setDecision(existing.name, 'needed');
       } else if (!existing) {
         const houseArea =
           isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
@@ -258,7 +251,7 @@ export const HomeView = (): React.JSX.Element => {
         });
       }
     },
-    [items, addItem, unskipItem],
+    [items, addItem, setDecision],
   );
 
   if (settingsView === 'section-order') {
@@ -400,12 +393,7 @@ export const HomeView = (): React.JSX.Element => {
                 One-offs ({oneOffItems.length})
               </Text>
               {oneOffItems.map((item) => (
-                <TripItemRow
-                  key={item.id}
-                  item={item}
-                  mode="home"
-                  onPress={() => toggleItemNeeded(item.name, item.needed)}
-                />
+                <TripItemRow key={item.id} item={item} mode="home" />
               ))}
             </View>
           )}

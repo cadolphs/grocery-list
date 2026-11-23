@@ -31,6 +31,10 @@ function renderAppInStoreView() {
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(stapleLibrary.listAll());
+  // #96: staples start Undecided; mark them Needed as a finished sweep would.
+  stapleLibrary
+    .listAll()
+    .forEach((s) => tripService.setDecision(s.name, 'needed'));
 
   render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>

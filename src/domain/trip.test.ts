@@ -1292,6 +1292,9 @@ describe('TripService sweep decision', () => {
     ];
     const firstTrip = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
     firstTrip.initializeFromStorage(staples);
+    // #96: staples start Undecided; the sweep marks both Needed.
+    firstTrip.setDecision('Bread', 'needed');
+    firstTrip.setDecision('Milk', 'needed');
     firstTrip.addItem({
       name: 'Candles',
       houseArea: 'Kitchen Cabinets',
@@ -1322,7 +1325,16 @@ describe('TripService sweep decision', () => {
     // Unbought Milk and Candles carry over still Needed.
     expect(afterCarryover).toContainEqual(needed('Milk'));
     expect(afterCarryover).toContainEqual(needed('Candles'));
-    expect(decisionsOf(nextTrip)).toEqual([needed('Bread'), needed('Milk')]);
+    // #96: Reset Sweep returns every staple to Undecided.
+    const undecided = (name: string) => ({
+      name,
+      needed: false,
+      decision: 'undecided',
+    });
+    expect(decisionsOf(nextTrip)).toEqual([
+      undecided('Bread'),
+      undecided('Milk'),
+    ]);
   });
 });
 
@@ -1415,4 +1427,183 @@ describe('TripService step and set decision', () => {
     const milk = tripService.getItems().find((i) => i.name === 'Milk');
     expect(milk).toMatchObject(state('needed'));
   });
+});
+
+// #96: the trip lifecycle runs on decisions. A new trip starts every staple
+// Undecided; one-offs are always Needed; Finish Trip carries over exactly the
+// Needed items not in the cart; Reset Sweep returns staples to Undecided.
+describe('TripService lifecycle on decisions (#96)', () => {
+  const areas = () => ['Fridge', 'Kitchen Cabinets'];
+  const milk: StapleInput = {
+    id: 'staple-milk',
+    name: 'Milk',
+    houseArea: 'Fridge',
+    storeLocation: { section: 'Dairy', aisleNumber: 2 },
+  };
+  const eggs: StapleInput = {
+    id: 'staple-eggs',
+    name: 'Eggs',
+    houseArea: 'Fridge',
+    storeLocation: { section: 'Dairy', aisleNumber: 2 },
+  };
+  const bread: StapleInput = {
+    id: 'staple-bread',
+    name: 'Bread',
+    houseArea: 'Kitchen Cabinets',
+    storeLocation: { section: 'Bakery', aisleNumber: 1 },
+  };
+  const rice: StapleInput = {
+    id: 'staple-rice',
+    name: 'Rice',
+    houseArea: 'Kitchen Cabinets',
+    storeLocation: { section: 'Grains', aisleNumber: 5 },
+  };
+  const candles = {
+    name: 'Candles',
+    houseArea: 'Kitchen Cabinets',
+    storeLocation: { section: 'Home', aisleNumber: null },
+    itemType: 'one-off' as const,
+    source: 'quick-add' as const,
+  };
+
+  const decisions = (tripService: TripService) =>
+    Object.fromEntries(
+      tripService.getItems().map((i) => [i.name, i.decision] as const),
+    );
+
+  const startedWith = (staples: StapleInput[]) => {
+    const storage = createNullTripStorage();
+    const tripService = createTrip(storage, areas);
+    tripService.initializeFromStorage(staples);
+    return { storage, tripService };
+  };
+
+  test('a new trip starts every staple Undecided', () => {
+    const { tripService } = startedWith([milk, bread]);
+
+    expect(decisions(tripService)).toEqual({
+      Milk: 'undecided',
+      Bread: 'undecided',
+    });
+    expect(tripService.getItems().every((i) => i.needed === false)).toBe(true);
+  });
+
+  test('a one-off is Needed and stays Needed whatever the sweep does to it', () => {
+    const { tripService } = startedWith([]);
+    tripService.addItem(candles);
+    const onAdd = decisions(tripService);
+
+    tripService.setDecision('Candles', 'not-needed');
+    tripService.stepTowardNotNeeded('Candles');
+    tripService.skipItem('Candles');
+
+    expect(onAdd).toEqual({ Candles: 'needed' });
+    expect(decisions(tripService)).toEqual({ Candles: 'needed' });
+    expect(tripService.getItems()[0]!.needed).toBe(true);
+  });
+
+  const finishTripWith = () => {
+    const { storage, tripService } = startedWith([milk, eggs, bread, rice]);
+    tripService.addItem(candles);
+    tripService.setDecision('Milk', 'needed'); // Needed, not in cart
+    tripService.setDecision('Eggs', 'needed'); // Needed, in cart
+    tripService.checkOff('Eggs');
+    tripService.setDecision('Bread', 'not-needed');
+    // Rice stays Undecided
+    const result = tripService.complete();
+    return { storage, result };
+  };
+
+  test('Finish Trip carries over exactly the Needed items not in the cart', () => {
+    const { storage, result } = finishTripWith();
+
+    const carried = storage.loadCarryover().map((i) => [i.name, i.decision]);
+    expect(carried).toEqual([
+      ['Milk', 'needed'],
+      ['Candles', 'needed'],
+    ]);
+    expect(result.unboughtItems.map((i) => i.name)).toEqual([
+      'Milk',
+      'Candles',
+    ]);
+  });
+
+  test('the next trip has the carried-over items Needed, once each, and every other staple Undecided', () => {
+    const { storage } = finishTripWith();
+
+    const nextTrip = createTrip(storage, areas);
+    nextTrip.initializeFromStorage([milk, eggs, bread, rice]);
+
+    expect(
+      nextTrip
+        .getItems()
+        .map((i) => i.name)
+        .sort(),
+    ).toEqual(['Bread', 'Candles', 'Eggs', 'Milk', 'Rice']);
+    expect(decisions(nextTrip)).toEqual({
+      Milk: 'needed',
+      Eggs: 'undecided',
+      Bread: 'undecided',
+      Rice: 'undecided',
+      Candles: 'needed',
+    });
+  });
+
+  test('Reset Sweep returns every staple to Undecided and drops one-offs', () => {
+    const { tripService } = startedWith([milk, bread]);
+    tripService.addItem(candles);
+    tripService.setDecision('Milk', 'needed');
+    tripService.setDecision('Bread', 'not-needed');
+
+    tripService.resetSweep([milk, bread]);
+
+    expect(decisions(tripService)).toEqual({
+      Milk: 'undecided',
+      Bread: 'undecided',
+    });
+  });
+
+  test('a quick-added staple starts Needed; a library-added staple starts Undecided', () => {
+    const { tripService } = startedWith([]);
+
+    tripService.addItem({
+      name: 'Butter',
+      houseArea: 'Fridge',
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+      itemType: 'staple',
+      source: 'quick-add',
+      stapleId: 'staple-butter',
+    });
+    tripService.addItem({
+      name: 'Jam',
+      houseArea: 'Kitchen Cabinets',
+      storeLocation: { section: 'Spreads', aisleNumber: 4 },
+      itemType: 'staple',
+      source: 'preloaded',
+      stapleId: 'staple-jam',
+      decision: 'undecided',
+    });
+
+    expect(decisions(tripService)).toEqual({
+      Butter: 'needed',
+      Jam: 'undecided',
+    });
+    expect(tripService.getItems().map((i) => i.needed)).toEqual([true, false]);
+  });
+
+  test.each<SweepDecision>(['undecided', 'needed', 'not-needed'])(
+    'a staple deleted from the library leaves the trip when %s',
+    (decision) => {
+      const { tripService } = startedWith([milk, bread]);
+      tripService.setDecision('Milk', decision);
+
+      tripService.removeItemsByStaple({
+        id: 'staple-milk',
+        name: 'Milk',
+        houseArea: 'Fridge',
+      });
+
+      expect(decisions(tripService)).toEqual({ Bread: 'undecided' });
+    },
+  );
 });

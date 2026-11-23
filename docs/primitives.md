@@ -18,7 +18,9 @@ services from `ServiceProvider`. No classes (ADR-009).
 - **Trip service** (`trip.ts`: `createTrip`): the current trip, sweep
   progress, carryover on completion (`initializeFromStorage`, `complete`),
   a sweep row's decision (`stepTowardNeeded`, `stepTowardNotNeeded`,
-  `setDecision`).
+  `setDecision`). Staples start Undecided (an `addItem` request may pass
+  `decision`; it defaults to Needed), one-offs are always Needed, and
+  `complete` carries over exactly the Needed items not in the cart.
   adrs: [product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Staple library** (`staple-library.ts`: `createStapleLibrary`): recurring

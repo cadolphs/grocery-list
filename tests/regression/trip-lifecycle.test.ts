@@ -32,6 +32,10 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
       source: 'whiteboard',
     });
 
+    // #96: staples start Undecided; the sweep marks them Needed.
+    trip.setDecision('Milk', 'needed');
+    trip.setDecision('Bread', 'needed');
+
     // Check off Milk (staple) and Birthday Cake (one-off) — Bread stays unbought
     trip.checkOff('Milk');
     trip.checkOff('Birthday Cake');
@@ -80,6 +84,10 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
         storeLocation: { section: 'Bakery', aisleNumber: 1 },
       },
     ]);
+
+    // #96: staples start Undecided; the sweep marks them Needed.
+    trip1.setDecision('Milk', 'needed');
+    trip1.setDecision('Bread', 'needed');
 
     // Check off Milk, leave Bread unbought
     trip1.checkOff('Milk');
@@ -146,6 +154,11 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const trip1Items = trip1.getItems();
     expect(trip1Items).toHaveLength(3);
 
+    // #96: staples start Undecided; the sweep marks them Needed.
+    trip1.setDecision('Milk', 'needed');
+    trip1.setDecision('Bread', 'needed');
+    trip1.setDecision('Eggs', 'needed');
+
     // Check off 2 staples (Milk and Bread) — Eggs stays unbought
     trip1.checkOff('Milk');
     trip1.checkOff('Bread');
@@ -162,19 +175,15 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
 
     const trip2Items = trip2.getItems();
 
-    // New trip should have 3 staples (preloaded) + 1 carryover item = 4 total
-    expect(trip2Items).toHaveLength(4);
+    // #96: the carried-over Eggs arrives Needed in place of a fresh
+    // Undecided copy, so the new trip holds each staple once: 2 + 1 = 3.
+    expect(trip2Items).toHaveLength(3);
 
-    // The 3 staples should appear as preloaded
     const preloadedItems = trip2Items.filter(
       (item) => item.source === 'preloaded',
     );
-    expect(preloadedItems).toHaveLength(3);
-    expect(preloadedItems.map((i) => i.name).sort()).toEqual([
-      'Bread',
-      'Eggs',
-      'Milk',
-    ]);
+    expect(preloadedItems).toHaveLength(2);
+    expect(preloadedItems.map((i) => i.name).sort()).toEqual(['Bread', 'Milk']);
 
     // The 1 carryover item (Eggs) should have source 'carryover'
     const carryoverItems = trip2Items.filter(
@@ -214,6 +223,11 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
+
+    // #96: staples start Undecided; the sweep marks them Needed.
+    previousTrip.setDecision('Milk', 'needed');
+    previousTrip.setDecision('Bread', 'needed');
+    previousTrip.setDecision('Eggs', 'needed');
 
     // Buy Milk and Eggs, leave Bread unbought
     previousTrip.checkOff('Milk');
@@ -255,19 +269,16 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const preloadedItems = items.filter((item) => item.source === 'preloaded');
     const carryoverItems = items.filter((item) => item.source === 'carryover');
 
-    expect(preloadedItems).toHaveLength(3);
-    expect(preloadedItems.map((i) => i.name).sort()).toEqual([
-      'Bread',
-      'Eggs',
-      'Milk',
-    ]);
+    // #96: the carried-over Bread replaces its fresh Undecided copy.
+    expect(preloadedItems).toHaveLength(2);
+    expect(preloadedItems.map((i) => i.name).sort()).toEqual(['Eggs', 'Milk']);
 
     expect(carryoverItems).toHaveLength(1);
     expect(carryoverItems[0]!.name).toBe('Bread');
     expect(carryoverItems[0]!.source).toBe('carryover');
 
-    // 2. Total items = 3 staples + 1 carryover = 4
-    expect(items).toHaveLength(4);
+    // 2. Total items = 2 fresh staples + 1 carryover = 3, each staple once
+    expect(items).toHaveLength(3);
 
     // 3. Carryover cleared from storage
     expect(storage.loadCarryover()).toHaveLength(0);
@@ -348,6 +359,10 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
         storeLocation: { section: 'Bakery', aisleNumber: 1 },
       },
     ]);
+
+    // #96: staples start Undecided; the sweep marks them Needed.
+    tripService.setDecision('Milk', 'needed');
+    tripService.setDecision('Bread', 'needed');
 
     tripService.checkOff('Milk');
 

@@ -38,6 +38,8 @@ const renderStoreViewWithGroups = (
   const tripService = createTrip(tripStorage);
   // Seed the trip with items so groupBySection has groups to render
   tripService.initializeFromStorage(staples);
+  // #96: staples start Undecided; the store lists only Needed ones.
+  staples.forEach((s) => tripService.setDecision(s.name, 'needed'));
 
   const element = (
     <ServiceProvider

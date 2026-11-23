@@ -193,7 +193,8 @@ describe('Trip: skipItem', () => {
     const shampoo = items.find((i) => i.name === 'Shampoo');
     const soap = items.find((i) => i.name === 'Soap');
     expect(shampoo?.needed).toBe(false);
-    expect(soap?.needed).toBe(true);
+    // #96: staples start Undecided; skipping Shampoo leaves Soap untouched.
+    expect(soap?.decision).toBe('undecided');
   });
 
   it('does not remove the item from the trip', () => {
@@ -280,7 +281,7 @@ describe('Trip: completeArea and getSweepProgress', () => {
 });
 
 describe('Trip: resetSweep', () => {
-  it('resets staple items to needed=true and checked=false', () => {
+  it('resets staple items to Undecided and checked=false', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     const staples = [
@@ -305,10 +306,11 @@ describe('Trip: resetSweep', () => {
     expect(items).toHaveLength(2);
     const milk = items.find((i) => i.name === 'Milk');
     const butter = items.find((i) => i.name === 'Butter');
-    expect(milk?.needed).toBe(true);
+    // #96: Reset Sweep returns every staple to Undecided.
+    expect(milk?.decision).toBe('undecided');
     expect(milk?.checked).toBe(false);
     expect(milk?.checkedAt).toBeNull();
-    expect(butter?.needed).toBe(true);
+    expect(butter?.decision).toBe('undecided');
     expect(butter?.checked).toBe(false);
   });
 
@@ -386,7 +388,7 @@ describe('Trip: resetSweep', () => {
     expect(loadedTrip?.items).toHaveLength(1);
     expect(loadedTrip?.items[0]!.name).toBe('Milk');
     expect(loadedTrip?.items[0]!.checked).toBe(false);
-    expect(loadedTrip?.items[0]!.needed).toBe(true);
+    expect(loadedTrip?.items[0]!.decision).toBe('undecided');
   });
 });
 
@@ -402,6 +404,8 @@ describe('Trip: complete categorizes items', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
+    // #96: staples start Undecided; the sweep marks Milk Needed.
+    trip.setDecision('Milk', 'needed');
     return { trip };
   };
 

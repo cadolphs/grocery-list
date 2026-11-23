@@ -269,6 +269,10 @@ describe('sweep mode shows one-offs section separately', () => {
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    stapleLibrary
+      .listAll()
+      .forEach((s) => tripService.setDecision(s.name, 'needed'));
 
     tripService.addItem({
       name: 'Birthday Candles',
@@ -306,6 +310,10 @@ describe('sweep mode shows one-offs section separately', () => {
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());
+    // #96: staples start Undecided; mark them Needed as a finished sweep would.
+    stapleLibrary
+      .listAll()
+      .forEach((s) => tripService.setDecision(s.name, 'needed'));
 
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>
@@ -316,17 +324,18 @@ describe('sweep mode shows one-offs section separately', () => {
     expect(screen.queryByText(/One-offs/)).toBeNull();
   });
 
-  it('one-off item tap toggles needed state', () => {
+  // #96: one-offs are always Needed, so a tap no longer skips one.
+  it('one-off item tap leaves it Needed', () => {
     renderAppWithOneOff();
 
     const item = screen.getByText('Birthday Candles');
     fireEvent.press(item);
 
-    // After tap, item should be skipped (grey strikethrough)
     const flatStyle = Array.isArray(item.props.style)
       ? Object.assign({}, ...item.props.style.filter(Boolean))
       : item.props.style;
 
-    expect(flatStyle.color).toBe(theme.color.textMuted);
+    expect(flatStyle.color).not.toBe(theme.color.textMuted);
+    expect(flatStyle.textDecorationLine).not.toBe('line-through');
   });
 });
