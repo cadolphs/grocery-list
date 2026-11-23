@@ -1,7 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
-  // Default scope for local runs. CI narrows this to the files a push changed
-  // with `--mutate` (see .github/workflows/mutation.yml).
+  // Full scope (`npm run mutation -- --all`). `npm run mutation` narrows it to
+  // the files changed versus main with `--mutate` (see scripts/mutation.mjs).
   mutate: ['src/domain/**/*.ts', 'src/ports/**/*.ts', '!src/**/*.test.ts'],
   testRunner: 'jest',
   jest: {
