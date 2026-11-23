@@ -3,6 +3,13 @@
 import { createTrip } from '../../src/domain/trip';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
   it('complete() marks trip as completed, persists to storage, saves unbought as carryover, returns CompleteTripResult', () => {
     const storage = createNullTripStorage();
@@ -33,12 +40,12 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     });
 
     // #96: staples start Undecided; the sweep marks them Needed.
-    trip.setDecision('Milk', 'needed');
-    trip.setDecision('Bread', 'needed');
+    trip.setDecision(itemIdNamed(trip, 'Milk'), 'needed');
+    trip.setDecision(itemIdNamed(trip, 'Bread'), 'needed');
 
     // Check off Milk (staple) and Birthday Cake (one-off) — Bread stays unbought
-    trip.checkOff('Milk');
-    trip.checkOff('Birthday Cake');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.checkOff(itemIdNamed(trip, 'Birthday Cake'));
 
     // Complete the trip
     const result = trip.complete();
@@ -86,11 +93,11 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     ]);
 
     // #96: staples start Undecided; the sweep marks them Needed.
-    trip1.setDecision('Milk', 'needed');
-    trip1.setDecision('Bread', 'needed');
+    trip1.setDecision(itemIdNamed(trip1, 'Milk'), 'needed');
+    trip1.setDecision(itemIdNamed(trip1, 'Bread'), 'needed');
 
     // Check off Milk, leave Bread unbought
-    trip1.checkOff('Milk');
+    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
 
     // Complete trip — Bread becomes carryover
     trip1.complete();
@@ -155,13 +162,13 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(trip1Items).toHaveLength(3);
 
     // #96: staples start Undecided; the sweep marks them Needed.
-    trip1.setDecision('Milk', 'needed');
-    trip1.setDecision('Bread', 'needed');
-    trip1.setDecision('Eggs', 'needed');
+    trip1.setDecision(itemIdNamed(trip1, 'Milk'), 'needed');
+    trip1.setDecision(itemIdNamed(trip1, 'Bread'), 'needed');
+    trip1.setDecision(itemIdNamed(trip1, 'Eggs'), 'needed');
 
     // Check off 2 staples (Milk and Bread) — Eggs stays unbought
-    trip1.checkOff('Milk');
-    trip1.checkOff('Bread');
+    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
+    trip1.checkOff(itemIdNamed(trip1, 'Bread'));
 
     // Complete trip 1
     const result = trip1.complete();
@@ -225,13 +232,13 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     ]);
 
     // #96: staples start Undecided; the sweep marks them Needed.
-    previousTrip.setDecision('Milk', 'needed');
-    previousTrip.setDecision('Bread', 'needed');
-    previousTrip.setDecision('Eggs', 'needed');
+    previousTrip.setDecision(itemIdNamed(previousTrip, 'Milk'), 'needed');
+    previousTrip.setDecision(itemIdNamed(previousTrip, 'Bread'), 'needed');
+    previousTrip.setDecision(itemIdNamed(previousTrip, 'Eggs'), 'needed');
 
     // Buy Milk and Eggs, leave Bread unbought
-    previousTrip.checkOff('Milk');
-    previousTrip.checkOff('Eggs');
+    previousTrip.checkOff(itemIdNamed(previousTrip, 'Milk'));
+    previousTrip.checkOff(itemIdNamed(previousTrip, 'Eggs'));
     previousTrip.complete();
 
     // Verify preconditions: storage has completed trip + carryover
@@ -297,7 +304,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    previousTrip.checkOff('Milk'); // This persists the trip as active
+    previousTrip.checkOff(itemIdNamed(previousTrip, 'Milk')); // This persists the trip as active
 
     // App init: new session
     const newTripService = createTrip(storage);
@@ -361,10 +368,10 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     ]);
 
     // #96: staples start Undecided; the sweep marks them Needed.
-    tripService.setDecision('Milk', 'needed');
-    tripService.setDecision('Bread', 'needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Milk'), 'needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Bread'), 'needed');
 
-    tripService.checkOff('Milk');
+    tripService.checkOff(itemIdNamed(tripService, 'Milk'));
 
     // Simulate what handleFinishTrip SHOULD do: call tripService.complete()
     const result = tripService.complete();

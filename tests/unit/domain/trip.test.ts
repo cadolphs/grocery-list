@@ -5,6 +5,13 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 describe('Trip: addItem', () => {
   it('adds a one-off item to the trip', () => {
     const tripStorage = createNullTripStorage();
@@ -102,7 +109,7 @@ describe('Trip: checkOff persistence', () => {
       },
     ]);
 
-    trip.checkOff('Whole milk');
+    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
 
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();
@@ -126,7 +133,7 @@ describe('Trip: checkOff persistence', () => {
       },
     ]);
 
-    trip.checkOff('Whole milk');
+    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
 
     const loadedTrip = tripStorage.loadTrip();
     const loadedButter = loadedTrip?.items.find((i) => i.name === 'Butter');
@@ -150,7 +157,7 @@ describe('Trip: loadFromStorage', () => {
         storeLocation: { section: 'Bakery', aisleNumber: null },
       },
     ]);
-    trip1.checkOff('Milk');
+    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
 
     const trip2 = createTrip(tripStorage);
     trip2.loadFromStorage();
@@ -187,7 +194,7 @@ describe('Trip: setDecision Not needed', () => {
       },
     ]);
 
-    trip.setDecision('Shampoo', 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Shampoo'), 'not-needed');
 
     const items = trip.getItems();
     const shampoo = items.find((i) => i.name === 'Shampoo');
@@ -208,7 +215,7 @@ describe('Trip: setDecision Not needed', () => {
       },
     ]);
 
-    trip.setDecision('Butter', 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
 
     expect(trip.getItems()).toHaveLength(1);
     expect(trip.getItems()[0]!.name).toBe('Butter');
@@ -232,8 +239,8 @@ describe('Trip: resetSweep', () => {
       },
     ];
     trip.initializeFromStorage(staples);
-    trip.checkOff('Milk');
-    trip.setDecision('Butter', 'not-needed');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
 
     trip.resetSweep(staples);
 
@@ -286,7 +293,7 @@ describe('Trip: resetSweep', () => {
       },
     ];
     trip.initializeFromStorage(staples);
-    trip.checkOff('Milk');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
     trip.addItem({
       name: 'Candles',
       houseArea: 'Kitchen Cabinets',
@@ -319,13 +326,13 @@ describe('Trip: complete categorizes items', () => {
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
     // #96: staples start Undecided; the sweep marks Milk Needed.
-    trip.setDecision('Milk', 'needed');
+    trip.setDecision(itemIdNamed(trip, 'Milk'), 'needed');
     return { trip };
   };
 
   it('categorizes checked staples as purchasedStaples', () => {
     const { trip } = setupTripWithItems();
-    trip.checkOff('Milk');
+    trip.checkOff(itemIdNamed(trip, 'Milk'));
 
     const result = trip.complete();
 
@@ -342,7 +349,7 @@ describe('Trip: complete categorizes items', () => {
       itemType: 'one-off',
       source: 'quick-add',
     });
-    trip.checkOff('Candles');
+    trip.checkOff(itemIdNamed(trip, 'Candles'));
 
     const result = trip.complete();
 

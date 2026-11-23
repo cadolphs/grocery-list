@@ -15,11 +15,11 @@ type TripItemRowProps = {
   readonly onPress?: () => void;
   readonly onLongPress?: (name: string, area: string) => void;
   // Sweep rows only (#93): web shows ✓ / ✗ buttons that set the decision.
-  readonly onSetDecision?: (name: string, decision: SweepDecision) => void;
+  readonly onSetDecision?: (itemId: string, decision: SweepDecision) => void;
   // Sweep rows only (#94): on iOS / Android a swipe right / left steps the
   // decision one position toward Needed / Not needed.
-  readonly onStepTowardNeeded?: (name: string) => void;
-  readonly onStepTowardNotNeeded?: (name: string) => void;
+  readonly onStepTowardNeeded?: (itemId: string) => void;
+  readonly onStepTowardNotNeeded?: (itemId: string) => void;
 };
 
 // A staple on the Home sweep shows its decision: Undecided, Needed or
@@ -99,7 +99,7 @@ export const TripItemRow = ({
               styles.decisionButton,
               item.decision === 'needed' && styles.decisionButtonOn,
             ]}
-            onPress={() => onSetDecision(item.name, 'needed')}
+            onPress={() => onSetDecision(item.id, 'needed')}
             testID={`mark-needed-${item.name}`}
             accessibilityLabel={`Mark ${item.name} needed`}
             accessibilityState={{ selected: item.decision === 'needed' }}
@@ -111,7 +111,7 @@ export const TripItemRow = ({
               styles.decisionButton,
               item.decision === 'not-needed' && styles.decisionButtonOn,
             ]}
-            onPress={() => onSetDecision(item.name, 'not-needed')}
+            onPress={() => onSetDecision(item.id, 'not-needed')}
             testID={`mark-not-needed-${item.name}`}
             accessibilityLabel={`Mark ${item.name} not needed`}
             accessibilityState={{ selected: item.decision === 'not-needed' }}
@@ -136,8 +136,8 @@ export const TripItemRow = ({
   if (isSweepRow && onStepTowardNeeded && onStepTowardNotNeeded) {
     return (
       <SweepRowSwipe
-        onSwipeRight={() => onStepTowardNeeded(item.name)}
-        onSwipeLeft={() => onStepTowardNotNeeded(item.name)}
+        onSwipeRight={() => onStepTowardNeeded(item.id)}
+        onSwipeLeft={() => onStepTowardNotNeeded(item.id)}
       >
         {row}
       </SweepRowSwipe>

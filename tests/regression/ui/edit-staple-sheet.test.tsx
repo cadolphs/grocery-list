@@ -18,6 +18,13 @@ import { createNullAreaStorage } from '../../../src/adapters/null/null-area-stor
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 function createTestServices() {
@@ -46,7 +53,9 @@ function createTestServices() {
   // #96: staples start Undecided; mark them Needed as a finished sweep would.
   stapleLibrary
     .listAll()
-    .forEach((s) => tripService.setDecision(s.name, 'needed'));
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
   return { stapleLibrary, tripService, areaManagement };
 }
 

@@ -14,6 +14,13 @@ import { createNullSectionOrderStorage } from '../adapters/null/null-section-ord
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { StapleInput } from '../domain/trip';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const makeStaple = (
   name: string,
   section: string,
@@ -39,7 +46,9 @@ const renderStoreViewWithGroups = (
   // Seed the trip with items so groupBySection has groups to render
   tripService.initializeFromStorage(staples);
   // #96: staples start Undecided; the store lists only Needed ones.
-  staples.forEach((s) => tripService.setDecision(s.name, 'needed'));
+  staples.forEach((s) =>
+    tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+  );
 
   const element = (
     <ServiceProvider

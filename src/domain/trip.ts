@@ -44,11 +44,13 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 export type TripService = {
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly getItems: () => TripItem[];
-  readonly checkOff: (name: string) => void;
-  readonly uncheckItem: (name: string) => void;
-  readonly stepTowardNeeded: (name: string) => void;
-  readonly stepTowardNotNeeded: (name: string) => void;
-  readonly setDecision: (name: string, decision: SweepDecision) => void;
+  readonly checkOff: (itemId: string) => void;
+  readonly uncheckItem: (itemId: string) => void;
+  // Decision operations target one trip item by its id: the library allows
+  // one name in several house areas (spec #90 story 35).
+  readonly stepTowardNeeded: (itemId: string) => void;
+  readonly stepTowardNotNeeded: (itemId: string) => void;
+  readonly setDecision: (itemId: string, decision: SweepDecision) => void;
   readonly markAreaDone: (area: HouseArea) => void;
   readonly undoArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
@@ -188,15 +190,15 @@ export const createTrip = (
     storage.saveTrip(buildTrip(tripId, items, createdAt));
   };
 
-  // Apply a partial patch to every item matching `name`, then notify and
+  // Apply a partial patch to the item with `itemId`, then notify and
   // persist. Used by check/uncheck, which share this shape.
   // Notifying matters because HomeView and StoreView are mounted at the same
   // time (AppShell) and each holds its own useTrip state: without it, an item
   // checked on one view stays stale on the other until something else
   // notifies.
-  const updateItemByName = (name: string, patch: Partial<TripItem>): void => {
+  const updateItem = (itemId: string, patch: Partial<TripItem>): void => {
     items = items.map((item) =>
-      item.name === name ? { ...item, ...patch } : item,
+      item.id === itemId ? { ...item, ...patch } : item,
     );
     notify();
     persistTrip();
@@ -220,12 +222,12 @@ export const createTrip = (
     persistTrip();
   };
 
-  const decideItemByName = (
-    name: string,
+  const decideItem = (
+    itemId: string,
     decide: (current: SweepDecision) => SweepDecision,
   ): void => {
     items = items.map((item) =>
-      item.name === name && isSweepable(item)
+      item.id === itemId && isSweepable(item)
         ? { ...item, decision: decide(item.decision) }
         : item,
     );
@@ -295,27 +297,27 @@ export const createTrip = (
 
     getItems: () => [...items],
 
-    checkOff: (name: string) => {
-      updateItemByName(name, {
+    checkOff: (itemId: string) => {
+      updateItem(itemId, {
         checked: true,
         checkedAt: new Date().toISOString(),
       });
     },
 
-    uncheckItem: (name: string) => {
-      updateItemByName(name, { checked: false, checkedAt: null });
+    uncheckItem: (itemId: string) => {
+      updateItem(itemId, { checked: false, checkedAt: null });
     },
 
-    stepTowardNeeded: (name: string) => {
-      decideItemByName(name, (current) => stepDecision(current, 1));
+    stepTowardNeeded: (itemId: string) => {
+      decideItem(itemId, (current) => stepDecision(current, 1));
     },
 
-    stepTowardNotNeeded: (name: string) => {
-      decideItemByName(name, (current) => stepDecision(current, -1));
+    stepTowardNotNeeded: (itemId: string) => {
+      decideItem(itemId, (current) => stepDecision(current, -1));
     },
 
-    setDecision: (name: string, decision: SweepDecision) => {
-      decideItemByName(name, () => decision);
+    setDecision: (itemId: string, decision: SweepDecision) => {
+      decideItem(itemId, () => decision);
     },
 
     markAreaDone: (area: HouseArea) => {

@@ -38,6 +38,13 @@ import { AppShell } from '../../../src/ui/AppShell';
 import { theme } from '../../../src/ui/theme';
 import { useIsWeb } from '../../../src/hooks/useIsWeb';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 // =============================================================================
 // Shared test setup
 // =============================================================================
@@ -80,7 +87,11 @@ function createTestServices() {
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
   // #96: staples start Undecided; mark them Needed as a finished sweep would.
-  library.listAll().forEach((s) => tripService.setDecision(s.name, 'needed'));
+  library
+    .listAll()
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
   return { library, tripService, stapleStorage, tripStorage };
 }
 
@@ -191,7 +202,10 @@ describe('US-08: Area completion and sweep progress in UI', () => {
     services.tripService
       .getItems()
       .forEach((item) =>
-        services.tripService.setDecision(item.name, 'undecided'),
+        services.tripService.setDecision(
+          itemIdNamed(services.tripService, item.name),
+          'undecided',
+        ),
       );
     return services;
   };
@@ -472,7 +486,7 @@ describe('US-11: Trip summary screen in UI', () => {
     ['Whole milk', 'Butter', 'Eggs', 'Toilet paper', 'Canned beans'].forEach(
       (name) => fireEvent.press(screen.getByText(name)),
     );
-    tripService.setDecision('Shampoo', 'not-needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Shampoo'), 'not-needed');
 
     // When the trip summary screen appears
     fireEvent.press(screen.getByText('Finish Trip'));
@@ -493,7 +507,9 @@ describe('US-11: Trip summary screen in UI', () => {
       </ServiceProvider>,
     );
     fireEvent.press(screen.getByText('Store'));
-    tripService.getItems().forEach((i) => tripService.checkOff(i.name));
+    tripService
+      .getItems()
+      .forEach((i) => tripService.checkOff(itemIdNamed(tripService, i.name)));
     fireEvent.press(screen.getByText('Finish Trip'));
 
     // When Carlos taps "Switch to Store View"

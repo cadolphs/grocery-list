@@ -15,9 +15,12 @@ type AreaSectionProps = {
   readonly onUndoArea?: (area: string) => void;
   readonly onSelectArea?: (area: string) => void;
   readonly onItemLongPress?: (name: string, area: string) => void;
-  readonly onSetItemDecision?: (name: string, decision: SweepDecision) => void;
-  readonly onStepItemTowardNeeded?: (name: string) => void;
-  readonly onStepItemTowardNotNeeded?: (name: string) => void;
+  readonly onSetItemDecision?: (
+    itemId: string,
+    decision: SweepDecision,
+  ) => void;
+  readonly onStepItemTowardNeeded?: (itemId: string) => void;
+  readonly onStepItemTowardNotNeeded?: (itemId: string) => void;
   readonly isCompleted?: boolean;
   readonly isActive?: boolean;
   readonly undecidedCount?: number;

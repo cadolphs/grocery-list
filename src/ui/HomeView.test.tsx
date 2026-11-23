@@ -42,6 +42,13 @@ import { SectionOrderStorage } from '../ports/section-order-storage';
 import { TripStorage } from '../ports/trip-storage';
 import { AddStapleRequest } from '../domain/types';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 // --- Test infrastructure: initializable storage wrappers (matching the
 // production InitializableStorage<T> shape used by initializeApp). ---
 
@@ -479,7 +486,10 @@ describe('HomeView tri-state sweep row (#93)', () => {
   ): Promise<{ services: AppServices; tree: ReturnType<typeof render> }> => {
     const services = await initServicesWith(fridgeStaples, ['Fridge']);
     Object.entries(decisions).forEach(([name, decision]) =>
-      services.tripService.setDecision(name, decision),
+      services.tripService.setDecision(
+        itemIdNamed(services.tripService, name),
+        decision,
+      ),
     );
     return { services, tree: renderHomeView(services) };
   };
@@ -620,8 +630,14 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
 
   test('the store lists Needed staples and one-offs only', async () => {
     const services = await initServicesWith(pantry, ['Fridge']);
-    services.tripService.setDecision('Milk', 'needed');
-    services.tripService.setDecision('Butter', 'not-needed');
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Milk'),
+      'needed',
+    );
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Butter'),
+      'not-needed',
+    );
     addCandles(services);
 
     const tree = renderStoreView(services);
@@ -634,7 +650,10 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
 
   test('checking an item into the cart keeps it on the list and keeps its decision', async () => {
     const services = await initServicesWith(pantry, ['Fridge']);
-    services.tripService.setDecision('Milk', 'needed');
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Milk'),
+      'needed',
+    );
     const tree = renderStoreView(services);
 
     fireEvent.press(tree.getByText('Milk'));
@@ -657,7 +676,10 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
     'picking a store suggestion for a staple that is %s sets it Needed without a duplicate',
     async (decision) => {
       const services = await initServicesWith(pantry, ['Fridge']);
-      services.tripService.setDecision('Eggs', decision);
+      services.tripService.setDecision(
+        itemIdNamed(services.tripService, 'Eggs'),
+        decision,
+      );
       const tree = renderStoreView(services);
 
       await act(async () => {
@@ -701,8 +723,14 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
 
   test('Reset Sweep returns every row to Undecided', async () => {
     const services = await initServicesWith(pantry, ['Fridge']);
-    services.tripService.setDecision('Milk', 'needed');
-    services.tripService.setDecision('Butter', 'not-needed');
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Milk'),
+      'needed',
+    );
+    services.tripService.setDecision(
+      itemIdNamed(services.tripService, 'Butter'),
+      'not-needed',
+    );
     addCandles(services);
     const tree = renderHomeView(services);
 
@@ -723,6 +751,57 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
     fireEvent.press(tree.getByText('Candles'));
 
     expect(decisionOf(services, 'Candles')).toBe('needed');
+  });
+
+  // Spec #90 story 35: the same name in two house areas is two rows, and a
+  // decision on one row leaves the other alone.
+  describe('a name kept in two house areas', () => {
+    const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
+    const milkIn = (houseArea: string): AddStapleRequest => ({
+      name: 'Milk',
+      houseArea,
+      storeLocation: { section: 'Dairy', aisleNumber: 2 },
+    });
+    const milkDecisions = (services: AppServices) =>
+      services.tripService
+        .getItems()
+        .filter((i) => i.name === 'Milk')
+        .map((i) => [i.houseArea, i.decision]);
+
+    afterEach(() => {
+      mockedUseIsWeb.mockReturnValue(false);
+    });
+
+    test('✓ on the Fridge row sets only the Fridge row Needed', async () => {
+      mockedUseIsWeb.mockReturnValue(true);
+      const services = await initServicesWith(
+        [milkIn('Fridge'), milkIn('Freezer')],
+        ['Fridge', 'Freezer'],
+      );
+      const tree = renderHomeView(services);
+
+      fireEvent.press(tree.getAllByTestId('mark-needed-Milk')[0]!);
+
+      expect(milkDecisions(services)).toEqual([
+        ['Fridge', 'needed'],
+        ['Freezer', 'undecided'],
+      ]);
+    });
+
+    test('quick-adding Milk to the Fridge marks only the new row Needed', async () => {
+      const services = await initServicesWith(
+        [milkIn('Freezer')],
+        ['Fridge', 'Freezer'],
+      );
+      const tree = renderHomeView(services);
+
+      await submitNewStapleThroughQuickAdd(tree, 'Milk');
+
+      expect(milkDecisions(services)).toEqual([
+        ['Freezer', 'undecided'],
+        ['Fridge', 'needed'],
+      ]);
+    });
   });
 });
 
@@ -752,7 +831,10 @@ describe('HomeView derived area completion, Done and Undo (#95)', () => {
       Soap: 'needed',
     };
     Object.entries({ ...all, ...decisions }).forEach(([name, decision]) =>
-      services.tripService.setDecision(name, decision),
+      services.tripService.setDecision(
+        itemIdNamed(services.tripService, name),
+        decision,
+      ),
     );
     return { services, tree: renderHomeView(services) };
   };
@@ -828,7 +910,9 @@ describe('HomeView derived area completion, Done and Undo (#95)', () => {
     const before = tree.getByText('3 of 3 areas complete');
 
     await act(async () => {
-      services.tripService.stepTowardNotNeeded('Soap');
+      services.tripService.stepTowardNotNeeded(
+        itemIdNamed(services.tripService, 'Soap'),
+      );
     });
 
     expect(before).toBeTruthy();

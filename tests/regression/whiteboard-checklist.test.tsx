@@ -24,6 +24,13 @@ import { createAreaManagement } from '../../src/domain/area-management';
 import { StapleItem } from '../../src/domain/types';
 import { theme } from '../../src/ui/theme';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const createStaple = (name: string, houseArea: string): StapleItem => ({
   id: `id-${name.toLowerCase()}`,
   name,
@@ -169,7 +176,9 @@ function renderAppInChecklistMode() {
   // #96: staples start Undecided; mark them Needed as a finished sweep would.
   stapleLibrary
     .listAll()
-    .forEach((s) => tripService.setDecision(s.name, 'needed'));
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
 
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
@@ -219,10 +228,12 @@ describe('preloaded staples show as already on trip', () => {
     // #96: staples start Undecided; mark them Needed as a finished sweep would.
     stapleLibrary
       .listAll()
-      .forEach((s) => tripService.setDecision(s.name, 'needed'));
+      .forEach((s) =>
+        tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+      );
 
     // Mark Eggs Not needed during the sweep phase
-    tripService.setDecision('Eggs', 'not-needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Eggs'), 'not-needed');
 
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(

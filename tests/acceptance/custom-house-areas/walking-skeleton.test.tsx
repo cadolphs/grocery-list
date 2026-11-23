@@ -43,6 +43,13 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 // NEW null adapter:
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 // UI components (for UI-level walking skeleton tests):
 // import { render, fireEvent, waitFor } from '@testing-library/react-native';
 // import { ServiceProvider } from '../../../src/ui/ServiceProvider';
@@ -177,7 +184,7 @@ describe('WS-CHA-03: Sweep progress uses dynamic area count', () => {
         itemType: 'staple',
         source: 'preloaded',
       });
-      trip.setDecision(`${area} staple`, 'undecided');
+      trip.setDecision(itemIdNamed(trip, `${area} staple`), 'undecided');
     });
   };
 

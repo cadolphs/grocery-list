@@ -25,6 +25,13 @@ import { groupBySection } from '../../../src/domain/item-grouping';
 import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const DEFAULT_AREAS: readonly string[] = [
   'Bathroom',
   'Garage Pantry',
@@ -62,10 +69,12 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
     // #96: staples start Undecided; mark them Needed as a finished sweep would.
-    library.listAll().forEach((s) => trip.setDecision(s.name, 'needed'));
+    library
+      .listAll()
+      .forEach((s) => trip.setDecision(itemIdNamed(trip, s.name), 'needed'));
 
     // When Carlos marks "Shampoo" Not needed for this trip
-    trip.setDecision('Shampoo', 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Shampoo'), 'not-needed');
 
     // Then "Shampoo" is removed from the current trip (needed = false)
     const shampoo = trip.getItems().find((i) => i.name === 'Shampoo');
@@ -93,7 +102,7 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
     trip1.initializeFromStorage(library.listAll());
-    trip1.setDecision('Shampoo', 'not-needed');
+    trip1.setDecision(itemIdNamed(trip1, 'Shampoo'), 'not-needed');
     trip1.complete();
 
     // When Carlos starts the next sweep
@@ -120,10 +129,10 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
-    trip.setDecision('Butter', 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
 
     // When Carlos re-adds "Butter"
-    trip.setDecision('Butter', 'needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'needed');
 
     // Then "Butter" is back on the current trip
     const butter = trip.getItems().find((i) => i.name === 'Butter');
@@ -174,12 +183,14 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
     // #96: staples start Undecided; mark them Needed as a finished sweep would.
-    library.listAll().forEach((s) => trip.setDecision(s.name, 'needed'));
+    library
+      .listAll()
+      .forEach((s) => trip.setDecision(itemIdNamed(trip, s.name), 'needed'));
 
     // When Carlos marks 1 in Bathroom and 2 in Fridge Not needed
-    trip.setDecision('Shampoo', 'not-needed');
-    trip.setDecision('Butter', 'not-needed');
-    trip.setDecision('Eggs', 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Shampoo'), 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Eggs'), 'not-needed');
 
     // Then area counts reflect the Not needed staples
     const grouped = groupByArea(trip.getItems(), DEFAULT_AREAS);

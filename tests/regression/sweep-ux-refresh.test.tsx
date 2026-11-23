@@ -28,6 +28,13 @@ import { createNullStapleStorage } from '../../src/adapters/null/null-staple-sto
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../src/domain/trip';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   id: 'item-1',
   name: 'Milk',
@@ -247,7 +254,9 @@ describe('sweep mode shows one-offs section separately', () => {
     // #96: staples start Undecided; mark them Needed as a finished sweep would.
     stapleLibrary
       .listAll()
-      .forEach((s) => tripService.setDecision(s.name, 'needed'));
+      .forEach((s) =>
+        tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+      );
 
     tripService.addItem({
       name: 'Birthday Candles',
@@ -288,7 +297,9 @@ describe('sweep mode shows one-offs section separately', () => {
     // #96: staples start Undecided; mark them Needed as a finished sweep would.
     stapleLibrary
       .listAll()
-      .forEach((s) => tripService.setDecision(s.name, 'needed'));
+      .forEach((s) =>
+        tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+      );
 
     render(
       <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>

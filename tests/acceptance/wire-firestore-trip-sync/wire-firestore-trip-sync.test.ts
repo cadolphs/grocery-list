@@ -28,6 +28,13 @@ import {
   withInitialize,
 } from '../helpers/null-adapter-factories';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
 
 // Pre-built trip with Milk and Eggs for remote-sync tests
@@ -227,8 +234,8 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     ]);
 
     // Persist initial state so loadFromStorage has something to load
-    tripService.checkOff('Milk');
-    tripService.uncheckItem('Milk');
+    tripService.checkOff(itemIdNamed(tripService, 'Milk'));
+    tripService.uncheckItem(itemIdNamed(tripService, 'Milk'));
 
     let notifyCount = 0;
     tripService.subscribe(() => {

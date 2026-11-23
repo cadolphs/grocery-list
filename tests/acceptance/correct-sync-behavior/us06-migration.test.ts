@@ -12,6 +12,13 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { TripItem } from '../../../src/domain/types';
 import { migrateTripIfNeeded } from '../../../src/adapters/firestore/migration';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 describe('US-06: Migrate local trip to cloud storage', () => {
   // =============================================================================
   // S-18: Local trip migrates to cloud on first sync-enabled launch
@@ -28,7 +35,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     }));
     localTrip.initializeFromStorage(staples);
     for (let i = 0; i < 7; i++) {
-      localTrip.checkOff(`Item ${i + 1}`);
+      localTrip.checkOff(itemIdNamed(localTrip, `Item ${i + 1}`));
     }
 
     // And cloud storage has no trip for his account

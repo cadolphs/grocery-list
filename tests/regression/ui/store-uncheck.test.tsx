@@ -14,6 +14,13 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 function renderAppInStoreView() {
   const stapleStorage = createNullStapleStorage([
     {
@@ -34,7 +41,9 @@ function renderAppInStoreView() {
   // #96: staples start Undecided; mark them Needed as a finished sweep would.
   stapleLibrary
     .listAll()
-    .forEach((s) => tripService.setDecision(s.name, 'needed'));
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
 
   render(
     <ServiceProvider stapleLibrary={stapleLibrary} tripService={tripService}>

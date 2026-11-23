@@ -16,6 +16,13 @@ import { createNullTripStorage } from '../../../src/adapters/null/null-trip-stor
 import { createTrip } from '../../../src/domain/trip';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 function renderAppWithCustomOrder(customOrder: string[] | null) {
   const stapleStorage = createNullStapleStorage([
     {
@@ -41,7 +48,9 @@ function renderAppWithCustomOrder(customOrder: string[] | null) {
   // #96: staples start Undecided; mark them Needed as a finished sweep would.
   stapleLibrary
     .listAll()
-    .forEach((s) => tripService.setDecision(s.name, 'needed'));
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
 
   const sectionOrderStorage = createNullSectionOrderStorage(customOrder);
 

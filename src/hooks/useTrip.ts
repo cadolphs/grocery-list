@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect } from 'react';
 import {
   TripItem,
   AddTripItemResult,
+  AddStapleRequest,
   HouseArea,
   SweepDecision,
 } from '../domain/types';
@@ -15,10 +16,15 @@ import { useServices } from '../ui/ServiceProvider';
 export type UseTripResult = {
   readonly items: TripItem[];
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
-  readonly toggleCheckOff: (name: string) => void;
-  readonly setDecision: (name: string, decision: SweepDecision) => void;
-  readonly stepTowardNeeded: (name: string) => void;
-  readonly stepTowardNotNeeded: (name: string) => void;
+  // Row operations take the trip item id: one name can sit in several house
+  // areas (spec #90 story 35).
+  readonly toggleCheckOff: (itemId: string) => void;
+  readonly setDecision: (itemId: string, decision: SweepDecision) => void;
+  readonly stepTowardNeeded: (itemId: string) => void;
+  readonly stepTowardNotNeeded: (itemId: string) => void;
+  // Quick-add of a new staple: adds it to the library and marks the trip item
+  // it just added, and only that one, Needed (#96).
+  readonly addStapleAsNeeded: (request: AddStapleRequest) => void;
   readonly markAreaDone: (area: HouseArea) => void;
   readonly undoArea: (area: HouseArea) => void;
   readonly resetSweep: () => void;
@@ -59,12 +65,12 @@ export const useTrip = (): UseTripResult => {
   );
 
   const toggleCheckOff = useCallback(
-    (name: string): void => {
-      const item = tripService.getItems().find((i) => i.name === name);
+    (itemId: string): void => {
+      const item = tripService.getItems().find((i) => i.id === itemId);
       if (item?.checked) {
-        tripService.uncheckItem(name);
+        tripService.uncheckItem(itemId);
       } else {
-        tripService.checkOff(name);
+        tripService.checkOff(itemId);
       }
       setItems(tripService.getItems());
     },
@@ -72,27 +78,47 @@ export const useTrip = (): UseTripResult => {
   );
 
   const setDecision = useCallback(
-    (name: string, decision: SweepDecision): void => {
-      tripService.setDecision(name, decision);
+    (itemId: string, decision: SweepDecision): void => {
+      tripService.setDecision(itemId, decision);
       setItems(tripService.getItems());
     },
     [tripService],
   );
 
   const stepTowardNeeded = useCallback(
-    (name: string): void => {
-      tripService.stepTowardNeeded(name);
+    (itemId: string): void => {
+      tripService.stepTowardNeeded(itemId);
       setItems(tripService.getItems());
     },
     [tripService],
   );
 
   const stepTowardNotNeeded = useCallback(
-    (name: string): void => {
-      tripService.stepTowardNotNeeded(name);
+    (itemId: string): void => {
+      tripService.stepTowardNotNeeded(itemId);
       setItems(tripService.getItems());
     },
     [tripService],
+  );
+
+  // The library diff path adds the new staple to the trip Undecided,
+  // synchronously; the library rejects a second staple with the same name and
+  // area, so (name, area) finds exactly the row just added.
+  const addStapleAsNeeded = useCallback(
+    (request: AddStapleRequest): void => {
+      if (!stapleLibrary.addStaple(request).success) return;
+      const added = tripService
+        .getItems()
+        .find(
+          (i) =>
+            i.itemType === 'staple' &&
+            i.name === request.name &&
+            i.houseArea === request.houseArea,
+        );
+      if (added) tripService.setDecision(added.id, 'needed');
+      setItems(tripService.getItems());
+    },
+    [tripService, stapleLibrary],
   );
 
   const markAreaDone = useCallback(
@@ -137,6 +163,7 @@ export const useTrip = (): UseTripResult => {
     setDecision,
     stepTowardNeeded,
     stepTowardNotNeeded,
+    addStapleAsNeeded,
     markAreaDone,
     undoArea,
     resetSweep,

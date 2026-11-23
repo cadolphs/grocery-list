@@ -34,6 +34,13 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 // =============================================================================
 // Shared test setup
 // =============================================================================
@@ -71,7 +78,11 @@ function createTestServices() {
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
   // #96: staples start Undecided; mark them Needed as a finished sweep would.
-  library.listAll().forEach((s) => tripService.setDecision(s.name, 'needed'));
+  library
+    .listAll()
+    .forEach((s) =>
+      tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
+    );
   return { library, tripService, stapleStorage, tripStorage };
 }
 

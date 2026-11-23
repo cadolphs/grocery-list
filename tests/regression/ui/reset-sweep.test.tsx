@@ -14,6 +14,13 @@ import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 function renderAppWithItems() {
   const stapleStorage = createNullStapleStorage([
     {
@@ -33,7 +40,7 @@ function renderAppWithItems() {
   tripService.initializeFromStorage(stapleLibrary.listAll());
 
   // Check off Milk and complete an area to have state to reset
-  tripService.checkOff('Milk');
+  tripService.checkOff(itemIdNamed(tripService, 'Milk'));
   tripService.markAreaDone('Fridge');
 
   // Add a one-off item

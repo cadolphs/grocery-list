@@ -17,7 +17,6 @@ import { groupByArea, getOneOffItems } from '../domain/item-grouping';
 import {
   HouseArea,
   StapleItem,
-  AddStapleRequest,
   AddOneOffRequest,
   AddTripItemRequest,
 } from '../domain/types';
@@ -48,6 +47,7 @@ export const HomeView = (): React.JSX.Element => {
     setDecision,
     stepTowardNeeded,
     stepTowardNotNeeded,
+    addStapleAsNeeded,
     markAreaDone,
     undoArea,
     resetSweep,
@@ -128,17 +128,6 @@ export const HomeView = (): React.JSX.Element => {
     setEditInitialValues(null);
   }, []);
 
-  // The library diff path adds the new staple to the trip Undecided; a staple
-  // quick-added here is one the user wants, so it is marked Needed (#96).
-  const handleSubmitStaple = useCallback(
-    (request: AddStapleRequest): void => {
-      if (stapleLibrary.addStaple(request).success) {
-        setDecision(request.name, 'needed');
-      }
-    },
-    [stapleLibrary, setDecision],
-  );
-
   const handleSubmitOneOff = useCallback(
     (request: AddOneOffRequest): void => {
       stapleLibrary.addOneOff(request);
@@ -202,7 +191,7 @@ export const HomeView = (): React.JSX.Element => {
           (i.name === staple.name && i.houseArea === staple.houseArea),
       );
       if (existingItem && existingItem.decision !== 'needed') {
-        setDecision(existingItem.name, 'needed');
+        setDecision(existingItem.id, 'needed');
       } else if (!existingItem) {
         addItem({
           name: staple.name,
@@ -217,11 +206,15 @@ export const HomeView = (): React.JSX.Element => {
     [items, addItem, setDecision],
   );
 
+  // The checklist is keyed by name, so this still unticks every row of that
+  // name, as it did before decisions took a trip item id.
   const handleRemoveFromChecklist = useCallback(
     (name: string): void => {
-      setDecision(name, 'not-needed');
+      items
+        .filter((i) => i.name === name)
+        .forEach((i) => setDecision(i.id, 'not-needed'));
     },
-    [setDecision],
+    [items, setDecision],
   );
 
   const handleSelectSuggestion = useCallback(
@@ -239,7 +232,7 @@ export const HomeView = (): React.JSX.Element => {
       // handleAddFromChecklist above: a row not yet Needed is set Needed, a
       // missing row is added, and a Needed row is left alone (no duplicate).
       if (existing && existing.decision !== 'needed') {
-        setDecision(existing.name, 'needed');
+        setDecision(existing.id, 'needed');
       } else if (!existing) {
         const houseArea =
           isOneOff && !staple.houseArea ? 'Kitchen Cabinets' : staple.houseArea;
@@ -459,7 +452,7 @@ export const HomeView = (): React.JSX.Element => {
         existingSections={existingSections}
         onFindDuplicate={handleFindDuplicate}
         onDismiss={handleDismissMetadataSheet}
-        onSubmitStaple={handleSubmitStaple}
+        onSubmitStaple={addStapleAsNeeded}
         onSubmitOneOff={handleSubmitOneOff}
         onSubmitTripItem={handleSubmitTripItem}
         onSaveEdit={handleSaveEdit}

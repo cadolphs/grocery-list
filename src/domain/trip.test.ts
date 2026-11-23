@@ -10,6 +10,13 @@ import {
   NullTripStorageWithSync,
 } from '../adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 const createTestTripService = (): TripService =>
   createTrip(createNullTripStorage(), () => ['Fridge', 'Kitchen Cabinets']);
 
@@ -66,14 +73,14 @@ describe('TripService.subscribe', () => {
   test.each([
     [
       'setDecision Not needed',
-      (t: TripService) => t.setDecision('Bread', 'not-needed'),
+      (t: TripService) => t.setDecision(itemIdNamed(t, 'Bread'), 'not-needed'),
     ],
     [
       'setDecision Needed',
-      (t: TripService) => t.setDecision('Bread', 'needed'),
+      (t: TripService) => t.setDecision(itemIdNamed(t, 'Bread'), 'needed'),
     ],
-    ['checkOff', (t: TripService) => t.checkOff('Bread')],
-    ['uncheckItem', (t: TripService) => t.uncheckItem('Bread')],
+    ['checkOff', (t: TripService) => t.checkOff(itemIdNamed(t, 'Bread'))],
+    ['uncheckItem', (t: TripService) => t.uncheckItem(itemIdNamed(t, 'Bread'))],
   ])('subscriber is notified when %s is called', (_name, mutate) => {
     const tripService = createTestTripService();
     tripService.addItem({
@@ -354,7 +361,7 @@ describe('TripService.subscribe', () => {
     });
 
     // Mark it Not needed (simulates unchecking in checklist)
-    tripService.setDecision('Milk', 'not-needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Milk'), 'not-needed');
     expect(tripService.getItems()[0]!.decision).toBe('not-needed');
 
     // Attempting to add the same stapleId again should be rejected
@@ -690,7 +697,7 @@ describe('TripService.getSweepProgress reads areas live via getter', () => {
       itemType: 'staple',
       source: 'preloaded',
     });
-    tripService.setDecision('Bread', 'undecided');
+    tripService.setDecision(itemIdNamed(tripService, 'Bread'), 'undecided');
     expect(tripService.getSweepProgress().allAreasComplete).toBe(true);
 
     // Add the area holding an Undecided staple — completion is now incomplete
@@ -1253,8 +1260,8 @@ describe('TripService sweep decision', () => {
     const firstTrip = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
     firstTrip.initializeFromStorage(staples);
     // #96: staples start Undecided; the sweep marks both Needed.
-    firstTrip.setDecision('Bread', 'needed');
-    firstTrip.setDecision('Milk', 'needed');
+    firstTrip.setDecision(itemIdNamed(firstTrip, 'Bread'), 'needed');
+    firstTrip.setDecision(itemIdNamed(firstTrip, 'Milk'), 'needed');
     firstTrip.addItem({
       name: 'Candles',
       houseArea: 'Kitchen Cabinets',
@@ -1262,14 +1269,14 @@ describe('TripService sweep decision', () => {
       itemType: 'one-off',
       source: 'quick-add',
     });
-    firstTrip.checkOff('Bread');
+    firstTrip.checkOff(itemIdNamed(firstTrip, 'Bread'));
     const afterCheck = decisionsOf(firstTrip);
     firstTrip.complete();
 
     const nextTrip = createTrip(storage, () => ['Fridge', 'Kitchen Cabinets']);
     nextTrip.initializeFromStorage(staples);
     const afterCarryover = decisionsOf(nextTrip);
-    nextTrip.setDecision('Milk', 'not-needed');
+    nextTrip.setDecision(itemIdNamed(nextTrip, 'Milk'), 'not-needed');
     nextTrip.resetSweep(staples);
 
     const needed = (name: string) => ({
@@ -1314,7 +1321,7 @@ describe('TripService step and set decision', () => {
   ): { tripService: TripService; storage: NullTripStorageWithSync } => {
     const { tripService, storage } = createTestTripServiceWithStorage();
     tripService.addItem(bread);
-    tripService.setDecision('Bread', decision);
+    tripService.setDecision(itemIdNamed(tripService, 'Bread'), decision);
     return { tripService, storage };
   };
 
@@ -1332,7 +1339,7 @@ describe('TripService step and set decision', () => {
   ])('step toward Needed from %s yields %s', (from, to) => {
     const { tripService } = breadIn(from);
 
-    tripService.stepTowardNeeded('Bread');
+    tripService.stepTowardNeeded(itemIdNamed(tripService, 'Bread'));
 
     expect(breadState(tripService)).toEqual(state(to));
   });
@@ -1344,7 +1351,7 @@ describe('TripService step and set decision', () => {
   ])('step toward Not needed from %s yields %s', (from, to) => {
     const { tripService } = breadIn(from);
 
-    tripService.stepTowardNotNeeded('Bread');
+    tripService.stepTowardNotNeeded(itemIdNamed(tripService, 'Bread'));
 
     expect(breadState(tripService)).toEqual(state(to));
   });
@@ -1356,7 +1363,7 @@ describe('TripService step and set decision', () => {
   ])('set decision from %s lands directly on %s', (from, to) => {
     const { tripService } = breadIn(from);
 
-    tripService.setDecision('Bread', to);
+    tripService.setDecision(itemIdNamed(tripService, 'Bread'), to);
 
     expect(breadState(tripService)).toEqual(state(to));
   });
@@ -1366,7 +1373,7 @@ describe('TripService step and set decision', () => {
     const notifications: number[] = [];
     tripService.subscribe(() => notifications.push(1));
 
-    tripService.stepTowardNotNeeded('Bread');
+    tripService.stepTowardNotNeeded(itemIdNamed(tripService, 'Bread'));
 
     expect(notifications).toHaveLength(1);
     const stored = storage.loadTrip()?.items.find((i) => i.name === 'Bread');
@@ -1377,10 +1384,62 @@ describe('TripService step and set decision', () => {
     const { tripService } = breadIn('needed');
     tripService.addItem({ ...bread, name: 'Milk', stapleId: 'staple-2' });
 
-    tripService.stepTowardNotNeeded('Bread');
+    tripService.stepTowardNotNeeded(itemIdNamed(tripService, 'Bread'));
 
     const milk = tripService.getItems().find((i) => i.name === 'Milk');
     expect(milk).toMatchObject(state('needed'));
+  });
+
+  // Spec #90 story 35: the library allows one name in several house areas,
+  // and deciding the row in one area leaves the other area's row alone.
+  test.each<[string, (t: TripService, id: string) => void]>([
+    ['set decision', (t, id) => t.setDecision(id, 'needed')],
+    ['step toward Needed', (t, id) => t.stepTowardNeeded(id)],
+    ['step toward Not needed', (t, id) => t.stepTowardNotNeeded(id)],
+  ])(
+    '%s on one row leaves a same-named row in another area alone',
+    (_, decide) => {
+      const tripService = createTestTripService();
+      tripService.addItem({ ...bread, decision: 'undecided' });
+      tripService.addItem({
+        ...bread,
+        houseArea: 'Fridge',
+        stapleId: 'staple-2',
+        decision: 'undecided',
+      });
+      const [cabinetBread] = tripService.getItems();
+
+      decide(tripService, cabinetBread!.id);
+
+      const decisions = tripService
+        .getItems()
+        .map((i) => [i.houseArea, i.decision === 'undecided']);
+      expect(decisions).toEqual([
+        ['Kitchen Cabinets', false],
+        ['Fridge', true],
+      ]);
+    },
+  );
+
+  test('checking one row into the cart leaves a same-named row in another area alone', () => {
+    const tripService = createTestTripService();
+    tripService.addItem(bread);
+    tripService.addItem({
+      ...bread,
+      houseArea: 'Fridge',
+      stapleId: 'staple-2',
+    });
+    const [cabinetBread] = tripService.getItems();
+
+    tripService.checkOff(cabinetBread!.id);
+    const afterCheck = tripService.getItems().map((i) => i.checked);
+    tripService.uncheckItem(cabinetBread!.id);
+
+    expect(afterCheck).toEqual([true, false]);
+    expect(tripService.getItems().map((i) => i.checked)).toEqual([
+      false,
+      false,
+    ]);
   });
 });
 
@@ -1447,9 +1506,9 @@ describe('TripService lifecycle on decisions (#96)', () => {
     tripService.addItem(candles);
     const onAdd = decisions(tripService);
 
-    tripService.setDecision('Candles', 'not-needed');
-    tripService.stepTowardNotNeeded('Candles');
-    tripService.setDecision('Candles', 'not-needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Candles'), 'not-needed');
+    tripService.stepTowardNotNeeded(itemIdNamed(tripService, 'Candles'));
+    tripService.setDecision(itemIdNamed(tripService, 'Candles'), 'not-needed');
 
     expect(onAdd).toEqual({ Candles: 'needed' });
     expect(decisions(tripService)).toEqual({ Candles: 'needed' });
@@ -1459,10 +1518,10 @@ describe('TripService lifecycle on decisions (#96)', () => {
   const finishTripWith = () => {
     const { storage, tripService } = startedWith([milk, eggs, bread, rice]);
     tripService.addItem(candles);
-    tripService.setDecision('Milk', 'needed'); // Needed, not in cart
-    tripService.setDecision('Eggs', 'needed'); // Needed, in cart
-    tripService.checkOff('Eggs');
-    tripService.setDecision('Bread', 'not-needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Milk'), 'needed'); // Needed, not in cart
+    tripService.setDecision(itemIdNamed(tripService, 'Eggs'), 'needed'); // Needed, in cart
+    tripService.checkOff(itemIdNamed(tripService, 'Eggs'));
+    tripService.setDecision(itemIdNamed(tripService, 'Bread'), 'not-needed');
     // Rice stays Undecided
     const result = tripService.complete();
     return { storage, result };
@@ -1506,8 +1565,8 @@ describe('TripService lifecycle on decisions (#96)', () => {
   test('Reset Sweep returns every staple to Undecided and drops one-offs', () => {
     const { tripService } = startedWith([milk, bread]);
     tripService.addItem(candles);
-    tripService.setDecision('Milk', 'needed');
-    tripService.setDecision('Bread', 'not-needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Milk'), 'needed');
+    tripService.setDecision(itemIdNamed(tripService, 'Bread'), 'not-needed');
 
     tripService.resetSweep([milk, bread]);
 
@@ -1548,7 +1607,7 @@ describe('TripService lifecycle on decisions (#96)', () => {
     'a staple deleted from the library leaves the trip when %s',
     (decision) => {
       const { tripService } = startedWith([milk, bread]);
-      tripService.setDecision('Milk', decision);
+      tripService.setDecision(itemIdNamed(tripService, 'Milk'), decision);
 
       tripService.removeItemsByStaple({
         id: 'staple-milk',
@@ -1588,7 +1647,7 @@ describe('TripService derived area completion, Done and Undo', () => {
     tripService.addItem(staple('Butter', 'Fridge'));
     tripService.addItem(staple('Bread', 'Kitchen Cabinets'));
     Object.entries(decisions).forEach(([name, decision]) =>
-      tripService.setDecision(name, decision),
+      tripService.setDecision(itemIdNamed(tripService, name), decision),
     );
     return tripService;
   };
@@ -1613,7 +1672,7 @@ describe('TripService derived area completion, Done and Undo', () => {
     const tripService = sweepWith({});
     const before = tripService.getSweepProgress().completedAreas;
 
-    tripService.stepTowardNotNeeded('Eggs');
+    tripService.stepTowardNotNeeded(itemIdNamed(tripService, 'Eggs'));
 
     expect(before).toEqual(['Fridge', 'Kitchen Cabinets', 'Bathroom']);
     expect(tripService.getSweepProgress().completedAreas).toEqual([
@@ -1687,7 +1746,7 @@ describe('TripService derived area completion, Done and Undo', () => {
     const storage = createNullTripStorage();
     const tripService = createTrip(storage, () => ['Fridge']);
     tripService.addItem(staple('Milk', 'Fridge'));
-    tripService.setDecision('Milk', 'undecided');
+    tripService.setDecision(itemIdNamed(tripService, 'Milk'), 'undecided');
 
     tripService.markAreaDone('Fridge');
 

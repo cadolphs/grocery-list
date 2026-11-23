@@ -10,6 +10,13 @@
 import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
+// Trip operations take a trip item id; these tests name the item instead.
+const itemIdNamed = (
+  trip: { getItems: () => ReadonlyArray<{ id: string; name: string }> },
+  name: string,
+): string =>
+  trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
+
 describe('US-03: Real-time listeners on trip data', () => {
   // =============================================================================
   // S-09: Not needed item syncs in real-time
@@ -27,7 +34,7 @@ describe('US-03: Real-time listeners on trip data', () => {
       },
     ]);
     // #96: staples start Undecided; the sweep marks Butter Needed.
-    trip.setDecision('Butter', 'needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'needed');
     const butter = trip.getItems().find((i) => i.name === 'Butter');
     expect(butter?.decision).toBe('needed');
 
@@ -39,7 +46,7 @@ describe('US-03: Real-time listeners on trip data', () => {
 
     // When "Butter" is marked Not needed from a remote device
     // (Simulated: remote device marks Butter Not needed, trip is persisted, arrives via onSnapshot)
-    trip.setDecision('Butter', 'not-needed');
+    trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
     onChange();
 
     // Then the local trip shows "Butter" as not needed
