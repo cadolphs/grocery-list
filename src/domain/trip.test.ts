@@ -1304,8 +1304,7 @@ describe('TripService sweep decision', () => {
 });
 
 // #93: a sweep row moves along Not needed ‹ Undecided › Needed, one position
-// per step, stopping at the ends; set decision lands directly. needed stays in
-// sync with decision while the expand phase is on.
+// per step, stopping at the ends; set decision lands directly.
 describe('TripService step and set decision', () => {
   const bread = {
     name: 'Bread',

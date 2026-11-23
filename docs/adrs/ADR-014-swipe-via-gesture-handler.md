@@ -8,7 +8,8 @@ A trip row is a three-position slider for its decision (not-needed ‹ undecided
 › needed). Swipe right moves one step toward `needed`, swipe left one step
 toward `not-needed`; tap does nothing, long-press edits. The swipe is built on
 `react-native-gesture-handler`, the project's first gesture dependency. On web
-the row also shows ✓ / ✗ buttons that take the same single step.
+the row also shows ✓ / ✗ buttons that set the decision directly: ✓ sets
+`needed` and ✗ sets `not-needed`.
 
 ## Why
 

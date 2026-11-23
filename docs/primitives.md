@@ -20,7 +20,8 @@ services from `ServiceProvider`. No classes (ADR-009).
   progress derived from decisions (`getSweepProgress`: area complete when it
   holds no Undecided staple), carryover on completion
   (`initializeFromStorage`, `complete`), a sweep row's decision
-  (`stepTowardNeeded`, `stepTowardNotNeeded`, `setDecision`), and an area's
+  (`stepTowardNeeded`, `stepTowardNotNeeded`, `setDecision`, each by trip
+  item id, as are `checkOff` / `uncheckItem`), and an area's
   Done / Undo (`markAreaDone`: Undecided staples become Not needed;
   `undoArea`: Not needed staples become Undecided; Needed is never touched).
   Staples start Undecided (an `addItem` request may pass `decision`; it
@@ -93,7 +94,7 @@ services from `ServiceProvider`. No classes (ADR-009).
 - **Sweep row swipe** (`ui/SweepRowSwipe.native.tsx`, root in
   `ui/GestureRoot.native.tsx`): on iOS / Android a pan steps a sweep row's
   decision; the plain `.tsx` twins keep gesture-handler out of web, which
-  uses the row's ✓ / ✗ buttons. Jest renders everything inside a gesture root
+  uses the row's ✓ / ✗ buttons (✓ sets Needed, ✗ sets Not needed). Jest renders everything inside a gesture root
   (`jest.setup.js`). adrs: [adrs/ADR-014-swipe-via-gesture-handler.md]
 - **Screens**: see [feature-map.md](feature-map.md). On Home's sweep each
   staple row shows its decision (Undecided, Needed, Not needed); an area's
