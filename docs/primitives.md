@@ -62,7 +62,7 @@ services from `ServiceProvider`. No classes (ADR-009).
 
 - **Firestore adapters** (`firestore/firestore-*-storage.ts`): synced storage
   with a local mirror and real-time listeners. adrs:
-  [adrs/ADR-001-firestore-cloud-backend.md,
+  [adrs/ADR-015-firestore-cloud-backend.md,
   product/architecture/adr-001-realtime-listener-integration.md,
   product/architecture/adr-002-firestore-trip-storage.md,
   adrs/ADR-008-signout-listener-lifecycle.md]
@@ -71,9 +71,9 @@ services from `ServiceProvider`. No classes (ADR-009).
   envelope. adrs: []
 - **Firebase config** (`firestore/firebase-config.ts`): app, auth, Firestore
   singletons; production project only (ADR-011). adrs:
-  [adrs/ADR-001-firestore-cloud-backend.md]
+  [adrs/ADR-015-firestore-cloud-backend.md]
 - **Migration** (`firestore/migration.ts`): local → Firestore one-time move.
-  adrs: [adrs/ADR-001-firestore-cloud-backend.md]
+  adrs: [adrs/ADR-015-firestore-cloud-backend.md]
 - **AsyncStorage adapters** (`async-storage/`): device-local storage. adrs:
   [adrs/ADR-002-local-storage-strategy.md]
 - **Null adapters** (`null/`): in-memory test doubles for every port; use them

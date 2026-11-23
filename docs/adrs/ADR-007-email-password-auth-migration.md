@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (supersedes ADR-003-email-link-auth)
+Proposed (supersedes ADR-017-email-link-auth)
 
 ## Context
 
