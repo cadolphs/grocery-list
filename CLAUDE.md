@@ -68,3 +68,17 @@ This project follows the **functional programming** paradigm. Factory functions,
 - **Duration target**: 5-15 minutes per delivery
 - **Config file**: `stryker.config.mjs`
 - **CI workflow**: `.github/workflows/mutation.yml`
+
+## Agent skills
+
+### Issue tracker
+
+GitHub issues on `cadolphs/grocery-list` via `gh`; product ideas and specs live on the planning board, not in issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), alongside the existing `P0`..`P3` and `needs-decision`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` at the root (created lazily) and ADRs in `docs/adrs/`. See `docs/agents/domain.md`.
