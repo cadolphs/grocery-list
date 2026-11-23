@@ -8,6 +8,7 @@ import { ViewMode } from '../hooks/useViewMode';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
 import { SweepRowSwipe } from './SweepRowSwipe';
+import { isNeeded } from '../domain/item-grouping';
 
 type TripItemRowProps = {
   readonly item: TripItem;
@@ -28,6 +29,14 @@ const sweepRowStyle = {
   undecided: 'rowUndecided',
   needed: 'rowNeeded',
   'not-needed': 'rowNotNeeded',
+} as const satisfies Record<SweepDecision, string>;
+
+// The name's look on Home follows the decision too. Only Not needed is struck
+// through. A one-off is always Needed (ADR-013).
+const homeTextStyle = {
+  undecided: 'undecidedText',
+  needed: 'neededText',
+  'not-needed': 'notNeededText',
 } as const satisfies Record<SweepDecision, string>;
 
 export const TripItemRow = ({
@@ -82,11 +91,7 @@ export const TripItemRow = ({
           style={[
             styles.itemName,
             item.checked && mode === 'store' && styles.checkedText,
-            mode === 'home' && item.decision === 'needed' && styles.neededText,
-            mode === 'home' &&
-              item.decision !== 'needed' &&
-              styles.notNeededText,
-            isSweepRow && item.decision === 'undecided' && styles.undecidedText,
+            mode === 'home' && styles[homeTextStyle[item.decision]],
           ]}
         >
           {item.name}
@@ -97,12 +102,12 @@ export const TripItemRow = ({
           <Pressable
             style={[
               styles.decisionButton,
-              item.decision === 'needed' && styles.decisionButtonOn,
+              isNeeded(item) && styles.decisionButtonOn,
             ]}
             onPress={() => onSetDecision(item.id, 'needed')}
             testID={`mark-needed-${item.name}`}
             accessibilityLabel={`Mark ${item.name} needed`}
-            accessibilityState={{ selected: item.decision === 'needed' }}
+            accessibilityState={{ selected: isNeeded(item) }}
           >
             <Text style={styles.decisionIcon}>{'\u2713'}</Text>
           </Pressable>
@@ -168,7 +173,6 @@ const styles = StyleSheet.create({
   },
   undecidedText: {
     color: theme.color.text,
-    textDecorationLine: 'none',
   },
   decisionButton: {
     minHeight: theme.target.min,

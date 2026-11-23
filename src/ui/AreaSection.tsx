@@ -21,7 +21,6 @@ type AreaSectionProps = {
   ) => void;
   readonly onStepItemTowardNeeded?: (itemId: string) => void;
   readonly onStepItemTowardNotNeeded?: (itemId: string) => void;
-  readonly isCompleted?: boolean;
   readonly isActive?: boolean;
   readonly undecidedCount?: number;
 };
@@ -38,13 +37,11 @@ export const AreaSection = ({
   onSetItemDecision,
   onStepItemTowardNeeded,
   onStepItemTowardNotNeeded,
-  isCompleted,
   isActive,
   undecidedCount = 0,
 }: AreaSectionProps): React.JSX.Element => {
-  const neededCount = areaGroup.items.filter(
-    (item) => item.decision === 'needed',
-  ).length;
+  // An area is complete when it holds no Undecided staple (ADR-013).
+  const isCompleted = undecidedCount === 0;
 
   return (
     <View
@@ -58,7 +55,7 @@ export const AreaSection = ({
           }
         >
           <Text style={styles.heading}>
-            {formatAreaHeading(areaGroup.area, neededCount)}
+            {formatAreaHeading(areaGroup.area, areaGroup.neededCount)}
           </Text>
         </Pressable>
         {undecidedCount > 0 && (

@@ -13,7 +13,7 @@ import {
 import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useServices } from './ServiceProvider';
-import { groupByArea, getOneOffItems } from '../domain/item-grouping';
+import { groupByArea, getOneOffItems, isNeeded } from '../domain/item-grouping';
 import {
   HouseArea,
   StapleItem,
@@ -74,8 +74,7 @@ export const HomeView = (): React.JSX.Element => {
     [allStaples],
   );
   const tripItemNameSet = useMemo(
-    () =>
-      new Set(items.filter((i) => i.decision === 'needed').map((i) => i.name)),
+    () => new Set(items.filter(isNeeded).map((i) => i.name)),
     [items],
   );
   const [activeArea, setActiveArea] = useState<HouseArea | null>(null);
@@ -190,7 +189,7 @@ export const HomeView = (): React.JSX.Element => {
           i.stapleId === staple.id ||
           (i.name === staple.name && i.houseArea === staple.houseArea),
       );
-      if (existingItem && existingItem.decision !== 'needed') {
+      if (existingItem && !isNeeded(existingItem)) {
         setDecision(existingItem.id, 'needed');
       } else if (!existingItem) {
         addItem({
@@ -231,7 +230,7 @@ export const HomeView = (): React.JSX.Element => {
       // Same rule as StoreView.handleSelectSuggestion and
       // handleAddFromChecklist above: a row not yet Needed is set Needed, a
       // missing row is added, and a Needed row is left alone (no duplicate).
-      if (existing && existing.decision !== 'needed') {
+      if (existing && !isNeeded(existing)) {
         setDecision(existing.id, 'needed');
       } else if (!existing) {
         const houseArea =
@@ -378,9 +377,6 @@ export const HomeView = (): React.JSX.Element => {
               onMarkAreaDone={markAreaDone}
               onUndoArea={undoArea}
               onSelectArea={handleSelectArea}
-              isCompleted={sweepProgress.completedAreas.includes(
-                areaGroup.area,
-              )}
               isActive={activeArea === areaGroup.area}
               undecidedCount={
                 sweepProgress.undecidedCountByArea[areaGroup.area] ?? 0

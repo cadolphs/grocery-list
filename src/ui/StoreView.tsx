@@ -7,7 +7,11 @@ import { useTrip } from '../hooks/useTrip';
 import { useAreas } from '../hooks/useAreas';
 import { useSectionOrder } from '../hooks/useSectionOrder';
 import { useServices } from './ServiceProvider';
-import { groupBySection } from '../domain/item-grouping';
+import {
+  groupBySection,
+  isNeeded,
+  isOnShoppingList,
+} from '../domain/item-grouping';
 import {
   sortByCustomOrder,
   appendNewSections,
@@ -138,7 +142,7 @@ export const StoreView = (): React.JSX.Element => {
             (item) =>
               item.name === staple.name && item.houseArea === staple.houseArea,
           );
-      if (existing && existing.decision !== 'needed') {
+      if (existing && !isNeeded(existing)) {
         setDecision(existing.id, 'needed');
       } else if (!existing) {
         const houseArea =
@@ -165,11 +169,7 @@ export const StoreView = (): React.JSX.Element => {
     );
   }
 
-  // The shopping list: Needed items plus one-offs (always Needed, ADR-013).
-  // Checking into the cart leaves the decision alone, so a row stays listed.
-  const listedItems = items.filter(
-    (item) => item.decision === 'needed' || item.itemType === 'one-off',
-  );
+  const listedItems = items.filter(isOnShoppingList);
   const groups = groupBySection(listedItems);
   const knownSectionNames = groups.map((group) => group.section);
   const effectiveOrder =

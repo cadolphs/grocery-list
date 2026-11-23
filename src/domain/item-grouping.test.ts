@@ -8,6 +8,7 @@ import {
   AislePartition,
   AisleSubGroup,
   groupBySection,
+  isOnShoppingList,
   partitionSectionByAisle,
 } from './item-grouping';
 
@@ -36,6 +37,20 @@ const sectionGroupFor = (section: string, items: TripItem[]) => {
   }
   return group;
 };
+
+describe('isOnShoppingList', () => {
+  test.each<[TripItem['itemType'], TripItem['decision'], boolean]>([
+    ['staple', 'needed', true],
+    ['staple', 'undecided', false],
+    ['staple', 'not-needed', false],
+    ['one-off', 'needed', true],
+    ['one-off', 'not-needed', true],
+  ])('a %s that is %s is listed: %s', (itemType, decision, listed) => {
+    const item = { ...makeItem('Milk', 'Dairy', 2), itemType, decision };
+
+    expect(isOnShoppingList(item)).toBe(listed);
+  });
+});
 
 describe('partitionSectionByAisle', () => {
   // Helper: narrow an AislePartition to its multi-aisle subgroup array,

@@ -12,6 +12,7 @@ import {
 } from './types';
 import { TripStorage } from '../ports/trip-storage';
 import { UpdateStapleChanges } from './staple-library';
+import { isNeeded } from './item-grouping';
 
 export type StapleInput = AddStapleRequest & { readonly id?: string };
 
@@ -472,7 +473,7 @@ export type CompleteTripResult = {
 const isChecked = (item: TripItem): boolean => item.checked;
 // Finish Trip carries over exactly the Needed items not in the cart (ADR-013).
 const carriesOver = (item: TripItem): boolean =>
-  item.decision === 'needed' && !item.checked;
+  isNeeded(item) && !item.checked;
 const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
 const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 

@@ -35,7 +35,7 @@ describe('completed area shows undo button', () => {
     render(
       <AreaSection
         areaGroup={createTestAreaGroup()}
-        isCompleted={true}
+        undecidedCount={0}
         onUndoArea={onUndoArea}
       />,
     );
@@ -49,7 +49,7 @@ describe('completed area shows undo button', () => {
     render(
       <AreaSection
         areaGroup={createTestAreaGroup()}
-        isCompleted={true}
+        undecidedCount={0}
         onUndoArea={onUndoArea}
       />,
     );
@@ -66,7 +66,7 @@ describe('completed area shows undo button', () => {
     render(
       <AreaSection
         areaGroup={createTestAreaGroup()}
-        isCompleted={false}
+        undecidedCount={1}
         onUndoArea={onUndoArea}
       />,
     );
