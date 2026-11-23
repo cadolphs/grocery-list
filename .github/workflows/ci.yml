@@ -6,9 +6,13 @@ on:
   # Weekly run: advisories appear and allowlist entries expire without commits.
   schedule:
     - cron: '0 7 * * 1'
+  # Only events that change the code: PR-body and label checks live in
+  # pr-hygiene.yml, so that a label added together with `opened` (as
+  # `gh pr create --label` does) never starts a second CI run that the
+  # concurrency group then cancels (issue #73).
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -25,8 +29,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -46,19 +48,3 @@ jobs:
       # are on .github/audit-allowlist.json (reason + expiry); see AGENTS.md.
       - name: Security audit
         run: node scripts/check-audit.mjs
-
-      # PR hygiene, deterministic: the body must follow the PR template, and a
-      # PR may declare a higher Risk than its paths imply, never a lower one.
-      # Dependabot PRs have generated bodies, so they are exempt.
-      - name: Check PR body follows the template
-        if: github.event_name == 'pull_request' && github.event.pull_request.user.login != 'dependabot[bot]'
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-        run: node scripts/check-pr-body.mjs
-
-      - name: Check declared risk tier
-        if: github.event_name == 'pull_request' && github.event.pull_request.user.login != 'dependabot[bot]'
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: node scripts/check-risk-tier.mjs "origin/${{ github.base_ref }}"
