@@ -1,7 +1,7 @@
 # Decision records
 
 Read these before proposing a change that spans several PRs. New records use
-the next free number in `docs/adrs/` (currently **ADR-015**), follow the
+the next free number in `docs/adrs/` (highest `ADR-NNN` file plus one), follow the
 template in ADR-009, end with **Revisit if**, and are listed here in the same
 PR. Supersede instead of rewriting history. A PR that writes or supersedes a
 record also updates the `adrs` lists in [`docs/primitives.md`](../primitives.md).
