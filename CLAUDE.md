@@ -82,4 +82,8 @@ Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 
 ### Domain docs
 
-Single-context: `GLOSSARY.md` at the root (created lazily) and ADRs in `docs/adrs/`. See `docs/agents/domain.md`.
+Single-context: `GLOSSARY.md` at the root (created lazily) and ADRs in `docs/adrs/`, written to the repo template (ADR-009 shape, ends with **Revisit if**), not the skill's `ADR-FORMAT.md`. See `docs/agents/domain.md`.
+
+### PR bodies and review
+
+PR bodies always use `.github/pull_request_template.md` (CI checks it); the `pr` skill's diagrams go under **System recap** and its before/after evidence under **Testing**. The pre-merge review is the `pr-review` subagent; the `code-review` skill is optional on top. See `docs/agents/pr-and-review.md`.

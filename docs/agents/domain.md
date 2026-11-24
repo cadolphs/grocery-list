@@ -10,6 +10,10 @@ How the engineering skills should consume this repo's domain documentation when 
 
 The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) adds terms to `GLOSSARY.md` as they get resolved. New ADRs go in `docs/adrs/` with the next free number, and get a line in `docs/adrs/README.md`.
 
+## Writing an ADR
+
+Write every ADR to the repo template, never the skill's one-paragraph `ADR-FORMAT.md`: copy the shape of [ADR-009](../adrs/ADR-009-no-classes-fp-only.md) (`Status:` and `Date:` line, **Decision**, **Why**, **Revisit if**). In the same PR, add the record to the index in `docs/adrs/README.md` and to the `adrs` lists in `docs/primitives.md` for each primitive it touches. The skill's three-part test for _when_ to offer an ADR still applies; the policy records in the README's "the no" table are the exception, recorded because agents keep re-proposing them.
+
 ## File structure
 
 Single-context repo (this one):
