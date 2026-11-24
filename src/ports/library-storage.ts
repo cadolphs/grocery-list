@@ -1,4 +1,4 @@
-// Driven port: Staple Storage
+// Driven port: Library Storage
 // Pure interface - no implementation details
 
 import { LibraryItem } from '../domain/types';
