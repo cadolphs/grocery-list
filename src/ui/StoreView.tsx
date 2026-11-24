@@ -19,7 +19,7 @@ import {
 import { CompleteTripResult } from '../domain/trip';
 import {
   HouseArea,
-  StapleItem,
+  LibraryItem,
   AddOneOffRequest,
   AddTripItemRequest,
 } from '../domain/types';
@@ -35,7 +35,7 @@ export const StoreView = (): React.JSX.Element => {
   const {
     items,
     addItem,
-    toggleCheckOff,
+    togglePutInCart,
     setDecision,
     addStapleAsNeeded,
     syncStapleUpdate,
@@ -132,7 +132,7 @@ export const StoreView = (): React.JSX.Element => {
   );
 
   const handleSelectSuggestion = useCallback(
-    (staple: StapleItem): void => {
+    (staple: LibraryItem): void => {
       const isOneOff = staple.type === 'one-off';
       const existing = isOneOff
         ? items.find(
@@ -194,7 +194,7 @@ export const StoreView = (): React.JSX.Element => {
         <AisleSection
           key={sectionGroup.section}
           sectionGroup={sectionGroup}
-          onItemPress={toggleCheckOff}
+          onItemPress={togglePutInCart}
           onItemLongPress={handleEditStaple}
         />
       ))}

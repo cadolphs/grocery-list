@@ -1,10 +1,10 @@
 import { createAreaManagement } from '../../../src/domain/area-management';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { StapleItem } from '../../../src/domain/types';
+import { LibraryItem } from '../../../src/domain/types';
 
-const makeStaple = (name: string, houseArea: string): StapleItem => ({
+const makeStaple = (name: string, houseArea: string): LibraryItem => ({
   id: `${name}-${houseArea}`,
   name,
   houseArea,
@@ -15,17 +15,17 @@ const makeStaple = (name: string, houseArea: string): StapleItem => ({
 
 const createManagement = (
   areas: string[] = ['Kitchen', 'Bathroom'],
-  staples: StapleItem[] = [],
+  staples: LibraryItem[] = [],
 ) => {
   const areaStorage = createNullAreaStorage(areas);
-  const stapleStorage = createNullStapleStorage(staples);
+  const libraryStorage = createNullLibraryStorage(staples);
   const tripStorage = createNullTripStorage();
   const management = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
-  return { management, areaStorage, stapleStorage, tripStorage };
+  return { management, areaStorage, libraryStorage, tripStorage };
 };
 
 describe('area management', () => {
@@ -141,7 +141,7 @@ describe('area management', () => {
 
     it('renames area and propagates to staples and trip items', () => {
       const staples = [makeStaple('Soap', 'Kitchen')];
-      const { management, stapleStorage } = createManagement(
+      const { management, libraryStorage } = createManagement(
         ['Kitchen', 'Bathroom'],
         staples,
       );
@@ -150,7 +150,7 @@ describe('area management', () => {
 
       expect(result).toEqual({ success: true });
       expect(management.getAreas()).toEqual(['Pantry', 'Bathroom']);
-      expect(stapleStorage.loadAll()[0]!.houseArea).toBe('Pantry');
+      expect(libraryStorage.loadAll()[0]!.houseArea).toBe('Pantry');
     });
   });
 
@@ -209,7 +209,7 @@ describe('area management', () => {
 
     it('deletes area with reassignment when no conflicts', () => {
       const staples = [makeStaple('Soap', 'Kitchen')];
-      const { management, stapleStorage } = createManagement(
+      const { management, libraryStorage } = createManagement(
         ['Kitchen', 'Bathroom'],
         staples,
       );
@@ -218,7 +218,7 @@ describe('area management', () => {
 
       expect(result).toEqual({ success: true });
       expect(management.getAreas()).toEqual(['Bathroom']);
-      expect(stapleStorage.loadAll()[0]!.houseArea).toBe('Bathroom');
+      expect(libraryStorage.loadAll()[0]!.houseArea).toBe('Bathroom');
     });
 
     it('deletes empty area without reassignment', () => {

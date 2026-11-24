@@ -15,7 +15,7 @@ import { TripItemRow } from '../../src/ui/TripItemRow';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
 import { createStapleLibrary } from '../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../src/domain/trip';
@@ -88,7 +88,7 @@ describe('long press on store item triggers edit callback', () => {
 const WIRING_AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 
 function createStoreEditTestServices() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Butter',
       houseArea: 'Fridge',
@@ -102,11 +102,11 @@ function createStoreEditTestServices() {
   ]);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(WIRING_AREAS);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripService = createTrip(tripStorage, WIRING_AREAS);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
   tripService.initializeFromStorage(stapleLibrary.listAll());

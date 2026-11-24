@@ -11,7 +11,7 @@
  * Driving Ports:
  * - Domain: createAreaManagement, groupByArea, createTrip
  * - Domain: createStapleLibrary (existing)
- * - Null adapters: createNullAreaStorage, createNullStapleStorage, createNullTripStorage
+ * - Null adapters: createNullAreaStorage, createNullLibraryStorage, createNullTripStorage
  *
  * Story Trace:
  * - WS-1 through WS-5: US-CHA-03 (Dynamic Area Consumption -- riskiest first)
@@ -38,7 +38,7 @@ import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
 
 // Null adapters:
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 // NEW null adapter:
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
@@ -79,8 +79,8 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
     const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
 
     // And Carlos has staples in "Laundry Room" and "Fridge"
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Detergent',
       houseArea: 'Laundry Room',
@@ -114,8 +114,8 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
 
   it('preserves existing behavior with default 5 areas', () => {
     // Given Carlos has staples in the default areas only
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -143,8 +143,8 @@ describe('WS-CHA-03: groupByArea uses custom area list', () => {
   it('shows empty groups for areas with no items', () => {
     // Given Carlos has 6 areas but staples only in "Fridge"
     const customAreas = [...DEFAULT_AREAS, 'Laundry Room'];
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -240,11 +240,11 @@ describe('WS-CHA-03: Area management adds a new area', () => {
   it('adds a new area that persists in the area list', () => {
     // Given Carlos has the 5 default areas
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -263,11 +263,11 @@ describe('WS-CHA-03: Area management adds a new area', () => {
   it('rejects adding a duplicate area name', () => {
     // Given "Bathroom" already exists
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -290,17 +290,17 @@ describe('WS-CHA-03: New area appears in groupByArea', () => {
   it('newly added area shows items in groupByArea', () => {
     // Given Carlos has added "Laundry Room" to his areas
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
     areaManagement.add('Laundry Room');
 
     // And Carlos adds "Detergent" as a staple in "Laundry Room"
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Detergent',
       houseArea: 'Laundry Room',
@@ -354,10 +354,10 @@ describe('WS-CHA-03: Default areas seeded on fresh install', () => {
 //   it.skip('displays all configured areas in settings', () => {
 //     // Given Carlos has 6 areas including "Laundry Room"
 //     // const areaStorage = createNullAreaStorage([...DEFAULT_AREAS, 'Laundry Room']);
-//     // const stapleStorage = createNullStapleStorage();
+//     // const libraryStorage = createNullLibraryStorage();
 //     // const tripStorage = createNullTripStorage();
-//     // const areaManagement = createAreaManagement(areaStorage, stapleStorage, tripStorage);
-//     // const library = createStapleLibrary(stapleStorage);
+//     // const areaManagement = createAreaManagement(areaStorage, libraryStorage, tripStorage);
+//     // const library = createStapleLibrary(libraryStorage);
 //     // const trip = createTrip(tripStorage, areaManagement.getAreas());
 //     //
 //     // When Carlos opens area settings

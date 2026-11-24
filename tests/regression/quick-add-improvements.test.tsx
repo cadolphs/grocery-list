@@ -12,21 +12,21 @@ import { QuickAdd } from '../../src/ui/QuickAdd';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
 import { createStapleLibrary } from '../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../src/domain/trip';
 import { AddTripItemResult } from '../../src/domain/types';
 
 describe('store view has quick add bar', () => {
   it('renders QuickAdd component at the top of StoreView', () => {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());
@@ -108,14 +108,14 @@ describe('bare add opens metadata sheet', () => {
 
 describe('store view metadata sheet uses store context', () => {
   it('defaults to One-off item type when metadata sheet opens from store view', () => {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());

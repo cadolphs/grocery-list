@@ -9,11 +9,11 @@
 //   legacy factories fall back to pure AsyncStorage adapters.
 
 import { useState, useEffect } from 'react';
-import { createAsyncStapleStorage } from '../adapters/async-storage/async-staple-storage';
+import { createAsyncLibraryStorage } from '../adapters/async-storage/async-library-storage';
 import { createAsyncTripStorage } from '../adapters/async-storage/async-trip-storage';
 import { createAsyncAreaStorage } from '../adapters/async-storage/async-area-storage';
 import { createAsyncSectionOrderStorage } from '../adapters/async-storage/async-section-order-storage';
-import { createFirestoreStapleStorage } from '../adapters/firestore/firestore-staple-storage';
+import { createFirestoreLibraryStorage } from '../adapters/firestore/firestore-library-storage';
 import { createFirestoreAreaStorage } from '../adapters/firestore/firestore-area-storage';
 import { createFirestoreSectionOrderStorage } from '../adapters/firestore/firestore-section-order-storage';
 import { createFirestoreTripStorage } from '../adapters/firestore/firestore-trip-storage';
@@ -29,12 +29,12 @@ import {
   createAreaManagement,
   AreaManagement,
 } from '../domain/area-management';
-import { StapleStorage } from '../ports/staple-storage';
+import { LibraryStorage } from '../ports/library-storage';
 import { AreaStorage } from '../ports/area-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { TripStorage } from '../ports/trip-storage';
 import { AuthUser } from '../auth/AuthService';
-import { StapleItem } from '../domain/types';
+import { LibraryItem } from '../domain/types';
 
 export type AppServices = {
   readonly stapleLibrary: StapleLibrary;
@@ -58,10 +58,10 @@ type InitializableStorage<T> = T & {
 };
 
 export type AdapterFactories = {
-  readonly createStapleStorage: (
+  readonly createLibraryStorage: (
     uid: string,
     options?: { onChange?: () => void },
-  ) => InitializableStorage<StapleStorage>;
+  ) => InitializableStorage<LibraryStorage>;
   readonly createAreaStorage: (
     uid: string,
     options?: { onChange?: () => void },
@@ -73,20 +73,20 @@ export type AdapterFactories = {
     uid: string,
     options?: { onChange?: () => void },
   ) => InitializableStorage<TripStorage>;
-  readonly checkMigrationNeeded: (firestoreStaples: StapleStorage) => boolean;
+  readonly checkMigrationNeeded: (firestoreStaples: LibraryStorage) => boolean;
   readonly migrateToFirestore: (
     from: {
-      staples: StapleStorage;
+      staples: LibraryStorage;
       areas: AreaStorage;
       sectionOrder: SectionOrderStorage;
     },
     to: {
-      staples: StapleStorage;
+      staples: LibraryStorage;
       areas: AreaStorage;
       sectionOrder: SectionOrderStorage;
     },
   ) => void;
-  readonly createAsyncStapleStorage: () => InitializableStorage<StapleStorage>;
+  readonly createAsyncLibraryStorage: () => InitializableStorage<LibraryStorage>;
   readonly createAsyncAreaStorage: () => InitializableStorage<AreaStorage>;
   readonly createAsyncSectionOrderStorage: () => InitializableStorage<SectionOrderStorage>;
   readonly createAsyncTripStorage: () => InitializableStorage<TripStorage>;
@@ -112,7 +112,7 @@ const initializationError = (message: string): AppInitializationResult => ({
 
 const runMigrationIfNeeded = async (
   factories: AdapterFactories,
-  firestoreStaples: StapleStorage,
+  firestoreStaples: LibraryStorage,
   firestoreAreas: AreaStorage,
   firestoreSectionOrder: SectionOrderStorage,
   firestoreTripStorage: TripStorage,
@@ -125,7 +125,7 @@ const runMigrationIfNeeded = async (
   // Staple/area/sectionOrder migration only if needed
   if (!factories.checkMigrationNeeded(firestoreStaples)) return;
 
-  const asyncStaples = factories.createAsyncStapleStorage();
+  const asyncStaples = factories.createAsyncLibraryStorage();
   const asyncAreas = factories.createAsyncAreaStorage();
   const asyncSectionOrder = factories.createAsyncSectionOrderStorage();
 
@@ -154,22 +154,22 @@ const runMigrationIfNeeded = async (
 // differs between previous and current. The CURRENT (new) staple is returned in `updated`
 // so consumers get the post-edit values.
 export type StapleDiff = {
-  readonly added: readonly StapleItem[];
-  readonly removed: readonly StapleItem[];
-  readonly updated: readonly StapleItem[];
+  readonly added: readonly LibraryItem[];
+  readonly removed: readonly LibraryItem[];
+  readonly updated: readonly LibraryItem[];
 };
 
 const hasRelevantChange = (
-  previous: StapleItem,
-  current: StapleItem,
+  previous: LibraryItem,
+  current: LibraryItem,
 ): boolean =>
   previous.houseArea !== current.houseArea ||
   previous.storeLocation.section !== current.storeLocation.section ||
   previous.storeLocation.aisleNumber !== current.storeLocation.aisleNumber;
 
 export const diffStaples = (
-  previousStaples: readonly StapleItem[],
-  currentStaples: readonly StapleItem[],
+  previousStaples: readonly LibraryItem[],
+  currentStaples: readonly LibraryItem[],
 ): StapleDiff => {
   const previousById = new Map(previousStaples.map((s) => [s.id, s]));
   const currentIds = new Set(currentStaples.map((s) => s.id));
@@ -190,7 +190,7 @@ export const diffStaples = (
 
 export const applyAddedStaplesToTrip = (
   tripService: TripService,
-  added: readonly StapleItem[],
+  added: readonly LibraryItem[],
 ): void => {
   for (const staple of added) {
     // Duplicate guard: skip if trip already has an item with this stapleId
@@ -215,7 +215,7 @@ export const applyAddedStaplesToTrip = (
 
 const applyRemovedStaplesToTrip = (
   tripService: TripService,
-  removed: readonly StapleItem[],
+  removed: readonly LibraryItem[],
 ): void => {
   for (const staple of removed) {
     tripService.removeItemsByStaple(staple);
@@ -224,7 +224,7 @@ const applyRemovedStaplesToTrip = (
 
 const applyUpdatedStaplesToTrip = (
   tripService: TripService,
-  updated: readonly StapleItem[],
+  updated: readonly LibraryItem[],
 ): void => {
   for (const staple of updated) {
     tripService.syncStapleUpdate(staple.id, {
@@ -266,7 +266,7 @@ export const initializeApp = async (
       if (!cancelled) handleAreaChange?.();
     };
 
-    const stapleStorage = factories.createStapleStorage(uid, {
+    const libraryStorage = factories.createLibraryStorage(uid, {
       onChange: onStapleChange,
     });
     const areaStorage = factories.createAreaStorage(uid, {
@@ -278,7 +278,7 @@ export const initializeApp = async (
     });
 
     await Promise.all([
-      stapleStorage.initialize(),
+      libraryStorage.initialize(),
       areaStorage.initialize(),
       sectionOrderStorage.initialize(),
       tripStorage.initialize(),
@@ -286,20 +286,20 @@ export const initializeApp = async (
 
     await runMigrationIfNeeded(
       factories,
-      stapleStorage,
+      libraryStorage,
       areaStorage,
       sectionOrderStorage,
       tripStorage,
     );
 
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     // Pass a live-read getter so getSweepProgress().totalAreas reflects the
     // current area list even when areas are added/removed without recreating
     // the trip service (RCA: frozen tripAreas snapshot, trip.ts:96-97,201).
     const tripService = createTrip(tripStorage, () => areaStorage.loadAll());
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -350,7 +350,7 @@ export const initializeApp = async (
     // Reactivity wiring: subscribe to the stapleLibrary's own change seam so
     // that LOCAL deletes (UI-driven `stapleLibrary.remove`) drive trip cleanup
     // even when the Firestore adapter suppresses its own-write echo via
-    // `stapleStorage.onChange`. The two paths fan into the same handler, so
+    // `libraryStorage.onChange`. The two paths fan into the same handler, so
     // remote/cross-device deletes (which DO surface through `onChange`) keep
     // working unchanged. `diffStaples` makes the second fire a no-op against
     // an already-advanced `previousStaples`, so double-firing is idempotent.
@@ -358,7 +358,7 @@ export const initializeApp = async (
 
     const unsubscribeAll = () => {
       cancelled = true;
-      stapleStorage.unsubscribe?.();
+      libraryStorage.unsubscribe?.();
       areaStorage.unsubscribe?.();
       sectionOrderStorage.unsubscribe?.();
       tripStorage.unsubscribe?.();
@@ -389,8 +389,8 @@ export const initializeApp = async (
 const createProductionFactories = (): AdapterFactories => {
   const db = getFirebaseDb();
   return {
-    createStapleStorage: (uid, options) =>
-      createFirestoreStapleStorage(db, uid, options),
+    createLibraryStorage: (uid, options) =>
+      createFirestoreLibraryStorage(db, uid, options),
     createAreaStorage: (uid, options) =>
       createFirestoreAreaStorage(db, uid, options),
     createSectionOrderStorage: (uid) =>
@@ -399,7 +399,7 @@ const createProductionFactories = (): AdapterFactories => {
       createFirestoreTripStorage(db, uid, options),
     checkMigrationNeeded: migrationNeeded,
     migrateToFirestore,
-    createAsyncStapleStorage: () => createAsyncStapleStorage(),
+    createAsyncLibraryStorage: () => createAsyncLibraryStorage(),
     createAsyncAreaStorage: () => createAsyncAreaStorage(),
     createAsyncSectionOrderStorage: () => createAsyncSectionOrderStorage(),
     createAsyncTripStorage: () => createAsyncTripStorage(),
@@ -409,13 +409,13 @@ const createProductionFactories = (): AdapterFactories => {
 
 // Legacy factories: all AsyncStorage (backward compatibility for unauthenticated usage)
 const createLegacyFactories = (): AdapterFactories => ({
-  createStapleStorage: () => createAsyncStapleStorage(),
+  createLibraryStorage: () => createAsyncLibraryStorage(),
   createAreaStorage: () => createAsyncAreaStorage(),
   createSectionOrderStorage: () => createAsyncSectionOrderStorage(),
   createTripStorage: (_uid: string) => createAsyncTripStorage(),
   checkMigrationNeeded: () => false,
   migrateToFirestore: () => {},
-  createAsyncStapleStorage: () => createAsyncStapleStorage(),
+  createAsyncLibraryStorage: () => createAsyncLibraryStorage(),
   createAsyncAreaStorage: () => createAsyncAreaStorage(),
   createAsyncSectionOrderStorage: () => createAsyncSectionOrderStorage(),
   createAsyncTripStorage: () => createAsyncTripStorage(),

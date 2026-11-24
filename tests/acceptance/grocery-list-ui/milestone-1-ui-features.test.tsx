@@ -23,7 +23,7 @@ jest.mock('../../../src/hooks/useIsWeb', () => ({
 // Domain ports (already implemented):
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // UI ports:
@@ -50,7 +50,7 @@ const itemIdNamed = (
 // =============================================================================
 
 function createTestServices() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -82,7 +82,7 @@ function createTestServices() {
       storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
     },
   ]);
-  const library = createStapleLibrary(stapleStorage);
+  const library = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
@@ -92,7 +92,7 @@ function createTestServices() {
     .forEach((s) =>
       tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
     );
-  return { library, tripService, stapleStorage, tripStorage };
+  return { library, tripService, libraryStorage, tripStorage };
 }
 
 // =============================================================================
@@ -509,7 +509,7 @@ describe('US-11: Trip summary screen in UI', () => {
     fireEvent.press(screen.getByText('Store'));
     tripService
       .getItems()
-      .forEach((i) => tripService.checkOff(itemIdNamed(tripService, i.name)));
+      .forEach((i) => tripService.putInCart(itemIdNamed(tripService, i.name)));
     fireEvent.press(screen.getByText('Finish Trip'));
 
     // When Carlos taps "Switch to Store View"

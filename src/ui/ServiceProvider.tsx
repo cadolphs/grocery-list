@@ -10,7 +10,7 @@ import {
 } from '../domain/area-management';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { createNullAreaStorage } from '../adapters/null/null-area-storage';
-import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../adapters/null/null-library-storage';
 import { createNullTripStorage } from '../adapters/null/null-trip-storage';
 import { createNullSectionOrderStorage } from '../adapters/null/null-section-order-storage';
 
@@ -34,7 +34,7 @@ export const useServices = (): ServiceContextValue => {
 const createDefaultAreaManagement = (): AreaManagement =>
   createAreaManagement(
     createNullAreaStorage(),
-    createNullStapleStorage([]),
+    createNullLibraryStorage([]),
     createNullTripStorage(),
   );
 

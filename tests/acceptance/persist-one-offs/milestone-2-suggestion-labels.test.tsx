@@ -20,21 +20,21 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
 
 function createServicesWithOneOff() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Milk',
       houseArea: 'Fridge',
       storeLocation: { section: 'Dairy', aisleNumber: 3 },
     },
   ]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   // Add a one-off to the library
   (stapleLibrary as any).addOneOff({
     name: 'Tahini',
@@ -51,7 +51,7 @@ function createServicesWithOneOff() {
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
 
@@ -128,14 +128,14 @@ describe('M2-3: Same-name items: only one-off suggestion appears', () => {
 
   it('shows only the one-off suggestion when a staple and one-off share a name', () => {
     // Given Elena has "Butter" as a staple and "Butter" as a one-off
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 2 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     (stapleLibrary as any).addOneOff({
       name: 'Butter',
       storeLocation: { section: 'International', aisleNumber: 7 },
@@ -151,7 +151,7 @@ describe('M2-3: Same-name items: only one-off suggestion appears', () => {
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 

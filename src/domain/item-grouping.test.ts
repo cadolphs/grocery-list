@@ -185,9 +185,9 @@ describe('partitionSectionByAisle', () => {
     const aisle5 = subGroups.find((g) => g.aisleKey === 5);
     expect(aisle4).toBeDefined();
     expect(aisle5).toBeDefined();
-    expect(aisle4!.checkedCount).toBe(2);
+    expect(aisle4!.inCartCount).toBe(2);
     expect(aisle4!.totalCount).toBe(3);
-    expect(aisle5!.checkedCount).toBe(0);
+    expect(aisle5!.inCartCount).toBe(0);
     expect(aisle5!.totalCount).toBe(2);
   });
 
@@ -207,7 +207,7 @@ describe('partitionSectionByAisle', () => {
     const subGroups = multiAisleSubGroups(result);
     const noAisleTail = subGroups.find((g) => g.aisleKey === null);
     expect(noAisleTail).toBeDefined();
-    expect(noAisleTail!.checkedCount).toBe(0);
+    expect(noAisleTail!.inCartCount).toBe(0);
     expect(noAisleTail!.totalCount).toBe(1);
   });
 

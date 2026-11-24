@@ -8,7 +8,7 @@ import { StoreView } from './StoreView';
 import { ServiceProvider } from './ServiceProvider';
 import { createStapleLibrary } from '../domain/staple-library';
 import { createTrip } from '../domain/trip';
-import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../adapters/null/null-library-storage';
 import { createNullTripStorage } from '../adapters/null/null-trip-storage';
 import { createNullSectionOrderStorage } from '../adapters/null/null-section-order-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
@@ -39,8 +39,8 @@ const renderStoreViewWithGroups = (
   staples: readonly StapleInput[],
   sectionOrderStorage: SectionOrderStorage,
 ): Harness => {
-  const stapleStorage = createNullStapleStorage([]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const libraryStorage = createNullLibraryStorage([]);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   // Seed the trip with items so groupBySection has groups to render

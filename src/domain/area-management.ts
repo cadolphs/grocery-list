@@ -2,7 +2,7 @@
 // Pure domain logic, no IO imports
 
 import { AreaStorage } from '../ports/area-storage';
-import { StapleStorage } from '../ports/staple-storage';
+import { LibraryStorage } from '../ports/library-storage';
 import { TripStorage } from '../ports/trip-storage';
 
 export type AreaResult =
@@ -38,7 +38,7 @@ const isDuplicate = (name: string, areas: string[]): boolean =>
 
 export const createAreaManagement = (
   areaStorage: AreaStorage,
-  stapleStorage: StapleStorage,
+  libraryStorage: LibraryStorage,
   tripStorage: TripStorage,
 ): AreaManagement => {
   return {
@@ -80,7 +80,7 @@ export const createAreaManagement = (
       areaStorage.saveAll(updatedAreas);
 
       // Propagate to staples and trip items
-      stapleStorage.updateArea(oldName, trimmedNewName);
+      libraryStorage.updateArea(oldName, trimmedNewName);
       tripStorage.updateItemArea(oldName, trimmedNewName);
 
       return { success: true };
@@ -100,7 +100,7 @@ export const createAreaManagement = (
         return { success: false, error: `"${name}" not found` };
       }
 
-      const staplesInArea = stapleStorage
+      const staplesInArea = libraryStorage
         .loadAll()
         .filter((s) => s.houseArea === name);
 
@@ -113,7 +113,7 @@ export const createAreaManagement = (
 
       if (staplesInArea.length > 0 && options?.reassignTo) {
         // Check for duplicate conflicts
-        const targetStaples = stapleStorage
+        const targetStaples = libraryStorage
           .loadAll()
           .filter((s) => s.houseArea === options.reassignTo);
         const targetNames = new Set(
@@ -132,7 +132,7 @@ export const createAreaManagement = (
         }
 
         // Reassign staples and trip items
-        stapleStorage.updateArea(name, options.reassignTo);
+        libraryStorage.updateArea(name, options.reassignTo);
         tripStorage.updateItemArea(name, options.reassignTo);
       }
 

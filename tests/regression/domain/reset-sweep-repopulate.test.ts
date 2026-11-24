@@ -1,12 +1,12 @@
-// Regression test: resetSweep must re-populate trip from current staple library
+// Regression test: startOver must re-populate trip from current staple library
 //
-// Bug: resetSweep() only resets existing trip items. New staples added to the
-// library after trip.initializeFromStorage() never appear on the trip after resetSweep.
+// Bug: startOver() only resets existing trip items. New staples added to the
+// library after trip.initializeFromStorage() never appear on the trip after startOver.
 
 import { createTrip, StapleInput } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
-describe('resetSweep re-populates from library', () => {
+describe('startOver re-populates from library', () => {
   it('includes staples added to library after trip.initializeFromStorage()', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
@@ -30,8 +30,8 @@ describe('resetSweep re-populates from library', () => {
       },
     ];
 
-    // resetSweep should accept current staples and rebuild from them
-    trip.resetSweep(updatedStaples);
+    // startOver should accept current staples and rebuild from them
+    trip.startOver(updatedStaples);
 
     const items = trip.getItems();
     const itemNames = items.map((i) => i.name);
@@ -67,7 +67,7 @@ describe('resetSweep re-populates from library', () => {
       },
     ];
 
-    trip.resetSweep(updatedStaples);
+    trip.startOver(updatedStaples);
 
     const items = trip.getItems();
     expect(items).toHaveLength(1);

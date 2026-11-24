@@ -22,7 +22,7 @@
 // --- Driving port imports ---
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import {
   diffStaples,
@@ -46,7 +46,7 @@ function createTestServices(
     storeLocation: { section: string; aisleNumber: number | null };
   }>,
 ) {
-  const stapleStorage = createNullStapleStorage(
+  const libraryStorage = createNullLibraryStorage(
     preloadedStaples ?? [
       {
         name: 'Whole milk',
@@ -55,7 +55,7 @@ function createTestServices(
       },
     ],
   );
-  const library = createStapleLibrary(stapleStorage);
+  const library = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
@@ -74,7 +74,7 @@ function createTestServices(
     previousStaples = currentStaples;
   });
 
-  return { library, tripService, stapleStorage, tripStorage };
+  return { library, tripService, libraryStorage, tripStorage };
 }
 
 // =============================================================================

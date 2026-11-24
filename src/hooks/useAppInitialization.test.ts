@@ -1,17 +1,17 @@
 // Tests for useAppInitialization - wiring Firestore adapters when authenticated
 
 import { AuthUser } from '../auth/AuthService';
-import { StapleStorage } from '../ports/staple-storage';
+import { LibraryStorage } from '../ports/library-storage';
 import { AreaStorage } from '../ports/area-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { TripStorage } from '../ports/trip-storage';
-import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../adapters/null/null-library-storage';
 import { createNullAreaStorage } from '../adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../adapters/null/null-section-order-storage';
 import { createNullTripStorage } from '../adapters/null/null-trip-storage';
 
 // Types for the initializable storage adapters (Firestore/AsyncStorage adapters have initialize())
-type InitializableStapleStorage = StapleStorage & {
+type InitializableLibraryStorage = LibraryStorage & {
   initialize: () => Promise<void>;
 };
 type InitializableAreaStorage = AreaStorage & {
@@ -26,29 +26,29 @@ type InitializableTripStorage = TripStorage & {
 
 // Factory types for dependency injection
 type AdapterFactories = {
-  readonly createStapleStorage: (
+  readonly createLibraryStorage: (
     uid: string,
     options?: { onChange?: () => void },
-  ) => InitializableStapleStorage;
+  ) => InitializableLibraryStorage;
   readonly createAreaStorage: (uid: string) => InitializableAreaStorage;
   readonly createSectionOrderStorage: (
     uid: string,
   ) => InitializableSectionOrderStorage;
   readonly createTripStorage: () => InitializableTripStorage;
-  readonly checkMigrationNeeded: (firestoreStaples: StapleStorage) => boolean;
+  readonly checkMigrationNeeded: (firestoreStaples: LibraryStorage) => boolean;
   readonly migrateToFirestore: (
     from: {
-      staples: StapleStorage;
+      staples: LibraryStorage;
       areas: AreaStorage;
       sectionOrder: SectionOrderStorage;
     },
     to: {
-      staples: StapleStorage;
+      staples: LibraryStorage;
       areas: AreaStorage;
       sectionOrder: SectionOrderStorage;
     },
   ) => void;
-  readonly createAsyncStapleStorage: () => InitializableStapleStorage;
+  readonly createAsyncLibraryStorage: () => InitializableLibraryStorage;
   readonly createAsyncAreaStorage: () => InitializableAreaStorage;
   readonly createAsyncSectionOrderStorage: () => InitializableSectionOrderStorage;
   readonly createAsyncTripStorage: () => InitializableTripStorage;
@@ -58,13 +58,13 @@ type AdapterFactories = {
   ) => void;
 };
 
-import { StapleItem, AddStapleRequest } from '../domain/types';
+import { LibraryItem, AddStapleRequest } from '../domain/types';
 
 // Helper: create initializable wrappers around null storages
-const createInitializableStapleStorage = (
+const createInitializableLibraryStorage = (
   initialItems: AddStapleRequest[] = [],
-): InitializableStapleStorage => ({
-  ...createNullStapleStorage(initialItems),
+): InitializableLibraryStorage => ({
+  ...createNullLibraryStorage(initialItems),
   initialize: async () => {},
 });
 
@@ -87,13 +87,13 @@ const createInitializableTripStorage = (): InitializableTripStorage => ({
 });
 
 const defaultFactories: AdapterFactories = {
-  createStapleStorage: () => createInitializableStapleStorage(),
+  createLibraryStorage: () => createInitializableLibraryStorage(),
   createAreaStorage: () => createInitializableAreaStorage(),
   createSectionOrderStorage: () => createInitializableSectionOrderStorage(),
   createTripStorage: () => createInitializableTripStorage(),
   checkMigrationNeeded: () => false,
   migrateToFirestore: () => {},
-  createAsyncStapleStorage: () => createInitializableStapleStorage(),
+  createAsyncLibraryStorage: () => createInitializableLibraryStorage(),
   createAsyncAreaStorage: () => createInitializableAreaStorage(),
   createAsyncSectionOrderStorage: () =>
     createInitializableSectionOrderStorage(),
@@ -140,9 +140,9 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (uid: string) => {
+        createLibraryStorage: (uid: string) => {
           capturedUid = uid;
-          return createInitializableStapleStorage();
+          return createInitializableLibraryStorage();
         },
       };
 
@@ -263,8 +263,8 @@ describe('initializeApp', () => {
       const factories: AdapterFactories = {
         ...defaultFactories,
         checkMigrationNeeded: () => true,
-        createAsyncStapleStorage: () => ({
-          ...createNullStapleStorage(),
+        createAsyncLibraryStorage: () => ({
+          ...createNullLibraryStorage(),
           initialize: async () => {
             initOrder.push('async-staple');
           },
@@ -297,8 +297,8 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: () => ({
-          ...createNullStapleStorage(),
+        createLibraryStorage: () => ({
+          ...createNullLibraryStorage(),
           initialize: async () => {
             throw new Error('Firestore unavailable');
           },
@@ -319,16 +319,17 @@ describe('initializeApp', () => {
 
       // Track the onChange callback so we can fire it manually
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
           // Create storage with initial staples, wire onChange
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -372,15 +373,16 @@ describe('initializeApp', () => {
       const authUser: AuthUser = { uid: 'user-remove', email: 'r@r.com' };
 
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -428,15 +430,16 @@ describe('initializeApp', () => {
       const authUser: AuthUser = { uid: 'user-sid', email: 'sid@d.com' };
 
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -477,15 +480,16 @@ describe('initializeApp', () => {
       const authUser: AuthUser = { uid: 'user-guard', email: 'g@g.com' };
 
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Tahini',
               houseArea: 'Kitchen Cabinets',
@@ -536,15 +540,16 @@ describe('initializeApp', () => {
       const authUser: AuthUser = { uid: 'user-sync-update', email: 'su@u.com' };
 
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -601,15 +606,16 @@ describe('initializeApp', () => {
       const authUser: AuthUser = { uid: 'user-sweep', email: 's@s.com' };
 
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -651,9 +657,9 @@ describe('initializeApp', () => {
   });
 
   // RCA root cause B: local stapleLibrary.remove must drive trip cleanup via the
-  // domain's own subscribe seam, independent of stapleStorage.onChange (which
+  // domain's own subscribe seam, independent of libraryStorage.onChange (which
   // the Firestore adapter suppresses for own-write echoes). These tests use a
-  // real stapleLibrary and a real tripService -- only stapleStorage is faked,
+  // real stapleLibrary and a real tripService -- only libraryStorage is faked,
   // and its onChange is captured but never auto-invoked.
   describe('local stapleLibrary.remove triggers trip cleanup via domain subscription', () => {
     test('local stapleLibrary.remove removes a trip item linked by stapleId', async () => {
@@ -666,12 +672,12 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
           // Real seed: one staple, captured onChange that we WILL NOT auto-fire.
-          const storage = createNullStapleStorage([
+          const storage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -716,8 +722,8 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string) => {
-          const storage = createNullStapleStorage([
+        createLibraryStorage: (_uid: string) => {
+          const storage = createNullLibraryStorage([
             {
               name: 'Cinnamon',
               houseArea: 'Pantry',
@@ -795,8 +801,8 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (_uid: string) => {
-          const storage = createNullStapleStorage([
+        createLibraryStorage: (_uid: string) => {
+          const storage = createNullLibraryStorage([
             {
               name: 'Soda',
               houseArea: 'Pantry',
@@ -831,15 +837,16 @@ describe('initializeApp', () => {
       const authUser: AuthUser = { uid: 'user-stale', email: 'st@u.com' };
 
       let capturedOnChange: (() => void) | undefined;
-      let sharedStorage: ReturnType<typeof createNullStapleStorage> | undefined;
+      let sharedStorage:
+        ReturnType<typeof createNullLibraryStorage> | undefined;
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          sharedStorage = createNullStapleStorage([
+          sharedStorage = createNullLibraryStorage([
             {
               name: 'Soda',
               houseArea: 'Pantry',
@@ -882,11 +889,11 @@ describe('initializeApp', () => {
 
       const factories: AdapterFactories = {
         ...defaultFactories,
-        createStapleStorage: (
+        createLibraryStorage: (
           _uid: string,
           options?: { onChange?: () => void },
         ) => {
-          const storage = createNullStapleStorage([
+          const storage = createNullLibraryStorage([
             {
               name: 'Milk',
               houseArea: 'Fridge',
@@ -921,7 +928,7 @@ describe('initializeApp', () => {
       expect(afterFirst[0]!.name).toBe('Bread');
 
       // Second fire (simulated delayed Firestore echo): manually invoke the
-      // captured stapleStorage.onChange. previousStaples has been advanced by
+      // captured libraryStorage.onChange. previousStaples has been advanced by
       // the first fire, so diffStaples sees no removed/added/updated entries
       // and removeItemsByStaple is never called again.
       capturedOnChange!();
@@ -936,10 +943,10 @@ describe('initializeApp', () => {
   });
 });
 
-// Helper: build a StapleItem for diff tests
+// Helper: build a LibraryItem for diff tests
 const makeStaple = (
-  overrides: Partial<StapleItem> & { id: string },
-): StapleItem => ({
+  overrides: Partial<LibraryItem> & { id: string },
+): LibraryItem => ({
   name: 'Milk',
   houseArea: 'Fridge',
   storeLocation: { section: 'Dairy', aisleNumber: 3 },
@@ -1011,7 +1018,7 @@ describe('diffStaples', () => {
   });
 
   test('does NOT include added staples in updated', () => {
-    const previous: StapleItem[] = [];
+    const previous: LibraryItem[] = [];
     const current = [makeStaple({ id: 's-new' })];
 
     const diff = diffStaples(previous, current);
@@ -1022,7 +1029,7 @@ describe('diffStaples', () => {
 
   test('does NOT include removed staples in updated', () => {
     const previous = [makeStaple({ id: 's-gone' })];
-    const current: StapleItem[] = [];
+    const current: LibraryItem[] = [];
 
     const diff = diffStaples(previous, current);
 

@@ -22,7 +22,7 @@ import { createTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
 import { groupBySection } from '../../../src/domain/item-grouping';
 // import { searchStaples } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // Trip operations take a trip item id; these tests name the item instead.
@@ -52,7 +52,7 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
 
   it('marks a staple Not needed without removing from the library', () => {
     // Given "Shampoo" is pre-loaded as a staple in "Bathroom"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
@@ -64,7 +64,7 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
         storeLocation: { section: 'Paper Goods', aisleNumber: 8 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -91,14 +91,14 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
 
   it('Not needed staple reappears on next trip', () => {
     // Given Carlos marked "Shampoo" Not needed on the current trip
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
         storeLocation: { section: 'Personal Care', aisleNumber: 7 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip1 = createTrip(tripStorage);
     trip1.initializeFromStorage(library.listAll());
@@ -118,14 +118,14 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
 
   it('re-adds a Not needed staple within the same trip', () => {
     // Given Carlos marked "Butter" Not needed in "Fridge"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -141,7 +141,7 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
 
   it('mark multiple staples Not needed across different areas', () => {
     // Given Carlos has staples in Bathroom and Fridge
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
@@ -178,7 +178,7 @@ describe('US-07: Mark a Staple Not Needed This Trip', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -339,7 +339,7 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
 
   it('suggests known staples by name prefix', () => {
     // Given "Greek yogurt" is in the staple library
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Greek yogurt',
         houseArea: 'Fridge',
@@ -351,7 +351,7 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos types "gre"
     const suggestions = library.search('gre');
@@ -363,14 +363,14 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
 
   it('returns no suggestions for unknown item', () => {
     // Given staple library has items but not "Birthday candles"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Greek yogurt',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos types "birthday candles"
     const suggestions = library.search('birthday candles');
@@ -381,14 +381,14 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
 
   it('search is case-insensitive', () => {
     // Given "Greek yogurt" is in the staple library
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Greek yogurt',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos types "GREEK"
     const suggestions = library.search('GREEK');
@@ -400,7 +400,7 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
 
   it('multiple suggestions for partial match', () => {
     // Given multiple items starting with "ch"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Cheddar cheese',
         houseArea: 'Fridge',
@@ -417,7 +417,7 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos types "ch"
     const suggestions = library.search('ch');
@@ -429,14 +429,14 @@ describe('US-09: Auto-Suggest from Staple Library', () => {
   });
 
   it('empty input returns no suggestions', () => {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Greek yogurt',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
 
     // When the quick-add field is empty
     const suggestions = library.search('');
@@ -477,7 +477,7 @@ describe('US-10: Navigate Store Sections', () => {
     const groups = groupBySection(items as any);
 
     // When all Dairy items are checked
-    const dairyComplete = groups[0]!.checkedCount === groups[0]!.totalCount;
+    const dairyComplete = groups[0]!.inCartCount === groups[0]!.totalCount;
 
     // Then the next section is Canned Goods
     expect(dairyComplete).toBe(true);
@@ -514,7 +514,7 @@ describe('US-10: Navigate Store Sections', () => {
     const produce = groups.find((g) => g.section === 'Produce');
 
     // Then Produce shows 3 of 4
-    expect(produce?.checkedCount).toBe(3);
+    expect(produce?.inCartCount).toBe(3);
     expect(produce?.totalCount).toBe(4);
   });
 
@@ -542,9 +542,9 @@ describe('US-10: Navigate Store Sections', () => {
     const groups = groupBySection(items as any);
 
     // Then completed sections are identifiable
-    const completed = groups.filter((g) => g.checkedCount === g.totalCount);
+    const completed = groups.filter((g) => g.inCartCount === g.totalCount);
     expect(completed).toHaveLength(2);
-    const incomplete = groups.filter((g) => g.checkedCount < g.totalCount);
+    const incomplete = groups.filter((g) => g.inCartCount < g.totalCount);
     expect(incomplete).toHaveLength(1);
     expect(incomplete[0]!.section).toBe('Deli');
   });
@@ -566,7 +566,7 @@ describe('US-10: Navigate Store Sections', () => {
     const groups = groupBySection(items as any);
 
     // When we check if all sections are complete
-    const allComplete = groups.every((g) => g.checkedCount === g.totalCount);
+    const allComplete = groups.every((g) => g.inCartCount === g.totalCount);
 
     // Then trip completion is available
     expect(allComplete).toBe(true);

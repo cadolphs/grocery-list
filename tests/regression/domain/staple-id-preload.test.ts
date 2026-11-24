@@ -4,14 +4,14 @@
 // trip items had stapleId: null when library staples flowed through start().
 
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 describe('Regression: staple ID preserved on trip preload', () => {
   it('trip items created from library staples have non-null stapleId matching the staple ID', () => {
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
 
     library.addStaple({
       name: 'Milk',

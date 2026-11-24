@@ -1,10 +1,10 @@
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 
 describe('staple library', () => {
   describe('addStaple', () => {
     it('adds a staple with name, house area, section, and aisle number', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       const result = library.addStaple({
@@ -27,7 +27,7 @@ describe('staple library', () => {
     });
 
     it('rejects duplicate staple with same name and house area', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({
@@ -50,7 +50,7 @@ describe('staple library', () => {
     });
 
     it('allows same item name in different house areas', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({
@@ -72,7 +72,7 @@ describe('staple library', () => {
 
   describe('updateStaple', () => {
     it('rejects rename to empty name with an error result', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({
@@ -93,7 +93,7 @@ describe('staple library', () => {
     });
 
     it('rejects rename to whitespace-only name with an error result', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({
@@ -113,7 +113,7 @@ describe('staple library', () => {
     });
 
     it('merges changes.name into the persisted staple', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({
@@ -137,7 +137,7 @@ describe('staple library', () => {
     });
 
     it('rejects rename when post-merge name duplicates another staple in same area', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({
@@ -166,7 +166,7 @@ describe('staple library', () => {
 
   describe('addOneOff', () => {
     it('adds a one-off item with type one-off and empty houseArea', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addOneOff({
@@ -187,7 +187,7 @@ describe('staple library', () => {
     });
 
     it('deduplicates by name and type one-off', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addOneOff({
@@ -205,7 +205,7 @@ describe('staple library', () => {
     });
 
     it('does not interfere with staple adds of same name', () => {
-      const storage = createNullStapleStorage();
+      const storage = createNullLibraryStorage();
       const library = createStapleLibrary(storage);
 
       library.addStaple({

@@ -1,14 +1,14 @@
-// Null adapter for StapleStorage - in-memory implementation for testing
+// Null adapter for LibraryStorage - in-memory implementation for testing
 
-import { AddStapleRequest, StapleItem } from '../../domain/types';
-import { StapleStorage } from '../../ports/staple-storage';
+import { AddStapleRequest, LibraryItem } from '../../domain/types';
+import { LibraryStorage } from '../../ports/library-storage';
 
 type NullStapleInput = AddStapleRequest;
 
-export const createNullStapleStorage = (
+export const createNullLibraryStorage = (
   initialItems: NullStapleInput[] = [],
-): StapleStorage & { readonly unsubscribe: () => void } => {
-  const items: StapleItem[] = initialItems.map((input, index) => ({
+): LibraryStorage & { readonly unsubscribe: () => void } => {
+  const items: LibraryItem[] = initialItems.map((input, index) => ({
     id: `staple-init-${index}`,
     name: input.name,
     houseArea: input.houseArea,
@@ -19,7 +19,7 @@ export const createNullStapleStorage = (
 
   return {
     loadAll: () => [...items],
-    save: (item: StapleItem) => {
+    save: (item: LibraryItem) => {
       items.push(item);
     },
     remove: (id: string) => {
@@ -28,7 +28,7 @@ export const createNullStapleStorage = (
         items.splice(index, 1);
       }
     },
-    update: (updatedItem: StapleItem) => {
+    update: (updatedItem: LibraryItem) => {
       const index = items.findIndex((item) => item.id === updatedItem.id);
       if (index !== -1) {
         items[index] = updatedItem;

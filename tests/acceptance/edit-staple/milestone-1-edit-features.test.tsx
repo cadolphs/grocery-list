@@ -19,7 +19,7 @@
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 import { groupByArea } from '../../../src/domain/item-grouping';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 const DEFAULT_AREAS: readonly string[] = [
@@ -39,14 +39,14 @@ describe('US-ES-01/02: Edit Validation', () => {
 
   it('rejects edit with empty house area', () => {
     // Given "Butter" is a staple in "Fridge"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const staple = library.listAll()[0];
 
     // When Carlos clears the house area field and tries to save
@@ -65,14 +65,14 @@ describe('US-ES-01/02: Edit Validation', () => {
 
   it('rejects edit with empty store section', () => {
     // Given "Shampoo" is a staple in "Bathroom"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Shampoo',
         houseArea: 'Bathroom',
         storeLocation: { section: 'Personal Care', aisleNumber: 7 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const staple = library.listAll()[0];
 
     // When Carlos clears the store section and tries to save
@@ -93,14 +93,14 @@ describe('US-ES-01/02: Edit Validation', () => {
 
   it('rejects edit on a staple that no longer exists', () => {
     // Given "Oat milk" was removed from the library
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Oat milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const staple = library.listAll()[0];
     library.remove(staple!.id);
 
@@ -116,14 +116,14 @@ describe('US-ES-01/02: Edit Validation', () => {
 
   it('preserves original values when edit is cancelled', () => {
     // Given "Eggs" is a staple in "Fridge", "Dairy" section, aisle 3
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Eggs',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos opens the edit sheet but does not call updateStaple (cancel)
     // (No update call -- simulating cancel at domain level)
@@ -148,7 +148,7 @@ describe('US-ES-03: Remove Staple from Edit Sheet', () => {
 
   it('removes a staple from the library', () => {
     // Given "Toilet paper" and "Shampoo" are staples in "Bathroom"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Toilet paper',
         houseArea: 'Bathroom',
@@ -160,7 +160,7 @@ describe('US-ES-03: Remove Staple from Edit Sheet', () => {
         storeLocation: { section: 'Personal Care', aisleNumber: 7 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tp = library.listAll().find((s) => s.name === 'Toilet paper')!;
 
     // When Carlos removes "Toilet paper" from the library
@@ -193,7 +193,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
 
   it('trip item moves to new area when staple area is edited', () => {
     // Given Carlos has an active trip with "Whole milk" in "Fridge"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
@@ -205,7 +205,7 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -230,14 +230,14 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
 
   it('trip item updates store section when staple section is edited', () => {
     // Given Carlos has an active trip with "Canned beans" in "Canned Goods", aisle 5
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Canned beans',
         houseArea: 'Garage Pantry',
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -259,14 +259,14 @@ describe('US-ES-04: Sync Current Trip When Staple Edited', () => {
 
   it('editing a staple does not affect one-off items on the trip', () => {
     // Given the trip has staple "Whole milk" and one-off "Birthday cake"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());

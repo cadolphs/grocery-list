@@ -45,8 +45,8 @@ const DEFAULT_HOUSE_AREAS: readonly string[] = [
 export type TripService = {
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   readonly getItems: () => TripItem[];
-  readonly checkOff: (itemId: string) => void;
-  readonly uncheckItem: (itemId: string) => void;
+  readonly putInCart: (itemId: string) => void;
+  readonly takeOutOfCart: (itemId: string) => void;
   // Decision operations target one trip item by its id: the library allows
   // one name in several house areas (spec #90 story 35).
   readonly stepTowardNeeded: (itemId: string) => void;
@@ -56,7 +56,7 @@ export type TripService = {
   readonly undoArea: (area: HouseArea) => void;
   readonly getSweepProgress: () => SweepProgress;
   readonly loadFromStorage: () => void;
-  readonly resetSweep: (staples: ReadonlyArray<StapleInput>) => void;
+  readonly startOver: (staples: ReadonlyArray<StapleInput>) => void;
   readonly complete: () => CompleteTripResult;
   readonly initializeFromStorage: (staples: ReadonlyArray<StapleInput>) => void;
   readonly syncStapleUpdate: (
@@ -317,14 +317,14 @@ export const createTrip = (
 
     getItems: () => [...items],
 
-    checkOff: (itemId: string) => {
+    putInCart: (itemId: string) => {
       updateItem(itemId, {
         checked: true,
         checkedAt: new Date().toISOString(),
       });
     },
 
-    uncheckItem: (itemId: string) => {
+    takeOutOfCart: (itemId: string) => {
       updateItem(itemId, { checked: false, checkedAt: null });
     },
 
@@ -365,7 +365,7 @@ export const createTrip = (
       }
     },
 
-    resetSweep: (staples: ReadonlyArray<StapleInput>) => {
+    startOver: (staples: ReadonlyArray<StapleInput>) => {
       const stapleItems = staples.map(stapleInputToTripItem);
       items = stapleItems;
       notify();
@@ -462,7 +462,7 @@ export const createTrip = (
       const result = categorizeItems(items);
 
       // Save carryover: unbought items with source changed to 'carryover'
-      const carryoverItems = result.unboughtItems.map((item) => ({
+      const carryoverItems = result.carryoverItems.map((item) => ({
         ...item,
         source: 'carryover' as const,
       }));
@@ -486,7 +486,7 @@ export const createTrip = (
 export type CompleteTripResult = {
   readonly purchasedStaples: readonly TripItem[];
   readonly purchasedOneOffs: readonly TripItem[];
-  readonly unboughtItems: readonly TripItem[];
+  readonly carryoverItems: readonly TripItem[];
 };
 
 const isChecked = (item: TripItem): boolean => item.checked;
@@ -503,6 +503,6 @@ const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
   return {
     purchasedStaples: checkedItems.filter(isStaple),
     purchasedOneOffs: checkedItems.filter(isOneOff),
-    unboughtItems: items.filter(carriesOver),
+    carryoverItems: items.filter(carriesOver),
   };
 };

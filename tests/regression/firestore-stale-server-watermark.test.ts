@@ -22,9 +22,9 @@
 // carryover, staples, areas, section order), plus one section-order-only case
 // for a mirrored clear.
 
-import type { StapleItem, Trip, TripItem } from '../../src/domain/types';
+import type { LibraryItem, Trip, TripItem } from '../../src/domain/types';
 import type { FirestoreTripStorage } from '../../src/adapters/firestore/firestore-trip-storage';
-import type { FirestoreStapleStorage } from '../../src/adapters/firestore/firestore-staple-storage';
+import type { FirestoreLibraryStorage } from '../../src/adapters/firestore/firestore-library-storage';
 import type { FirestoreAreaStorage } from '../../src/adapters/firestore/firestore-area-storage';
 import type { FirestoreSectionOrderStorage } from '../../src/adapters/firestore/firestore-section-order-storage';
 import { DEFAULT_HOUSE_AREAS } from '../../src/adapters/async-storage/async-area-storage';
@@ -168,7 +168,7 @@ const carryoverRow = defineRow<FirestoreTripStorage, readonly TripItem[]>({
   assertsOnChange: false,
 });
 
-const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+const makeStaple = (overrides: Partial<LibraryItem> = {}): LibraryItem => ({
   id: 'staple-1',
   name: 'Milk',
   houseArea: 'Kitchen',
@@ -182,16 +182,16 @@ const createStapleAdapter = (
   db: unknown,
   uid: string,
   onChange: () => void,
-): FirestoreStapleStorage => {
+): FirestoreLibraryStorage => {
   const {
-    createFirestoreStapleStorage,
-  } = require('../../src/adapters/firestore/firestore-staple-storage');
-  return createFirestoreStapleStorage(db, uid, { onChange });
+    createFirestoreLibraryStorage,
+  } = require('../../src/adapters/firestore/firestore-library-storage');
+  return createFirestoreLibraryStorage(db, uid, { onChange });
 };
 
 // The staple port has no replace-all write. Each value is a one-item library
 // under a fixed id, so writing it is a save the first time and an update after.
-const stapleRow = defineRow<FirestoreStapleStorage, StapleItem[]>({
+const stapleRow = defineRow<FirestoreLibraryStorage, LibraryItem[]>({
   document: 'staples',
   mirrorDocName: 'staples',
   docPath: `users/${TEST_UID}/data/staples`,

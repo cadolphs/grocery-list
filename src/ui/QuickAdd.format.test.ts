@@ -1,9 +1,9 @@
 // Unit tests for formatSuggestion — a pure function.
 
 import { formatSuggestion } from './QuickAdd';
-import { StapleItem } from '../domain/types';
+import { LibraryItem } from '../domain/types';
 
-const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+const makeStaple = (overrides: Partial<LibraryItem> = {}): LibraryItem => ({
   id: 'id-1',
   name: 'Milk',
   houseArea: 'Fridge',

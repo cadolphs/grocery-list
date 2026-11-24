@@ -11,7 +11,7 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
@@ -24,7 +24,7 @@ const itemIdNamed = (
   trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
 
 function renderAppWithCustomOrder(customOrder: string[] | null) {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Deli Turkey',
       houseArea: 'Fridge',
@@ -41,7 +41,7 @@ function renderAppWithCustomOrder(customOrder: string[] | null) {
       storeLocation: { section: 'Bakery', aisleNumber: 1 },
     },
   ]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(stapleLibrary.listAll());

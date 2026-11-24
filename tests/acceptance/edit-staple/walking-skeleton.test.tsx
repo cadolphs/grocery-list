@@ -20,7 +20,7 @@
 
 // --- Driving port imports (to be extended during DELIVER wave) ---
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 
 // =============================================================================
 // WS-ES-1: Edit Staple House Area (US-ES-01)
@@ -34,14 +34,14 @@ describe('WS-ES-1: Edit Staple House Area', () => {
 
   it('moves a staple to a different house area', () => {
     // Given "Whole milk" is a staple in "Fridge"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const staple = library.listAll()[0];
 
     // When Carlos changes "Whole milk" house area to "Freezer"
@@ -69,14 +69,14 @@ describe('WS-ES-2: Edit Staple Store Location', () => {
 
   it('changes store section and aisle on a staple', () => {
     // Given "Canned beans" is in "Canned Goods" section, aisle 5
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Canned beans',
         houseArea: 'Garage Pantry',
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const staple = library.listAll()[0];
 
     // When Carlos moves "Canned beans" to "International" section, aisle 9
@@ -103,7 +103,7 @@ describe('WS-ES-3: Duplicate Detection on Edit', () => {
 
   it('blocks move when same name already exists in target area', () => {
     // Given "Whole milk" exists in both "Fridge" and "Freezer"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
@@ -115,7 +115,7 @@ describe('WS-ES-3: Duplicate Detection on Edit', () => {
         storeLocation: { section: 'Frozen', aisleNumber: 10 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const fridgeMilk = library.listByArea('Fridge')[0];
 
     // When Carlos tries to move the Fridge "Whole milk" to "Freezer"
@@ -149,14 +149,14 @@ describe('WS-ES-4: Self-Update Allowed', () => {
 
   it('allows updating store location on same staple without duplicate error', () => {
     // Given "Whole milk" is in "Fridge", "Dairy" section, aisle 3
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Whole milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const staple = library.listAll()[0];
 
     // When Carlos updates aisle from 3 to 4 (same name, same area)

@@ -3,7 +3,7 @@
 import { createTrip } from '../../../src/domain/trip';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 
 // Trip operations take a trip item id; these tests name the item instead.
 const itemIdNamed = (
@@ -97,7 +97,7 @@ describe('Trip: addItem', () => {
   });
 });
 
-describe('Trip: checkOff persistence', () => {
+describe('Trip: putInCart persistence', () => {
   it('persists checked item to storage via saveTrip', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
@@ -109,7 +109,7 @@ describe('Trip: checkOff persistence', () => {
       },
     ]);
 
-    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
+    trip.putInCart(itemIdNamed(trip, 'Whole milk'));
 
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();
@@ -133,7 +133,7 @@ describe('Trip: checkOff persistence', () => {
       },
     ]);
 
-    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
+    trip.putInCart(itemIdNamed(trip, 'Whole milk'));
 
     const loadedTrip = tripStorage.loadTrip();
     const loadedButter = loadedTrip?.items.find((i) => i.name === 'Butter');
@@ -157,7 +157,7 @@ describe('Trip: loadFromStorage', () => {
         storeLocation: { section: 'Bakery', aisleNumber: null },
       },
     ]);
-    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
+    trip1.putInCart(itemIdNamed(trip1, 'Milk'));
 
     const trip2 = createTrip(tripStorage);
     trip2.loadFromStorage();
@@ -222,7 +222,7 @@ describe('Trip: setDecision Not needed', () => {
   });
 });
 
-describe('Trip: resetSweep', () => {
+describe('Trip: startOver', () => {
   it('resets staple items to Undecided and checked=false', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
@@ -239,16 +239,16 @@ describe('Trip: resetSweep', () => {
       },
     ];
     trip.initializeFromStorage(staples);
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
     trip.setDecision(itemIdNamed(trip, 'Butter'), 'not-needed');
 
-    trip.resetSweep(staples);
+    trip.startOver(staples);
 
     const items = trip.getItems();
     expect(items).toHaveLength(2);
     const milk = items.find((i) => i.name === 'Milk');
     const butter = items.find((i) => i.name === 'Butter');
-    // #96: Reset Sweep returns every staple to Undecided.
+    // #96: Start over returns every staple to Undecided.
     expect(milk?.decision).toBe('undecided');
     expect(milk?.checked).toBe(false);
     expect(milk?.checkedAt).toBeNull();
@@ -275,7 +275,7 @@ describe('Trip: resetSweep', () => {
       source: 'quick-add',
     });
 
-    trip.resetSweep(staples);
+    trip.startOver(staples);
 
     const items = trip.getItems();
     expect(items).toHaveLength(1);
@@ -293,7 +293,7 @@ describe('Trip: resetSweep', () => {
       },
     ];
     trip.initializeFromStorage(staples);
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
     trip.addItem({
       name: 'Candles',
       houseArea: 'Kitchen Cabinets',
@@ -302,7 +302,7 @@ describe('Trip: resetSweep', () => {
       source: 'quick-add',
     });
 
-    trip.resetSweep(staples);
+    trip.startOver(staples);
 
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();
@@ -315,8 +315,8 @@ describe('Trip: resetSweep', () => {
 
 describe('Trip: complete categorizes items', () => {
   const setupTripWithItems = () => {
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Milk',
       houseArea: 'Fridge',
@@ -332,7 +332,7 @@ describe('Trip: complete categorizes items', () => {
 
   it('categorizes checked staples as purchasedStaples', () => {
     const { trip } = setupTripWithItems();
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
 
     const result = trip.complete();
 
@@ -349,7 +349,7 @@ describe('Trip: complete categorizes items', () => {
       itemType: 'one-off',
       source: 'quick-add',
     });
-    trip.checkOff(itemIdNamed(trip, 'Candles'));
+    trip.putInCart(itemIdNamed(trip, 'Candles'));
 
     const result = trip.complete();
 
@@ -357,7 +357,7 @@ describe('Trip: complete categorizes items', () => {
     expect(result.purchasedOneOffs[0]!.name).toBe('Candles');
   });
 
-  it('categorizes unchecked items as unboughtItems', () => {
+  it('categorizes unchecked items as carryoverItems', () => {
     const { trip } = setupTripWithItems();
     trip.addItem({
       name: 'Avocados',
@@ -370,11 +370,11 @@ describe('Trip: complete categorizes items', () => {
 
     const result = trip.complete();
 
-    expect(result.unboughtItems).toHaveLength(2);
-    expect(result.unboughtItems).toContainEqual(
+    expect(result.carryoverItems).toHaveLength(2);
+    expect(result.carryoverItems).toContainEqual(
       expect.objectContaining({ name: 'Milk' }),
     );
-    expect(result.unboughtItems).toContainEqual(
+    expect(result.carryoverItems).toContainEqual(
       expect.objectContaining({ name: 'Avocados' }),
     );
   });
@@ -388,6 +388,6 @@ describe('Trip: complete categorizes items', () => {
 
     expect(result.purchasedStaples).toHaveLength(0);
     expect(result.purchasedOneOffs).toHaveLength(0);
-    expect(result.unboughtItems).toHaveLength(0);
+    expect(result.carryoverItems).toHaveLength(0);
   });
 });

@@ -57,7 +57,7 @@ import { AppShell } from '../../../src/ui/AppShell';
 import { LoginScreen } from '../../../src/ui/LoginScreen';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
@@ -135,8 +135,8 @@ function createTrackingFactories(): {
   const unsubscribeCalls: string[] = [];
 
   const factories: AdapterFactories = {
-    createStapleStorage: (_uid: string) => ({
-      ...createNullStapleStorage(),
+    createLibraryStorage: (_uid: string) => ({
+      ...createNullLibraryStorage(),
       initialize: () => Promise.resolve(),
       unsubscribe: () => {
         unsubscribeCalls.push('staples');
@@ -165,8 +165,8 @@ function createTrackingFactories(): {
     }),
     checkMigrationNeeded: () => false,
     migrateToFirestore: () => {},
-    createAsyncStapleStorage: () => ({
-      ...createNullStapleStorage(),
+    createAsyncLibraryStorage: () => ({
+      ...createNullLibraryStorage(),
       initialize: () => Promise.resolve(),
     }),
     createAsyncAreaStorage: () => ({

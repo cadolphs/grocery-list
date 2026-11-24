@@ -10,7 +10,7 @@
 import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { AuthUser } from '../../../src/auth/AuthService';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import {
   createNullTripStorage,
   NullTripStorageWithSync,
@@ -27,15 +27,15 @@ const testUser: AuthUser = { uid: 'clemens-123', email: 'clemens@test.com' };
 // (the null staple storage has no simulateRemoteChange); the trip adapter's
 // is wired into the storage's simulateRemoteChange.
 const createSyncFactories = (
-  stapleStorage: ReturnType<typeof createNullStapleStorage>,
+  libraryStorage: ReturnType<typeof createNullLibraryStorage>,
   tripStorage: NullTripStorageWithSync,
 ) => {
   let stapleOnChange: (() => void) | undefined;
 
   const factories = createNullAdapterFactories({
-    createStapleStorage: (_uid, options) => {
+    createLibraryStorage: (_uid, options) => {
       stapleOnChange = options?.onChange;
-      return withInitialize(stapleStorage);
+      return withInitialize(libraryStorage);
     },
     createTripStorage: (_uid, options) => {
       if (options?.onChange) tripStorage.setOnChange(options.onChange);
@@ -54,7 +54,7 @@ describe('US-07: Prevent duplicate trip items', () => {
   it('S-22: no duplicate when remote trip update contains locally added item', async () => {
     // Given Clemens has an active trip with "Milk", and "Tahini"
     // (stapleId: "staple-tahini-abc") was just added to it locally
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -63,7 +63,7 @@ describe('US-07: Prevent duplicate trip items', () => {
     ]);
     const tripStorage = createNullTripStorage();
     const { factories, fireStapleOnChange } = createSyncFactories(
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
     const result = await initializeApp(testUser, factories);
@@ -103,7 +103,7 @@ describe('US-07: Prevent duplicate trip items', () => {
 
     // And the staple listener then delivers the "Tahini" staple behind it,
     // so the auto-add path sees "Tahini" as a new staple
-    stapleStorage.save({
+    libraryStorage.save({
       id: 'staple-tahini-abc',
       ...tahini,
       type: 'staple',

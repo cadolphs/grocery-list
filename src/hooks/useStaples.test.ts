@@ -5,8 +5,8 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useStaples } from './useStaples';
 import { createStapleLibrary, StapleLibrary } from '../domain/staple-library';
-import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
-import { StapleItem } from '../domain/types';
+import { createNullLibraryStorage } from '../adapters/null/null-library-storage';
+import { LibraryItem } from '../domain/types';
 
 const withListenerCount = (
   library: StapleLibrary,
@@ -36,7 +36,7 @@ const milk = {
 
 describe('useStaples', () => {
   it('returns the staples already in the library', () => {
-    const library = createStapleLibrary(createNullStapleStorage([milk]));
+    const library = createStapleLibrary(createNullLibraryStorage([milk]));
 
     const { result } = renderHook(() => useStaples(library));
 
@@ -44,7 +44,7 @@ describe('useStaples', () => {
   });
 
   it('re-renders with the new list after a staple is added', () => {
-    const library = createStapleLibrary(createNullStapleStorage([]));
+    const library = createStapleLibrary(createNullLibraryStorage([]));
     const { result } = renderHook(() => useStaples(library));
 
     act(() => {
@@ -55,7 +55,7 @@ describe('useStaples', () => {
   });
 
   it('re-renders after a staple is removed', () => {
-    const library = createStapleLibrary(createNullStapleStorage([milk]));
+    const library = createStapleLibrary(createNullLibraryStorage([milk]));
     const { result } = renderHook(() => useStaples(library));
 
     act(() => {
@@ -67,7 +67,7 @@ describe('useStaples', () => {
 
   it('removes its listener on unmount', () => {
     const { library, count } = withListenerCount(
-      createStapleLibrary(createNullStapleStorage([])),
+      createStapleLibrary(createNullLibraryStorage([])),
     );
     const { unmount } = renderHook(() => useStaples(library));
     expect(count()).toBe(1);
@@ -78,10 +78,10 @@ describe('useStaples', () => {
   });
 
   it('follows a different library when it is swapped', () => {
-    const first = createStapleLibrary(createNullStapleStorage([]));
-    const second = createStapleLibrary(createNullStapleStorage([milk]));
+    const first = createStapleLibrary(createNullLibraryStorage([]));
+    const second = createStapleLibrary(createNullLibraryStorage([milk]));
     const { result, rerender } = renderHook<
-      StapleItem[],
+      LibraryItem[],
       { library: StapleLibrary }
     >(({ library }) => useStaples(library), {
       initialProps: { library: first },

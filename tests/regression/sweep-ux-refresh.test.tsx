@@ -24,7 +24,7 @@ import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
 import { theme } from '../../src/ui/theme';
 import { createStapleLibrary } from '../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../src/domain/trip';
 
@@ -240,14 +240,14 @@ describe('groupByArea excludes one-offs from area groups', () => {
 
 describe('sweep mode shows one-offs section separately', () => {
   function renderAppWithOneOff() {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());
@@ -283,14 +283,14 @@ describe('sweep mode shows one-offs section separately', () => {
   });
 
   it('does not render One-offs section when no one-off items exist', () => {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const tripService = createTrip(tripStorage);
     tripService.initializeFromStorage(stapleLibrary.listAll());

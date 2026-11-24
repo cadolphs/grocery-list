@@ -1,7 +1,7 @@
 /**
- * Regression test for Reset Sweep button on HomeView.
+ * Regression test for Start over button on HomeView.
  *
- * Verifies that tapping "Reset Sweep" calls resetSweep on TripService,
+ * Verifies that tapping "Start over" calls startOver on TripService,
  * refreshes the view, and requires confirmation before executing.
  */
 
@@ -10,7 +10,7 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 
@@ -22,7 +22,7 @@ const itemIdNamed = (
   trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
 
 function renderAppWithItems() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Milk',
       houseArea: 'Fridge',
@@ -34,13 +34,13 @@ function renderAppWithItems() {
       storeLocation: { section: 'Personal Care', aisleNumber: 7 },
     },
   ]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(stapleLibrary.listAll());
 
   // Check off Milk and complete an area to have state to reset
-  tripService.checkOff(itemIdNamed(tripService, 'Milk'));
+  tripService.putInCart(itemIdNamed(tripService, 'Milk'));
   tripService.markAreaDone('Fridge');
 
   // Add a one-off item
@@ -61,51 +61,51 @@ function renderAppWithItems() {
   return { tripService };
 }
 
-describe('Reset Sweep button', () => {
-  it('HomeView shows a Reset Sweep button', () => {
+describe('Start over button', () => {
+  it('HomeView shows a Start over button', () => {
     renderAppWithItems();
-    expect(screen.getByTestId('reset-sweep-button')).toBeTruthy();
-    expect(screen.getByText('Reset Sweep')).toBeTruthy();
+    expect(screen.getByTestId('start-over-button')).toBeTruthy();
+    expect(screen.getByText('Start over')).toBeTruthy();
   });
 
-  it('tapping Reset Sweep shows a confirmation prompt', () => {
+  it('tapping Start over shows a confirmation prompt', () => {
     renderAppWithItems();
-    fireEvent.press(screen.getByTestId('reset-sweep-button'));
+    fireEvent.press(screen.getByTestId('start-over-button'));
     expect(
       screen.getByText(
-        'Are you sure? This will reset all items and remove one-offs.',
+        'Start over? Every staple goes back to Undecided. One-offs, in-cart marks and carried-over items are lost.',
       ),
     ).toBeTruthy();
   });
 
-  it('confirming Reset Sweep resets the trip and refreshes the view', () => {
+  it('confirming Start over resets the trip and refreshes the view', () => {
     renderAppWithItems();
 
     // Before reset: one-off item should be visible
     expect(screen.getByText('Birthday candles')).toBeTruthy();
 
-    // Tap Reset Sweep then confirm
-    fireEvent.press(screen.getByTestId('reset-sweep-button'));
-    fireEvent.press(screen.getByTestId('confirm-reset-sweep'));
+    // Tap Start over then confirm
+    fireEvent.press(screen.getByTestId('start-over-button'));
+    fireEvent.press(screen.getByTestId('confirm-start-over'));
 
     // After reset: one-off removed. Sweep progress is derived from decisions
     // (#95), so what it reads after a reset follows the reset's decisions.
     expect(screen.queryByText('Birthday candles')).toBeNull();
   });
 
-  it('cancelling Reset Sweep does not change the trip', () => {
+  it('cancelling Start over does not change the trip', () => {
     renderAppWithItems();
 
-    // Tap Reset Sweep then cancel
-    fireEvent.press(screen.getByTestId('reset-sweep-button'));
-    fireEvent.press(screen.getByTestId('cancel-reset-sweep'));
+    // Tap Start over then cancel
+    fireEvent.press(screen.getByTestId('start-over-button'));
+    fireEvent.press(screen.getByTestId('cancel-start-over'));
 
     // One-off should still be present
     expect(screen.getByText('Birthday candles')).toBeTruthy();
     // Confirmation should be dismissed
     expect(
       screen.queryByText(
-        'Are you sure? This will reset all items and remove one-offs.',
+        'Start over? Every staple goes back to Undecided. One-offs, in-cart marks and carried-over items are lost.',
       ),
     ).toBeNull();
   });

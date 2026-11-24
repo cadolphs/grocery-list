@@ -11,7 +11,7 @@
 
 import { initializeApp } from '../../../src/hooks/useAppInitialization';
 import { AuthUser } from '../../../src/auth/AuthService';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import {
   createNullTripStorage,
   NullTripStorageWithSync,
@@ -28,7 +28,7 @@ import {
 // or change them from a test.
 const createTrackingFactories = (
   shared: {
-    stapleStorage?: ReturnType<typeof createNullStapleStorage>;
+    libraryStorage?: ReturnType<typeof createNullLibraryStorage>;
     tripStorage?: NullTripStorageWithSync;
   } = {},
 ) => {
@@ -42,11 +42,11 @@ const createTrackingFactories = (
   });
 
   const factories = createNullAdapterFactories({
-    createStapleStorage: (_uid, options) => {
+    createLibraryStorage: (_uid, options) => {
       if (options?.onChange) onChangeCallbacks.staples = options.onChange;
       return tracked(
         'staples',
-        shared.stapleStorage ?? createNullStapleStorage(),
+        shared.libraryStorage ?? createNullLibraryStorage(),
       );
     },
     createAreaStorage: () => tracked('areas', createNullAreaStorage()),
@@ -136,7 +136,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
 
   it('S-14: delayed listener callback after logout does not update state', async () => {
     // Given Clemens is logged in with "Milk" as a staple and an active trip
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -145,7 +145,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
     ]);
     const tripStorage = createNullTripStorage();
     const { factories, onChangeCallbacks } = createTrackingFactories({
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     });
     const result = await initializeApp(testUser, factories);
@@ -161,7 +161,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
 
     // When a delayed staple adapter callback fires after logout
     // (a remote add that was in flight when the listener was torn down)
-    stapleStorage.save({
+    libraryStorage.save({
       id: 'staple-cheese-remote',
       name: 'Cheese',
       houseArea: 'Fridge',
@@ -200,7 +200,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
   // change seam) is released by unsubscribeAll() as well.
   it('local staple change after logout does not touch the trip', async () => {
     // Given Clemens is logged in with "Milk" as a staple and an active trip
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -209,7 +209,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
     ]);
     const tripStorage = createNullTripStorage();
     const { factories } = createTrackingFactories({
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     });
     const result = await initializeApp(testUser, factories);

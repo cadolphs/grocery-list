@@ -1,4 +1,4 @@
-import { createNullStapleStorage } from '../null/null-staple-storage';
+import { createNullLibraryStorage } from '../null/null-library-storage';
 import { createNullAreaStorage } from '../null/null-area-storage';
 import { createNullSectionOrderStorage } from '../null/null-section-order-storage';
 import { createNullTripStorage } from '../null/null-trip-storage';
@@ -7,9 +7,9 @@ import {
   migrateToFirestore,
   migrateTripIfNeeded,
 } from './migration';
-import { StapleItem, Trip, TripItem } from '../../domain/types';
+import { LibraryItem, Trip, TripItem } from '../../domain/types';
 
-const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+const makeStaple = (overrides: Partial<LibraryItem> = {}): LibraryItem => ({
   id: 'staple-1',
   name: 'Milk',
   houseArea: 'Fridge',
@@ -30,7 +30,7 @@ describe('migration service', () => {
       });
 
       const source = {
-        staples: createNullStapleStorage(),
+        staples: createNullLibraryStorage(),
         areas: createNullAreaStorage([
           'Fridge',
           'Kitchen Cabinets',
@@ -47,7 +47,7 @@ describe('migration service', () => {
       source.staples.save(staple2);
 
       const destination = {
-        staples: createNullStapleStorage(),
+        staples: createNullLibraryStorage(),
         areas: createNullAreaStorage([]),
         sectionOrder: createNullSectionOrderStorage(null),
       };
@@ -77,12 +77,12 @@ describe('migration service', () => {
 
   describe('migrationNeeded', () => {
     it('returns true when Firestore staple storage is empty', () => {
-      const firestoreStaples = createNullStapleStorage();
+      const firestoreStaples = createNullLibraryStorage();
       expect(migrationNeeded(firestoreStaples)).toBe(true);
     });
 
     it('returns false when Firestore already has data', () => {
-      const firestoreStaples = createNullStapleStorage();
+      const firestoreStaples = createNullLibraryStorage();
       firestoreStaples.save(makeStaple());
       expect(migrationNeeded(firestoreStaples)).toBe(false);
     });
@@ -91,12 +91,12 @@ describe('migration service', () => {
   describe('edge cases', () => {
     it('completes without error when source is empty', () => {
       const source = {
-        staples: createNullStapleStorage(),
+        staples: createNullLibraryStorage(),
         areas: createNullAreaStorage([]),
         sectionOrder: createNullSectionOrderStorage(null),
       };
       const destination = {
-        staples: createNullStapleStorage(),
+        staples: createNullLibraryStorage(),
         areas: createNullAreaStorage([]),
         sectionOrder: createNullSectionOrderStorage(null),
       };
@@ -110,12 +110,12 @@ describe('migration service', () => {
 
     it('copies section order only when source has one', () => {
       const source = {
-        staples: createNullStapleStorage(),
+        staples: createNullLibraryStorage(),
         areas: createNullAreaStorage(['Kitchen']),
         sectionOrder: createNullSectionOrderStorage(null),
       };
       const destination = {
-        staples: createNullStapleStorage(),
+        staples: createNullLibraryStorage(),
         areas: createNullAreaStorage([]),
         sectionOrder: createNullSectionOrderStorage(null),
       };

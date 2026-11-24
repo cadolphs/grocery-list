@@ -6,9 +6,9 @@
  */
 
 import { filterStaples } from '../../../src/ui/StapleChecklist';
-import { StapleItem } from '../../../src/domain/types';
+import { LibraryItem } from '../../../src/domain/types';
 
-const makeStaple = (name: string): StapleItem => ({
+const makeStaple = (name: string): LibraryItem => ({
   id: name.toLowerCase().replace(/\s/g, '-'),
   name,
   houseArea: 'Kitchen',
@@ -17,7 +17,7 @@ const makeStaple = (name: string): StapleItem => ({
   createdAt: '2026-01-01T00:00:00Z',
 });
 
-const staples: readonly StapleItem[] = [
+const staples: readonly LibraryItem[] = [
   makeStaple('Cheddar Cheese'),
   makeStaple('Chicken Breast'),
   makeStaple('Chocolate Chips'),

@@ -10,7 +10,7 @@ const makeSectionGroup = (section: string): SectionGroup => ({
   section,
   items: [] as TripItem[],
   totalCount: 0,
-  checkedCount: 0,
+  inCartCount: 0,
 });
 
 describe('sortByCustomOrder', () => {

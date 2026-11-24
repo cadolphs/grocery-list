@@ -6,20 +6,20 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
 import { createStapleLibrary } from '../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../src/domain/trip';
 import { theme } from '../../src/ui/theme';
 
 function renderApp() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Milk',
       houseArea: 'Fridge',
       storeLocation: { section: 'Dairy', aisleNumber: 3 },
     },
   ]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(stapleLibrary.listAll());
@@ -101,8 +101,8 @@ describe('checklist mode shows alphabetic list and quick add', () => {
     // Area sections should NOT be visible (complete buttons won't exist)
     expect(screen.queryAllByTestId(/^complete-/).length).toBe(0);
 
-    // Reset sweep button should NOT be visible
-    expect(screen.queryByTestId('reset-sweep-button')).toBeNull();
+    // Start over button should NOT be visible
+    expect(screen.queryByTestId('start-over-button')).toBeNull();
   });
 
   it('in sweep mode: area sections visible, StapleChecklist not visible', () => {

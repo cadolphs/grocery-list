@@ -1,11 +1,11 @@
-// Tests for AsyncStorage-backed StapleStorage adapter with cache
+// Tests for AsyncStorage-backed LibraryStorage adapter with cache
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createAsyncStapleStorage } from '../../../src/adapters/async-storage/async-staple-storage';
-import { StapleItem } from '../../../src/domain/types';
+import { createAsyncLibraryStorage } from '../../../src/adapters/async-storage/async-library-storage';
+import { LibraryItem } from '../../../src/domain/types';
 
 const STORAGE_KEY = '@grocery/staple_library';
 
-const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+const makeStaple = (overrides: Partial<LibraryItem> = {}): LibraryItem => ({
   id: 'staple-1',
   name: 'Paper Towels',
   houseArea: 'Kitchen Cabinets',
@@ -23,7 +23,7 @@ beforeEach(() => {
   (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
 });
 
-describe('createAsyncStapleStorage', () => {
+describe('createAsyncLibraryStorage', () => {
   describe('initialize', () => {
     it('loads items from AsyncStorage into cache', async () => {
       const items = [makeStaple()];
@@ -31,7 +31,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify(items),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       expect(AsyncStorage.getItem).toHaveBeenCalledWith(STORAGE_KEY);
@@ -39,7 +39,7 @@ describe('createAsyncStapleStorage', () => {
     });
 
     it('starts with empty cache when AsyncStorage has no data', async () => {
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       expect(storage.loadAll()).toEqual([]);
@@ -48,7 +48,7 @@ describe('createAsyncStapleStorage', () => {
     it('starts with empty cache when AsyncStorage has invalid JSON', async () => {
       (AsyncStorage.getItem as jest.Mock).mockResolvedValue('not-json');
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       expect(storage.loadAll()).toEqual([]);
@@ -62,7 +62,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify(items),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       const result1 = storage.loadAll();
@@ -74,7 +74,7 @@ describe('createAsyncStapleStorage', () => {
 
   describe('save', () => {
     it('adds item to cache immediately', async () => {
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       const item = makeStaple();
@@ -84,7 +84,7 @@ describe('createAsyncStapleStorage', () => {
     });
 
     it('persists to AsyncStorage in background', async () => {
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       const item = makeStaple();
@@ -107,7 +107,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify([item]),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       storage.remove(item.id);
@@ -121,7 +121,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify([item]),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       storage.remove(item.id);
@@ -139,7 +139,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify([item]),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       storage.remove('non-existent');
@@ -157,7 +157,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify([towels, plates, milk]),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       expect(storage.search('paper')).toEqual([towels, plates]);
@@ -170,7 +170,7 @@ describe('createAsyncStapleStorage', () => {
         JSON.stringify([item]),
       );
 
-      const storage = createAsyncStapleStorage();
+      const storage = createAsyncLibraryStorage();
       await storage.initialize();
 
       expect(storage.search('')).toEqual([]);

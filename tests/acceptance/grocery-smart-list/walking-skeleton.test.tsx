@@ -30,7 +30,7 @@ import { groupBySection } from '../../../src/domain/item-grouping';
 import { TripItem } from '../../../src/domain/types';
 //
 // Null adapters for testing:
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // Trip operations take a trip item id; these tests name the item instead.
@@ -64,8 +64,8 @@ describe('WS-1: Add a Staple Item', () => {
 
   it('adds a staple item with full metadata to the library', () => {
     // Given Carlos has an empty staple library
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos adds "Whole milk" as a staple in "Fridge" area, "Dairy" section, aisle 3
     const result = library.addStaple({
@@ -86,8 +86,8 @@ describe('WS-1: Add a Staple Item', () => {
 
   it('adds a staple item without an aisle number', () => {
     // Given Carlos has an empty staple library
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
 
     // When Carlos adds "Rotisserie chicken" as a staple in "Fridge" area, "Deli" section, with no aisle
     const result = library.addStaple({
@@ -127,8 +127,8 @@ describe('WS-1: Add a Staple Item', () => {
     );
 
     // And "Birthday candles" does not appear in the staple library
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     expect(library.listAll()).not.toContainEqual(
       expect.objectContaining({ name: 'Birthday candles' }),
     );
@@ -136,8 +136,8 @@ describe('WS-1: Add a Staple Item', () => {
 
   it('prevents duplicate staple in the same house area', () => {
     // Given "Whole milk" already exists as a staple in "Fridge"
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -164,8 +164,8 @@ describe('WS-1: Add a Staple Item', () => {
 
   it('allows same item name in different house areas', () => {
     // Given "Hand soap" exists as a staple in "Bathroom"
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Hand soap',
       houseArea: 'Bathroom',
@@ -197,8 +197,8 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
 
   it('pre-loads all staples grouped by house area on new sweep', () => {
     // Given Carlos has staples in the library
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -242,8 +242,8 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
 
   it('shows all 5 house areas even when some are empty', () => {
     // Given Carlos has staples only in "Fridge" and "Bathroom"
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -274,8 +274,8 @@ describe('WS-2: See Pre-Loaded Staples by Area', () => {
 
   it('newly added staple appears on next sweep', () => {
     // Given Carlos adds "Oat milk" as a staple during a trip
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Oat milk',
       houseArea: 'Fridge',
@@ -309,8 +309,8 @@ describe('WS-3: Quick-Add Item', () => {
 
   it('quick-adds a new staple item with metadata', () => {
     // Given Carlos has an active trip
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage([]);
@@ -340,8 +340,8 @@ describe('WS-3: Quick-Add Item', () => {
 
   it('quick-adds a one-off item without adding to staple library', () => {
     // Given Carlos has an active trip
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage([]);
@@ -485,7 +485,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
+    trip.putInCart(itemIdNamed(trip, 'Whole milk'));
 
     // When Carlos views the items (toggle does not change data, only grouping)
     const items = trip.getItems();
@@ -520,7 +520,7 @@ describe('WS-5: Check Off Items in Store', () => {
     ]);
 
     // When Carlos checks off "Whole milk"
-    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
+    trip.putInCart(itemIdNamed(trip, 'Whole milk'));
 
     // Then "Whole milk" shows as in the cart
     const milk = trip.getItems().find((i) => i.name === 'Whole milk');
@@ -543,10 +543,10 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    trip.checkOff(itemIdNamed(trip, 'Butter'));
+    trip.putInCart(itemIdNamed(trip, 'Butter'));
 
     // When Carlos taps "Butter" again
-    trip.uncheckItem(itemIdNamed(trip, 'Butter'));
+    trip.takeOutOfCart(itemIdNamed(trip, 'Butter'));
 
     // Then "Butter" is unchecked
     const butter = trip.getItems().find((i) => i.name === 'Butter');
@@ -579,9 +579,9 @@ describe('WS-5: Check Off Items in Store', () => {
         storeLocation: { section: 'Bakery', aisleNumber: null },
       },
     ]);
-    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
-    trip1.checkOff(itemIdNamed(trip1, 'Eggs'));
-    trip1.checkOff(itemIdNamed(trip1, 'Bread'));
+    trip1.putInCart(itemIdNamed(trip1, 'Milk'));
+    trip1.putInCart(itemIdNamed(trip1, 'Eggs'));
+    trip1.putInCart(itemIdNamed(trip1, 'Bread'));
 
     // When the app restarts (simulate by creating new trip instance with same storage)
     const trip2 = createTrip(tripStorage);
@@ -630,7 +630,7 @@ describe('WS-5: Check Off Items in Store', () => {
     const dairy = groups.find((g) => g.section === 'Dairy');
 
     // Then progress shows 2 of 4
-    expect(dairy?.checkedCount).toBe(2);
+    expect(dairy?.inCartCount).toBe(2);
     expect(dairy?.totalCount).toBe(4);
   });
 });
@@ -649,8 +649,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
 
   it('bought staples re-queue, bought one-offs clear, unbought carry over', () => {
     // Given Carlos has an active trip with mixed items
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -673,8 +673,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
       itemType: 'one-off',
       source: 'quick-add',
     });
-    trip.checkOff(itemIdNamed(trip, 'Whole milk'));
-    trip.checkOff(itemIdNamed(trip, 'Birthday candles'));
+    trip.putInCart(itemIdNamed(trip, 'Whole milk'));
+    trip.putInCart(itemIdNamed(trip, 'Birthday candles'));
     // Avocados left unchecked
 
     // When Carlos finishes the trip
@@ -689,7 +689,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
       expect.objectContaining({ name: 'Birthday candles' }),
     );
     // And unbought one-off carries over
-    expect(result.unboughtItems).toContainEqual(
+    expect(result.carryoverItems).toContainEqual(
       expect.objectContaining({ name: 'Avocados' }),
     );
 
@@ -737,8 +737,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
     // Carlos did not buy "Avocados" again
 
     // When Carlos finishes the trip
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     trip.complete();
 
     // Then "Avocados" appears once on the next trip
@@ -752,8 +752,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
 
   it('staple library is unchanged after trip completion', () => {
     // Given Carlos has 5 staples in the library
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Milk',
       houseArea: 'Fridge',
@@ -782,8 +782,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
-    trip.checkOff(itemIdNamed(trip, 'Eggs'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Eggs'));
 
     // When Carlos finishes the trip
     trip.complete();
@@ -811,8 +811,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
         storeLocation: { section: 'Bakery', aisleNumber: null },
       },
     ];
-    const stapleStorage = createNullStapleStorage(staples);
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage(staples);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -831,7 +831,7 @@ describe('WS-6: Complete Trip with Carryover', () => {
       source: 'quick-add',
     });
     // Check all items
-    trip.getItems().forEach((i) => trip.checkOff(itemIdNamed(trip, i.name)));
+    trip.getItems().forEach((i) => trip.putInCart(itemIdNamed(trip, i.name)));
 
     // When Carlos finishes the trip
     trip.complete();

@@ -14,7 +14,7 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../src/ui/MetadataBottomSheet';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../src/adapters/null/null-library-storage';
 import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage';
 import {
   initializeApp,
@@ -139,8 +139,8 @@ const WIRING_AREAS = ['Bathroom', 'Fridge', 'Freezer'];
 // handleStapleChange, exactly as in the running app. Only the storages that
 // carry seeded state are overridden; the rest come from the shared helper.
 async function createWiringTestServices(): Promise<AppServices> {
-  const stapleStorage = withInitialize(
-    createNullStapleStorage([
+  const libraryStorage = withInitialize(
+    createNullLibraryStorage([
       {
         name: 'Butter',
         houseArea: 'Fridge',
@@ -155,7 +155,7 @@ async function createWiringTestServices(): Promise<AppServices> {
   );
   const areaStorage = withInitialize(createNullAreaStorage(WIRING_AREAS));
   const factories = createNullAdapterFactories({
-    createStapleStorage: () => stapleStorage,
+    createLibraryStorage: () => libraryStorage,
     createAreaStorage: () => areaStorage,
   });
   const result = await initializeApp({ uid: 'test', email: null }, factories);

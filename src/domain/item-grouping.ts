@@ -28,7 +28,7 @@ export type SectionGroup = {
   readonly section: string;
   readonly items: TripItem[];
   readonly totalCount: number;
-  readonly checkedCount: number;
+  readonly inCartCount: number;
 };
 
 // AisleKey identifies an aisle sub-group within a section.
@@ -41,7 +41,7 @@ export type AisleSubGroup = {
   readonly aisleKey: AisleKey;
   readonly items: TripItem[];
   readonly totalCount: number;
-  readonly checkedCount: number;
+  readonly inCartCount: number;
 };
 
 // Compare two items within the same section: aisleNumber ascending, nulls last,
@@ -76,7 +76,7 @@ const createSectionGroup = (
   section,
   items,
   totalCount: items.length,
-  checkedCount: items.filter((item) => item.checked).length,
+  inCartCount: items.filter((item) => item.checked).length,
 });
 
 export const groupBySection = (items: TripItem[]): SectionGroup[] => {
@@ -104,7 +104,7 @@ const createAisleSubGroup = (
   aisleKey,
   items,
   totalCount: items.length,
-  checkedCount: items.filter((item) => item.checked).length,
+  inCartCount: items.filter((item) => item.checked).length,
 });
 
 // Bucket items by aisleKey, preserving input order within each bucket.

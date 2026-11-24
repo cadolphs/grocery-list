@@ -2,14 +2,14 @@
 // Pure domain logic, no IO imports
 
 import {
-  StapleItem,
+  LibraryItem,
   AddStapleRequest,
   AddOneOffRequest,
-  AddStapleResult,
+  AddLibraryItemResult,
   HouseArea,
   StoreLocation,
 } from './types';
-import { StapleStorage } from '../ports/staple-storage';
+import { LibraryStorage } from '../ports/library-storage';
 
 export type UpdateStapleChanges = {
   readonly name?: string;
@@ -18,15 +18,15 @@ export type UpdateStapleChanges = {
 };
 
 export type StapleLibrary = {
-  readonly addStaple: (request: AddStapleRequest) => AddStapleResult;
-  readonly addOneOff: (request: AddOneOffRequest) => AddStapleResult;
+  readonly addStaple: (request: AddStapleRequest) => AddLibraryItemResult;
+  readonly addOneOff: (request: AddOneOffRequest) => AddLibraryItemResult;
   readonly updateStaple: (
     id: string,
     changes: UpdateStapleChanges,
-  ) => AddStapleResult;
-  readonly listAll: () => StapleItem[];
-  readonly listByArea: (area: HouseArea) => StapleItem[];
-  readonly search: (query: string) => StapleItem[];
+  ) => AddLibraryItemResult;
+  readonly listAll: () => LibraryItem[];
+  readonly listByArea: (area: HouseArea) => LibraryItem[];
+  readonly search: (query: string) => LibraryItem[];
   readonly remove: (id: string) => void;
   // Functional in-memory subscription: listener invoked after any mutation
   // (add/update/remove). Returns an unsubscribe function. Mirrors the
@@ -38,17 +38,17 @@ const generateId = (): string =>
   `staple-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const isDuplicate = (
-  existing: StapleItem[],
+  existing: LibraryItem[],
   name: string,
   houseArea: HouseArea,
 ): boolean =>
   existing.some((item) => item.name === name && item.houseArea === houseArea);
 
-const isDuplicateOneOff = (existing: StapleItem[], name: string): boolean =>
+const isDuplicateOneOff = (existing: LibraryItem[], name: string): boolean =>
   existing.some((item) => item.name === name && item.type === 'one-off');
 
 const isDuplicateExcludingSelf = (
-  existing: StapleItem[],
+  existing: LibraryItem[],
   selfId: string,
   name: string,
   houseArea: HouseArea,
@@ -58,12 +58,12 @@ const isDuplicateExcludingSelf = (
       item.id !== selfId && item.name === name && item.houseArea === houseArea,
   );
 
-export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
+export const createStapleLibrary = (storage: LibraryStorage): StapleLibrary => {
   const listeners = new Set<() => void>();
   const notify = (): void => listeners.forEach((listener) => listener());
 
   return {
-    addStaple: (request: AddStapleRequest): AddStapleResult => {
+    addStaple: (request: AddStapleRequest): AddLibraryItemResult => {
       const existing = storage.loadAll();
 
       if (isDuplicate(existing, request.name, request.houseArea)) {
@@ -73,7 +73,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
         };
       }
 
-      const staple: StapleItem = {
+      const staple: LibraryItem = {
         id: generateId(),
         name: request.name,
         houseArea: request.houseArea,
@@ -87,14 +87,14 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       return { success: true };
     },
 
-    addOneOff: (request: AddOneOffRequest): AddStapleResult => {
+    addOneOff: (request: AddOneOffRequest): AddLibraryItemResult => {
       const existing = storage.loadAll();
 
       if (isDuplicateOneOff(existing, request.name)) {
         return { success: true };
       }
 
-      const oneOff: StapleItem = {
+      const oneOff: LibraryItem = {
         id: generateId(),
         name: request.name,
         houseArea: '',
@@ -111,7 +111,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
     updateStaple: (
       id: string,
       changes: UpdateStapleChanges,
-    ): AddStapleResult => {
+    ): AddLibraryItemResult => {
       const existing = storage.loadAll();
       const staple = existing.find((item) => item.id === id);
 
@@ -145,7 +145,7 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
         };
       }
 
-      const updatedStaple: StapleItem = {
+      const updatedStaple: LibraryItem = {
         ...staple,
         name: updatedName,
         houseArea: updatedHouseArea,
@@ -157,12 +157,12 @@ export const createStapleLibrary = (storage: StapleStorage): StapleLibrary => {
       return { success: true };
     },
 
-    listAll: (): StapleItem[] => storage.loadAll(),
+    listAll: (): LibraryItem[] => storage.loadAll(),
 
-    listByArea: (area: HouseArea): StapleItem[] =>
+    listByArea: (area: HouseArea): LibraryItem[] =>
       storage.loadAll().filter((item) => item.houseArea === area),
 
-    search: (query: string): StapleItem[] =>
+    search: (query: string): LibraryItem[] =>
       query.trim() === '' ? [] : storage.search(query),
 
     remove: (id: string): void => {

@@ -8,7 +8,7 @@
 import { createTrip } from '../../../src/domain/trip';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { TripItem } from '../../../src/domain/types';
 import { migrateTripIfNeeded } from '../../../src/adapters/firestore/migration';
 
@@ -35,7 +35,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     }));
     localTrip.initializeFromStorage(staples);
     for (let i = 0; i < 7; i++) {
-      localTrip.checkOff(itemIdNamed(localTrip, `Item ${i + 1}`));
+      localTrip.putInCart(itemIdNamed(localTrip, `Item ${i + 1}`));
     }
 
     // And cloud storage has no trip for his account
@@ -48,8 +48,8 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     // Then all 15 items with their checkoff states are written to cloud storage
     const migratedTrip = cloudTripStorage.loadTrip();
     expect(migratedTrip!.items).toHaveLength(15);
-    const checkedCount = migratedTrip!.items.filter((i) => i.checked).length;
-    expect(checkedCount).toBe(7);
+    const inCartCount = migratedTrip!.items.filter((i) => i.checked).length;
+    expect(inCartCount).toBe(7);
   });
 
   // =============================================================================
@@ -104,7 +104,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     migrateTripIfNeeded(localTripStorage, cloudTripStorage);
 
     // And the app initializes from staple library
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -116,7 +116,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const trip = createTrip(cloudTripStorage);
     trip.initializeFromStorage(library.listAll());
 

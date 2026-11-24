@@ -25,7 +25,7 @@ import {
 import { sortByCustomOrder } from '../../../src/domain/section-ordering';
 import { TripItem, AddStapleRequest } from '../../../src/domain/types';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
@@ -66,15 +66,15 @@ const stapleInput = (
 // Renders the settings screen wrapped in a ServiceProvider with InMemory adapters
 // pre-seeded with the supplied staples. UI-level driving port for US-01.
 const renderSettingsScreenWithStaples = (staples: AddStapleRequest[]) => {
-  const stapleStorage = createNullStapleStorage(staples);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const libraryStorage = createNullLibraryStorage(staples);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripAreas = ['Pantry'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
   const sectionOrderStorage = createNullSectionOrderStorage();

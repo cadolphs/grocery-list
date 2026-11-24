@@ -234,8 +234,8 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     ]);
 
     // Persist initial state so loadFromStorage has something to load
-    tripService.checkOff(itemIdNamed(tripService, 'Milk'));
-    tripService.uncheckItem(itemIdNamed(tripService, 'Milk'));
+    tripService.putInCart(itemIdNamed(tripService, 'Milk'));
+    tripService.takeOutOfCart(itemIdNamed(tripService, 'Milk'));
 
     let notifyCount = 0;
     tripService.subscribe(() => {
