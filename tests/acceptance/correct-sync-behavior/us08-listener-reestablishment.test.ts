@@ -11,14 +11,14 @@ import {
   initializeApp,
   AdapterFactories,
 } from '../../../src/hooks/useAppInitialization';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 
 const createTestFactories = (): AdapterFactories => ({
-  createStapleStorage: (_uid: string) => ({
-    ...createNullStapleStorage(),
+  createLibraryStorage: (_uid: string) => ({
+    ...createNullLibraryStorage(),
     initialize: () => Promise.resolve(),
   }),
   createAreaStorage: (_uid: string) => ({
@@ -35,8 +35,8 @@ const createTestFactories = (): AdapterFactories => ({
   }),
   checkMigrationNeeded: () => false,
   migrateToFirestore: () => {},
-  createAsyncStapleStorage: () => ({
-    ...createNullStapleStorage(),
+  createAsyncLibraryStorage: () => ({
+    ...createNullLibraryStorage(),
     initialize: () => Promise.resolve(),
   }),
   createAsyncAreaStorage: () => ({
@@ -92,14 +92,14 @@ describe('US-08: Listener re-establishment after re-login', () => {
 
   it('S-26: different user sees their own data after login', async () => {
     // Given Clemens logged out on his phone
-    const clemensStaples = createNullStapleStorage([
+    const clemensStaples = createNullLibraryStorage([
       {
         name: 'Clemens Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const partnerStaples = createNullStapleStorage([
+    const partnerStaples = createNullLibraryStorage([
       {
         name: 'Partner Yogurt',
         houseArea: 'Fridge',
@@ -109,7 +109,7 @@ describe('US-08: Listener re-establishment after re-login', () => {
 
     // Create factories that return different data per user
     const factories: AdapterFactories = {
-      createStapleStorage: (uid: string) => ({
+      createLibraryStorage: (uid: string) => ({
         ...(uid === 'clemens-uid' ? clemensStaples : partnerStaples),
         initialize: () => Promise.resolve(),
       }),
@@ -127,8 +127,8 @@ describe('US-08: Listener re-establishment after re-login', () => {
       }),
       checkMigrationNeeded: () => false,
       migrateToFirestore: () => {},
-      createAsyncStapleStorage: () => ({
-        ...createNullStapleStorage(),
+      createAsyncLibraryStorage: () => ({
+        ...createNullLibraryStorage(),
         initialize: () => Promise.resolve(),
       }),
       createAsyncAreaStorage: () => ({

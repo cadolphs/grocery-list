@@ -39,8 +39,8 @@ verifying (ADR-011).
 File: `src/ui/HomeView.tsx`
 
 Default signed-in view: trip items grouped by house area, sweep/checklist modes,
-quick add, reset sweep. Reach: `login`, then `browse --path /`. Test IDs:
-`home-scroll`, `home-mode-sweep`, `home-mode-checklist`, `reset-sweep-button`,
+quick add, start over. Reach: `login`, then `browse --path /`. Test IDs:
+`home-scroll`, `home-mode-sweep`, `home-mode-checklist`, `start-over-button`,
 `settings-button`; per sweep row `sweep-row-<decision>-<name>` and, on web,
 `mark-needed-<name>` / `mark-not-needed-<name>`; per area `complete-<area>`
 (Done) and `badge-<area>` (Undo).

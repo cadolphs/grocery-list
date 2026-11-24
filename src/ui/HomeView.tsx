@@ -17,7 +17,7 @@ import { groupByArea, getOneOffItems, isNeeded } from '../domain/item-grouping';
 import { matchesStapleIdentity, neededStapleIds } from '../domain/trip';
 import {
   HouseArea,
-  StapleItem,
+  LibraryItem,
   AddOneOffRequest,
   AddTripItemRequest,
 } from '../domain/types';
@@ -51,7 +51,7 @@ export const HomeView = (): React.JSX.Element => {
     addStapleAsNeeded,
     markAreaDone,
     undoArea,
-    resetSweep,
+    startOver,
     syncStapleUpdate,
     sweepProgress,
   } = useTrip();
@@ -168,7 +168,7 @@ export const HomeView = (): React.JSX.Element => {
   );
 
   const handleQuickAddSearch = useCallback(
-    (query: string): StapleItem[] => {
+    (query: string): LibraryItem[] => {
       return stapleLibrary.search(query).filter((s) => s.type === 'one-off');
     },
     [stapleLibrary],
@@ -184,7 +184,7 @@ export const HomeView = (): React.JSX.Element => {
   );
 
   const handleAddFromChecklist = useCallback(
-    (staple: StapleItem): void => {
+    (staple: LibraryItem): void => {
       const existingItem = items.find(matchesStapleIdentity(staple));
       if (existingItem && !isNeeded(existingItem)) {
         setDecision(existingItem.id, 'needed');
@@ -194,7 +194,7 @@ export const HomeView = (): React.JSX.Element => {
           houseArea: staple.houseArea,
           storeLocation: staple.storeLocation,
           itemType: 'staple',
-          source: 'whiteboard',
+          source: 'quick-add',
           stapleId: staple.id,
         });
       }
@@ -205,7 +205,7 @@ export const HomeView = (): React.JSX.Element => {
   // Unticks only this staple's own trip item: another staple with the same
   // name in a different house area keeps its decision (#104).
   const handleRemoveFromChecklist = useCallback(
-    (staple: StapleItem): void => {
+    (staple: LibraryItem): void => {
       items
         .filter(matchesStapleIdentity(staple))
         .forEach((i) => setDecision(i.id, 'not-needed'));
@@ -214,7 +214,7 @@ export const HomeView = (): React.JSX.Element => {
   );
 
   const handleSelectSuggestion = useCallback(
-    (staple: StapleItem): void => {
+    (staple: LibraryItem): void => {
       const isOneOff = staple.type === 'one-off';
       const existing = isOneOff
         ? items.find(
@@ -391,7 +391,7 @@ export const HomeView = (): React.JSX.Element => {
             </View>
           )}
           <Pressable
-            testID="reset-sweep-button"
+            testID="start-over-button"
             onPress={() => {
               setShowResetConfirmation(true);
               setTimeout(
@@ -399,20 +399,21 @@ export const HomeView = (): React.JSX.Element => {
                 100,
               );
             }}
-            style={styles.resetSweepButton}
+            style={styles.startOverButton}
           >
-            <Text style={styles.resetSweepButtonText}>Reset Sweep</Text>
+            <Text style={styles.startOverButtonText}>Start over</Text>
           </Pressable>
           {showResetConfirmation && (
             <View style={styles.resetConfirmation}>
               <Text style={styles.resetConfirmationText}>
-                Are you sure? This will reset all items and remove one-offs.
+                Start over? Every staple goes back to Undecided. One-offs,
+                in-cart marks and carried-over items are lost.
               </Text>
               <View style={styles.resetConfirmationButtons}>
                 <Pressable
-                  testID="confirm-reset-sweep"
+                  testID="confirm-start-over"
                   onPress={() => {
-                    resetSweep();
+                    startOver();
                     setShowResetConfirmation(false);
                   }}
                   style={styles.confirmButton}
@@ -420,7 +421,7 @@ export const HomeView = (): React.JSX.Element => {
                   <Text style={styles.confirmButtonText}>Confirm</Text>
                 </Pressable>
                 <Pressable
-                  testID="cancel-reset-sweep"
+                  testID="cancel-start-over"
                   onPress={() => setShowResetConfirmation(false)}
                   style={styles.cancelButton}
                 >
@@ -532,13 +533,13 @@ const styles = StyleSheet.create({
     color: theme.color.text,
     marginBottom: theme.space.xs,
   },
-  resetSweepButton: {
+  startOverButton: {
     ...surfaces.dangerButton,
     padding: theme.space.md,
     marginTop: theme.space.lg,
     alignItems: 'center',
   },
-  resetSweepButtonText: {
+  startOverButtonText: {
     color: theme.color.inverseText,
     fontSize: theme.font.size.md,
     fontWeight: theme.font.weight.bold,

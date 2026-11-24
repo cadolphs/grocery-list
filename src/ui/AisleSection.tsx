@@ -32,13 +32,13 @@ type AisleSectionProps = {
 
 // Section and aisle sub-group share the same checked/total count shape,
 // so progress formatting and completion are computed by a single helper pair.
-type Progress = { readonly checkedCount: number; readonly totalCount: number };
+type Progress = { readonly inCartCount: number; readonly totalCount: number };
 
 const formatProgress = (progress: Progress): string =>
-  `${progress.checkedCount} of ${progress.totalCount}`;
+  `${progress.inCartCount} of ${progress.totalCount}`;
 
 const isComplete = (progress: Progress): boolean =>
-  progress.checkedCount === progress.totalCount;
+  progress.inCartCount === progress.totalCount;
 
 const aisleKeySlug = (aisleKey: AisleKey): string =>
   aisleKey === null ? 'no-aisle' : String(aisleKey);

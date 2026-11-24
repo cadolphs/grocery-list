@@ -1,6 +1,6 @@
 // HomeView integration tests
 // Behavioral acceptance for fix-staple-delete-trip-sync (step 01-03):
-// - deleting a staple removes its trip item without reset-sweep
+// - deleting a staple removes its trip item without starting over
 // - name+houseArea fallback path (Branch A from RCA) propagates through UI
 // - checklist mode refreshes on staple-library mutation (Branch C)
 // - StoreView's existingSections re-derives on staple library mutation
@@ -32,11 +32,11 @@ import { HomeView } from './HomeView';
 import { StoreView } from './StoreView';
 import { ServiceProvider } from './ServiceProvider';
 import { initializeApp, AppServices } from '../hooks/useAppInitialization';
-import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../adapters/null/null-library-storage';
 import { createNullAreaStorage } from '../adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../adapters/null/null-section-order-storage';
 import { createNullTripStorage } from '../adapters/null/null-trip-storage';
-import { StapleStorage } from '../ports/staple-storage';
+import { LibraryStorage } from '../ports/library-storage';
 import { AreaStorage } from '../ports/area-storage';
 import { SectionOrderStorage } from '../ports/section-order-storage';
 import { TripStorage } from '../ports/trip-storage';
@@ -57,10 +57,10 @@ type Initializable<T> = T & {
   unsubscribe?: () => void;
 };
 
-const wrapStapleStorage = (
+const wrapLibraryStorage = (
   initial: AddStapleRequest[],
-): Initializable<StapleStorage> => ({
-  ...createNullStapleStorage(initial),
+): Initializable<LibraryStorage> => ({
+  ...createNullLibraryStorage(initial),
   initialize: async () => {},
 });
 
@@ -83,18 +83,18 @@ const wrapTripStorage = (): Initializable<TripStorage> => ({
 // initializeApp wiring (which creates stapleLibrary, tripService, and
 // subscribes the diff handler) runs against deterministic in-memory state.
 const buildFactories = (
-  stapleStorage: Initializable<StapleStorage>,
+  libraryStorage: Initializable<LibraryStorage>,
   areaStorage: Initializable<AreaStorage>,
   tripStorage: Initializable<TripStorage>,
   sectionOrderStorage: Initializable<SectionOrderStorage>,
 ) => ({
-  createStapleStorage: () => stapleStorage,
+  createLibraryStorage: () => libraryStorage,
   createAreaStorage: () => areaStorage,
   createSectionOrderStorage: () => sectionOrderStorage,
   createTripStorage: () => tripStorage,
   checkMigrationNeeded: () => false,
   migrateToFirestore: () => {},
-  createAsyncStapleStorage: () => wrapStapleStorage([]),
+  createAsyncLibraryStorage: () => wrapLibraryStorage([]),
   createAsyncAreaStorage: () => wrapAreaStorage([]),
   createAsyncSectionOrderStorage: () => wrapSectionOrderStorage(),
   createAsyncTripStorage: () => wrapTripStorage(),
@@ -105,12 +105,12 @@ const initServicesWith = async (
   initialStaples: AddStapleRequest[],
   initialAreas: string[],
 ): Promise<AppServices> => {
-  const stapleStorage = wrapStapleStorage(initialStaples);
+  const libraryStorage = wrapLibraryStorage(initialStaples);
   const areaStorage = wrapAreaStorage(initialAreas);
   const tripStorage = wrapTripStorage();
   const sectionOrderStorage = wrapSectionOrderStorage();
   const factories = buildFactories(
-    stapleStorage,
+    libraryStorage,
     areaStorage,
     tripStorage,
     sectionOrderStorage,
@@ -179,7 +179,7 @@ describe('HomeView staple-delete flow (fix-staple-delete-trip-sync 01-03)', () =
       false,
     );
 
-    // AND no reset-sweep occurred (the trip was edited in place; reset would
+    // AND no start over occurred (the trip was edited in place; reset would
     // have rebuilt items from staples). The items list shrank strictly (a
     // reset would have left an empty items list AND triggered a notify with
     // rebuilt staple items).
@@ -721,7 +721,7 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
     expect(tree.queryByTestId('sweep-row-undecided-Milk')).not.toBeNull();
   });
 
-  test('Reset Sweep returns every row to Undecided', async () => {
+  test('Start over returns every row to Undecided', async () => {
     const services = await initServicesWith(pantry, ['Fridge']);
     services.tripService.setDecision(
       itemIdNamed(services.tripService, 'Milk'),
@@ -734,8 +734,8 @@ describe('Trip lifecycle on decisions in the Home and Store views (#96)', () => 
     addCandles(services);
     const tree = renderHomeView(services);
 
-    fireEvent.press(tree.getByTestId('reset-sweep-button'));
-    fireEvent.press(tree.getByTestId('confirm-reset-sweep'));
+    fireEvent.press(tree.getByTestId('start-over-button'));
+    fireEvent.press(tree.getByTestId('confirm-start-over'));
 
     expect(tree.queryByTestId('sweep-row-undecided-Milk')).not.toBeNull();
     expect(tree.queryByTestId('sweep-row-undecided-Eggs')).not.toBeNull();

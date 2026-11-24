@@ -21,7 +21,7 @@ import { renderHook } from '@testing-library/react-native';
 import { appendNewSections } from '../../../src/domain/section-ordering';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
@@ -33,14 +33,14 @@ import { useSectionOrder } from '../../../src/hooks/useSectionOrder';
 
 const wrapperWithStorage = (initialOrder: string[] | null) => {
   const sectionOrderStorage = createNullSectionOrderStorage(initialOrder);
-  const stapleStorage = createNullStapleStorage([]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const libraryStorage = createNullLibraryStorage([]);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, ['Pantry']);
   const areaStorage = createNullAreaStorage(['Pantry']);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
   const wrapper = ({ children }: { children: React.ReactNode }) => (

@@ -4,7 +4,7 @@
 // share (a storage it reads from, an onChange it wants to fire).
 
 import { AdapterFactories } from '../../../src/hooks/useAppInitialization';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
@@ -20,14 +20,14 @@ export const withInitialize = <T extends object>(storage: T) => ({
 export const createNullAdapterFactories = (
   overrides: Partial<AdapterFactories> = {},
 ): AdapterFactories => ({
-  createStapleStorage: () => withInitialize(createNullStapleStorage()),
+  createLibraryStorage: () => withInitialize(createNullLibraryStorage()),
   createAreaStorage: () => withInitialize(createNullAreaStorage()),
   createSectionOrderStorage: () =>
     withInitialize(createNullSectionOrderStorage()),
   createTripStorage: () => withInitialize(createNullTripStorage()),
   checkMigrationNeeded: () => false,
   migrateToFirestore: () => {},
-  createAsyncStapleStorage: () => withInitialize(createNullStapleStorage()),
+  createAsyncLibraryStorage: () => withInitialize(createNullLibraryStorage()),
   createAsyncAreaStorage: () => withInitialize(createNullAreaStorage()),
   createAsyncSectionOrderStorage: () =>
     withInitialize(createNullSectionOrderStorage()),

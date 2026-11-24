@@ -45,7 +45,7 @@ describe('US-02: Firestore trip storage adapter', () => {
     ]);
 
     // When Clemens checks off "Milk"
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
 
     // Then the trip in cloud storage contains "Milk" as checked
     const savedTrip = tripStorage.loadTrip();
@@ -88,8 +88,8 @@ describe('US-02: Firestore trip storage adapter', () => {
     );
 
     // And "Milk" and "Eggs" are checked off
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
-    trip.checkOff(itemIdNamed(trip, 'Eggs'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Eggs'));
 
     // When Clemens completes the trip
     trip.complete();
@@ -155,9 +155,9 @@ describe('US-02: Firestore trip storage adapter', () => {
       },
     ];
     setupTrip.initializeFromStorage(staples);
-    setupTrip.checkOff(itemIdNamed(setupTrip, 'Milk'));
-    setupTrip.checkOff(itemIdNamed(setupTrip, 'Eggs'));
-    setupTrip.checkOff(itemIdNamed(setupTrip, 'Bread'));
+    setupTrip.putInCart(itemIdNamed(setupTrip, 'Milk'));
+    setupTrip.putInCart(itemIdNamed(setupTrip, 'Eggs'));
+    setupTrip.putInCart(itemIdNamed(setupTrip, 'Bread'));
 
     // When the app initializes and reads from cloud storage
     const loadedTrip = createTrip(tripStorage);
@@ -192,14 +192,14 @@ describe('US-02: Firestore trip storage adapter', () => {
 
     // When Clemens checks off "Eggs"
     // (Even if the background persist fails, the local state is updated first)
-    trip.checkOff(itemIdNamed(trip, 'Eggs'));
+    trip.putInCart(itemIdNamed(trip, 'Eggs'));
 
     // Then "Eggs" appears checked in the local view immediately
     const eggs = trip.getItems().find((i) => i.name === 'Eggs');
     expect(eggs?.checked).toBe(true);
 
     // And the app does not show an error or freeze
-    // (The fire-and-forget pattern means checkOff returns synchronously)
+    // (The fire-and-forget pattern means putInCart returns synchronously)
     // This is verified by the fact that we reach this assertion without timeout.
   });
 });

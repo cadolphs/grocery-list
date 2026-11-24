@@ -4,18 +4,18 @@ import { useTrip } from '../../../src/hooks/useTrip';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 const createTestWrapper = () => {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Whole milk',
       houseArea: 'Fridge',
       storeLocation: { section: 'Dairy', aisleNumber: 3 },
     },
   ]);
-  const library = createStapleLibrary(stapleStorage);
+  const library = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());

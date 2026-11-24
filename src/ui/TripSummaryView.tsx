@@ -19,7 +19,7 @@ export const TripSummaryView = ({
   const stapleCount = result.purchasedStaples.length;
   const oneOffCount = result.purchasedOneOffs.length;
   const purchasedCount = stapleCount + oneOffCount;
-  const carryoverItems = result.unboughtItems;
+  const carryoverItems = result.carryoverItems;
 
   return (
     <View style={styles.container}>

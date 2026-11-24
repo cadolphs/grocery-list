@@ -1,32 +1,32 @@
-// AsyncStorage adapter for StapleStorage port
+// AsyncStorage adapter for LibraryStorage port
 // Cached reads/writes: initialize() hydrates from disk, then all ops use in-memory cache.
 // Writes update cache synchronously and persist to AsyncStorage in background.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StapleItem } from '../../domain/types';
-import { StapleStorage } from '../../ports/staple-storage';
+import { LibraryItem } from '../../domain/types';
+import { LibraryStorage } from '../../ports/library-storage';
 
 const STORAGE_KEY = '@grocery/staple_library';
 
-export type AsyncStapleStorage = StapleStorage & {
+export type AsyncLibraryStorage = LibraryStorage & {
   readonly initialize: () => Promise<void>;
 };
 
-const parseItems = (raw: string | null): StapleItem[] => {
+const parseItems = (raw: string | null): LibraryItem[] => {
   if (raw === null) return [];
   try {
-    return JSON.parse(raw) as StapleItem[];
+    return JSON.parse(raw) as LibraryItem[];
   } catch {
     return [];
   }
 };
 
-const persistInBackground = (items: StapleItem[]): void => {
+const persistInBackground = (items: LibraryItem[]): void => {
   AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 };
 
-export const createAsyncStapleStorage = (): AsyncStapleStorage => {
-  let cache: StapleItem[] = [];
+export const createAsyncLibraryStorage = (): AsyncLibraryStorage => {
+  let cache: LibraryItem[] = [];
 
   return {
     initialize: async (): Promise<void> => {
@@ -34,9 +34,9 @@ export const createAsyncStapleStorage = (): AsyncStapleStorage => {
       cache = parseItems(raw);
     },
 
-    loadAll: (): StapleItem[] => [...cache],
+    loadAll: (): LibraryItem[] => [...cache],
 
-    save: (item: StapleItem): void => {
+    save: (item: LibraryItem): void => {
       cache = [...cache, item];
       persistInBackground(cache);
     },
@@ -49,14 +49,14 @@ export const createAsyncStapleStorage = (): AsyncStapleStorage => {
       }
     },
 
-    update: (updatedItem: StapleItem): void => {
+    update: (updatedItem: LibraryItem): void => {
       cache = cache.map((item) =>
         item.id === updatedItem.id ? updatedItem : item,
       );
       persistInBackground(cache);
     },
 
-    search: (query: string): StapleItem[] => {
+    search: (query: string): LibraryItem[] => {
       if (query.trim() === '') return [];
       const lowerQuery = query.toLowerCase();
       return cache.filter((item) =>

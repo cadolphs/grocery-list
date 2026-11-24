@@ -6,7 +6,7 @@
  *
  * Driving Ports:
  * - Domain: createAreaManagement, groupByArea
- * - Null adapters: createNullAreaStorage, createNullStapleStorage, createNullTripStorage
+ * - Null adapters: createNullAreaStorage, createNullLibraryStorage, createNullTripStorage
  *
  * Story Trace:
  * - US-CHA-04: Rename Area with Propagation
@@ -24,7 +24,7 @@ import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
 
 // Null adapters:
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 
@@ -49,8 +49,8 @@ describe('US-CHA-04: Rename a House Area', () => {
   it('rename propagates to all staples in that area', () => {
     // Given Carlos has 4 staples in "Garage Pantry"
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Canned tomatoes',
       houseArea: 'Garage Pantry',
@@ -74,7 +74,7 @@ describe('US-CHA-04: Rename a House Area', () => {
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -99,8 +99,8 @@ describe('US-CHA-04: Rename a House Area', () => {
   it('rename propagates to active trip items', () => {
     // Given Carlos has an active trip with 3 items in "Kitchen Cabinets"
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Cereal',
       houseArea: 'Kitchen Cabinets',
@@ -128,7 +128,7 @@ describe('US-CHA-04: Rename a House Area', () => {
     });
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -150,11 +150,11 @@ describe('US-CHA-04: Rename a House Area', () => {
   it('blocks rename to an existing area name', () => {
     // Given Carlos has areas "Bathroom" and "Fridge"
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -175,11 +175,11 @@ describe('US-CHA-04: Rename a House Area', () => {
   it('blocks rename to same name with different case', () => {
     // Given Carlos has an area named "Bathroom"
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -207,11 +207,11 @@ describe('US-CHA-05: Delete a House Area', () => {
   it('deletes an empty area', () => {
     // Given Ana Lucia has "Garage Pantry" with 0 staples
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -228,8 +228,8 @@ describe('US-CHA-05: Delete a House Area', () => {
   it('deletes area with staples and reassigns to target', () => {
     // Given Carlos has 2 staples in "Freezer"
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Frozen peas',
       houseArea: 'Freezer',
@@ -243,7 +243,7 @@ describe('US-CHA-05: Delete a House Area', () => {
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -263,8 +263,8 @@ describe('US-CHA-05: Delete a House Area', () => {
   it('delete reassigns trip items too', () => {
     // Given Carlos has an active trip with 1 item in "Freezer" and 2 staples
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Frozen peas',
       houseArea: 'Freezer',
@@ -287,7 +287,7 @@ describe('US-CHA-05: Delete a House Area', () => {
     });
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -309,11 +309,11 @@ describe('US-CHA-05: Delete a House Area', () => {
   it('cannot delete the last remaining area', () => {
     // Given Ana Lucia has only 1 area remaining
     const areaStorage = createNullAreaStorage(['Kitchen']);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -331,8 +331,8 @@ describe('US-CHA-05: Delete a House Area', () => {
   it('detects duplicate conflict on reassignment', () => {
     // Given Carlos has "Whole milk" in both "Fridge" and "Freezer"
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -346,7 +346,7 @@ describe('US-CHA-05: Delete a House Area', () => {
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -377,11 +377,11 @@ describe('US-CHA-06: Reorder Areas', () => {
     // Given Carlos has areas with "Laundry Room" at position 6
     const areas = [...DEFAULT_AREAS, 'Laundry Room'];
     const areaStorage = createNullAreaStorage(areas);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -409,8 +409,8 @@ describe('US-CHA-06: Reorder Areas', () => {
       'Kitchen Cabinets',
       'Fridge',
     ];
-    const stapleStorage = createNullStapleStorage();
-    const library = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage();
+    const library = createStapleLibrary(libraryStorage);
     library.addStaple({
       name: 'Soap',
       houseArea: 'Bathroom',
@@ -442,11 +442,11 @@ describe('US-CHA-06: Reorder Areas', () => {
       'Freezer',
     ];
     const areaStorage = createNullAreaStorage(DEFAULT_AREAS);
-    const stapleStorage = createNullStapleStorage();
+    const libraryStorage = createNullLibraryStorage();
     const tripStorage = createNullTripStorage();
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
     areaManagement.reorder(newOrder);
@@ -476,7 +476,7 @@ describe('US-CHA-07: Area Name Validation', () => {
   const createManagement = (areas: string[] = DEFAULT_AREAS) =>
     createAreaManagement(
       createNullAreaStorage(areas),
-      createNullStapleStorage(),
+      createNullLibraryStorage(),
       createNullTripStorage(),
     );
 

@@ -10,7 +10,7 @@ import { ServiceProvider } from '../ui/ServiceProvider';
 import { createStapleLibrary } from '../domain/staple-library';
 import { createTrip } from '../domain/trip';
 import { createAreaManagement } from '../domain/area-management';
-import { createNullStapleStorage } from '../adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../adapters/null/null-library-storage';
 import { createNullTripStorage } from '../adapters/null/null-trip-storage';
 import { AreaStorage } from '../ports/area-storage';
 
@@ -42,13 +42,13 @@ const createTestAreaStorage = (initial: string[]): TestAreaStorage => {
 };
 
 const createTestWrapper = (areaStorage: TestAreaStorage) => {
-  const stapleStorage = createNullStapleStorage([]);
-  const library = createStapleLibrary(stapleStorage);
+  const libraryStorage = createNullLibraryStorage([]);
+  const library = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
 

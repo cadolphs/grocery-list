@@ -12,7 +12,7 @@ services from `ServiceProvider`. No classes (ADR-009).
 
 ## Domain (`src/domain/`)
 
-- **Types** (`types.ts`): `StapleItem`, `TripItem` (its `decision` is a
+- **Types** (`types.ts`): `LibraryItem`, `TripItem` (its `decision` is a
   `SweepDecision`: Undecided, Needed or Not needed), `Trip`, `HouseArea`,
   `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
@@ -21,7 +21,7 @@ services from `ServiceProvider`. No classes (ADR-009).
   holds no Undecided staple), carryover on completion
   (`initializeFromStorage`, `complete`), a sweep row's decision
   (`stepTowardNeeded`, `stepTowardNotNeeded`, `setDecision`, each by trip
-  item id, as are `checkOff` / `uncheckItem`), and an area's
+  item id, as are `putInCart` / `takeOutOfCart`), and an area's
   Done / Undo (`markAreaDone`: Undecided staples become Not needed;
   `undoArea`: Not needed staples become Undecided; Needed is never touched).
   Staples start Undecided (an `addItem` request may pass `decision`; it
@@ -53,7 +53,7 @@ services from `ServiceProvider`. No classes (ADR-009).
 
 ## Ports (`src/ports/`)
 
-- **Storage ports**: `StapleStorage`, `TripStorage` (trip and carryover
+- **Storage ports**: `LibraryStorage`, `TripStorage` (trip and carryover
   documents; check-offs live on the trip items), `AreaStorage`,
   `SectionOrderStorage`. adrs: [adrs/ADR-003-async-sync-port-bridge.md,
   adrs/ADR-002-local-storage-strategy.md]

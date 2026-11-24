@@ -9,7 +9,7 @@ export type StoreLocation = {
 
 export type ItemType = 'staple' | 'one-off';
 
-export type StapleItem = {
+export type LibraryItem = {
   readonly id: string;
   readonly name: string;
   readonly houseArea: HouseArea;
@@ -29,7 +29,7 @@ export type AddOneOffRequest = {
   readonly storeLocation: StoreLocation;
 };
 
-export type AddStapleResult =
+export type AddLibraryItemResult =
   | { readonly success: true }
   | { readonly success: false; readonly error: string };
 
@@ -38,7 +38,7 @@ export type AddStapleResult =
 // A staple's sweep status on the current trip (ADR-013, GLOSSARY.md).
 export type SweepDecision = 'undecided' | 'needed' | 'not-needed';
 
-export type ItemSource = 'preloaded' | 'quick-add' | 'whiteboard' | 'carryover';
+export type ItemSource = 'preloaded' | 'quick-add' | 'carryover';
 
 export type TripItem = {
   readonly id: string;

@@ -14,7 +14,7 @@ import {
   createStapleLibrary,
   StapleLibrary,
 } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
@@ -48,8 +48,8 @@ function renderAppWithSections(
   customOrder: string[] | null,
   stapleSeeds: readonly StapleSeed[] = defaultStapleSeeds,
 ): { storage: SectionOrderStorage; stapleLibrary: StapleLibrary } {
-  const stapleStorage = createNullStapleStorage([...stapleSeeds]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const libraryStorage = createNullLibraryStorage([...stapleSeeds]);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(stapleLibrary.listAll());

@@ -1,20 +1,20 @@
 // Migration service: transfers data from AsyncStorage to Firestore on first sign-in
 
-import { StapleStorage } from '../../ports/staple-storage';
+import { LibraryStorage } from '../../ports/library-storage';
 import { AreaStorage } from '../../ports/area-storage';
 import { SectionOrderStorage } from '../../ports/section-order-storage';
 import { TripStorage } from '../../ports/trip-storage';
 
 type StorageAdapters = {
-  readonly staples: StapleStorage;
+  readonly staples: LibraryStorage;
   readonly areas: AreaStorage;
   readonly sectionOrder: SectionOrderStorage;
 };
 
-export const migrationNeeded = (firestoreStaples: StapleStorage): boolean =>
+export const migrationNeeded = (firestoreStaples: LibraryStorage): boolean =>
   firestoreStaples.loadAll().length === 0;
 
-const migrateStaples = (from: StapleStorage, to: StapleStorage): void => {
+const migrateStaples = (from: LibraryStorage, to: LibraryStorage): void => {
   from.loadAll().forEach((staple) => to.save(staple));
 };
 

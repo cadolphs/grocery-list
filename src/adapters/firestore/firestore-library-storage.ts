@@ -1,4 +1,4 @@
-// Firestore adapter for StapleStorage port
+// Firestore adapter for LibraryStorage port
 // Cached reads/writes: initialize() hydrates from AsyncStorage (durable local
 // mirror) then subscribes to Firestore via onSnapshot. All ops use the in-memory
 // cache. Writes update the cache synchronously and persist both to Firestore
@@ -22,8 +22,8 @@
 
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
-import { StapleItem } from '../../domain/types';
-import { StapleStorage } from '../../ports/staple-storage';
+import { LibraryItem } from '../../domain/types';
+import { LibraryStorage } from '../../ports/library-storage';
 import {
   DocumentWatermark,
   UNSTAMPED,
@@ -36,17 +36,17 @@ import {
   writeMirrorEnvelope,
 } from './local-write-watermark';
 
-export type FirestoreStapleStorageOptions = {
+export type FirestoreLibraryStorageOptions = {
   readonly onChange?: () => void;
 };
 
-export type FirestoreStapleStorage = StapleStorage & {
+export type FirestoreLibraryStorage = LibraryStorage & {
   readonly initialize: () => Promise<void>;
   readonly unsubscribe: () => void;
 };
 
 type StapleDocumentData = {
-  readonly items?: StapleItem[];
+  readonly items?: LibraryItem[];
   readonly writtenAt?: number;
 };
 
@@ -61,7 +61,7 @@ const buildDocRef = (db: Firestore, uid: string) =>
 const persistInBackground = (
   db: Firestore,
   uid: string,
-  items: StapleItem[],
+  items: LibraryItem[],
   writtenAt: number,
 ): void => {
   setDoc(buildDocRef(db, uid), { items, writtenAt });
@@ -69,26 +69,26 @@ const persistInBackground = (
 
 // --- AsyncStorage mirror (v2 envelope, v1 fallback) ---
 
-const isStapleItemList = (candidate: unknown): candidate is StapleItem[] =>
+const isStapleItemList = (candidate: unknown): candidate is LibraryItem[] =>
   Array.isArray(candidate);
 
 // Pre-upgrade v1 mirrors hold the raw JSON array under the v1 key.
 const readStapleMirror = (uid: string) =>
-  readMirrorEnvelope<StapleItem[]>(
+  readMirrorEnvelope<LibraryItem[]>(
     uid,
     'staples',
     buildRawJsonV1Parser(isStapleItemList),
     isStapleItemList,
   );
 
-const serializeItems = (items: StapleItem[]): string => JSON.stringify(items);
+const serializeItems = (items: LibraryItem[]): string => JSON.stringify(items);
 
-export const createFirestoreStapleStorage = (
+export const createFirestoreLibraryStorage = (
   db: Firestore,
   uid: string,
-  options: FirestoreStapleStorageOptions = {},
-): FirestoreStapleStorage => {
-  let cache: StapleItem[] = [];
+  options: FirestoreLibraryStorageOptions = {},
+): FirestoreLibraryStorage => {
+  let cache: LibraryItem[] = [];
   let watermark: DocumentWatermark = UNSTAMPED;
   let unsubscribeFn: () => void = () => {};
   let isInitialized = false;
@@ -101,7 +101,7 @@ export const createFirestoreStapleStorage = (
   let hydratedFromLocal = false;
   const { onChange } = options;
 
-  const commitLocalChange = (updatedItems: StapleItem[]): void => {
+  const commitLocalChange = (updatedItems: LibraryItem[]): void => {
     const writtenAt = mintLocalStamp(watermark);
     cache = updatedItems;
     watermark = observeStamp(watermark, writtenAt);
@@ -111,7 +111,7 @@ export const createFirestoreStapleStorage = (
 
   const handleSnapshot = (snapshot: DocumentSnapshot): void => {
     const data = snapshot.exists() ? snapshot.data() : undefined;
-    const incomingItems: StapleItem[] | null = data?.items ?? null;
+    const incomingItems: LibraryItem[] | null = data?.items ?? null;
     const serverHasStaples = incomingItems !== null && incomingItems.length > 0;
     const serverWrittenAt = extractWrittenAt(data);
 
@@ -199,9 +199,9 @@ export const createFirestoreStapleStorage = (
       unsubscribeFn();
     },
 
-    loadAll: (): StapleItem[] => [...cache],
+    loadAll: (): LibraryItem[] => [...cache],
 
-    save: (item: StapleItem): void => {
+    save: (item: LibraryItem): void => {
       commitLocalChange([...cache, item]);
     },
 
@@ -211,13 +211,13 @@ export const createFirestoreStapleStorage = (
       commitLocalChange([...cache.slice(0, index), ...cache.slice(index + 1)]);
     },
 
-    update: (updatedItem: StapleItem): void => {
+    update: (updatedItem: LibraryItem): void => {
       commitLocalChange(
         cache.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
       );
     },
 
-    search: (query: string): StapleItem[] => {
+    search: (query: string): LibraryItem[] => {
       if (query.trim() === '') return [];
       const lowerQuery = query.toLowerCase();
       return cache.filter((item) =>

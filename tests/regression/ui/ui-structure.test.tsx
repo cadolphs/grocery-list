@@ -11,19 +11,19 @@ import { render, screen, fireEvent } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createTrip } from '../../../src/domain/trip';
 
 function renderApp() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Milk',
       houseArea: 'Fridge',
       storeLocation: { section: 'Dairy', aisleNumber: 3 },
     },
   ]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(stapleLibrary.listAll());

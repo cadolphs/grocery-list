@@ -14,7 +14,7 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
@@ -24,8 +24,8 @@ import { useIsWeb } from '../../../src/hooks/useIsWeb';
 const mockedUseIsWeb = useIsWeb as jest.MockedFunction<typeof useIsWeb>;
 
 function renderApp() {
-  const stapleStorage = createNullStapleStorage([]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const libraryStorage = createNullLibraryStorage([]);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripAreas = ['Fridge', 'Kitchen Cabinets'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
@@ -33,7 +33,7 @@ function renderApp() {
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
   render(

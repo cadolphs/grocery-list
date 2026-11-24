@@ -7,7 +7,7 @@ import { View, TextInput, Pressable, Text, StyleSheet } from 'react-native';
 import {
   AddTripItemRequest,
   AddTripItemResult,
-  StapleItem,
+  LibraryItem,
 } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
@@ -16,10 +16,10 @@ import { pressedBlock, surfaces, linkHit } from './surfaces';
 const formatLocation = (section: string, aisleNumber: number | null): string =>
   aisleNumber === null ? section : `${section} / Aisle ${aisleNumber}`;
 
-const typeLabel = (type: StapleItem['type']): string =>
+const typeLabel = (type: LibraryItem['type']): string =>
   type === 'one-off' ? ' (one-off)' : '';
 
-export const formatSuggestion = (staple: StapleItem): string => {
+export const formatSuggestion = (staple: LibraryItem): string => {
   const location = formatLocation(
     staple.storeLocation.section,
     staple.storeLocation.aisleNumber,
@@ -29,8 +29,8 @@ export const formatSuggestion = (staple: StapleItem): string => {
 
 type QuickAddProps = {
   readonly onAddItem: (request: AddTripItemRequest) => AddTripItemResult;
-  readonly onSearch?: (query: string) => StapleItem[];
-  readonly onSelectSuggestion?: (staple: StapleItem) => void;
+  readonly onSearch?: (query: string) => LibraryItem[];
+  readonly onSelectSuggestion?: (staple: LibraryItem) => void;
   readonly onOpenMetadataSheet?: (itemName: string) => void;
 };
 
@@ -41,7 +41,7 @@ export const QuickAdd = ({
   onOpenMetadataSheet,
 }: QuickAddProps): React.JSX.Element => {
   const [inputText, setInputText] = useState('');
-  const [suggestions, setSuggestions] = useState<StapleItem[]>([]);
+  const [suggestions, setSuggestions] = useState<LibraryItem[]>([]);
   const trimmedInput = inputText.trim();
   const isWeb = useIsWeb();
 
@@ -52,7 +52,7 @@ export const QuickAdd = ({
     }
   };
 
-  const handleSelectSuggestion = (staple: StapleItem): void => {
+  const handleSelectSuggestion = (staple: LibraryItem): void => {
     if (onSelectSuggestion) {
       onSelectSuggestion(staple);
     } else {

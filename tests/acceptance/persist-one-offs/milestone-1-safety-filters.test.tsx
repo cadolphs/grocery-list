@@ -22,7 +22,7 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
@@ -39,7 +39,7 @@ describe('M1-1: Staple checklist excludes one-off items', () => {
 
   it('shows only staples in checklist, not persisted one-offs', () => {
     // Given Elena has staples "Milk", "Bread" and one-off "Tahini" in the library
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -51,7 +51,7 @@ describe('M1-1: Staple checklist excludes one-off items', () => {
         storeLocation: { section: 'Bakery', aisleNumber: 1 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     // Manually add a one-off to the library
     (stapleLibrary as any).addOneOff({
       name: 'Tahini',
@@ -68,7 +68,7 @@ describe('M1-1: Staple checklist excludes one-off items', () => {
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -105,14 +105,14 @@ describe('M1-2: New trip preloads only staples', () => {
 
   it('does not preload one-offs into a new trip', () => {
     // Given Elena has staples "Milk" and one-off "Tahini" in the library
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     (stapleLibrary as any).addOneOff({
       name: 'Tahini',
       storeLocation: { section: 'International', aisleNumber: 7 },
@@ -147,8 +147,8 @@ describe('M1-3: Empty checklist when only one-offs exist', () => {
 
   it('shows no staple rows when library has only one-offs', () => {
     // Given Elena has only one-off "Tahini" in the library (no staples)
-    const stapleStorage = createNullStapleStorage([]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const libraryStorage = createNullLibraryStorage([]);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     (stapleLibrary as any).addOneOff({
       name: 'Tahini',
       storeLocation: { section: 'International', aisleNumber: 7 },
@@ -162,7 +162,7 @@ describe('M1-3: Empty checklist when only one-offs exist', () => {
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 

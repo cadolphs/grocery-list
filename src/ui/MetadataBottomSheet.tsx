@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import {
   HouseArea,
-  StapleItem,
+  LibraryItem,
   AddStapleRequest,
   AddOneOffRequest,
   AddTripItemRequest,
@@ -48,7 +48,7 @@ type MetadataBottomSheetProps = {
   readonly onFindDuplicate?: (
     name: string,
     area: HouseArea,
-  ) => StapleItem | undefined;
+  ) => LibraryItem | undefined;
   readonly onDismiss: () => void;
   readonly onSubmitStaple: (request: AddStapleRequest) => void;
   readonly onSubmitOneOff?: (request: AddOneOffRequest) => void;
@@ -125,7 +125,7 @@ const validateRename = (
   area: HouseArea,
   selfId: string,
   findDuplicate:
-    ((name: string, area: HouseArea) => StapleItem | undefined) | undefined,
+    ((name: string, area: HouseArea) => LibraryItem | undefined) | undefined,
 ): RenameValidationResult => {
   const trimmedName = rawName.trim();
   if (trimmedName === '') return { kind: 'invalid-empty' };
@@ -186,7 +186,7 @@ export const MetadataBottomSheet = ({
   >([]);
   const [aisleText, setAisleText] = useState('');
   const [sheetMode, setSheetMode] = useState<SheetMode>('form');
-  const [duplicateStaple, setDuplicateStaple] = useState<StapleItem | null>(
+  const [duplicateStaple, setDuplicateStaple] = useState<LibraryItem | null>(
     null,
   );
   const [nameError, setNameError] = useState<string | null>(null);

@@ -17,12 +17,12 @@ import { StapleChecklist } from '../../src/ui/StapleChecklist';
 import { ServiceProvider } from '../../src/ui/ServiceProvider';
 import { AppShell } from '../../src/ui/AppShell';
 import { createStapleLibrary } from '../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../src/domain/trip';
 import { createAreaManagement } from '../../src/domain/area-management';
-import { StapleItem } from '../../src/domain/types';
+import { LibraryItem } from '../../src/domain/types';
 import { theme } from '../../src/ui/theme';
 
 // Trip operations take a trip item id; these tests name the item instead.
@@ -32,7 +32,7 @@ const itemIdNamed = (
 ): string =>
   trip.getItems().find((item) => item.name === name)?.id ?? `missing-${name}`;
 
-const createStaple = (name: string, houseArea: string): StapleItem => ({
+const createStaple = (name: string, houseArea: string): LibraryItem => ({
   id: `id-${name.toLowerCase()}`,
   name,
   houseArea,
@@ -41,7 +41,7 @@ const createStaple = (name: string, houseArea: string): StapleItem => ({
   createdAt: '2026-01-01T00:00:00Z',
 });
 
-const STAPLES: readonly StapleItem[] = [
+const STAPLES: readonly LibraryItem[] = [
   createStaple('Milk', 'Fridge'),
   createStaple('Apples', 'Pantry'),
   createStaple('Bread', 'Pantry'),
@@ -159,7 +159,7 @@ describe('staple checklist renders sorted list with toggle', () => {
 });
 
 function renderAppInChecklistMode() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Milk',
       houseArea: 'Fridge',
@@ -171,7 +171,7 @@ function renderAppInChecklistMode() {
       storeLocation: { section: 'Bakery', aisleNumber: null },
     },
   ]);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripAreas = ['Fridge', 'Pantry'];
   const tripService = createTrip(tripStorage, tripAreas);
@@ -186,7 +186,7 @@ function renderAppInChecklistMode() {
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
 
@@ -206,7 +206,7 @@ function renderAppInChecklistMode() {
 
 describe('preloaded staples show as already on trip', () => {
   it('preloaded staples that are needed show green; Not needed staples show strikethrough', () => {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -223,7 +223,7 @@ describe('preloaded staples show as already on trip', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const tripAreas = ['Fridge', 'Pantry'];
     const tripService = createTrip(tripStorage, tripAreas);
@@ -241,7 +241,7 @@ describe('preloaded staples show as already on trip', () => {
     const areaStorage = createNullAreaStorage(tripAreas);
     const areaManagement = createAreaManagement(
       areaStorage,
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
 
@@ -319,7 +319,7 @@ describe('checklist mode shows staple checklist', () => {
 // must act on the row the user touched, not every staple of that name.
 describe('same-named staples in different areas', () => {
   const renderTwoMilks = () => {
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -331,7 +331,7 @@ describe('same-named staples in different areas', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const stapleLibrary = createStapleLibrary(stapleStorage);
+    const stapleLibrary = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const tripAreas = ['Fridge', 'Pantry'];
     const tripService = createTrip(tripStorage, tripAreas);
@@ -341,7 +341,7 @@ describe('same-named staples in different areas', () => {
       .forEach((item) => tripService.setDecision(item.id, 'needed'));
     const areaManagement = createAreaManagement(
       createNullAreaStorage(tripAreas),
-      stapleStorage,
+      libraryStorage,
       tripStorage,
     );
     render(

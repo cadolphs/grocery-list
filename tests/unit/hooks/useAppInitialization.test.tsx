@@ -1,9 +1,9 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppInitialization } from '../../../src/hooks/useAppInitialization';
-import { StapleItem, Trip } from '../../../src/domain/types';
+import { LibraryItem, Trip } from '../../../src/domain/types';
 
-const makeStaple = (): StapleItem => ({
+const makeStaple = (): LibraryItem => ({
   id: 'staple-1',
   name: 'Milk',
   houseArea: 'Fridge',

@@ -26,7 +26,7 @@
 // Domain ports (already implemented):
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // UI ports (to be created during DELIVER wave):
@@ -46,7 +46,7 @@ const itemIdNamed = (
 // =============================================================================
 
 function createTestServices() {
-  const stapleStorage = createNullStapleStorage([
+  const libraryStorage = createNullLibraryStorage([
     {
       name: 'Whole milk',
       houseArea: 'Fridge',
@@ -73,7 +73,7 @@ function createTestServices() {
       storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
     },
   ]);
-  const library = createStapleLibrary(stapleStorage);
+  const library = createStapleLibrary(libraryStorage);
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage);
   tripService.initializeFromStorage(library.listAll());
@@ -83,7 +83,7 @@ function createTestServices() {
     .forEach((s) =>
       tripService.setDecision(itemIdNamed(tripService, s.name), 'needed'),
     );
-  return { library, tripService, stapleStorage, tripStorage };
+  return { library, tripService, libraryStorage, tripStorage };
 }
 
 // =============================================================================

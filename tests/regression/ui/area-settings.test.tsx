@@ -10,14 +10,14 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
 import { createAreaManagement } from '../../../src/domain/area-management';
-import { StapleItem } from '../../../src/domain/types';
+import { LibraryItem } from '../../../src/domain/types';
 
-function makeStaple(name: string, houseArea: string): StapleItem {
+function makeStaple(name: string, houseArea: string): LibraryItem {
   return {
     id: `${name}-${houseArea}`,
     name,
@@ -30,23 +30,23 @@ function makeStaple(name: string, houseArea: string): StapleItem {
 
 function createTestServices(
   areas: string[] = ['Bathroom', 'Kitchen', 'Garage'],
-  staples: StapleItem[] = [],
+  staples: LibraryItem[] = [],
 ) {
-  const stapleStorage = createNullStapleStorage(staples);
+  const libraryStorage = createNullLibraryStorage(staples);
   const tripStorage = createNullTripStorage();
   const areaStorage = createNullAreaStorage(areas);
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripService = createTrip(tripStorage);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
   tripService.initializeFromStorage(stapleLibrary.listAll());
   return { stapleLibrary, tripService, areaManagement };
 }
 
-function renderApp(areas?: string[], staples: StapleItem[] = []) {
+function renderApp(areas?: string[], staples: LibraryItem[] = []) {
   const { stapleLibrary, tripService, areaManagement } = createTestServices(
     areas,
     staples,

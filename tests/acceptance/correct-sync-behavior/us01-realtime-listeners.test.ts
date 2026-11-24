@@ -2,14 +2,14 @@
  * US-01: Real-Time Listeners on Staples, Areas, and Section Order
  *
  * Focused acceptance scenarios for real-time data propagation.
- * Tests exercise driving ports: StapleStorage, AreaStorage, SectionOrderStorage
+ * Tests exercise driving ports: LibraryStorage, AreaStorage, SectionOrderStorage
  * with onChange callback pattern.
  *
  * All tests marked .skip -- enable one at a time during DELIVER.
  */
 
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createNullSectionOrderStorage } from '../../../src/adapters/null/null-section-order-storage';
 
@@ -80,7 +80,7 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
 
   it('S-03: staple removed on one device disappears on the other', () => {
     // Given Clemens has staples "Milk", "Eggs", and "Soda"
-    const storage = createNullStapleStorage([
+    const storage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -129,7 +129,7 @@ describe('US-01: Real-time listeners on staples, areas, and section order', () =
 
   it('S-04: local write echoed back by listener does not trigger redundant update', () => {
     // Given Clemens has staples "Milk" and "Eggs"
-    const storage = createNullStapleStorage([
+    const storage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',

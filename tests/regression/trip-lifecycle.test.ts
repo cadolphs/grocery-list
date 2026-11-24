@@ -36,7 +36,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
       houseArea: 'Kitchen Cabinets',
       storeLocation: { section: 'Bakery', aisleNumber: 1 },
       itemType: 'one-off',
-      source: 'whiteboard',
+      source: 'quick-add',
     });
 
     // #96: staples start Undecided; the sweep marks them Needed.
@@ -44,8 +44,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     trip.setDecision(itemIdNamed(trip, 'Bread'), 'needed');
 
     // Check off Milk (staple) and Birthday Cake (one-off) — Bread stays unbought
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
-    trip.checkOff(itemIdNamed(trip, 'Birthday Cake'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Birthday Cake'));
 
     // Complete the trip
     const result = trip.complete();
@@ -57,8 +57,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(result.purchasedOneOffs).toHaveLength(1);
     expect(result.purchasedOneOffs[0]!.name).toBe('Birthday Cake');
 
-    expect(result.unboughtItems).toHaveLength(1);
-    expect(result.unboughtItems[0]!.name).toBe('Bread');
+    expect(result.carryoverItems).toHaveLength(1);
+    expect(result.carryoverItems[0]!.name).toBe('Bread');
 
     // 2. Trip persisted with status 'completed'
     const savedTrip = storage.loadTrip();
@@ -97,7 +97,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     trip1.setDecision(itemIdNamed(trip1, 'Bread'), 'needed');
 
     // Check off Milk, leave Bread unbought
-    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
+    trip1.putInCart(itemIdNamed(trip1, 'Milk'));
 
     // Complete trip — Bread becomes carryover
     trip1.complete();
@@ -167,14 +167,14 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     trip1.setDecision(itemIdNamed(trip1, 'Eggs'), 'needed');
 
     // Check off 2 staples (Milk and Bread) — Eggs stays unbought
-    trip1.checkOff(itemIdNamed(trip1, 'Milk'));
-    trip1.checkOff(itemIdNamed(trip1, 'Bread'));
+    trip1.putInCart(itemIdNamed(trip1, 'Milk'));
+    trip1.putInCart(itemIdNamed(trip1, 'Bread'));
 
     // Complete trip 1
     const result = trip1.complete();
     expect(result.purchasedStaples).toHaveLength(2);
-    expect(result.unboughtItems).toHaveLength(1);
-    expect(result.unboughtItems[0]!.name).toBe('Eggs');
+    expect(result.carryoverItems).toHaveLength(1);
+    expect(result.carryoverItems[0]!.name).toBe('Eggs');
 
     // --- Trip 2: start new trip with same staples + carryover ---
     const trip2 = createTrip(storage);
@@ -237,8 +237,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     previousTrip.setDecision(itemIdNamed(previousTrip, 'Eggs'), 'needed');
 
     // Buy Milk and Eggs, leave Bread unbought
-    previousTrip.checkOff(itemIdNamed(previousTrip, 'Milk'));
-    previousTrip.checkOff(itemIdNamed(previousTrip, 'Eggs'));
+    previousTrip.putInCart(itemIdNamed(previousTrip, 'Milk'));
+    previousTrip.putInCart(itemIdNamed(previousTrip, 'Eggs'));
     previousTrip.complete();
 
     // Verify preconditions: storage has completed trip + carryover
@@ -304,7 +304,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    previousTrip.checkOff(itemIdNamed(previousTrip, 'Milk')); // This persists the trip as active
+    previousTrip.putInCart(itemIdNamed(previousTrip, 'Milk')); // This persists the trip as active
 
     // App init: new session
     const newTripService = createTrip(storage);
@@ -371,7 +371,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     tripService.setDecision(itemIdNamed(tripService, 'Milk'), 'needed');
     tripService.setDecision(itemIdNamed(tripService, 'Bread'), 'needed');
 
-    tripService.checkOff(itemIdNamed(tripService, 'Milk'));
+    tripService.putInCart(itemIdNamed(tripService, 'Milk'));
 
     // Simulate what handleFinishTrip SHOULD do: call tripService.complete()
     const result = tripService.complete();
@@ -379,8 +379,8 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     // The result categorizes items correctly
     expect(result.purchasedStaples).toHaveLength(1);
     expect(result.purchasedStaples[0]!.name).toBe('Milk');
-    expect(result.unboughtItems).toHaveLength(1);
-    expect(result.unboughtItems[0]!.name).toBe('Bread');
+    expect(result.carryoverItems).toHaveLength(1);
+    expect(result.carryoverItems[0]!.name).toBe('Bread');
 
     // CRITICAL: trip is persisted as completed in storage
     const savedTrip = storage.loadTrip();

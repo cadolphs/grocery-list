@@ -87,3 +87,26 @@ describe('readStoredTrip', () => {
     });
   });
 });
+
+// #113: 'whiteboard' was dropped from ItemSource. A trip item saved with it
+// was added from the Home view by hand, so it reads as a quick add.
+describe('readStoredTrip: retired item sources', () => {
+  const readSource = (source: string) =>
+    readStoredTrip({
+      id: 'trip-1',
+      items: [{ ...storedItem(undefined, 'needed'), source } as StoredTripItem],
+      status: 'active',
+      createdAt: '2026-11-23T00:00:00.000Z',
+    }).items[0]!.source;
+
+  test('a stored whiteboard item reads as quick-add', () => {
+    expect(readSource('whiteboard')).toBe('quick-add');
+  });
+
+  test.each(['preloaded', 'quick-add', 'carryover'])(
+    'a stored %s item keeps its source',
+    (source) => {
+      expect(readSource(source)).toBe(source);
+    },
+  );
+});

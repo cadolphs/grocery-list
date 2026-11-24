@@ -20,7 +20,7 @@
 
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 // Trip operations take a trip item id; these tests name the item instead.
@@ -38,7 +38,7 @@ const itemIdNamed = (
 describe('WS-1: Staple sync across devices via real-time listener', () => {
   it('staple added on one device appears on the other without restart', () => {
     // Given Clemens has a staple library with "Milk" and "Eggs"
-    const storage = createNullStapleStorage([
+    const storage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -116,10 +116,10 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     ]);
 
     // And the trip is stored in cloud storage
-    // (checkOff calls persistTrip internally, writing to storage)
+    // (putInCart calls persistTrip internally, writing to storage)
 
     // When Clemens checks off "Milk" on his phone
-    trip.checkOff(itemIdNamed(trip, 'Milk'));
+    trip.putInCart(itemIdNamed(trip, 'Milk'));
 
     // Then the trip in cloud storage shows "Milk" as checked with a timestamp
     const savedTrip = tripStorage.loadTrip();
@@ -150,7 +150,7 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
 describe('WS-3: New staple auto-adds to active trip', () => {
   it('new staple appears in active trip without resetting sweep', () => {
     // Given Clemens has an active trip started with "Milk" and "Eggs"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -162,7 +162,7 @@ describe('WS-3: New staple auto-adds to active trip', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());

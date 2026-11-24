@@ -18,7 +18,7 @@ export type UseTripResult = {
   readonly addItem: (request: AddTripItemWithStapleId) => AddTripItemResult;
   // Row operations take the trip item id: one name can sit in several house
   // areas (spec #90 story 35).
-  readonly toggleCheckOff: (itemId: string) => void;
+  readonly togglePutInCart: (itemId: string) => void;
   readonly setDecision: (itemId: string, decision: SweepDecision) => void;
   readonly stepTowardNeeded: (itemId: string) => void;
   readonly stepTowardNotNeeded: (itemId: string) => void;
@@ -27,7 +27,7 @@ export type UseTripResult = {
   readonly addStapleAsNeeded: (request: AddStapleRequest) => void;
   readonly markAreaDone: (area: HouseArea) => void;
   readonly undoArea: (area: HouseArea) => void;
-  readonly resetSweep: () => void;
+  readonly startOver: () => void;
   readonly syncStapleUpdate: (
     stapleId: string,
     changes: UpdateStapleChanges,
@@ -64,13 +64,13 @@ export const useTrip = (): UseTripResult => {
     [tripService],
   );
 
-  const toggleCheckOff = useCallback(
+  const togglePutInCart = useCallback(
     (itemId: string): void => {
       const item = tripService.getItems().find((i) => i.id === itemId);
       if (item?.checked) {
-        tripService.uncheckItem(itemId);
+        tripService.takeOutOfCart(itemId);
       } else {
-        tripService.checkOff(itemId);
+        tripService.putInCart(itemId);
       }
       setItems(tripService.getItems());
     },
@@ -139,11 +139,11 @@ export const useTrip = (): UseTripResult => {
     [tripService],
   );
 
-  const resetSweep = useCallback((): void => {
+  const startOver = useCallback((): void => {
     const currentStaples = stapleLibrary
       .listAll()
       .filter((s) => s.type === 'staple');
-    tripService.resetSweep(currentStaples);
+    tripService.startOver(currentStaples);
     setItems(tripService.getItems());
     setSweepProgress(tripService.getSweepProgress());
   }, [tripService, stapleLibrary]);
@@ -159,14 +159,14 @@ export const useTrip = (): UseTripResult => {
   return {
     items,
     addItem,
-    toggleCheckOff,
+    togglePutInCart,
     setDecision,
     stepTowardNeeded,
     stepTowardNotNeeded,
     addStapleAsNeeded,
     markAreaDone,
     undoArea,
-    resetSweep,
+    startOver,
     syncStapleUpdate,
     sweepProgress,
   };

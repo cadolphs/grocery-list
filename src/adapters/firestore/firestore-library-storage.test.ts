@@ -1,5 +1,5 @@
-import { StapleItem } from '../../domain/types';
-import { StapleStorage } from '../../ports/staple-storage';
+import { LibraryItem } from '../../domain/types';
+import { LibraryStorage } from '../../ports/library-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- Firestore mock infrastructure ---
@@ -66,7 +66,7 @@ jest.mock('firebase/firestore', () => ({
 const TEST_UID = 'user-123';
 const STAPLES_DOC_PATH = `users/${TEST_UID}/data/staples`;
 
-const makeStapleItem = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+const makeStapleItem = (overrides: Partial<LibraryItem> = {}): LibraryItem => ({
   id: 'item-1',
   name: 'Milk',
   houseArea: 'Kitchen',
@@ -78,12 +78,12 @@ const makeStapleItem = (overrides: Partial<StapleItem> = {}): StapleItem => ({
 
 const createFreshStorage = async () => {
   const {
-    createFirestoreStapleStorage,
-  } = require('./firestore-staple-storage');
+    createFirestoreLibraryStorage,
+  } = require('./firestore-library-storage');
   const mockDb = { type: 'firestore' };
-  const storage = createFirestoreStapleStorage(mockDb, TEST_UID);
+  const storage = createFirestoreLibraryStorage(mockDb, TEST_UID);
   await storage.initialize();
-  return storage as StapleStorage & { initialize: () => Promise<void> };
+  return storage as LibraryStorage & { initialize: () => Promise<void> };
 };
 
 beforeEach(async () => {
@@ -227,12 +227,12 @@ describe('firestore staple storage implements staple storage port', () => {
 
 const createFreshStorageWithOnChange = async (onChange?: () => void) => {
   const {
-    createFirestoreStapleStorage,
-  } = require('./firestore-staple-storage');
+    createFirestoreLibraryStorage,
+  } = require('./firestore-library-storage');
   const mockDb = { type: 'firestore' };
-  const result = createFirestoreStapleStorage(mockDb, TEST_UID, { onChange });
+  const result = createFirestoreLibraryStorage(mockDb, TEST_UID, { onChange });
   await result.initialize();
-  return result as StapleStorage & {
+  return result as LibraryStorage & {
     initialize: () => Promise<void>;
     unsubscribe: () => void;
   };

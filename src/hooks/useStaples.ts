@@ -4,10 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import { StapleLibrary } from '../domain/staple-library';
-import { StapleItem } from '../domain/types';
+import { LibraryItem } from '../domain/types';
 
-export const useStaples = (stapleLibrary: StapleLibrary): StapleItem[] => {
-  const [staples, setStaples] = useState<StapleItem[]>(() =>
+export const useStaples = (stapleLibrary: StapleLibrary): LibraryItem[] => {
+  const [staples, setStaples] = useState<LibraryItem[]>(() =>
     stapleLibrary.listAll(),
   );
 

@@ -2,7 +2,7 @@
 // user's data on an offline cold start.
 //
 // Defect (RCA primary cause, causal-chain links 2-4):
-// createFirestoreStapleStorage binds readiness to a remote round trip — cache is
+// createFirestoreLibraryStorage binds readiness to a remote round trip — cache is
 // hydrated exclusively from inside the first onSnapshot callback, and an absent
 // document is read as "the user has no staples" rather than "the server has not
 // told us anything yet". On native there is no durable Firestore cache
@@ -23,8 +23,8 @@
 // gate. The subscription is registered either way; with no mirror entry the
 // first snapshot remains the only source of truth and initialize() waits.
 
-import type { StapleItem, TripItem } from '../../src/domain/types';
-import type { StapleStorage } from '../../src/ports/staple-storage';
+import type { LibraryItem, TripItem } from '../../src/domain/types';
+import type { LibraryStorage } from '../../src/ports/library-storage';
 import type { AreaStorage } from '../../src/ports/area-storage';
 import type { SectionOrderStorage } from '../../src/ports/section-order-storage';
 import type { AreaGroup } from '../../src/domain/item-grouping';
@@ -52,7 +52,7 @@ const TEST_UID = 'staple-coldstart-uid';
 const OTHER_UID = 'staple-coldstart-other-uid';
 const staplesDocPath = (uid: string) => `users/${uid}/data/staples`;
 
-const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
+const makeStaple = (overrides: Partial<LibraryItem> = {}): LibraryItem => ({
   id: 'staple-1',
   name: 'Milk',
   houseArea: 'Kitchen',
@@ -62,16 +62,16 @@ const makeStaple = (overrides: Partial<StapleItem> = {}): StapleItem => ({
   ...overrides,
 });
 
-type StapleAdapter = StapleStorage & {
+type StapleAdapter = LibraryStorage & {
   initialize: () => Promise<void>;
   unsubscribe: () => void;
 };
 
 const createAdapter = (uid: string = TEST_UID): StapleAdapter => {
   const {
-    createFirestoreStapleStorage,
-  } = require('../../src/adapters/firestore/firestore-staple-storage');
-  return createFirestoreStapleStorage(
+    createFirestoreLibraryStorage,
+  } = require('../../src/adapters/firestore/firestore-library-storage');
+  return createFirestoreLibraryStorage(
     { type: 'firestore' },
     uid,
   ) as StapleAdapter;

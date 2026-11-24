@@ -9,7 +9,7 @@
 
 import { createStapleLibrary } from '../../../src/domain/staple-library';
 import { createTrip } from '../../../src/domain/trip';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 
 describe('US-05: New staple auto-adds to active trip', () => {
@@ -19,7 +19,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
 
   it('S-15: new staple added on remote device appears in trip via sync', () => {
     // Given Clemens has an active trip with "Milk" and "Eggs"
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -31,7 +31,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -41,7 +41,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
 
     // When "Tahini" is added as a staple from a remote device
     // (Simulated: remote write updates storage, onChange fires)
-    stapleStorage.save({
+    libraryStorage.save({
       id: 'staple-tahini-remote',
       name: 'Tahini',
       houseArea: 'Kitchen Cabinets',
@@ -80,7 +80,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
 
   it('S-16: removing a staple also removes it from the active trip', () => {
     // Given Clemens has an active trip containing "Soda" (stapleId: "staple-soda-123")
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
@@ -92,7 +92,7 @@ describe('US-05: New staple auto-adds to active trip', () => {
         storeLocation: { section: 'Beverages', aisleNumber: 6 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());
@@ -125,14 +125,14 @@ describe('US-05: New staple auto-adds to active trip', () => {
   it('S-17: trip persist failure after auto-add does not lose the staple', () => {
     // Given Clemens has an active trip and cloud storage is failing for trip writes
     // (The fire-and-forget pattern means the persist failure is silent)
-    const stapleStorage = createNullStapleStorage([
+    const libraryStorage = createNullLibraryStorage([
       {
         name: 'Milk',
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
       },
     ]);
-    const library = createStapleLibrary(stapleStorage);
+    const library = createStapleLibrary(libraryStorage);
     const tripStorage = createNullTripStorage();
     const trip = createTrip(tripStorage);
     trip.initializeFromStorage(library.listAll());

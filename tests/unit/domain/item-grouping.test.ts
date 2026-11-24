@@ -266,7 +266,7 @@ describe('groupBySection', () => {
     expect(allGroupedIds).toEqual(expect.arrayContaining(inputIds));
   });
 
-  it('computes totalCount and checkedCount per section', () => {
+  it('computes totalCount and inCartCount per section', () => {
     const items = [
       makeTripItem({
         name: 'Bread',
@@ -291,6 +291,6 @@ describe('groupBySection', () => {
     const result = groupBySection(items);
 
     expect(result[0]!.totalCount).toBe(3);
-    expect(result[0]!.checkedCount).toBe(2);
+    expect(result[0]!.inCartCount).toBe(2);
   });
 });

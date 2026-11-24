@@ -3,15 +3,15 @@
 
 import React, { useState } from 'react';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
-import { StapleItem } from '../domain/types';
+import { LibraryItem } from '../domain/types';
 import { useIsWeb } from '../hooks/useIsWeb';
 import { theme } from './theme';
 import { surfaces } from './surfaces';
 
 export const filterStaples = (
-  staples: readonly StapleItem[],
+  staples: readonly LibraryItem[],
   query: string,
-): readonly StapleItem[] => {
+): readonly LibraryItem[] => {
   if (query === '') return staples;
   const lowerQuery = query.toLowerCase();
   return staples.filter((staple) =>
@@ -20,22 +20,22 @@ export const filterStaples = (
 };
 
 type StapleChecklistProps = {
-  readonly staples: readonly StapleItem[];
+  readonly staples: readonly LibraryItem[];
   // Ids of the staples whose own trip item is Needed. Keyed by staple, not by
   // name: one name can be a staple in several house areas (#104).
   readonly neededStapleIds: ReadonlySet<string>;
-  readonly onAddStaple: (staple: StapleItem) => void;
-  readonly onRemoveStaple: (staple: StapleItem) => void;
+  readonly onAddStaple: (staple: LibraryItem) => void;
+  readonly onRemoveStaple: (staple: LibraryItem) => void;
   readonly onLongPress?: (name: string, area: string) => void;
 };
 
 const sortAlphabetically = (
-  staples: readonly StapleItem[],
-): readonly StapleItem[] =>
+  staples: readonly LibraryItem[],
+): readonly LibraryItem[] =>
   [...staples].sort((a, b) => a.name.localeCompare(b.name));
 
 type StapleRowProps = {
-  readonly staple: StapleItem;
+  readonly staple: LibraryItem;
   readonly isChecked: boolean;
   readonly onToggle: () => void;
   readonly onLongPress?: () => void;
@@ -95,7 +95,7 @@ export const StapleChecklist = ({
   const sortedStaples = sortAlphabetically(staples);
   const visibleStaples = filterStaples(sortedStaples, searchQuery);
 
-  const handleToggle = (staple: StapleItem): void => {
+  const handleToggle = (staple: LibraryItem): void => {
     if (neededStapleIds.has(staple.id)) {
       onRemoveStaple(staple);
     } else {

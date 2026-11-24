@@ -21,7 +21,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { MetadataBottomSheet } from '../../../src/ui/MetadataBottomSheet';
-import { HouseArea, StapleItem } from '../../../src/domain/types';
+import { HouseArea, LibraryItem } from '../../../src/domain/types';
 
 const AREAS: readonly HouseArea[] = [
   'Fridge',
@@ -152,7 +152,7 @@ describe('M1-RS-3: Duplicate name in same area is rejected with inline error', (
     // Given Clemens has staples "Milkk" and "Milk" both in "Fridge".
     // The component checks for duplicates by asking onFindDuplicate(name, area);
     // the test stubs it to return an existing "Milk" in "Fridge" when asked.
-    const existingMilk: StapleItem = {
+    const existingMilk: LibraryItem = {
       id: 'staple-milk-fridge',
       name: 'Milk',
       houseArea: 'Fridge',

@@ -26,7 +26,7 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ServiceProvider } from '../../../src/ui/ServiceProvider';
 import { AppShell } from '../../../src/ui/AppShell';
 import { createStapleLibrary } from '../../../src/domain/staple-library';
-import { createNullStapleStorage } from '../../../src/adapters/null/null-staple-storage';
+import { createNullLibraryStorage } from '../../../src/adapters/null/null-library-storage';
 import { createNullTripStorage } from '../../../src/adapters/null/null-trip-storage';
 import { createNullAreaStorage } from '../../../src/adapters/null/null-area-storage';
 import { createTrip } from '../../../src/domain/trip';
@@ -39,7 +39,7 @@ function createTestServices(
     storeLocation: { section: string; aisleNumber: number | null };
   }>,
 ) {
-  const stapleStorage = createNullStapleStorage(
+  const libraryStorage = createNullLibraryStorage(
     preloadedStaples ?? [
       {
         name: 'Milk',
@@ -48,7 +48,7 @@ function createTestServices(
       },
     ],
   );
-  const stapleLibrary = createStapleLibrary(stapleStorage);
+  const stapleLibrary = createStapleLibrary(libraryStorage);
   const tripAreas = ['Fridge', 'Kitchen Cabinets'];
   const tripStorage = createNullTripStorage();
   const tripService = createTrip(tripStorage, tripAreas);
@@ -59,11 +59,11 @@ function createTestServices(
   const areaStorage = createNullAreaStorage(tripAreas);
   const areaManagement = createAreaManagement(
     areaStorage,
-    stapleStorage,
+    libraryStorage,
     tripStorage,
   );
 
-  return { stapleLibrary, tripService, areaManagement, stapleStorage };
+  return { stapleLibrary, tripService, areaManagement, libraryStorage };
 }
 
 function renderApp(services: ReturnType<typeof createTestServices>) {
