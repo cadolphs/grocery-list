@@ -23,7 +23,8 @@ npm test -- path/to/file.test.ts   # single test file
 
 Acceptance tests live in `tests/acceptance/`. Mutation testing (Stryker) is
 scoped to `src/domain/**` and `src/ports/**` and runs locally, not in CI:
-`npm run mutation` mutates the files changed versus `origin/main`; see
+`npm run mutation` mutates the files changed versus `origin/main`, and
+`npm run mutation -- <file>...` mutates only the files you name; see
 `stryker.config.mjs`.
 
 ## Deployment

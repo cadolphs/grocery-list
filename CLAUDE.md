@@ -62,7 +62,7 @@ This project follows the **functional programming** paradigm. Factory functions,
 ## Mutation Testing Strategy
 
 - **Strategy**: Per-feature (scoped to modified files in `src/domain/` and `src/ports/`)
-- **Command**: `npm run mutation` (files changed versus `origin/main`, including uncommitted work; fetch first); `npm run mutation -- --all` for the whole scope
+- **Command**: `npm run mutation` (files changed versus `origin/main`, including uncommitted work; fetch first); `npm run mutation -- src/domain/a.ts [...]` for only the files with real logic changes (a rename across the domain, say); `npm run mutation -- --all` for the whole scope
 - **Tool**: Stryker (`@stryker-mutator/core` + `@stryker-mutator/jest-runner`)
 - **Kill rate threshold**: >= 80%
 - **Scope**: Domain logic and port interfaces only. UI components and adapters excluded (low mutation testing value).
