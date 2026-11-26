@@ -44,8 +44,8 @@ const createTripItem = (overrides?: Partial<TripItem>): TripItem => ({
   stapleId: 'staple-1',
   source: 'preloaded',
   decision: 'needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
   ...overrides,
 });
 
@@ -173,8 +173,8 @@ describe('groupByArea excludes one-offs from area groups', () => {
     stapleId: 'staple-1',
     source: 'preloaded',
     decision: 'needed',
-    checked: false,
-    checkedAt: null,
+    inCart: false,
+    inCartAt: null,
     ...overrides,
   });
 

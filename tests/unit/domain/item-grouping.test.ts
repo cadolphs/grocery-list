@@ -21,8 +21,8 @@ const makeTripItem = (
   stapleId: overrides.stapleId ?? null,
   source: overrides.source ?? 'preloaded',
   decision: overrides.decision ?? 'needed',
-  checked: overrides.checked ?? false,
-  checkedAt: overrides.checkedAt ?? null,
+  inCart: overrides.inCart ?? false,
+  inCartAt: overrides.inCartAt ?? null,
 });
 
 const ALL_HOUSE_AREAS: HouseArea[] = [
@@ -272,19 +272,19 @@ describe('groupBySection', () => {
         name: 'Bread',
         houseArea: 'Garage Pantry',
         storeLocation: { section: 'Inner Aisles', aisleNumber: 4 },
-        checked: true,
+        inCart: true,
       }),
       makeTripItem({
         name: 'Pasta',
         houseArea: 'Garage Pantry',
         storeLocation: { section: 'Inner Aisles', aisleNumber: 5 },
-        checked: false,
+        inCart: false,
       }),
       makeTripItem({
         name: 'Soap',
         houseArea: 'Bathroom',
         storeLocation: { section: 'Inner Aisles', aisleNumber: 7 },
-        checked: true,
+        inCart: true,
       }),
     ];
 

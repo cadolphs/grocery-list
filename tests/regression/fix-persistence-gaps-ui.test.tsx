@@ -21,8 +21,8 @@ const notNeededItem: TripItem = {
   stapleId: null,
   source: 'preloaded' as const,
   decision: 'not-needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
 };
 
 const areaGroupWithNotNeededItem: AreaGroup = {

@@ -76,7 +76,7 @@ const createSectionGroup = (
   section,
   items,
   totalCount: items.length,
-  inCartCount: items.filter((item) => item.checked).length,
+  inCartCount: items.filter((item) => item.inCart).length,
 });
 
 export const groupBySection = (items: TripItem[]): SectionGroup[] => {
@@ -104,7 +104,7 @@ const createAisleSubGroup = (
   aisleKey,
   items,
   totalCount: items.length,
-  inCartCount: items.filter((item) => item.checked).length,
+  inCartCount: items.filter((item) => item.inCart).length,
 });
 
 // Bucket items by aisleKey, preserving input order within each bucket.

@@ -10,6 +10,8 @@ import {
   StoredTripItem,
   readStoredCarryover,
   readStoredTrip,
+  toStoredCarryover,
+  toStoredTrip,
 } from '../../domain/stored-trip';
 
 const TRIP_KEY = '@grocery/active_trip';
@@ -55,7 +57,7 @@ export const createAsyncTripStorage = (): AsyncTripStorage => {
 
     saveTrip: (trip: Trip): void => {
       cachedTrip = trip;
-      AsyncStorage.setItem(TRIP_KEY, JSON.stringify(trip));
+      AsyncStorage.setItem(TRIP_KEY, JSON.stringify(toStoredTrip(trip)));
     },
 
     updateItemArea: (oldName: string, newName: string): void => {
@@ -66,12 +68,18 @@ export const createAsyncTripStorage = (): AsyncTripStorage => {
             item.houseArea === oldName ? { ...item, houseArea: newName } : item,
           ),
         };
-        AsyncStorage.setItem(TRIP_KEY, JSON.stringify(cachedTrip));
+        AsyncStorage.setItem(
+          TRIP_KEY,
+          JSON.stringify(toStoredTrip(cachedTrip)),
+        );
       }
     },
     saveCarryover: (items: readonly TripItem[]): void => {
       cachedCarryover = [...items];
-      AsyncStorage.setItem(CARRYOVER_KEY, JSON.stringify(items));
+      AsyncStorage.setItem(
+        CARRYOVER_KEY,
+        JSON.stringify(toStoredCarryover(items)),
+      );
     },
     loadCarryover: (): readonly TripItem[] => [...cachedCarryover],
     clearCarryover: (): void => {

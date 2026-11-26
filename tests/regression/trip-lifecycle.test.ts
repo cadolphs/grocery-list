@@ -321,7 +321,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     const items = newTripService.getItems();
     expect(items).toHaveLength(1);
     expect(items[0]!.name).toBe('Milk');
-    expect(items[0]!.checked).toBe(true);
+    expect(items[0]!.inCart).toBe(true);
   });
 
   it('app init starts fresh trip when no stored trip exists', () => {
@@ -342,7 +342,7 @@ describe('Trip lifecycle: complete() persists trip and saves carryover', () => {
     expect(items).toHaveLength(1);
     expect(items[0]!.name).toBe('Milk');
     expect(items[0]!.source).toBe('preloaded');
-    expect(items[0]!.checked).toBe(false);
+    expect(items[0]!.inCart).toBe(false);
   });
 
   it('finish trip button triggers domain completion', () => {

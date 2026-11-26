@@ -125,8 +125,8 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     const savedTrip = tripStorage.loadTrip();
     expect(savedTrip).not.toBeNull();
     const milkInStorage = savedTrip!.items.find((i) => i.name === 'Milk');
-    expect(milkInStorage?.checked).toBe(true);
-    expect(milkInStorage?.checkedAt).not.toBeNull();
+    expect(milkInStorage?.inCart).toBe(true);
+    expect(milkInStorage?.inCartAt).not.toBeNull();
 
     // And when the trip updates arrive from a remote change
     // (Simulated: other device loads from same storage, sees checked state)
@@ -137,8 +137,8 @@ describe('WS-2: Trip state syncs to cloud and loads on another device', () => {
     const milkOnOther = otherDeviceTrip
       .getItems()
       .find((i) => i.name === 'Milk');
-    expect(milkOnOther?.checked).toBe(true);
-    expect(milkOnOther?.checkedAt).not.toBeNull();
+    expect(milkOnOther?.inCart).toBe(true);
+    expect(milkOnOther?.inCartAt).not.toBeNull();
   });
 });
 

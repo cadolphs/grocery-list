@@ -241,7 +241,7 @@ describe('M1-RS-4: Same name in a different area is allowed', () => {
 describe('M1-RS-5: Renaming includes the new name in the changes payload (so trip items sync)', () => {
   // AC7: Renaming during an active trip updates TripItem.name for any
   //      trip item with matching stapleId, preserving checked, needed,
-  //      checkedAt, stapleId.
+  //      inCartAt, stapleId.
   //
   // Acceptance-test boundary: this scenario verifies the contract surface
   // at the driving port — the changes payload passed to onSaveEdit contains

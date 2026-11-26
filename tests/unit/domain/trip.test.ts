@@ -36,7 +36,7 @@ describe('Trip: addItem', () => {
         itemType: 'one-off',
         source: 'quick-add',
         decision: 'needed',
-        checked: false,
+        inCart: false,
       }),
     );
     expect(items[0]!.id).toBeDefined();
@@ -114,7 +114,7 @@ describe('Trip: putInCart persistence', () => {
     const loadedTrip = tripStorage.loadTrip();
     expect(loadedTrip).not.toBeNull();
     const loadedMilk = loadedTrip?.items.find((i) => i.name === 'Whole milk');
-    expect(loadedMilk?.checked).toBe(true);
+    expect(loadedMilk?.inCart).toBe(true);
   });
 
   it('persists only the checked item, others remain unchecked', () => {
@@ -137,7 +137,7 @@ describe('Trip: putInCart persistence', () => {
 
     const loadedTrip = tripStorage.loadTrip();
     const loadedButter = loadedTrip?.items.find((i) => i.name === 'Butter');
-    expect(loadedButter?.checked).toBe(false);
+    expect(loadedButter?.inCart).toBe(false);
   });
 });
 
@@ -164,8 +164,8 @@ describe('Trip: loadFromStorage', () => {
 
     const items = trip2.getItems();
     expect(items).toHaveLength(2);
-    expect(items.find((i) => i.name === 'Milk')?.checked).toBe(true);
-    expect(items.find((i) => i.name === 'Bread')?.checked).toBe(false);
+    expect(items.find((i) => i.name === 'Milk')?.inCart).toBe(true);
+    expect(items.find((i) => i.name === 'Bread')?.inCart).toBe(false);
   });
 
   it('returns empty items when no trip in storage', () => {
@@ -250,10 +250,10 @@ describe('Trip: startOver', () => {
     const butter = items.find((i) => i.name === 'Butter');
     // #96: Start over returns every staple to Undecided.
     expect(milk?.decision).toBe('undecided');
-    expect(milk?.checked).toBe(false);
-    expect(milk?.checkedAt).toBeNull();
+    expect(milk?.inCart).toBe(false);
+    expect(milk?.inCartAt).toBeNull();
     expect(butter?.decision).toBe('undecided');
-    expect(butter?.checked).toBe(false);
+    expect(butter?.inCart).toBe(false);
   });
 
   it('removes one-off items from the trip', () => {
@@ -308,7 +308,7 @@ describe('Trip: startOver', () => {
     expect(loadedTrip).not.toBeNull();
     expect(loadedTrip?.items).toHaveLength(1);
     expect(loadedTrip?.items[0]!.name).toBe('Milk');
-    expect(loadedTrip?.items[0]!.checked).toBe(false);
+    expect(loadedTrip?.items[0]!.inCart).toBe(false);
     expect(loadedTrip?.items[0]!.decision).toBe('undecided');
   });
 });

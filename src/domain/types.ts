@@ -49,8 +49,8 @@ export type TripItem = {
   readonly stapleId: string | null;
   readonly source: ItemSource;
   readonly decision: SweepDecision;
-  readonly checked: boolean;
-  readonly checkedAt: string | null;
+  readonly inCart: boolean;
+  readonly inCartAt: string | null;
 };
 
 export type AddTripItemRequest = {

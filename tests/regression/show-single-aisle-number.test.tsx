@@ -26,7 +26,7 @@ const makeItem = (
   name: string,
   section: string,
   aisleNumber: number | null,
-  checked: boolean = false,
+  inCart: boolean = false,
 ): TripItem => ({
   id: `id-${name}`,
   name,
@@ -36,8 +36,8 @@ const makeItem = (
   stapleId: null,
   source: 'preloaded',
   decision: 'needed',
-  checked,
-  checkedAt: null,
+  inCart,
+  inCartAt: null,
 });
 
 const sectionGroupFor = (section: string, items: TripItem[]): SectionGroup => {

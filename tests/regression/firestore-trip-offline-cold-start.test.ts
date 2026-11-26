@@ -54,8 +54,8 @@ const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   stapleId: null,
   source: 'preloaded',
   decision: 'needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
   ...overrides,
 });
 
@@ -138,7 +138,7 @@ describe('Firestore trip adapter — a local edit survives a late empty snapshot
 
     const editedTrip = makeTrip({
       items: [
-        makeTripItem({ checked: true, checkedAt: '2026-04-13T10:05:00.000Z' }),
+        makeTripItem({ inCart: true, inCartAt: '2026-04-13T10:05:00.000Z' }),
       ],
     });
     adapterB.saveTrip(editedTrip);

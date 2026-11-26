@@ -461,17 +461,17 @@ describe('US-10: Navigate Store Sections', () => {
       {
         name: 'Milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Butter',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Beans',
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
-        checked: false,
+        inCart: false,
       },
     ];
     const groups = groupBySection(items as any);
@@ -490,22 +490,22 @@ describe('US-10: Navigate Store Sections', () => {
       {
         name: 'Apples',
         storeLocation: { section: 'Produce', aisleNumber: null },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Bananas',
         storeLocation: { section: 'Produce', aisleNumber: null },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Oranges',
         storeLocation: { section: 'Produce', aisleNumber: null },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Avocados',
         storeLocation: { section: 'Produce', aisleNumber: null },
-        checked: false,
+        inCart: false,
       },
     ];
 
@@ -524,17 +524,17 @@ describe('US-10: Navigate Store Sections', () => {
       {
         name: 'Milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Beans',
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Turkey',
         storeLocation: { section: 'Deli', aisleNumber: null },
-        checked: false,
+        inCart: false,
       },
     ];
 
@@ -555,12 +555,12 @@ describe('US-10: Navigate Store Sections', () => {
       {
         name: 'Milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: true,
+        inCart: true,
       },
       {
         name: 'Beans',
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
-        checked: true,
+        inCart: true,
       },
     ];
     const groups = groupBySection(items as any);

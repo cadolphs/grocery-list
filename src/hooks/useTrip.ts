@@ -67,7 +67,7 @@ export const useTrip = (): UseTripResult => {
   const togglePutInCart = useCallback(
     (itemId: string): void => {
       const item = tripService.getItems().find((i) => i.id === itemId);
-      if (item?.checked) {
+      if (item?.inCart) {
         tripService.takeOutOfCart(itemId);
       } else {
         tripService.putInCart(itemId);

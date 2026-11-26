@@ -23,6 +23,7 @@
 // for a mirrored clear.
 
 import type { LibraryItem, Trip, TripItem } from '../../src/domain/types';
+import { toStoredCarryover, toStoredTrip } from '../../src/domain/stored-trip';
 import type { FirestoreTripStorage } from '../../src/adapters/firestore/firestore-trip-storage';
 import type { FirestoreLibraryStorage } from '../../src/adapters/firestore/firestore-library-storage';
 import type { FirestoreAreaStorage } from '../../src/adapters/firestore/firestore-area-storage';
@@ -65,6 +66,9 @@ type WatermarkAdapter = {
 //   silence        — what read() returns after an honoured absent snapshot
 //   seedV1Mirror   — the raw pre-upgrade v1 JSON for a value (case c)
 //   assertsOnChange — whether this document's handler fires onChange
+//   toStored       — the value as the adapter writes it, when that differs
+//                    from the domain value (trip items carry the legacy
+//                    checked pair in the expand phase of #112)
 type WatermarkRow<A extends WatermarkAdapter, T> = {
   readonly document: string;
   readonly mirrorDocName: string;
@@ -77,6 +81,7 @@ type WatermarkRow<A extends WatermarkAdapter, T> = {
   readonly silence: unknown;
   readonly seedV1Mirror: (value: T) => string;
   readonly assertsOnChange: boolean;
+  readonly toStored?: (value: T) => unknown;
 };
 
 type AnyWatermarkRow = WatermarkRow<WatermarkAdapter, unknown>;
@@ -97,8 +102,8 @@ const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   stapleId: null,
   source: 'preloaded',
   decision: 'needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
   ...overrides,
 });
 
@@ -127,12 +132,13 @@ const tripRow = defineRow<FirestoreTripStorage, Trip>({
   docPath: `users/${TEST_UID}/data/trip`,
   serverField: 'trip',
   createAdapter: createTripAdapter,
+  toStored: toStoredTrip,
   values: [
     makeTrip({ id: 'trip-v0' }),
     makeTrip({
       id: 'trip-v1',
       items: [
-        makeTripItem({ checked: true, checkedAt: '2026-04-13T10:05:00.000Z' }),
+        makeTripItem({ inCart: true, inCartAt: '2026-04-13T10:05:00.000Z' }),
       ],
     }),
     makeTrip({
@@ -153,6 +159,7 @@ const carryoverRow = defineRow<FirestoreTripStorage, readonly TripItem[]>({
   docPath: `users/${TEST_UID}/data/carryover`,
   serverField: 'items',
   createAdapter: createTripAdapter,
+  toStored: toStoredCarryover,
   values: [
     [makeTripItem({ id: 'carry-1', name: 'Olive Oil' })],
     [
@@ -365,7 +372,10 @@ describe.each(rows)(
       expectOnChangeCalls(row, onChange, 0);
       const rePushes = setDocCallsFor(row.docPath).slice(setDocCountBefore);
       expect(rePushes).toHaveLength(1);
-      expect(rePushes[0]![1]).toEqual({ [row.serverField]: V1, writtenAt: W1 });
+      expect(rePushes[0]![1]).toEqual({
+        [row.serverField]: row.toStored ? row.toStored(V1) : V1,
+        writtenAt: W1,
+      });
 
       const adapterC = await coldStartWithRemoteForgotten(row);
       expect(row.read(adapterC)).toEqual(V1);

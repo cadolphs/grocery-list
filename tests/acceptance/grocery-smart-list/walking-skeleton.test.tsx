@@ -408,7 +408,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         itemType: 'staple',
-        checked: false,
+        inCart: false,
         decision: 'needed',
       },
       {
@@ -416,7 +416,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         houseArea: 'Fridge',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         itemType: 'staple',
-        checked: false,
+        inCart: false,
         decision: 'needed',
       },
       {
@@ -424,7 +424,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         houseArea: 'Garage Pantry',
         storeLocation: { section: 'Canned Goods', aisleNumber: 5 },
         itemType: 'staple',
-        checked: false,
+        inCart: false,
         decision: 'needed',
       },
       {
@@ -432,7 +432,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         houseArea: 'Fridge',
         storeLocation: { section: 'Deli', aisleNumber: null },
         itemType: 'one-off',
-        checked: false,
+        inCart: false,
         decision: 'needed',
       },
     ];
@@ -457,13 +457,13 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
         name: 'Whole milk',
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
         decision: 'needed',
-        checked: false,
+        inCart: false,
       },
       {
         name: 'Deli turkey',
         storeLocation: { section: 'Deli', aisleNumber: null },
         decision: 'needed',
-        checked: false,
+        inCart: false,
       },
     ];
 
@@ -492,7 +492,7 @@ describe('WS-4: Toggle Between Home and Store Views', () => {
 
     // Then "Whole milk" is still checked off
     const milk = items.find((i) => i.name === 'Whole milk');
-    expect(milk?.checked).toBe(true);
+    expect(milk?.inCart).toBe(true);
   });
 });
 
@@ -524,12 +524,12 @@ describe('WS-5: Check Off Items in Store', () => {
 
     // Then "Whole milk" shows as in the cart
     const milk = trip.getItems().find((i) => i.name === 'Whole milk');
-    expect(milk?.checked).toBe(true);
+    expect(milk?.inCart).toBe(true);
 
     // And the check-off is persisted to storage
     const loadedTrip = tripStorage.loadTrip();
     const loadedMilk = loadedTrip?.items.find((i) => i.name === 'Whole milk');
-    expect(loadedMilk?.checked).toBe(true);
+    expect(loadedMilk?.inCart).toBe(true);
   });
 
   it('unchecks an accidentally checked item', () => {
@@ -550,12 +550,12 @@ describe('WS-5: Check Off Items in Store', () => {
 
     // Then "Butter" is unchecked
     const butter = trip.getItems().find((i) => i.name === 'Butter');
-    expect(butter?.checked).toBe(false);
+    expect(butter?.inCart).toBe(false);
 
     // And the uncheck is persisted to storage
     const loadedTrip = tripStorage.loadTrip();
     const loadedButter = loadedTrip?.items.find((i) => i.name === 'Butter');
-    expect(loadedButter?.checked).toBe(false);
+    expect(loadedButter?.inCart).toBe(false);
   });
 
   it('check-off state survives simulated app restart', () => {
@@ -589,7 +589,7 @@ describe('WS-5: Check Off Items in Store', () => {
 
     // Then all 3 items are still checked off
     const items = trip2.getItems();
-    expect(items.filter((i) => i.checked)).toHaveLength(3);
+    expect(items.filter((i) => i.inCart)).toHaveLength(3);
   });
 
   it('section progress updates on check-off', () => {
@@ -599,28 +599,28 @@ describe('WS-5: Check Off Items in Store', () => {
         name: 'Milk',
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: false,
+        inCart: false,
         decision: 'needed',
       },
       {
         name: 'Butter',
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: false,
+        inCart: false,
         decision: 'needed',
       },
       {
         name: 'Yogurt',
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: true,
+        inCart: true,
         decision: 'needed',
       },
       {
         name: 'Cheese',
         houseArea: 'Fridge' as const,
         storeLocation: { section: 'Dairy', aisleNumber: 3 },
-        checked: true,
+        inCart: true,
         decision: 'needed',
       },
     ];
@@ -722,8 +722,8 @@ describe('WS-6: Complete Trip with Carryover', () => {
         stapleId: null,
         source: 'carryover',
         decision: 'needed',
-        checked: false,
-        checkedAt: null,
+        inCart: false,
+        inCartAt: null,
       },
     ];
     tripStorage.saveTrip({
