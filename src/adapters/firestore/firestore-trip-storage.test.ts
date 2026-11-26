@@ -131,6 +131,26 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadTrip()).toEqual(trip);
   });
 
+  // #112 expand phase: an older build reads only checked / checkedAt.
+  test('saveTrip writes the legacy checked pair equal to inCart', async () => {
+    const storage = await createFreshStorage();
+    const at = '2026-11-26T10:00:00.000Z';
+
+    storage.saveTrip(
+      makeTrip({ items: [makeTripItem({ inCart: true, inCartAt: at })] }),
+    );
+
+    const written = mockSetDoc.mock.calls.at(-1)![1] as {
+      trip: { items: Record<string, unknown>[] };
+    };
+    expect(written.trip.items[0]).toMatchObject({
+      inCart: true,
+      inCartAt: at,
+      checked: true,
+      checkedAt: at,
+    });
+  });
+
   test('saveTrip persists to Firestore in background', async () => {
     const storage = await createFreshStorage();
     const trip = makeTrip();
