@@ -13,7 +13,8 @@ services from `ServiceProvider`. No classes (ADR-009).
 ## Domain (`src/domain/`)
 
 - **Types** (`types.ts`): `LibraryItem`, `TripItem` (its `decision` is a
-  `SweepDecision`: Undecided, Needed or Not needed), `Trip`, `HouseArea`,
+  `SweepDecision`: Undecided, Needed or Not needed; `inCart` / `inCartAt`
+  say whether and when it went in the cart), `Trip`, `HouseArea`,
   `StoreLocation`. adrs: [adrs/ADR-005-house-area-type-migration.md,
   adrs/ADR-013-tri-state-sweep-decision.md]
 - **Trip service** (`trip.ts`: `createTrip`): the current trip, sweep
@@ -38,11 +39,14 @@ services from `ServiceProvider`. No classes (ADR-009).
   rename, reorder, delete-and-move house areas; add and rename reject empty
   and case-insensitive duplicate names. adrs:
   [adrs/ADR-005-house-area-type-migration.md]
-- **Stored trip read** (`stored-trip.ts`: `readStoredTrip`,
-  `readStoredCarryover`): the one read rule both trip adapters use. A legacy
-  item with only `needed` reads as Needed / Not needed, a legacy
-  completed-areas set is dropped, and writes carry only `decision`. adrs:
-  [adrs/ADR-013-tri-state-sweep-decision.md]
+- **Stored trip read and write** (`stored-trip.ts`: `readStoredTrip`,
+  `readStoredCarryover`, `toStoredTrip`, `toStoredCarryover`): the one read
+  and write rule both trip adapters use. A legacy item with only `needed`
+  reads as Needed / Not needed, a legacy completed-areas set is dropped, and
+  writes carry only `decision`. In cart (#112, expand phase): writes carry the
+  legacy `checked` / `checkedAt` pair equal to `inCart` / `inCartAt`, and a
+  stored `checked` pair wins on read, since only an older build changes it
+  alone. adrs: [adrs/ADR-013-tri-state-sweep-decision.md]
 - **Item grouping** (`item-grouping.ts`: `groupByArea`, `groupBySection`,
   `partitionSectionByAisle`): pure view grouping. adrs:
   [product/architecture/adr-005-aisle-subgrouping-domain-helper.md]
