@@ -6,6 +6,8 @@ import {
   scopeMessage,
   selectMutateFiles,
   strykerArgs,
+  unnamedChanges,
+  unnamedMessage,
 } from './mutation.mjs';
 
 const always = () => true;
@@ -115,6 +117,12 @@ describe('parseArgs', () => {
     assert.doesNotMatch(error, /src\/domain\/trip\.ts,/);
   });
 
+  it('accepts a leading ./', () => {
+    assert.deepEqual(parseArgs(['./src/domain/trip.ts'], always), {
+      paths: ['src/domain/trip.ts'],
+    });
+  });
+
   it('rejects a ref mixed with files', () => {
     assert.ok(parseArgs(['main', 'src/domain/trip.ts'], always).error);
   });
@@ -171,5 +179,25 @@ describe('strykerArgs', () => {
 
   it('falls back to the config scope when asked for everything', () => {
     assert.deepEqual(strykerArgs('all'), ['stryker', 'run']);
+  });
+});
+
+describe('unnamedChanges', () => {
+  it('lists changed files that were not named', () => {
+    assert.deepEqual(
+      unnamedChanges(
+        ['src/domain/a.ts', 'src/domain/b.ts', 'src/ports/c.ts'],
+        ['src/domain/b.ts'],
+      ),
+      ['src/domain/a.ts', 'src/ports/c.ts'],
+    );
+  });
+
+  it('says nothing when every changed file was named', () => {
+    assert.equal(unnamedMessage([]), undefined);
+    assert.match(
+      unnamedMessage(['src/domain/a.ts']),
+      /Not mutating 1 other changed file\(s\): src\/domain\/a\.ts/,
+    );
   });
 });

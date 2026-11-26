@@ -26,8 +26,9 @@ import { pathToFileURL } from 'node:url';
 const MUTATABLE = /^src\/(domain|ports)\/.+\.ts$/;
 const NOT_MUTATABLE = /\.(test|d)\.ts$/;
 
-// Above this many files a changed-file run can take most of the 15-minute
-// budget, so the runner suggests naming the files instead.
+// A rough line, not a measurement: per-file cost varies a lot, but past a few
+// files a changed-file run tends toward the top of the 5-15 minute target, so
+// the runner suggests naming the files instead.
 export const WIDE_RUN_FILES = 3;
 
 const isMutatable = (path) => MUTATABLE.test(path) && !NOT_MUTATABLE.test(path);
@@ -42,6 +43,7 @@ const USAGE =
   'Usage: npm run mutation [-- <base-ref> | --all | <src/domain|src/ports file>...]';
 
 const looksLikePath = (arg) => arg.endsWith('.ts');
+const normalizePath = (arg) => arg.replace(/^\.\//, '');
 
 // Turns the CLI arguments into what to mutate:
 //   { base }   files changed versus that ref
@@ -51,14 +53,17 @@ const looksLikePath = (arg) => arg.endsWith('.ts');
 export const parseArgs = (args, exists = existsSync) => {
   if (args.length === 0) return { base: 'origin/main' };
   if (args.some(looksLikePath)) {
-    const rejected = args.filter(
+    const paths = args.map(normalizePath);
+    const rejected = paths.filter(
       (arg) => !looksLikePath(arg) || !isMutatable(arg) || !exists(arg),
     );
     return rejected.length > 0
       ? {
-          error: `Not an existing src/domain or src/ports source file: ${rejected.join(', ')}\n${USAGE}`,
+          error:
+            `Not an existing src/domain or src/ports source file: ${rejected.join(', ')}\n` +
+            `Name .ts files (not tests) relative to the repo root, e.g. src/domain/trip.ts.\n${USAGE}`,
         }
-      : { paths: [...new Set(args)] };
+      : { paths: [...new Set(paths)] };
   }
   const [arg, ...rest] = args;
   if (rest.length > 0 || (arg.startsWith('-') && arg !== '--all')) {
@@ -81,6 +86,17 @@ export const scopeMessage = (files, { fromDiff }) => {
         'changes, name them instead: npm run mutation -- <file>...'
     : list;
 };
+
+// Changed mutatable files the person did not name: the kill rate they report
+// does not cover these, so the runner lists them.
+export const unnamedChanges = (changed, named) =>
+  changed.filter((path) => !named.includes(path));
+
+export const unnamedMessage = (unnamed) =>
+  unnamed.length === 0
+    ? undefined
+    : `Not mutating ${unnamed.length} other changed file(s): ${unnamed.join(', ')}\n` +
+      'Name them too if they carry logic changes.';
 
 const gitLines = (args) =>
   execFileSync('git', args, { encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -121,6 +137,16 @@ const main = () => {
     return 0;
   }
   console.log(scopeMessage(files, { fromDiff: parsed.base !== undefined }));
+  if (parsed.paths) {
+    try {
+      const note = unnamedMessage(
+        unnamedChanges(selectMutateFiles(changedPaths('origin/main')), files),
+      );
+      if (note) console.log(note);
+    } catch {
+      // No origin/main to diff against: the named files are still mutated.
+    }
+  }
   const result = spawnSync('npx', strykerArgs(files), { stdio: 'inherit' });
   return result.status ?? 1;
 };
