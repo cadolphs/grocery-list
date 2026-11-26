@@ -208,7 +208,7 @@ describe('TripService.subscribe', () => {
       ...savedTrip,
       items: savedTrip.items.map((i) =>
         i.name === 'Milk'
-          ? { ...i, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+          ? { ...i, inCart: true, inCartAt: '2026-04-13T10:00:00Z' }
           : i,
       ),
     });
@@ -216,7 +216,7 @@ describe('TripService.subscribe', () => {
     tripService.loadFromStorage();
 
     expect(notifications).toHaveLength(1);
-    expect(tripService.getItems().find((i) => i.name === 'Milk')?.checked).toBe(
+    expect(tripService.getItems().find((i) => i.name === 'Milk')?.inCart).toBe(
       true,
     );
   });
@@ -282,8 +282,8 @@ describe('TripService.subscribe', () => {
           stapleId: null,
           source: 'preloaded',
           decision: 'needed',
-          checked: true,
-          checkedAt: '2026-04-12T10:00:00Z',
+          inCart: true,
+          inCartAt: '2026-04-12T10:00:00Z',
         },
       ],
       status: 'completed',
@@ -301,8 +301,8 @@ describe('TripService.subscribe', () => {
         stapleId: null,
         source: 'carryover',
         decision: 'needed',
-        checked: false,
-        checkedAt: null,
+        inCart: false,
+        inCartAt: null,
       },
     ]);
 
@@ -497,8 +497,8 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           stapleId: null,
           source: 'preloaded',
           decision: 'needed',
-          checked: false,
-          checkedAt: null,
+          inCart: false,
+          inCartAt: null,
         },
       ],
       status: 'active',
@@ -593,8 +593,8 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           stapleId: null,
           source: 'preloaded',
           decision: 'needed',
-          checked: false,
-          checkedAt: null,
+          inCart: false,
+          inCartAt: null,
         },
         {
           id: 'item-oneoff',
@@ -605,8 +605,8 @@ describe('TripService.removeItemsByStaple — id-then-(name,houseArea) fallback 
           stapleId: null,
           source: 'quick-add',
           decision: 'needed',
-          checked: false,
-          checkedAt: null,
+          inCart: false,
+          inCartAt: null,
         },
       ],
       status: 'active',
@@ -935,8 +935,8 @@ const storedTripItem: TripItem = {
   stapleId: 'staple-milk',
   source: 'preloaded',
   decision: 'needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
 };
 
 const carryoverTripItem: TripItem = {
@@ -948,8 +948,8 @@ const carryoverTripItem: TripItem = {
   stapleId: null,
   source: 'carryover',
   decision: 'needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
 };
 
 const breadStaple: StapleInput = {
@@ -1434,14 +1434,11 @@ describe('TripService step and set decision', () => {
     const [cabinetBread] = tripService.getItems();
 
     tripService.putInCart(cabinetBread!.id);
-    const afterCheck = tripService.getItems().map((i) => i.checked);
+    const afterCheck = tripService.getItems().map((i) => i.inCart);
     tripService.takeOutOfCart(cabinetBread!.id);
 
     expect(afterCheck).toEqual([true, false]);
-    expect(tripService.getItems().map((i) => i.checked)).toEqual([
-      false,
-      false,
-    ]);
+    expect(tripService.getItems().map((i) => i.inCart)).toEqual([false, false]);
   });
 });
 
@@ -1779,8 +1776,8 @@ describe('neededStapleIds', () => {
     stapleId: null,
     source: 'preloaded',
     decision: 'needed',
-    checked: false,
-    checkedAt: null,
+    inCart: false,
+    inCartAt: null,
     ...overrides,
   });
 

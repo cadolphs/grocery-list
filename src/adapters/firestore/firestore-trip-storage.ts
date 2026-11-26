@@ -27,6 +27,8 @@ import {
   StoredTripItem,
   readStoredCarryover,
   readStoredTrip,
+  toStoredCarryover,
+  toStoredTrip,
 } from '../../domain/stored-trip';
 import {
   DocumentWatermark,
@@ -78,7 +80,7 @@ const persistTripInBackground = (
   trip: Trip,
   writtenAt: number,
 ): void => {
-  setDoc(buildTripDocRef(db, uid), { trip, writtenAt });
+  setDoc(buildTripDocRef(db, uid), { trip: toStoredTrip(trip), writtenAt });
 };
 
 const persistCarryoverInBackground = (
@@ -87,7 +89,10 @@ const persistCarryoverInBackground = (
   items: readonly TripItem[],
   writtenAt: number,
 ): void => {
-  setDoc(buildCarryoverDocRef(db, uid), { items: [...items], writtenAt });
+  setDoc(buildCarryoverDocRef(db, uid), {
+    items: toStoredCarryover(items),
+    writtenAt,
+  });
 };
 
 // --- AsyncStorage mirror (v2 envelope, v1 fallback) ---
@@ -155,7 +160,7 @@ export const createFirestoreTripStorage = (
     cachedTrip = updatedTrip;
     tripWatermark = observeStamp(tripWatermark, writtenAt);
     persistTripInBackground(db, uid, updatedTrip, writtenAt);
-    writeMirrorEnvelope(uid, 'trip', updatedTrip, writtenAt);
+    writeMirrorEnvelope(uid, 'trip', toStoredTrip(updatedTrip), writtenAt);
   };
 
   const commitLocalCarryoverChange = (
@@ -165,7 +170,12 @@ export const createFirestoreTripStorage = (
     cachedCarryover = updatedItems;
     carryoverWatermark = observeStamp(carryoverWatermark, writtenAt);
     persistCarryoverInBackground(db, uid, updatedItems, writtenAt);
-    writeMirrorEnvelope(uid, 'carryover', updatedItems, writtenAt);
+    writeMirrorEnvelope(
+      uid,
+      'carryover',
+      toStoredCarryover(updatedItems),
+      writtenAt,
+    );
   };
 
   const handleTripSnapshot = (
@@ -213,7 +223,12 @@ export const createFirestoreTripStorage = (
     tripWatermark = observeStamp(tripWatermark, serverWrittenAt);
     if (incomingTrip !== null) {
       tripHydratedFromLocal = false;
-      writeMirrorEnvelope(uid, 'trip', incomingTrip, serverWrittenAt);
+      writeMirrorEnvelope(
+        uid,
+        'trip',
+        toStoredTrip(incomingTrip),
+        serverWrittenAt,
+      );
     }
     onChange?.();
   };
@@ -259,7 +274,12 @@ export const createFirestoreTripStorage = (
 
     cachedCarryover = incomingItems;
     carryoverWatermark = observeStamp(carryoverWatermark, serverWrittenAt);
-    writeMirrorEnvelope(uid, 'carryover', incomingItems, serverWrittenAt);
+    writeMirrorEnvelope(
+      uid,
+      'carryover',
+      toStoredCarryover(incomingItems),
+      serverWrittenAt,
+    );
   };
 
   return {

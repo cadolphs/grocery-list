@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Trip, TripItem } from '../../domain/types';
+import { toStoredCarryover, toStoredTrip } from '../../domain/stored-trip';
 import { TripStorage } from '../../ports/trip-storage';
 
 // --- Firestore mock infrastructure ---
@@ -67,8 +68,8 @@ const makeTripItem = (overrides: Partial<TripItem> = {}): TripItem => ({
   stapleId: null,
   source: 'preloaded',
   decision: 'needed',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
   ...overrides,
 });
 
@@ -130,6 +131,26 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadTrip()).toEqual(trip);
   });
 
+  // #112 expand phase: an older build reads only checked / checkedAt.
+  test('saveTrip writes the legacy checked pair equal to inCart', async () => {
+    const storage = await createFreshStorage();
+    const at = '2026-11-26T10:00:00.000Z';
+
+    storage.saveTrip(
+      makeTrip({ items: [makeTripItem({ inCart: true, inCartAt: at })] }),
+    );
+
+    const written = mockSetDoc.mock.calls.at(-1)![1] as {
+      trip: { items: Record<string, unknown>[] };
+    };
+    expect(written.trip.items[0]).toMatchObject({
+      inCart: true,
+      inCartAt: at,
+      checked: true,
+      checkedAt: at,
+    });
+  });
+
   test('saveTrip persists to Firestore in background', async () => {
     const storage = await createFreshStorage();
     const trip = makeTrip();
@@ -138,7 +159,7 @@ describe('firestore trip storage implements TripStorage port', () => {
 
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: TRIP_DOC_PATH }),
-      { trip, writtenAt: expect.any(Number) },
+      { trip: toStoredTrip(trip), writtenAt: expect.any(Number) },
     );
   });
 
@@ -170,7 +191,7 @@ describe('firestore trip storage implements TripStorage port', () => {
     expect(storage.loadCarryover()).toEqual(items);
     expect(mockSetDoc).toHaveBeenCalledWith(
       expect.objectContaining({ path: CARRYOVER_DOC_PATH }),
-      { items, writtenAt: expect.any(Number) },
+      { items: toStoredCarryover(items), writtenAt: expect.any(Number) },
     );
   });
 
@@ -224,13 +245,13 @@ describe('firestore trip storage onChange callback', () => {
     // Simulate remote checkoff of "Milk"
     const updatedTrip = makeTrip({
       items: [
-        makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' }),
+        makeTripItem({ inCart: true, inCartAt: '2026-04-10T11:00:00.000Z' }),
       ],
     });
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 
     expect(onChangeCallCount).toBe(1);
-    expect(storage.loadTrip()!.items[0]!.checked).toBe(true);
+    expect(storage.loadTrip()!.items[0]!.inCart).toBe(true);
   });
 
   test('does NOT call onChange when snapshot echoes current cache (own-write detection)', async () => {
@@ -265,7 +286,7 @@ describe('firestore trip storage onChange callback', () => {
 
     const editedTrip = makeTrip({
       items: [
-        makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' }),
+        makeTripItem({ inCart: true, inCartAt: '2026-04-10T11:00:00.000Z' }),
       ],
     });
     storage.saveTrip(editedTrip);
@@ -300,12 +321,12 @@ describe('firestore trip storage onChange callback', () => {
     // Simulate remote change -- should not throw even without onChange
     const updatedTrip = makeTrip({
       items: [
-        makeTripItem({ checked: true, checkedAt: '2026-04-10T11:00:00.000Z' }),
+        makeTripItem({ inCart: true, inCartAt: '2026-04-10T11:00:00.000Z' }),
       ],
     });
     simulateRemoteSnapshot(TRIP_DOC_PATH, { trip: updatedTrip });
 
-    expect(storage.loadTrip()!.items[0]!.checked).toBe(true);
+    expect(storage.loadTrip()!.items[0]!.inCart).toBe(true);
   });
 });
 

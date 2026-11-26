@@ -48,7 +48,7 @@ describe('US-06: Migrate local trip to cloud storage', () => {
     // Then all 15 items with their checkoff states are written to cloud storage
     const migratedTrip = cloudTripStorage.loadTrip();
     expect(migratedTrip!.items).toHaveLength(15);
-    const inCartCount = migratedTrip!.items.filter((i) => i.checked).length;
+    const inCartCount = migratedTrip!.items.filter((i) => i.inCart).length;
     expect(inCartCount).toBe(7);
   });
 
@@ -144,8 +144,8 @@ describe('US-06: Migrate local trip to cloud storage', () => {
         stapleId: 'staple-olive-oil',
         source: 'carryover',
         decision: 'needed',
-        checked: false,
-        checkedAt: null,
+        inCart: false,
+        inCartAt: null,
       },
       {
         id: 'carry-2',
@@ -156,8 +156,8 @@ describe('US-06: Migrate local trip to cloud storage', () => {
         stapleId: 'staple-sponges',
         source: 'carryover',
         decision: 'needed',
-        checked: false,
-        checkedAt: null,
+        inCart: false,
+        inCartAt: null,
       },
     ];
     localTripStorage.saveCarryover(carryoverItems);

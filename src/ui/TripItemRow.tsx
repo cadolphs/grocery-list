@@ -85,12 +85,12 @@ export const TripItemRow = ({
         style={styles.itemPressable}
         onPress={handlePress}
         onLongPress={handleLongPress}
-        testID={item.checked ? `checked-${item.name}` : undefined}
+        testID={item.inCart ? `checked-${item.name}` : undefined}
       >
         <Text
           style={[
             styles.itemName,
-            item.checked && mode === 'store' && styles.checkedText,
+            item.inCart && mode === 'store' && styles.checkedText,
             mode === 'home' && styles[homeTextStyle[item.decision]],
           ]}
         >

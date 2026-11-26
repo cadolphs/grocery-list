@@ -137,8 +137,8 @@ const stapleInputToTripItem = (staple: StapleInput): TripItem => ({
   source: 'preloaded',
   // ADR-013: a staple starts the trip Undecided until the sweep decides it.
   decision: 'undecided',
-  checked: false,
-  checkedAt: null,
+  inCart: false,
+  inCartAt: null,
 });
 
 const generateTripId = (): string =>
@@ -211,7 +211,7 @@ export const createTrip = (
   };
 
   // Apply a partial patch to the item with `itemId`, then notify and
-  // persist. Used by check/uncheck, which share this shape.
+  // persist. Used by putInCart / takeOutOfCart, which share this shape.
   // Notifying matters because HomeView and StoreView are mounted at the same
   // time (AppShell) and each holds its own useTrip state: without it, an item
   // checked on one view stays stale on the other until something else
@@ -306,8 +306,8 @@ export const createTrip = (
           request.itemType === 'one-off'
             ? 'needed'
             : (request.decision ?? 'needed'),
-        checked: false,
-        checkedAt: null,
+        inCart: false,
+        inCartAt: null,
       };
       items = [...items, tripItem];
       notify();
@@ -319,13 +319,13 @@ export const createTrip = (
 
     putInCart: (itemId: string) => {
       updateItem(itemId, {
-        checked: true,
-        checkedAt: new Date().toISOString(),
+        inCart: true,
+        inCartAt: new Date().toISOString(),
       });
     },
 
     takeOutOfCart: (itemId: string) => {
-      updateItem(itemId, { checked: false, checkedAt: null });
+      updateItem(itemId, { inCart: false, inCartAt: null });
     },
 
     stepTowardNeeded: (itemId: string) => {
@@ -489,20 +489,19 @@ export type CompleteTripResult = {
   readonly carryoverItems: readonly TripItem[];
 };
 
-const isChecked = (item: TripItem): boolean => item.checked;
+const isInCart = (item: TripItem): boolean => item.inCart;
 // Finish Trip carries over exactly the Needed items not in the cart (ADR-013).
-const carriesOver = (item: TripItem): boolean =>
-  isNeeded(item) && !item.checked;
+const carriesOver = (item: TripItem): boolean => isNeeded(item) && !item.inCart;
 const isStaple = (item: TripItem): boolean => item.itemType === 'staple';
 const isOneOff = (item: TripItem): boolean => item.itemType === 'one-off';
 
 // Pure categorization: split items into purchased staples / one-offs / unbought.
 // Used by `complete()`, which also persists carryover and trip status.
 const categorizeItems = (items: readonly TripItem[]): CompleteTripResult => {
-  const checkedItems = items.filter(isChecked);
+  const inCartItems = items.filter(isInCart);
   return {
-    purchasedStaples: checkedItems.filter(isStaple),
-    purchasedOneOffs: checkedItems.filter(isOneOff),
+    purchasedStaples: inCartItems.filter(isStaple),
+    purchasedOneOffs: inCartItems.filter(isOneOff),
     carryoverItems: items.filter(carriesOver),
   };
 };

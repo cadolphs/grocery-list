@@ -30,7 +30,7 @@ type AisleSectionProps = {
   readonly onItemLongPress?: (name: string, area: string) => void;
 };
 
-// Section and aisle sub-group share the same checked/total count shape,
+// Section and aisle sub-group share the same in-cart/total count shape,
 // so progress formatting and completion are computed by a single helper pair.
 type Progress = { readonly inCartCount: number; readonly totalCount: number };
 

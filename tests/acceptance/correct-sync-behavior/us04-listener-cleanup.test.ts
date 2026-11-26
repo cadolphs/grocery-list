@@ -177,8 +177,8 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
         ...storedTripBeforeLogout!,
         items: storedTripBeforeLogout!.items.map((item) => ({
           ...item,
-          checked: true,
-          checkedAt: '2026-04-13T10:00:00Z',
+          inCart: true,
+          inCartAt: '2026-04-13T10:00:00Z',
         })),
       });
     });
@@ -192,7 +192,7 @@ describe('US-04: Listener cleanup on unmount and logout', () => {
     // And the remote write did land in storage: the callbacks fired for real
     // and the guard dropped them, the fake did not swallow them.
     expect(
-      tripStorage.loadTrip()!.items.map((i) => [i.name, i.checked]),
+      tripStorage.loadTrip()!.items.map((i) => [i.name, i.inCart]),
     ).toEqual([['Milk', true]]);
   });
 

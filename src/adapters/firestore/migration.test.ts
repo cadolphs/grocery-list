@@ -137,8 +137,8 @@ describe('migration service', () => {
       stapleId: null,
       source: 'preloaded',
       decision: 'needed',
-      checked: false,
-      checkedAt: null,
+      inCart: false,
+      inCartAt: null,
     });
 
     const makeTrip = (items: TripItem[]): Trip => ({

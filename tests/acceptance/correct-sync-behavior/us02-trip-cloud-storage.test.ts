@@ -50,10 +50,10 @@ describe('US-02: Firestore trip storage adapter', () => {
     // Then the trip in cloud storage contains "Milk" as checked
     const savedTrip = tripStorage.loadTrip();
     const milkInStorage = savedTrip!.items.find((i) => i.name === 'Milk');
-    expect(milkInStorage?.checked).toBe(true);
+    expect(milkInStorage?.inCart).toBe(true);
 
     // And the checkoff timestamp is recorded
-    expect(milkInStorage?.checkedAt).not.toBeNull();
+    expect(milkInStorage?.inCartAt).not.toBeNull();
   });
 
   // =============================================================================
@@ -167,9 +167,9 @@ describe('US-02: Firestore trip storage adapter', () => {
     expect(loadedTrip.getItems()).toHaveLength(8);
 
     // And the 3 checked items retain their checked state and timestamps
-    const checkedItems = loadedTrip.getItems().filter((i) => i.checked);
+    const checkedItems = loadedTrip.getItems().filter((i) => i.inCart);
     expect(checkedItems).toHaveLength(3);
-    expect(checkedItems.every((i) => i.checkedAt !== null)).toBe(true);
+    expect(checkedItems.every((i) => i.inCartAt !== null)).toBe(true);
   });
 
   // =============================================================================
@@ -196,7 +196,7 @@ describe('US-02: Firestore trip storage adapter', () => {
 
     // Then "Eggs" appears checked in the local view immediately
     const eggs = trip.getItems().find((i) => i.name === 'Eggs');
-    expect(eggs?.checked).toBe(true);
+    expect(eggs?.inCart).toBe(true);
 
     // And the app does not show an error or freeze
     // (The fire-and-forget pattern means putInCart returns synchronously)

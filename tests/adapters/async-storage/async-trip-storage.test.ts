@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncTripStorage } from '../../../src/adapters/async-storage/async-trip-storage';
 import { Trip, TripItem } from '../../../src/domain/types';
+import { toStoredTrip } from '../../../src/domain/stored-trip';
 
 const TRIP_KEY = '@grocery/active_trip';
 
@@ -17,8 +18,8 @@ const makeTrip = (overrides: Partial<Trip> = {}): Trip => ({
       stapleId: 'staple-1',
       source: 'preloaded',
       decision: 'needed',
-      checked: false,
-      checkedAt: null,
+      inCart: false,
+      inCartAt: null,
     },
   ],
   status: 'active',
@@ -98,7 +99,7 @@ describe('createAsyncTripStorage', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         TRIP_KEY,
-        JSON.stringify(trip),
+        JSON.stringify(toStoredTrip(trip)),
       );
     });
 

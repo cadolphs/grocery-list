@@ -52,8 +52,8 @@ const createActiveTripWithItems = (): Trip => ({
       stapleId: 'staple-1',
       source: 'preloaded' as const,
       decision: 'needed',
-      checked: false,
-      checkedAt: null,
+      inCart: false,
+      inCartAt: null,
     },
     {
       id: 'trip-item-2',
@@ -64,8 +64,8 @@ const createActiveTripWithItems = (): Trip => ({
       stapleId: 'staple-2',
       source: 'preloaded' as const,
       decision: 'needed',
-      checked: false,
-      checkedAt: null,
+      inCart: false,
+      inCartAt: null,
     },
   ],
 });
@@ -143,8 +143,8 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     const itemsBefore = tripService.getItems();
     expect(itemsBefore.map((i) => i.name)).toEqual(['Milk', 'Eggs']);
     expect(itemsBefore.find((i) => i.name === 'Milk')).toMatchObject({
-      checked: false,
-      checkedAt: null,
+      inCart: false,
+      inCartAt: null,
     });
 
     // When a remote device checks off "Milk" and the trip update arrives via onChange
@@ -152,7 +152,7 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     const currentTrip = tripStorage.loadTrip()!;
     const updatedItems = currentTrip.items.map((item) =>
       item.name === 'Milk'
-        ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+        ? { ...item, inCart: true, inCartAt: '2026-04-13T10:00:00Z' }
         : item,
     );
     tripStorage.simulateRemoteChange((s) => {
@@ -162,8 +162,8 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
     // Then the local trip service shows "Milk" as checked
     const itemsAfter = tripService.getItems();
     const milkItem = itemsAfter.find((i) => i.name === 'Milk');
-    expect(milkItem?.checked).toBe(true);
-    expect(milkItem?.checkedAt).toBe('2026-04-13T10:00:00Z');
+    expect(milkItem?.inCart).toBe(true);
+    expect(milkItem?.inCartAt).toBe('2026-04-13T10:00:00Z');
 
     // And nothing else about the trip changed
     expect(itemsAfter.map((i) => i.name)).toEqual(['Milk', 'Eggs']);
@@ -196,8 +196,8 @@ describe('US-02: Trip onChange handler wired in initializeApp', () => {
         stapleId: null,
         source: 'quick-add' as const,
         decision: 'needed' as const,
-        checked: false,
-        checkedAt: null,
+        inCart: false,
+        inCartAt: null,
       };
       tripStorage.simulateRemoteChange((s) => {
         s.saveTrip({ ...currentTrip, items: [...currentTrip.items, newItem] });
@@ -246,7 +246,7 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     const currentTrip = tripStorage.loadTrip()!;
     const updatedItems = currentTrip.items.map((item) =>
       item.name === 'Milk'
-        ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+        ? { ...item, inCart: true, inCartAt: '2026-04-13T10:00:00Z' }
         : item,
     );
     tripStorage.saveTrip({ ...currentTrip, items: updatedItems });
@@ -257,7 +257,7 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
 
     // And the trip state reflects the remote change
     const milk = tripService.getItems().find((i) => i.name === 'Milk');
-    expect(milk?.checked).toBe(true);
+    expect(milk?.inCart).toBe(true);
   });
 
   it('UI re-renders when remote trip change arrives through full pipeline', async () => {
@@ -281,7 +281,7 @@ describe('US-03: TripService.loadFromStorage notifies subscribers', () => {
     if (currentTrip) {
       const updatedItems = currentTrip.items.map((item) =>
         item.name === 'Milk'
-          ? { ...item, checked: true, checkedAt: '2026-04-13T10:00:00Z' }
+          ? { ...item, inCart: true, inCartAt: '2026-04-13T10:00:00Z' }
           : item,
       );
       tripStorage.simulateRemoteChange((s) => {
